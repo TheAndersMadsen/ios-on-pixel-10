@@ -227,11 +227,62 @@ def console_matches(console, mirror):
     return bool(head) and body.startswith(head)
 
 
-def read_12377(mirror, console, wrapped, bound, why):
+def whole_log(mirror, console, total=None, size=None):
+    """One stream from the two logs. The console keeps the first 2 MiB and stops; the mirror keeps the last 1 MiB.
+    Returns (text, bytes lost between them): 0 when nothing is lost, None when the two can't be aligned."""
+    if not total or not size or total <= size:
+        return mirror, 0
+    body = console.split("TEGU-XNU STAGE0\n", 1)[-1]
+    start = total - size  # stream offset of the mirror's first byte
+    if len(body) < start:
+        return body + "\n" + mirror, start - len(body)
+    overlap = len(body) - start
+    if overlap >= len(mirror):
+        return body, 0
+    if body[start:start + 64] == mirror[:64]:
+        return body + mirror[overlap:], 0
+    return body + "\n" + mirror, None
+
+
+USER_ORDER = ("launchd", "boot tasks", "SpringBoard exec", "backboardd exec", "first swap", "display on")
+
+
+def read_userland(log, panic_message=None):
+    """iOS userland from the log. The kernel can't see a lock screen: first swap and display on are the nearest
+    it has, and whether the panel shows the UI is for the owner's eyes."""
+    tasks = set(re.findall(r"\(([^)\s]+)\) <Notice>: Doing boot task", log))
+    exec_count = lambda name: len(re.findall(rf"^exec {name}\s*$", log, re.M))
+    logged = [int(n) for n in re.findall(r"^SWEET FB: swap (\d+) layer", log, re.M)]
+    thousands = [int(n) for n in re.findall(r"^SWEET FB: (\d+) swaps", log, re.M)]
+    power = re.findall(r"^SWEET FB: display (on|off)", log, re.M)
+    skipped = re.findall(r"^SWEET FB: layer \d+ surface \d+ skipped: fmt (0x[0-9a-f]+)", log, re.M)
+    stats = re.findall(r"^tensor-dpu: \S+ kicks (\d+) dones (\d+) underrun first (\d+) later (\d+) nofetch (\d+)", log, re.M)
+    refused = re.search(r"^tensor-dpu: .*refused.*$", log, re.M)
+    faults = {}
+    for name in re.findall(r"^usertrap: ([^\s\[]+)\[\d+\] exception", log, re.M):
+        faults[name] = faults.get(name, 0) + 1
+    seen = {"launchd": "hello from launchd" in log, "boot tasks": bool(tasks),
+            "SpringBoard exec": exec_count("SpringBoard") > 0, "backboardd exec": exec_count("backboardd") > 0,
+            "first swap": bool(logged or thousands), "display on": "on" in power}
+    reached = [name for name in USER_ORDER if seen[name]]
+    return {"reached": reached, "furthest": reached[-1] if reached else None,
+            "restore_mode": "Restore environment starting" in log,
+            "boot_tasks": len(tasks), "springboard_execs": exec_count("SpringBoard"), "backboardd_execs": exec_count("backboardd"),
+            "swaps_at_least": max(thousands + logged, default=0), "display": power[-1] if power else None,
+            "skipped_formats": sorted(set(skipped)), "skipped": len(skipped),
+            "dpu": dict(zip(("kicks", "dones", "underrun_first", "underrun_later", "nofetch"), map(int, stats[-1]))) if stats else None,
+            "dpu_refused": refused.group(0) if refused else None,
+            "faults": faults, "aborts": len(re.findall(r"^userabort:", log, re.M)),
+            "own_deadline": bool(panic_message and panic_message.startswith("blazer-root: deadline"))}
+
+
+def read_12377(mirror, console, wrapped, bound, why, total=None, size=None):
     """Milestones, UFS and panic of a 12377 boot from the mirror, which XNUENT1 binds to the
     shim's nonce. An unbound log is reported as such and nothing is read from it."""
     if not bound:
         return {"bound": False, "why": why}
+    log, lost = whole_log(mirror, console, total, size)  # by stream position, so before CRLF is folded
+    log = log.replace("\r\n", "\n")
     mirror = mirror.replace("\r\n", "\n")  # the message buffer ends most lines with CRLF
     same = console_matches(console, mirror)
     # A wrapped mirror lost its start; only then is the console needed, and then it can't be compared.
@@ -239,13 +290,14 @@ def read_12377(mirror, console, wrapped, bound, why):
     early = [int(n) for n in re.findall(r"TEGU-XNU EARLY (\d+):", text)]
     reached = [name for name, pattern in MILESTONES_12377 if re.search(pattern, text, re.M)]
     stages = [dict(ms=int(m[0]), stage=m[1], reads=int(m[2]), blocks=int(m[3]), busy_ms=int(m[4]))
-              for m in STAGE_LINE.findall(mirror)]
-    done = re.search(r"^blazer-ufs-test: done, (\d+) errors", mirror, re.M)
-    attach = re.search(r'^blazer-ufs: "([^"]+)" on LUN (\d+): first block (\w+), (\d+) MiB, read only', mirror, re.M)
+              for m in STAGE_LINE.findall(log)]
+    done = re.search(r"^blazer-ufs-test: done, (\d+) errors", log, re.M)
+    attach = re.search(r'^blazer-ufs: "([^"]+)" on LUN (\d+): first block (\w+), (\d+) MiB, read only', log, re.M)
     panic = re.search(r"^panic\(cpu (\d+) caller (0x[0-9a-f]+)\):\s*(.*)$", mirror, re.M)
     exited = re.search(r"^pid 1 exited -- (.*)$", mirror, re.M)
-    return {"bound": True, "console_same": same, "wrapped": wrapped, "early_max": max(early) if early else None,
-            "reached": reached, "furthest": reached[-1] if reached else (f"EARLY {max(early)}" if early else "XNU entry"),
+    user = read_userland(log, panic.group(3) if panic else None)
+    return {"bound": True, "console_same": same, "wrapped": wrapped, "log_lost_bytes": lost, "userland": user, "early_max": max(early) if early else None,
+            "reached": reached, "furthest": user["furthest"] or (reached[-1] if reached else (f"EARLY {max(early)}" if early else "XNU entry")),
             "missing": [name for name, _ in MILESTONES_12377 if name not in reached and name not in OPTIONAL_12377],
             "stages": stages,
             "ufs": {"attached": bool(attach), "partition": attach.group(1) if attach else None,
@@ -358,7 +410,7 @@ def summarize(attempt):
         bound = bool(entry_fresh and prologue.get("present") and prologue.get("entry_valid") and mirror_text and
                      prologue.get("boot_nonce") == shim.get("nonce"))
         x = read_12377(mirror_text or "", console, (mirror_doc.get("stream_total") or 0) > (mirror_doc.get("size") or 0),
-                       bound, "no XNU entry record with the shim's nonce")
+                       bound, "no XNU entry record with the shim's nonce", mirror_doc.get("stream_total"), mirror_doc.get("size"))
         booted = payload_uuid(image) if image_same else None
         kernel.update(booted_uuid=booted, match=None if not (booted and meta_uuid) else booted == meta_uuid)
         if x.get("panic") and meta_mach and kernel["match"]:
@@ -432,6 +484,27 @@ def render_12377(x, lines):
         lines.append(f"pid 1     {x['pid1_exit']}")
     lines.append(f"early     EARLY up to {x['early_max']}; console {'same text as mirror' if x['console_same'] else 'not compared equal'}"
                  + ("; mirror wrapped" if x["wrapped"] else ""))
+    if x["wrapped"]:
+        lost = x.get("log_lost_bytes")
+        lines.append("log       console + mirror joined; " + ("nothing lost" if lost == 0 else "alignment unknown, counts may repeat" if lost is None else f"{lost} bytes lost between them, counts are minimums"))
+    user = x.get("userland") or {}
+    if user.get("reached"):
+        lines.append(f"userland  {' > '.join(user['reached'])}")
+        mode = "restore mode; " if user["restore_mode"] else ""
+        lines.append(f"          {mode}boot tasks {user['boot_tasks']}; execs SpringBoard {user['springboard_execs']} backboardd {user['backboardd_execs']}"
+                     + ("  RESPAWNED" if max(user["springboard_execs"], user["backboardd_execs"]) > 1 else ""))
+        lines.append(f"display   swaps at least {user['swaps_at_least']}; power {user['display']}; lock screen: owner's eyes only"
+                     + (f"; SKIPPED {user['skipped']} fmt {','.join(user['skipped_formats'])}" if user["skipped"] else ""))
+        if user["dpu"]:
+            d = user["dpu"]
+            lines.append(f"          DPU kicks {d['kicks']} dones {d['dones']} underrun first {d['underrun_first']} later {d['underrun_later']} nofetch {d['nofetch']}")
+        if user["dpu_refused"]:
+            lines.append(f"          {user['dpu_refused']}")
+        if user["faults"] or user["aborts"]:
+            top = sorted(user["faults"].items(), key=lambda kv: -kv[1])[:4]
+            lines.append(f"faults    {' '.join(f'{k}x{v}' for k, v in top)}; aborts {user['aborts']}")
+        if user["own_deadline"]:
+            lines.append("end       the kernel's own session deadline, not a crash")
     if x["stages"]:
         last = x["stages"][-1]
         names = " ".join(row["stage"] for row in x["stages"])

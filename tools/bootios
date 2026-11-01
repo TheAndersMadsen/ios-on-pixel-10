@@ -69,7 +69,9 @@ fi
 output=$(mktemp "${TMPDIR:-/tmp}/bootios.XXXXXX")
 trap 'rm -f "$output"' EXIT
 rc=0
-"$ROOT/research/laguna-usb-fix/run-attempt.sh" --image "$image" --name "$name" --wait-park-after-ep0 "$wait" ${mach_args[@]+"${mach_args[@]}"} 2>&1 \
+# --wait must also hold if the console never appears: the runner's default watch is 300 s, then it gives up uncaptured.
+watch=300; [ "$wait" -le "$watch" ] || watch=$wait
+"$ROOT/research/laguna-usb-fix/run-attempt.sh" --image "$image" --name "$name" --watch "$watch" --wait-park-after-ep0 "$wait" ${mach_args[@]+"${mach_args[@]}"} 2>&1 \
     | tee "$output" || rc=$?
 attempt=$(sed -n 's/^\[run-attempt\] attempt dir: //p' "$output" | tail -1)
 echo "attempt: ${attempt:-none (stopped before the attempt directory was made)}"
