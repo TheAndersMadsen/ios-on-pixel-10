@@ -13,6 +13,15 @@
 - Fixes live in `research/ufs-postlink-r2/run/scope`, not yet in `shim/`.
 - Next: read-only READ CAPACITY and READ(10) to find the GPT (`research/ufs-read-r1`, agent running).
 
+### 2026-11-01: high-window-r1, 1 GiB at `0xa00000000`
+
+- Physical: attempt `20261101-184019-high-window-r1` (image `a1838c58…`, capture `00802647…`): 233393 free + 28751 wired =
+  262144 pages, shift 12, shift-14 signature refusal still prints, `EXECOK6`, same `initproc` panic. Compact root, no UFS.
+- Physical: attempt `20261101-184200-high-window-fill-r1` (image `0e6cb769…`, capture `b14c5313…`): same, plus every free page
+  filled with `0x5a5aa5a5`, no fault. Writes silently ignored or later overwrites are not excluded.
+- Parent lifted N552's HOLD: its gate could never pass, and this test writes RAM only.
+- Not shown: above `0xa40000000`, shift 14 on real hardware, signatures accepted on the phone.
+
 ### 2026-11-01: ufs-link-r2, LINK result 0
 
 - Physical, one boot, attempt `20261101-181514-ufs-link-r2`, image `df5d7e3d…`, capture `3688d5bb…`, nonce matched.
