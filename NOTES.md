@@ -13,7 +13,8 @@ Latest detail: `HANDOFF.md`.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
 Current blocker: UFS device not present after ABL's shutdown (HCS.DP=0).
-Next concrete action: O2 read-only boot, then W1 link attempt. See `HANDOFF.md`.
+Next concrete action: apply N916's changes to O2, build it, ask the user who boots it. The
+full sequence and W1's preconditions are in `HANDOFF.md`, which holds the handoff detail.
 
 ### Hardware facts
 
@@ -51,7 +52,8 @@ Next concrete action: O2 read-only boot, then W1 link attempt. See `HANDOFF.md`.
 Root documents rewritten to the layout and working style of the Pixel 9a `ios-tegu`
 repository, and the root and `research/` reorganised to match. No tegu code or hardware
 facts were copied. Moved only, except 24 empty session folders removed. Stopped `loopapi`,
-disabled the campaign state and deleted the old scheduled tasks. Boot through `tools/bootios`.
+disabled the campaign state and deleted the old scheduled tasks. Boot through `tools/bootios`; it sets persistent
+`fastboot oem force-fastboot on` and does not turn it off, so tell the user first.
 
 Known leftovers, none used by the build chain: old October scripts and dated docs still
 name old paths; some old git worktrees have stale `.git` pointers (fix with

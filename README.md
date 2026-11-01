@@ -4,7 +4,7 @@
 
 This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.5 generation) to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The furthest native boots run pid 1 and dyld startup, then panic before `launchd` main. Bring-up detail is in [BLAZER.md](BLAZER.md).
 
-> Experimental bring-up, not a usable phone OS. Boots are temporary RAM boots. Apple's security model is mostly switched off.
+> Experimental bring-up, not a usable phone OS. Boots are temporary RAM boots; the boot tool leaves `force-fastboot` on. Apple's security model is mostly switched off.
 
 ## What works
 
@@ -20,7 +20,7 @@ This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.
 - **UFS:** controller registers can be read, but there is no link and no device read. The full iOS root cannot load yet.
 - **No native display, touch or stable userland.**
 - **No automatic recovery** has been qualified.
-- **Full root:** the 64 MiB boot path cannot carry the 2.3 GiB root and 2.7 GiB shared cache, which is why UFS comes first.
+- **Full root:** the 64 MiB boot path cannot carry the 2.3 GiB root and 2.5 GiB shared cache, which is why UFS comes first.
 
 Separate results, not native: the iOS 16.5 home screen with touch ran in a pKVM VM on this phone (2026-10-25), and QEMU has rendered the lock and home screens.
 
@@ -41,7 +41,7 @@ There is no serial console. The diagnostics live in reserved RAM at `0x95200000`
 
 ```sh
 research/laguna-foundation/kernel-blazer/xnu-build.sh          # kernel, -j8 -k
-tools/build-next-boot.sh                                       # boot image
+R4_MACHO=<kernel> tools/build-next-boot.sh                     # boot image
 tools/bootios <image> <name>                                   # temporary boot and capture
 tools/decode-shim-stamps.py                                    # read the result
 tools/read-ramdump.py --mach <booted kernel> --dump-base 0x95200000

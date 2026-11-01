@@ -1,8 +1,8 @@
-# Current — 2026-11-01: UFS has no link yet; O2 then W1 are prepared, not built
+# Current — 2026-11-01: UFS has no link yet; O2 and W1 link on the host; final O2 not built
 
 ### 2026-11-01: N900 baseline, W1 hypothesis, host-side integration
 
-- Phone: on stock Android, force-fastboot off (Root note on the fleet bus,
+- Phone: on stock Android, force-fastboot off (note from the previous lead agent,
   2026-11-01 16:01Z). No boot has run since N900.
 - Latest UFS physical result: N900, attempt
   `20261101-161514-gate-139540efc89b484cadbccae5993eb201`, eight read-only reads
@@ -25,7 +25,7 @@
   Expected: DP=1 and ULSS. Refuted if LINK still gives result 1 with pads verified
   high and HCE cycled.
 - Host work: N914 composed O2, W1 and post-link L2. All link and none has run on
-  hardware. The full cold route lacks 12 real bindings and refuses the real FDT.
+  hardware. The full cold-start route lacks 12 real hardware bindings and refuses the real FDT.
   READ(10) over DMA stays blocked until UFS's `inf_smmu` (`0x35100000`, SID 0x8100) is measured; treat UFS
   as non-coherent. Patches are unapplied:
   `research/laguna-usb-fix/native-fleet-20261031/N914-integration-next-candidate/`.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Host-only builder for a parent-approved temporary next boot. No device access.
+# Host-only builder for a temporary next boot. No device access.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$(realpath "$0")")/.." && pwd)
 LANE="$ROOT/research/laguna-usb-console"
