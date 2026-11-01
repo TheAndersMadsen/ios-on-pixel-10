@@ -58,6 +58,11 @@ QEMU only, parent checked the log: full 20F66 root, `rd=md0`, 16 KiB pages: cach
 panic in 290 guest seconds. Supports that the phone's panic is a compact-root defect; not isolated. Phone still
 needs a physical window above 1 GiB and 16 KiB signatures. `research/fullroot-qemu-r1/FINDINGS.md`.
 
+### 2026-11-01: APFS agent reviewed
+
+Host only; parent checked receipts. Reader reads staged root `637103e1…`: 45,044 files, 5.64 GB, 0 errors. Not run under real
+XNU VFS or UFS. Unapplied: `requests` race fix, short-read check before UFS. `research/apfs-reader-r1/FINDINGS.md`.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
