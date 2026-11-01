@@ -14,6 +14,10 @@
 - Caveats: UNDERRUN seen, CRC registers read 0, so the CRC proof didn't work. The test pattern doesn't use FE0, so RAM scanout is unproved. PPS write effect unknown: ABL's PPS already matched.
 - Next: rung 3, RAM scanout, then the kernel backend.
 
+### 2026-11-01: ssi-id-r1, touch bus probe
+
+Physical, `20261101-213232-ssi-id-r1`, image `85a0bc31…`, no XNU, no chip traffic. SSI read at `0xdb33058` faulted and the guard caught it. Read frames LPB, SPI rate and cfg rate replied. Then a hardware reset during the first state-changing frame, LSIO_N `pd_on` `0x01000401`: `NO_END`, `0xc00e`, Fatal Error HW, last access status read `0x5272008`. That status read worked through the earlier frames. Guess, untested: the frame resets the phone, or the guarded SSI fault leaves a RAS error that goes fatal; touch-r1 had the same order. Next: same probe with no SSI read before the votes.
+
 ### 2026-11-01: display-frame-r1d
 
 Physical, `20261101-211212-display-frame-r1d`, image `34183971…`. RAM scanout reached the panel through FE0 layer 0: `PANEL_REPORTS_PIXELS`, `fe0_fetched`, `ram_scanout_reached_panel`. Only the layer address changed: OPR 0, 423, 423, 0, 0, 0 as the nonce said, above the expected 380. Underrun on the first kick only, later kicks 0. DPU SMMU `CR0` 0, not enabled, GBPA 0. CRC registers still read 0. Colours and geometry on glass unconfirmed: nothing filmed, owner has not reported. `all-r1` and `all-r1-safe` built, not booted, and won't be: the owner dropped iOS 16.
