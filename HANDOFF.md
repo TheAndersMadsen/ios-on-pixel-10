@@ -8,6 +8,9 @@
 
 - **Physical, owner, `phone-touch-r2` (kernel p4, `blazer_touch=1`, brightness cap), 00:33:17: touch works on iOS 26 on the phone, very slow.** Picture still 1125x2436 with bars.
 
+- Physical, `phone-touch-r2` capture: ended by `blazer-root: READ failed` status -9 with hardware OCS 0 (read done, deadline expired under load, inferred; fix 0714 in p8). Touch 3109 reports 0 bad, axes correct; `HK TOP`: backboardd 1.6 s a frame. Brightness cap settled at DBV 4637 from 0x295e.
+- Physical, `clk-probe-r1`: firmware's clock tables read; GMC at level 13 (819 MT/s) when idle. `speed-probe-r3`: CPU_ON/OFF from our code work, A725 at 532.8 MHz, X4 at 800, cpu0 533; A725 3114823 fixed, X4 3076789 and 2957258 not. `keys-probe-r1`: pads read safely, volume keys seen, power not seen. `wifi-stage1-r1`: PCIe link up, `PCI ID 14e4:4438`, errors 0.
+
 ## Earlier today: XNU 12377 boots on the phone
 
 - Physical, attempt `20261101-215924-first-boot-r1`, image `169a5b85…`, kernel `89489d52…` (tegu series, blazer layer). Compact HFS root `3cd4dcb5…` in md0, no md1, no display, no touch, `cpus=1`. Same nonce shim to XNU, entry 6.6 ms after handoff.
