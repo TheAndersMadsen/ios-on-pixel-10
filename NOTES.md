@@ -63,6 +63,11 @@ needs a physical window above 1 GiB and 16 KiB signatures. `research/fullroot-qe
 Host only; parent checked receipts. Reader reads staged root `637103e1…`: 45,044 files, 5.64 GB, 0 errors. Not run under real
 XNU VFS or UFS. Unapplied: `requests` race fix, short-read check before UFS. `research/apfs-reader-r1/FINDINGS.md`.
 
+### 2026-11-01: input agent reviewed
+
+Host only, unapplied: keys are AP pads on `cpm_pinctrl`, not AoC; battery gauge max77779 on SPMI. No service stubs known to be required for a first UI
+boot, resting on a QEMU run. `research/buttons-power-r1/{FINDINGS,STUBS}.md`. Probe keyprobe-r1 not run; it needs someone pressing keys.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
