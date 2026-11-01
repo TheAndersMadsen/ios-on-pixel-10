@@ -2,6 +2,10 @@
 
 - **Physical, owner's eyes, `20261101-234344-phone-root-r1`, image `e49b93ca…`, kernel p2 `9ffbe445…`, root r3 `205cb0e2…`, `rd=md0 blazer_ufs_mountroot=1`, read-only, `varfs=1`, one CPU, no GPU: Apple logo about 3.5 min after the boot started at 23:43:44; owner reported the home screen at 23:54:43 CET at the latest (about 11 min). Log capture comes after the boot ends. Touch is off in this boot, so it isn't interactive yet.**
 
+- Same boot, capture: ended at its own `blazer_deadline=1800`, `classify_reset` 10 of 10 PASS, no timer. 493,098 reads, 93.9 s UFS busy, `SWEET FB: display on`, no display off seen, probe fills 8684-8759 us, 0 underruns, SoC 41 C after reset, battery 89%, thermal breadcrumb 0, about 133 nits (`research/ios26-fleet/handoffs/bright.md`). Ring wrapped: 1.89 MB of log lost.
+- Owner's decisions, 2026-11-02 00:13: battery SPMI reads yes; kernel writes to free blocks in `userdata_exp.ai` for a persistent `/var` yes, build and run; Wi-Fi firmware and GPL PHY table in local boot images yes.
+- Next boots: `phone-touch-r2` (p4, touch, brightness cap), `clk-probe-r1`, `speed-probe-r3`, then p5. Plan and order: `research/ios26-fleet/PLAN.md`.
+
 ## Earlier today: XNU 12377 boots on the phone
 
 - Physical, attempt `20261101-215924-first-boot-r1`, image `169a5b85…`, kernel `89489d52…` (tegu series, blazer layer). Compact HFS root `3cd4dcb5…` in md0, no md1, no display, no touch, `cpus=1`. Same nonce shim to XNU, entry 6.6 ms after handoff.
