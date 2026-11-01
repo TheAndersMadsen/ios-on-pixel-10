@@ -1,11 +1,16 @@
 # Pixel 10 Pro (blazer) bring-up
 
 The Pixel 10 Pro boots our XNU from RAM and reaches dyld startup on a compact root,
-then panics. It has no native display or touch. UFS linked once, with no device command yet. The active work is UFS, so
+then panics. It has no native display or touch. UFS links and answers commands; no READ yet. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
-## 2026-11-01 status: first UFS link
+## 2026-11-01 status: UFS commands work
+
+ufs-postlink-r2: NOP IN, fDeviceInit, TUR GOOD after UNIT ATTENTION, REPORT LUNS 4 LUs, data DMA landed:
+`research/ufs-postlink-r2/run/decoded.json`.
+
+## 2026-11-01: first UFS link
 
 ufs-link-r2: with device power and reset driven, LINK result 0 in 9.3 ms, HCS=0xf, DP=1. Without them,
 result 1 in 50 ms, DP=0. One boot: `research/ufs-link-r2/decoded.json`.

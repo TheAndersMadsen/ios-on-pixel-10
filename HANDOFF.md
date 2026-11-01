@@ -1,4 +1,17 @@
-# Current — 2026-11-01: first UFS link up on the phone (ufs-link-r2); no device command yet
+# Current — 2026-11-01: UFS commands work on the phone; REPORT LUNS lists 4 LUs; no READ yet
+
+### 2026-11-01: ufs-postlink-r2, first device commands
+
+- Physical, attempt `20261101-182305-ufs-postlink-r2`, image `49e5c6a1…`, capture `4232121c…`, nonce matched.
+  Decoded: `research/ufs-postlink-r2/run/decoded.json`. No READ, no write command, no user data.
+- Observed: NOP IN; fDeviceInit set and cleared in 4.3 ms; TUR gave UNIT ATTENTION (6/29/00, response=1), then GOOD;
+  REPORT LUNS to W-LUN 0x81 returned 4 LUs (0,1,2,3), 40 bytes landed by DMA. HCS 0xf, no UIC errors, lists stopped.
+- Link: LINK result 0 after device-on on 3 of 3 boots (ufs-link-r2, ufs-postlink-r1, r2), 9.3-9.9 ms.
+- r1 (`20261101-181939`) stopped at TUR: the phone sends response=1 with CHECK CONDITION, and the engine treated it as
+  fatal. Linux uses SCSI status only (`ufshcd.c:5378-5384`). Fixed in `research/ufs-postlink-r2/src/ufspl.c`.
+- Not shown: READ, LU sizes, which LU has `userdata_exp.ai`, XNU taking over. Same `launchd` panic later in boot.
+- Fixes live in `research/ufs-postlink-r2/run/scope`, not yet in `shim/`.
+- Next: read-only READ CAPACITY and READ(10) to find the GPT (`research/ufs-read-r1`, agent running).
 
 ### 2026-11-01: ufs-link-r2, LINK result 0
 

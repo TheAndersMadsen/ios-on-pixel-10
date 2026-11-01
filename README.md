@@ -17,7 +17,7 @@ This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.
 
 ## What does not work (yet)
 
-- **UFS:** link has come up once, but no command or read has run. The full iOS root cannot load yet.
+- **UFS:** link and device commands work, but no READ has run. The full iOS root cannot load yet.
 - **No native display, touch or stable userland.**
 - **No automatic recovery** has been qualified.
 - **Full root:** the 64 MiB boot path cannot carry the 2.3 GiB root and 2.5 GiB shared cache, which is why UFS comes first.
