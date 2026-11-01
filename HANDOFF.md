@@ -1,5 +1,11 @@
 # Current — 2026-11-01: backboardd draws frames and SpringBoard runs on the phone, to RAM; nothing on the panel yet
 
+### 2026-11-01: ufs-speed-r1, HS gear 4 on the phone
+
+- Physical, attempt `20261101-204627-ufs-speed-r1`, image `3efffef6…`, capture `6b08424f…`: PWM-G1 (mode 0x55) to HS gear 4, 2 lanes (mode 0x11), change rc 0 in 3.7 ms, no firmware or calibration sent. 12 of 12 blocks read equal at both speeds, 0 UIC errors.
+- XNU then read the root: 10295 reads, busy 1340 ms, 0.13 ms per block, 30.05 MiB/s (from 7.41 ms, 0.53 MiB/s). Ended by the 300 s deadline panic, as designed.
+- This image still had the 6-job md1. `shim/` doesn't have the gate yet; the shim copy is in `research/ufs-speed-r1`.
+
 ### 2026-11-01: phone-r1 (attempt ufs-ui-r1), first UI processes on the phone
 
 - Physical, attempt `20261101-203354-ufs-ui-r1`, image `8aa00893…`, kernel `b4a0efad…`, capture `7dd5f456…`, md1 `de340c95`, `/product` in the ADT. No storage write.

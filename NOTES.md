@@ -12,7 +12,7 @@ Latest detail: `HANDOFF.md`.
   `launchd`, backboardd and SpringBoard run from the full root over UFS; frames reach RAM. Not reached: a frame on the panel, touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: no display path to the panel, and 0.53 MiB/s storage. The earlier Restore-branch note was wrong: upstream logs the same line and reaches the home screen. md1 decides the jobs.
+Current blocker: no display path to the panel. The earlier Restore-branch note was wrong: upstream logs the same line and reaches the home screen. md1 decides the jobs.
 Next concrete action: read phone-r1's result, then HS gear 4, then the display frame tests.
 Detail in `HANDOFF.md`.
 
@@ -76,6 +76,10 @@ Physical: XNU ran at shift 14 with 4 GiB at `0xa00000000`, same compact-root pan
 
 QEMU, not the phone: with md1 `de340c95` (407 jobs) the same root spawned SpringBoard and backboardd, and drew the boot logo. The Restore branch is not the wall.
 SpringBoard aborts on a bounding path bitmap; suspect missing `/product`. Stability agent's tool fixes applied: `tools/bootios --mach --wait`, `tools/boot-summary.py`.
+
+### 2026-11-01: ufs-speed-r1
+
+Physical: HS gear 4, 30 MiB/s, up from 0.53. Detail in `HANDOFF.md`.
 
 ### How work runs
 
