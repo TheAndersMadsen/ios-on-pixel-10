@@ -276,7 +276,17 @@ const char *loader_boot(uintptr_t dtb)
 	con_hex2("BOOTARG", "pa=", ba_pa, "top=", top);
 
 	uintptr_t entry_pa = view.entry_pa;
-	tgl_usb_console_service();
+	/* Admission just blocked for seconds with USB unserved, so the host's next read is often
+	 * pending and the service call below starts it. Let that one finish; still refuse if not. */
+	{
+		extern int tgl_stamp_boot_us(uint64_t *);
+		uint64_t usb_t0 = 0, usb_now = 0;
+		tgl_usb_console_service();
+		if (!tgl_stamp_boot_us(&usb_t0))
+			while (laguna_usb_transfer_active() && !tgl_stamp_boot_us(&usb_now) &&
+			    usb_now - usb_t0 < UINT64_C(1000000))
+				tgl_usb_console_service();
+	}
 	if (laguna_usb_transfer_active()) return "USB transfer active at XNU handoff";
 	/* v3.6 global bring-up deadline: after the jump only the EP0 log's
 	 * last bytes and the DRAM mirror can tell the story, so bail with a

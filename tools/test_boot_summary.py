@@ -87,7 +87,8 @@ class RealAttempts(unittest.TestCase):
                   "20261101-181939-ufs-postlink-r1", "20261101-182305-ufs-postlink-r2",
                   "20261101-184019-high-window-r1", "20261101-184200-high-window-fill-r1",
                   "20261101-184625-ufs-read-r1", "20261101-185202-ufs-read-r2",
-                  "20261101-192343-ufs-read-r3", "20261101-192655-ufs-shim-r1", XNU)
+                  "20261101-192343-ufs-read-r3", "20261101-192655-ufs-shim-r1", XNU,
+                  "20261101-200840-page16k-r1")
 
     def run_one(self, name):
         path = ATTEMPTS / name

@@ -1,4 +1,16 @@
-# Current — 2026-11-01: XNU reads the staged root over UFS; root is not mounted from it yet
+# Current — 2026-11-01: launchd runs natively from the full iOS root over UFS; no UI yet
+
+### 2026-11-01: ufs-root-r2, launchd from the full root on the phone
+
+- Physical, attempt `20261101-201914-ufs-root-r2`, image `1a78080e…`, kernel `b4a0efad…`, capture `4bda1ae3…`, nonce matched, no storage write.
+  Decoded: `research/ufs-root-r1/run/root/decoded-r2.json`.
+- Observed, every decoder stage: 16 KiB pages, 4 GiB at `0xa00000000`, XNU took over UFS with DMA above 4 GiB, APFS `System` mounted, md1, init, launchd.ios, cache mapped,
+  `hello` at 225.6 s, xpcproxy. Reader: `launchd main=yes`, first time. 0 usertraps, 0 refusals. 10287 reads, 40.2 MiB, 7.4 ms per block, about 0.5 MiB/s.
+- The end is our own timer: `blazer-root: deadline 300 s` panic. Not a crash. Reads stop at about the same count as QEMU; launchd is on its Restore branch, so this is not the normal UI boot.
+- Attempts `20261101-201242-ufs-root-r1` and `20261101-201517-ufs-root-r1b` were refused with `USB transfer active at XNU handoff`; their panic text is residue of an earlier boot. Admission's hash blocks USB
+  service, so a host read was pending. Fix in `shim/loader.c`: finish that transfer, bounded to 1 s, then check. Works in r2.
+- Not shown: normal launchd branch, daemons healthy, UI, touch, and repeat of this boot. Storage reads look slow: link is unoptimised.
+- Next: launchd to SpringBoard (`research/fullroot-ui-qemu-r1`), faster UFS link, scanout (`research/display-frame-r1`, `research/xnu-fb-r1`).
 
 ### 2026-11-01: page16k-r1, 16 KiB pages and 4 GiB on the phone
 

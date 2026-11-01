@@ -1,8 +1,8 @@
 # hackios
 
-**Apple's XNU kernel and iOS 16 userland on the Google Pixel 10 Pro.** Native boot does not reach a working iOS yet.
+**Apple's XNU kernel and iOS 16 userland on the Google Pixel 10 Pro.** `launchd` runs natively from the full root; there is no UI yet.
 
-This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.5 generation) to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The furthest native boots run pid 1 and dyld startup, then panic before `launchd` main. Bring-up detail is in [BLAZER.md](BLAZER.md).
+This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.5 generation) to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The furthest native boot mounts the full iOS root from UFS and runs `launchd`, with no UI. Bring-up detail is in [BLAZER.md](BLAZER.md).
 
 > Experimental bring-up, not a usable phone OS. Boots are temporary RAM boots; the boot tool leaves `force-fastboot` on. Apple's security model is mostly switched off.
 
@@ -13,14 +13,14 @@ This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.
 | Boot | Stock Google bootloader → `fastboot boot` of our shim → XNU. Nothing is flashed to the boot partitions |
 | Logs | Shim stamps and XNU message buffer are read back over USB from the fastboot park |
 | Root | HFS+ compact root delivered in the boot image mounts |
-| Userland | pid 1 runs userspace code and dyld starts, then panics. `launchd` main has not been reached |
+| Root | Full APFS root mounts read-only from UFS, with 16 KiB pages and 4 GiB of RAM |
+| Userland | `launchd` main runs and spawns xpcproxy, on its Restore branch. Once so far |
 
 ## What does not work (yet)
 
-- **UFS:** link, commands and READ work, in the shim and XNU, and the root is staged, but it isn't mounted from there yet.
 - **No native display, touch or stable userland.**
 - **No automatic recovery** has been qualified.
-- **Full root:** the 64 MiB boot path cannot carry the 2.3 GiB root and 2.5 GiB shared cache, which is why UFS comes first.
+- **No normal boot:** `launchd` stays on its Restore branch and SpringBoard hasn't run.
 
 Separate results, not native: the iOS 16.5 home screen with touch ran in a pKVM VM on this phone (2026-10-25), and QEMU has rendered the lock and home screens.
 
