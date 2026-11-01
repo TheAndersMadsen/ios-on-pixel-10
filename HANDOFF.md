@@ -1,4 +1,21 @@
-# Current — 2026-11-01: ufs-observe-r2 clean; device is unpowered-looking and held in reset
+# Current — 2026-11-01: first UFS link up on the phone (ufs-link-r2); no device command yet
+
+### 2026-11-01: ufs-link-r2, LINK result 0
+
+- Physical, one boot, attempt `20261101-181514-ufs-link-r2`, image `df5d7e3d…`, capture `3688d5bb…`, nonce matched.
+  Decoded: `research/ufs-link-r2/decoded.json`. No storage access, doorbell, DMA or READ.
+- Pass A, no device-on: LINK result 1 on 4 of 4, about 50 ms each, HCS 0x8, DP=0. TX FSM 1→2.
+- Pass B, device-on (reset low, power, refclk SMC, reset high, aux SMC, all `smc_a0`=0): pads read high, RX FSM 7
+  after HCE, LINK result 0 on the first try in 9.3 ms, **HCS=0xf (DP=1, UTRLRDY, UTMRLRDY, UCRDY)**, FSMs after link
+  [0,2,1,2,1], no fault, ISR 0.
+- Observation: device-on is what made the difference. Inference: the device was unpowered or held in reset, and
+  the "local refusal" alternative is refuted for this route. Rail voltage still unmeasured.
+- Observed: the refclk pad's TX write doesn't stick (reads 0 after writing OE), yet link came up. Cause unknown.
+- One boot only: not yet shown repeatable. `is_ulss`=0 in the record because IS was cleared by the sequence; DP=1 and
+  result 0 are the evidence. Not READ10, not working UFS.
+- ufs-link-r1 (`20261101-181009-ufs-link-r1`) stopped at that pad's strict readback, so device-on never ran.
+- Boot continued to XNU, root mount, launchd exec, then the same panic. Phone parked, slot b, force-fastboot on.
+- Next: post-link on this route: NOP OUT, fDeviceInit, TUR, REPORT LUNS (`research/ufs-postlink-r1`, agent running).
 
 ### 2026-11-01: ufs-observe-r2 read power, pads and SMMU on the phone
 

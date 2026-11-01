@@ -1,18 +1,23 @@
 # Pixel 10 Pro (blazer) bring-up
 
 The Pixel 10 Pro boots our XNU from RAM and reaches dyld startup on a compact root,
-then panics. It has no native display, touch or UFS link. The active work is UFS, so
+then panics. It has no native display or touch. UFS linked once, with no device command yet. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
-## 2026-11-01 status: UFS controller readable, device absent
+## 2026-11-01 status: first UFS link
+
+ufs-link-r2: with device power and reset driven, LINK result 0 in 9.3 ms, HCS=0xf, DP=1. Without them,
+result 1 in 50 ms, DP=0. One boot: `research/ufs-link-r2/decoded.json`.
+
+## 2026-11-01: UFS controller readable
 
 ufs-observe-r2 read UFS power domains ON, warm mode 2, pads 8 and 0 low and `inf_smmu` not
 enabled, on the phone with no writes: `research/ufs-observe-r2/result.json`.
 
 ufs-observe-r1 read the controller without writing: HCE=0x3, HCS=0x108, DP=0. ABL logs full UFS
 init of the Samsung KLUDG4UHGC and then shuts it down about 30 s before our reads.
-ufs-link-r1 proposes the stock pre-link sequence from the shipped `ufs.ko`; it has not run. Full detail in `HANDOFF.md`.
+ Full detail in `HANDOFF.md`.
 
 ## Native boot checkpoint (2026-11-01)
 
