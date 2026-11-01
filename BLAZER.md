@@ -1,11 +1,16 @@
 # Pixel 10 Pro (blazer) bring-up
 
 The Pixel 10 Pro boots our XNU from RAM and reaches dyld startup on a compact root,
-then panics. It has no native display or touch. UFS links and answers commands; no READ yet. The active work is UFS, so
+then panics. It has no native display or touch. UFS links, answers commands and READs; the staged root is gone. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
-## 2026-11-01 status: UFS commands work
+## 2026-11-01 status: UFS READ works
+
+ufs-read-r2: GPT valid on 4 LUs, `userdata_exp.ai` found at LU0 LBA 2500838, staged image absent:
+`research/ufs-read-r2/run/decoded.json`.
+
+## 2026-11-01: UFS commands work
 
 ufs-postlink-r2: NOP IN, fDeviceInit, TUR GOOD after UNIT ATTENTION, REPORT LUNS 4 LUs, data DMA landed:
 `research/ufs-postlink-r2/run/decoded.json`.
@@ -36,8 +41,7 @@ root, launchd and dyld, then panic.
 
 ## UFS checkpoint (2026-10-28)
 
-The staging write put the system image in `userdata_exp.ai`; its current bytes are
-unverified. LINK_STARTUP completes with result 1. Testing refuted reset as the cause.
+The staging write put the system image in `userdata_exp.ai`; by 2026-11-01 it had been overwritten. LINK_STARTUP completes with result 1. Testing refuted reset as the cause.
 Hibern8 exit works for TX; RX stayed in state 1. "Device dead at DME level" was a misread, corrected on 2026-11-01. The shim has never driven the
 device pads or cycled HCE.
 

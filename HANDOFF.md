@@ -1,4 +1,18 @@
-# Current — 2026-11-01: UFS commands work on the phone; REPORT LUNS lists 4 LUs; no READ yet
+# Current — 2026-11-01: UFS READ works; the staged root is gone from `userdata_exp.ai`
+
+### 2026-11-01: ufs-read-r1 and r2, first storage reads
+
+- Physical, read-only. r1 `20261101-184625-ufs-read-r1` capture `07d1304c…`; r2 `20261101-185202-ufs-read-r2` capture `39d4de77…`.
+  Decoded: `research/ufs-read-r2/run/decoded.json`. No write command sent.
+- Observed: READ CAPACITY and READ(10) on 4 LUs, 4096-byte blocks, GPT headers and entries CRC-valid. LU0 max LBA 31147007.
+  `userdata_exp.ai`: LU0, LBA 2500838..4597989, 8 GiB. Canary test: data landed after CIVAC. GBPA stayed `0x2e1f` at every gate.
+- Observed: 11 of 12 sampled partition blocks differ from `ufs-staging/staging.img`; the 1 match is an all-zero block.
+  Blocks repeat between boots. No NXSB and no UFSSTG1 manifest. Inference: the Oct 28 image was overwritten. Cause unknown; the
+  phone has run Android since, and the new content looks like zeros plus encrypted data. Do not assume the partition is unused.
+- **Needs the user:** restaging writes storage and overwrites whatever is there now. Not approved. Nothing has written it.
+- ufs-read-r2's tests have 6 stale count expectations (more blocks read by design); mutants 97/97 caught. Not updated.
+- Phone: parked, slot b, force-fastboot on.
+- Next, not blocked: fold link, post-link and read into `shim/`, then XNU takeover (`research/ufs-integrate-r1`, agent running).
 
 ### 2026-11-01: ufs-postlink-r2, first device commands
 
