@@ -12,8 +12,8 @@ Latest detail: `HANDOFF.md`.
   RAM scanout to the panel from the shim. Not reached: anything on iOS 26 or XNU 12377, iOS's frames on the panel, touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: no route is settled yet. iOS 26 may need a GPU for its UI, and this phone has no GPU driver; unknown, under study in `research/ios26-route-r1`.
-Next concrete action: read `research/ios26-route-r1/PLAN.md` and `research/tegu-branches-r1/FINDINGS.md`, then take the first stage.
+Current blocker: can iOS 26 draw without a GPU driver? Tegu reports a buggy iOS 26 UI on its Pixel 9a, but through its Mali Metal driver; our GPU is Imagination. Open: no recorded UI without Metal.
+Next concrete action: read `research/ios26-root-r1/FINDINGS.md` (go/no-go) and `research/ios26-kernel-r1/FINDINGS.md` (tegu series plus blazer hardware layer).
 Detail in `HANDOFF.md`.
 
 ### Carried from iOS 16 to this branch
@@ -22,7 +22,7 @@ Detail in `HANDOFF.md`.
 - `tgl_dcs.h` keeps r1d's record address `0x9542a000`, which is also the UFS record's. Before enabling the DPU stage with UFS on, move it to `0x955e0000`, as `research/ui-integrate-r1/snapshot/` does.
 - `frame_tables.h` holds offsets and PPS generated from GPL-2.0 vendor source; decide its license before publishing.
 - `xnu/ios16-base/patches/`: 8796 drivers, the parts source for a 12377 port. They don't apply to 12377 as they stand.
-- Reference, no license, ideas only: `research/upstream/ios-tegu-gh-20261101`, branch `ios26-bringup` (Pixel 9a, Tensor G4). Its hardware values don't apply here.
+- Kernel base: `research/upstream/ios-tegu-gh-20261101`, branch `ios26-bringup`, `d807098` (Pixel 9a, Tensor G4), at the owner's instruction. No license: local use only, nothing published without the author's permission. Its hardware values don't apply here.
 
 ### 2026-11-01: ufs-observe-r2
 
