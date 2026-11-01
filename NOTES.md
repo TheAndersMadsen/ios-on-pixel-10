@@ -68,6 +68,10 @@ XNU VFS or UFS. Unapplied: `requests` race fix, short-read check before UFS. `re
 Host only, unapplied: keys are AP pads on `cpm_pinctrl`, not AoC; battery gauge max77779 on SPMI. No service stubs known to be required for a first UI
 boot, resting on a QEMU run. `research/buttons-power-r1/{FINDINGS,STUBS}.md`. Probe keyprobe-r1 not run; it needs someone pressing keys.
 
+### 2026-11-01: page16k-r1
+
+Physical: XNU ran at shift 14 with 4 GiB at `0xa00000000`, same compact-root panic. Detail in `HANDOFF.md`.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in

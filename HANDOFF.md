@@ -1,5 +1,12 @@
 # Current — 2026-11-01: XNU reads the staged root over UFS; root is not mounted from it yet
 
+### 2026-11-01: page16k-r1, 16 KiB pages and 4 GiB on the phone
+
+- Physical, attempt `20261101-200840-page16k-r1`, image `62a4e41e…`, kernel `b4a0efad…`, capture `92e3df04…`, compact root, no UFS: 254874 free + 7270 wired =
+  262144 16 KiB pages at `0xa00000000`. No shift-14 signature refusal, `EXECOK6`, same fault at pc `0x3009c7b48`, same `initproc` panic.
+- Not shown: cache and TLB behaviour under load (one process, one CPU), firmware's use of the top 3 GiB (not filled), the shared cache, UFS at this page size.
+- Next: full root from UFS on this kernel (`research/ufs-root-r1`).
+
 ### 2026-11-01: display-dcs-r1 and r2, first native panel commands
 
 - Physical, r2 attempt `20261101-195242-display-dcs-r2`, image `c88b7ce7…`, capture `e97bbd3a…`: DSI registers read (core `0x30313030`), PHY up,

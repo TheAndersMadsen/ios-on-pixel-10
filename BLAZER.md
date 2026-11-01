@@ -39,6 +39,10 @@ ufs-observe-r1 read the controller without writing: HCE=0x3, HCS=0x108, DP=0. AB
 init of the Samsung KLUDG4UHGC and then shuts it down about 30 s before our reads.
  Full detail in `HANDOFF.md`.
 
+## Memory checkpoint (2026-11-01)
+
+page16k-r1: 16 KiB pages, 4 GiB at `0xa00000000`, 262144 pages, same compact-root panic: `research/page16k-phone-r1/rootkernel/decoded.txt`.
+
 ## Panel checkpoint (2026-11-01)
 
 display-dcs-r2: native DSI commands reached the panel, it replied with its ID and power mode `0x9f`, flash commands sent. Visible effect not filmed. `research/display-dcs-r2/run/decoded.json`.
