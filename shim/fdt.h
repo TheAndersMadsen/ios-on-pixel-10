@@ -59,6 +59,9 @@ struct tgl_ufs_fdt_regions {
 	uint64_t hc, top, phy_sram;	/* reg tuples 0..2 */
 	uint64_t psm[3];		/* reg tuples 3..5 (0 when absent) */
 	unsigned reg_tuples;		/* tuples parsed (up to 6) */
-	unsigned named;			/* reg-names started with "ufs_hc" */
+	unsigned named;			/* first reg-names string is "ufs_hc" */
+	uint64_t hc_bytes, top_bytes;	/* sizes of the first two tuples */
+	unsigned ah8_pg, swh8_pg;	/* google,enable-hc-{ah8,swh8}-pg present */
+	unsigned decouple_ufs_en;	/* google,decouple-ufs-en present */
 };
 int fdt_find_ufs(uintptr_t fdt, struct tgl_ufs_fdt_regions *out);

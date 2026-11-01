@@ -378,3 +378,14 @@ const char *tgl_stage_name(unsigned stage)
 	default: return "unknown";
 	}
 }
+
+/* Microseconds on the same counter and boot origin as the stamps. No new timer setup. */
+int tgl_stamp_boot_us(uint64_t *out)
+{
+	uint64_t n = stamp_counter(), f = boot_freq;
+	if (!out || !f || f > UINT64_MAX / 1000000 || n < boot_t0) return -1;
+	uint64_t ticks = n - boot_t0, seconds = ticks / f;
+	if (seconds >= 90) return -1;
+	*out = seconds * 1000000 + (ticks % f) * 1000000 / f;
+	return 0;
+}

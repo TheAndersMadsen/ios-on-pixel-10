@@ -447,11 +447,13 @@ int fdt_find_ufs(uintptr_t fdt, struct tgl_ufs_fdt_regions *out)
 	static const char rn_hc[] = "ufs_hc";
 	unsigned ac = 2, sc = 1, depth = 0;
 	int name_hit = 0, compat_hit = 0, disabled = 0, named = 0;
-	uint64_t regs[6];
-	unsigned reg_tuples = 0;
+	uint64_t regs[6], sizes[6];
+	unsigned reg_tuples = 0, ah8 = 0, swh8 = 0, decouple = 0;
 	uint32_t p, end;
 
-	for (unsigned i = 0; i < 6; ++i) regs[i] = 0;
+	for (unsigned i = 0; i < 6; ++i) regs[i] = sizes[i] = 0;
+	out->hc_bytes = out->top_bytes = 0;
+	out->ah8_pg = out->swh8_pg = out->decouple_ufs_en = 0;
 	out->hc = out->top = out->phy_sram = 0;
 	out->psm[0] = out->psm[1] = out->psm[2] = 0;
 	out->reg_tuples = 0;
@@ -479,8 +481,8 @@ int fdt_find_ufs(uintptr_t fdt, struct tgl_ufs_fdt_regions *out)
 			if (depth == 1) continue;
 			/* a sibling closes the previous match context */
 			name_hit = 0; compat_hit = 0; disabled = 0; named = 0;
-			reg_tuples = 0;
-			for (unsigned i = 0; i < 6; ++i) regs[i] = 0;
+			reg_tuples = 0; ah8 = swh8 = decouple = 0;
+			for (unsigned i = 0; i < 6; ++i) regs[i] = sizes[i] = 0;
 			/* node names: "ufs", "ufs@<unit>", "ufshc", "ufshc@<unit>" */
 			if (len == 3 && name[0] == 'u' && name[1] == 'f' &&
 			    name[2] == 's')
@@ -508,12 +510,17 @@ int fdt_find_ufs(uintptr_t fdt, struct tgl_ufs_fdt_regions *out)
 				out->psm[2] = regs[5];
 				out->reg_tuples = reg_tuples;
 				out->named = named;
+				out->hc_bytes = sizes[0];
+				out->top_bytes = sizes[1];
+				out->ah8_pg = ah8;
+				out->swh8_pg = swh8;
+				out->decouple_ufs_en = decouple;
 				return out->hc != 0;
 			}
 			if (depth && depth < 31) {
 				name_hit = 0; compat_hit = 0; disabled = 0;
-				named = 0; reg_tuples = 0;
-				for (unsigned i = 0; i < 6; ++i) regs[i] = 0;
+				named = 0; reg_tuples = 0; ah8 = swh8 = decouple = 0;
+				for (unsigned i = 0; i < 6; ++i) regs[i] = sizes[i] = 0;
 			}
 		} else if (tok == 3) {
 			if (!depth || end - p < 8) return 0;
@@ -559,14 +566,23 @@ int fdt_find_ufs(uintptr_t fdt, struct tgl_ufs_fdt_regions *out)
 				    v.p[len - 1] == 0) {
 					uint32_t k = 0;
 					while (k < 6 && v.p[k] == (unsigned char)rn_hc[k]) ++k;
-					if (k == 6) named = 1;
+					if (k == 6 && len > 6 && v.p[6] == 0) named = 1;
 				} else if (eq(name, "reg") && len >= (ac + sc) * 4 &&
 				    !(len % ((ac + sc) * 4))) {
 					unsigned stride = (ac + sc) * 4;
 					for (unsigned off = 0; off + stride <= len &&
-					     reg_tuples < 6; off += stride, ++reg_tuples)
+					     reg_tuples < 6; off += stride, ++reg_tuples) {
 						regs[reg_tuples] =
 						    ac == 2 ? be64(v.p + off) : be32(v.p + off);
+						sizes[reg_tuples] =
+						    sc == 2 ? be64(v.p + off + ac * 4) : be32(v.p + off + ac * 4);
+					}
+				} else if (eq(name, "google,enable-hc-ah8-pg")) {
+					ah8 = 1;
+				} else if (eq(name, "google,enable-hc-swh8-pg")) {
+					swh8 = 1;
+				} else if (eq(name, "google,decouple-ufs-en")) {
+					decouple = 1;
 				}
 			}
 		} else if (tok == 4) continue;

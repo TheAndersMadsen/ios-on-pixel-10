@@ -1188,6 +1188,9 @@ void tgl_ufs_probe_ladder(struct tgl_ufs_result *out)
 		r->live = !rr && dbr == 0 &&
 		    (hcs2 & (UU_HCS_DP | UU_HCS_UTRLRDY)) ==
 		    (UU_HCS_DP | UU_HCS_UTRLRDY);
+#if TGL_UFS_HANDOFF
+		r->live = 0;
+#endif
 		tgl_stamp(TGL_STAGE_UFS_LIVE,
 		    r->live ? TGL_STAMP_F_DONE : TGL_STAMP_F_REFUSED,
 		    (uint64_t)hcs2 << 16 | dbr);
@@ -1263,6 +1266,20 @@ void tgl_ufs_trap_fail(uint64_t esr, uint64_t far_val)
 	uf_log("UFS: fault inside ladder; guard unwind, honest md0 handoff");
 }
 
+#if TGL_UFS_HANDOFF
+#include "tgl_ufs_handoff.h"
+void tgl_ufs_handoff_commit(int outcome, unsigned lun, uint32_t step, uint32_t hcs)
+{
+	ufs.r.attempted = 1;
+	ufs.r.live = outcome == UFSH_LIVE;
+	ufs.r.proven_lun = lun;
+	ufs.attempted = 1;
+	tgl_stamp(TGL_STAGE_UFS_LIVE,
+	    outcome == UFSH_LIVE ? TGL_STAMP_F_DONE : TGL_STAMP_F_REFUSED,
+	    (uint64_t)hcs << 32 | (uint64_t)step << 8 | (uint8_t)outcome);
+}
+#endif
+
 /* ---- honest-handoff cmdline gate (PLAN.md 4.3) ------------------------- */
 
 static int u_prefix(const char *tok, const char *pre)
@@ -1280,7 +1297,12 @@ int tgl_ufs_cmdline_admit(char *cmdline, const struct tgl_ufs_result *r)
 
 	while (len < 608 && cmdline[len]) len++;
 	if (len >= 608) return -1; /* unterminated: caller refuses the boot */
+#if TGL_UFS_HANDOFF
+	/* Lists are stopped and the DMA is over, so a mismatch only loses the root. */
+	if (r && r->live && ufsh_cmdline_ok(cmdline, r->proven_lun)) return 0;
+#else
 	if (r && r->live) return 0; /* U8 attestation present: admit as-is */
+#endif
 
 	for (unsigned i = 0; i <= len; ) {
 		unsigned j = i;

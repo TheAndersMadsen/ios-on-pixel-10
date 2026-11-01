@@ -1,4 +1,14 @@
-# Current — 2026-11-01: UFS READ works; the staged root is gone from `userdata_exp.ai`
+# Current — 2026-11-01: iOS root restaged and read back over UFS; XNU does not use UFS yet
+
+### 2026-11-01: ufs-stage-r1 and ufs-read-r3
+
+- User approved one write, 2026-11-01: `fastboot flash userdata_exp.ai research/ufs-stage-r1/staging.simg`, 19:22-19:23 CET, rc 0.
+  Only that partition; previous content overwritten. Slot b unchanged. Log: `research/ufs-stage-r1/flash.log`. This approval is spent.
+- `staging.simg` is new: expands to the pinned region `b4b25792…`, independently checked before flashing.
+- Found: `ufs-staging/staging-sparse.img` from Oct 28 has a non-standard header. Guess: this may be why that write isn't there. Do not use it.
+- Physical readback, attempt `20261101-192343-ufs-read-r3`, image `5920fffc…`, capture `dbb42dd4…`: 12 of 12 sampled blocks match
+  `staging.img`, NXSB at offset 32, UFSSTG1 manifest and seal match. Samples only: 12 of 604,672 blocks, not the whole image.
+- Next: read the root through XNU (`research/ufs-integrate-r1`, agent running). Then 16 KiB pages and 4 GiB window on the phone.
 
 ### 2026-11-01: ufs-read-r1 and r2, first storage reads
 
@@ -9,7 +19,6 @@
 - Observed: 11 of 12 sampled partition blocks differ from `ufs-staging/staging.img`; the 1 match is an all-zero block.
   Blocks repeat between boots. No NXSB and no UFSSTG1 manifest. Inference: the Oct 28 image was overwritten. Cause unknown; the
   phone has run Android since, and the new content looks like zeros plus encrypted data. Do not assume the partition is unused.
-- **Needs the user:** restaging writes storage and overwrites whatever is there now. Not approved. Nothing has written it.
 - ufs-read-r2's tests have 6 stale count expectations (more blocks read by design); mutants 97/97 caught. Not updated.
 - Phone: parked, slot b, force-fastboot on.
 - Next, not blocked: fold link, post-link and read into `shim/`, then XNU takeover (`research/ufs-integrate-r1`, agent running).

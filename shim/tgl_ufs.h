@@ -295,6 +295,7 @@ struct tgl_ufs_result {
 	uint64_t part_first_lba, part_last_lba;	/* U7: target entry range */
 	uint64_t stage_blocks;	/* U7b: NXSB block count read back */
 	uint32_t stage_block_size;
+	uint32_t proven_lun;	/* handoff: the LUN the route's READ used */
 };
 
 /* Run U0-U9 once. Never blocks unbounded, never parks, safe to call only
@@ -339,6 +340,15 @@ const struct tgl_ufs_result *tgl_ufs_result(void);
  *   returns -1 malformed (no NUL within 608): caller must refuse the boot
  * Rewrite is stamped (TGL_STAGE_UFS_LIVE REFUSED) so dumps see it. */
 int tgl_ufs_cmdline_admit(char *cmdline, const struct tgl_ufs_result *r);
+
+/* Handoff, default OFF. With it on only this sets live; the legacy ladder never does, because it leaves its
+ * list running on shim memory. outcome is enum ufsh_outcome; the caller starts no kernel on UFSH_HALT. */
+#ifndef TGL_UFS_HANDOFF
+#define TGL_UFS_HANDOFF 0
+#endif
+#if TGL_UFS_HANDOFF
+void tgl_ufs_handoff_commit(int outcome, unsigned lun, uint32_t step, uint32_t hcs);
+#endif
 
 /* Descriptor slab PA accessor (also used by the host test harness). */
 uintptr_t tgl_ufs_dma_pa(void);

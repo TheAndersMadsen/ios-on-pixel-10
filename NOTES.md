@@ -12,8 +12,8 @@ Latest detail: `HANDOFF.md`.
   display or touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: the staged root is no longer in `userdata_exp.ai`; restaging is a storage write and needs the user's confirmation.
-Next concrete action: get the user's decision on restaging; meanwhile integrate UFS into `shim/` and XNU takeover.
+Current blocker: XNU can't read UFS yet. The root is staged again and reads back in the shim.
+Next concrete action: integrate UFS into `shim/` and XNU takeover, then read blocks through XNU.
 Detail in `HANDOFF.md`.
 
 ### 2026-11-01: ufs-observe-r2

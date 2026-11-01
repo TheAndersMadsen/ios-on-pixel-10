@@ -41,6 +41,8 @@
 #include "tgl_usb_console.h"
 #include "tgl_display.h"
 #include "tgl_ufs.h"
+#include "tgl_ufs_route.h"
+#include "tgl_ufs_link.h"
 #include "guard.h"
 
 #define PSCI_SYSTEM_RESET UINT64_C(0x84000009)
@@ -527,8 +529,8 @@ void shim_main(uint64_t dtb)
 		 * constants; the constants remain the fallback when the tree
 		 * carries no UFS node. The setter refuses misaligned/zero
 		 * bases and keeps the fallback. */
+		static struct tgl_ufs_fdt_regions ufr;
 		{
-			struct tgl_ufs_fdt_regions ufr;
 			if (fdt_find_ufs(dtb, &ufr)) {
 				const uint64_t psm[3] = {
 					ufr.psm[0], ufr.psm[1], ufr.psm[2]
@@ -577,10 +579,35 @@ void shim_main(uint64_t dtb)
 		tgl_guard_esr = 0;
 		tgl_guard_far = 0;
 		tgl_guard_armed = 1;
+#if TGL_UFS_ROUTE
+		/* Link, then post-link, READ. Never branches boot flow on the result, only on doubt about DMA. */
+		guard_fault = tgl_ufs_route_link_guarded(&ufr);
+		tgl_guard_armed = 0;
+		if (guard_fault)
+			tgl_ufs_link_note_fault(tgl_guard_esr, tgl_guard_far);
+		tgl_stamp(TGL_STAGE_UFS_FIRST, guard_fault ? TGL_STAMP_F_FAULT : TGL_STAMP_F_DONE,
+		    (uint64_t)(int64_t)tgl_ufs_link_last_rc());
+#if TGL_UFS_POST_LINK
+		if (!guard_fault) {
+			tgl_stamp(0x00e5, TGL_STAMP_F_ENTER, 0);
+			int ufs_route_rc = tgl_ufs_route_after_link();
+			tgl_stamp(0x00e5, ufs_route_rc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, (uint64_t)(int64_t)ufs_route_rc);
+			/* The arena would be live under memory XNU owns. */
+			if (tgl_ufs_route_must_park())
+				stage_fail(TGL_STAMP_R_UFS, "UFS post-link DMA uncertain", (uint64_t)(int64_t)ufs_route_rc);
+		}
+#endif
+#if TGL_UFS_HANDOFF
+		if (tgl_ufs_route_handoff(guard_fault) < 0)
+			stage_fail(TGL_STAMP_R_UFS, "UFS DMA not quiesced", 0);
+		ufs_result = *tgl_ufs_result();
+#endif
+#else
 		guard_fault = tgl_ufs_guarded_ladder(&ufs_result);
 		tgl_guard_armed = 0;
 		if (guard_fault)
 			tgl_ufs_trap_fail(tgl_guard_esr, tgl_guard_far);
+#endif
 #if TGL_UFS_WDT_GUARD
 		}
 		tgl_stamp(TGL_STAGE_WDT_QUIESCE, TGL_STAMP_F_ENTER, TGL_WDT_BASE1);
