@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Boot one image on the phone, temporarily, through run-attempt.sh.
+# Usage: tools/bootios <image> <name>
+set -euo pipefail
+ROOT=$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+[ $# -eq 2 ] || { echo 'usage: tools/bootios <image> <name>' >&2; exit 2; }
+image=$1 name=$2
+[ -f "$image" ] || { echo "bootios: image not found: $image" >&2; exit 2; }
+echo "image:  $image"
+echo "size:   $(wc -c < "$image" | tr -d ' ') bytes"
+echo "sha256: $(shasum -a 256 "$image" | awk '{print $1}')"
+exec "$ROOT/research/laguna-usb-fix/run-attempt.sh" --image "$image" --name "$name"

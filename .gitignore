@@ -1,0 +1,9 @@
+# device dumps: stock images and live device trees
+backup/
+dtb/
+recovery/
+# evidence, third-party and Apple artifacts
+research/
+shim/out/
+xnu/out/
+__pycache__/
