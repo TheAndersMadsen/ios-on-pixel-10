@@ -44,6 +44,7 @@
 #include "tgl_ufs_route.h"
 #include "tgl_ufs_link.h"
 #include "guard.h"
+#include "tgl_scanout_takeover.h"
 #if TGL_ALL_STAGES
 #include "tgl_all.h"
 #endif
@@ -271,6 +272,9 @@ static int fb_probe_pa(uint64_t pa)
 void shim_main(uint64_t dtb)
 {
 	static struct tgl_fdt_memory memory;
+	/* Every boot, before any display work: a record from an earlier boot must never
+	 * give XNU permission to touch the DPU (display-patch contract). */
+	tgl_scanout_takeover_clear();
 	/* Boot CPU id at runtime — v2 prints it and carries it onto every
 	 * panic screen instead of assuming ABL released us on CPU0. */
 	__asm__ volatile("mrs %0, mpidr_el1" : "=r"(mpidr_boot));

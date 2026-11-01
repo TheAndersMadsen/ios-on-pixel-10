@@ -1,4 +1,12 @@
-# Current — 2026-11-01: moved to iOS 26
+# Current — 2026-11-01: XNU 12377 boots on the phone
+
+- Physical, attempt `20261101-215924-first-boot-r1`, image `169a5b85…`, kernel `89489d52…` (tegu series, blazer layer). Compact HFS root `3cd4dcb5…` in md0, no md1, no display, no touch, `cpus=1`. Same nonce shim to XNU, entry 6.6 ms after handoff.
+- Observed, in order: `EARLY 1`..`20`, Darwin 25.5.0, 16 KiB, 4 GiB at `0xa00000000`, `hfs: mounted iOSRoot`, UFS takeover with SMMU GBPA `2e1f`, `blazer-ufs-test: done, 0 errors`, `exec launchd`, `EXECOK6` first userspace SVC. Then `initproc failed to start`, namespace 2 subcode 0xb, the same as QEMU on this iOS 16 root; PSCI reset path ran, park 82 s, `0xbab9`.
+- This is not iOS 26 and has no UI. It's the old compact root on the new kernel. The panic is expected from that root; its cause isn't established (no user PC).
+- `tools/boot-summary.py` misreads this kernel: its "region says" text is stale residue. Read panics with `tools/read-ramdump.py --dump-base 0x95200000 --mach <unstripped>`. `research/ui-integrate-r1/all_decode.py` doesn't fit bootchain's manifest (no `features`).
+- Merged bootchain's tested patches into `shim/` and `tools/`: 12377 boot contract, D421AP ADT, payload.
+
+## 2026-11-01: moved to iOS 26
 
 - The owner dropped iOS 16. Branch `ios26` is the working line; `ios16` and tag `ios16-final` hold the frozen line, indexed by `IOS16.md` there. `main` stays at `78d0126`, the shared base. `research/` isn't in git and stays on disk.
 - iOS 26 has not been built or booted here. Host checks: shim, stage and route tests pass, tool tests pass, `tgl_dcs.o` compiled for ARM64 with rung 3. The combined shim has not been built into an image or booted.

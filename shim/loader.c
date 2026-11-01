@@ -19,7 +19,7 @@
 #include "tgl_display.h"
 #include "tgl_ufs.h"
 
-#define BOOT_LINE_LENGTH	608
+#define BOOT_LINE_LENGTH	1024	/* xnu-12377 pexpert/arm64/boot.h; was 608 on 8796 */
 #define PAGE_16K		0x4000UL
 
 /* pexpert/pexpert/arm64/boot.h, Revision/Version 2 */
@@ -41,7 +41,9 @@ struct boot_args {
 _Static_assert(__builtin_offsetof(struct payload, segs) == 0x2a8, "payload header layout");
 _Static_assert(__builtin_offsetof(struct boot_args, Video) == 40, "boot_args layout");
 _Static_assert(__builtin_offsetof(struct boot_args, CommandLine) == 108, "boot_args layout");
-_Static_assert(sizeof(struct boot_args) == 736, "boot_args layout");
+_Static_assert(sizeof(struct boot_args) == 1152, "boot_args layout");
+_Static_assert(__builtin_offsetof(struct boot_args, bootFlags) == 1136, "12377 boot_args layout");
+_Static_assert(__builtin_offsetof(struct boot_args, memSizeActual) == 1144, "12377 boot_args layout");
 
 /* MMU off: everything is Device memory, so copy in aligned 8-byte words. */
 static void zero64(uintptr_t dst, uint64_t n)
@@ -257,7 +259,7 @@ const char *loader_boot(uintptr_t dtb)
 	} /* Otherwise all Video fields remain zero: a headless contract. */
 	ba->deviceTreeP = adt_pa - pa_of_va_base;	/* xnu reads it with the MMU on: a VA */
 	ba->deviceTreeLength = (uint32_t)p->adt_size;
-	for (int i = 0; i < BOOT_LINE_LENGTH; i++)
+	for (int i = 0; i < TGL_BOOT_LINE_LENGTH; i++) /* payload field stays 608; rest stays zero */
 		ba->CommandLine[i] = p->cmdline[i];
 	ba->memSizeActual = p->mem_size;
 	/* The second half of this 16 KiB metadata page is below topOfKernelData

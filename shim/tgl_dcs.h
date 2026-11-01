@@ -4,7 +4,8 @@
 #ifndef TGL_DCS_H
 #define TGL_DCS_H
 #include <stdint.h>
-#define TGL_DCS_RECORD_PA UINT64_C(0x9542a000) /* ufs-read's zone, unused here: the UFS route is compiled off */
+/* Moved off the UFS route's READ_RECORD_PA. Display's stated free range, ends before the XNU msgbuf header. */
+#define TGL_DCS_RECORD_PA UINT64_C(0x95438000)
 #define TGL_DCS_RECORD_BYTES 0x6000u
 #define TGL_DCS_ENTRY_BYTES 16u
 #define TGL_DCS_HEADER_BYTES 64u

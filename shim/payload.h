@@ -64,7 +64,7 @@ static const char *tgl_payload_validate(uintptr_t source, uint64_t available,
 		return "bad payload header";
 	uint64_t table_end = sizeof(*p) + (uint64_t)p->nsegs * sizeof(struct payload_seg);
 	if (table_end > available) return "truncated segment table";
-	if (p->virt_base != UINT64_C(0xfffffff004000000) ||
+	if (p->virt_base < UINT64_C(0xfffffe0000000000) || (p->virt_base & UINT64_C(0x1ffffff)) ||
 	    !p->phys_base || (p->phys_base & UINT64_C(0x1ffffff)) ||
 	    !p->mem_size || (p->mem_size & (TGL_PAGE - 1)) ||
 	    p->mem_size > UINT64_C(0x180000000)) return "invalid kernel window";

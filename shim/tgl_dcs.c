@@ -566,6 +566,10 @@ static int stage_h(void)
     if (r[1] != 0) return stop_with(DCS_C_LPCM_REPLY, r[1]);
     return 0;
 }
+#ifdef TGL_DCS_HANDOFF
+#include "tgl_scanout_takeover.h"
+static uint32_t handoff_rev;
+#endif
 /* The first DPU access on this boot. Each one is on the record before it happens. dc_hw_force_be_csr_read, then the IDs of dc_hw_init. */
 static int stage_i(void)
 {
@@ -585,6 +589,9 @@ static int stage_i(void)
     if (v != VS_CHIP_ID_9400) return stop_with(DCS_C_CHIP, v);
     if ((rc = rd(FR_DPU + FR_CHIP_REV, &v))) return rc;
     note(DCS_N_CHIP_REV, v);
+#ifdef TGL_DCS_HANDOFF
+    handoff_rev = v;
+#endif
     if ((rc = rd(FR_DPU + FR_PRODUCT_ID, &v))) return rc;
     note(DCS_N_PRODUCT_ID, v);
     if ((rc = rd(FR_DPU + FR_CHIP_CUSTOMER, &v))) return rc;
@@ -764,7 +771,7 @@ static int fill(uint64_t pa, int white)
     note(DCS_N_FILL_MS, (uint32_t)((dcs_port_now_us() - t0) / 1000u));
     return 0;
 }
-static int stage_f0(void)
+__attribute__((unused)) static int stage_f0(void)
 {
     int rc;
     stage(DCS_S_F0_LAYER);
@@ -806,7 +813,7 @@ static int kick(uint32_t colour)
     return 0;
 }
 static uint32_t slot_white(unsigned i) { return i == 0 ? 0 : i == 1 ? 1 : (pattern >> (7u - i)) & 1u; } /* i 2..5: the nonce's top 4 pattern bits */
-static int stage_m(void)
+__attribute__((unused)) static int stage_m(void)
 {
     static const uint32_t crcs[] = { FR_PANEL0_OFIFO_INPUT_RED_CRC_VALUE, FR_PANEL0_OFIFO_INPUT_GREEN_CRC_VALUE, FR_PANEL0_OFIFO_INPUT_BLUE_CRC_VALUE, FR_OUTPUT0_OFIFO_RED0_CRC_VALUE, FR_OUTPUT0_OFIFO_GREEN0_CRC_VALUE, FR_OUTPUT0_OFIFO_BLUE0_CRC_VALUE };
     uint32_t v = 0, n; int rc, ok; uint8_t b = 0;
@@ -876,10 +883,17 @@ int tgl_dcs_run(void)
     if ((rc = stage_a()) || (rc = stage_b()) || (rc = stage_c()) || (rc = stage_d()) || (rc = stage_e()) || (rc = stage_f()) || (rc = stage_g()) || (rc = stage_h()) || (rc = stage_i())) return rc;
 #if TGL_FRAME_RUNG >= 2
     if ((rc = stage_j()) || (rc = stage_k()) || (rc = stage_t()) || (rc = stage_l())) return rc;
+#ifdef TGL_DCS_HANDOFF
+    /* ios26-display-r1: leave the panel configured for XNU. One test-pattern kick proves the path, then the record is the kernel's permission. No paint, no slots, no OUTPUT0_START=0. */
+    if ((rc = stage_s())) return rc;
+    if ((rc = kick(0))) return rc;
+    tgl_scanout_takeover_publish(HAKIOS_TK_REQUIRED, ref_hz, d.tx_mode == HDR_LP, (uint32_t)te_found, 1, VS_CHIP_ID_9400, handoff_rev);
+#else
 #if TGL_FRAME_RUNG >= 3
     if ((rc = stage_s()) || (rc = stage_f0())) return rc;
 #endif
     if ((rc = stage_m())) return rc;
+#endif
 #endif
     return 0;
 }

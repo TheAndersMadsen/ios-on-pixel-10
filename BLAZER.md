@@ -1,11 +1,15 @@
 # Pixel 10 Pro (blazer) bring-up
 
-Target is now iOS 26 (branch `ios26`), which has not booted on this phone. Everything below is iOS 16 evidence; its hardware results carry over.
+Target is now iOS 26 (branch `ios26`). Its kernel has booted on this phone; iOS 26 userland has not. Everything below is iOS 16 evidence; its hardware results carry over.
 
 The Pixel 10 Pro boots our XNU from RAM, mounts the full iOS root from UFS and runs `launchd`, backboardd and
 SpringBoard, which draw frames to RAM. iOS's frames don't reach the panel yet, and there is no touch. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
+
+## 2026-11-01: XNU 12377 boots
+
+first-boot-r1: the iOS 26-generation kernel ran on the phone to first userspace on the old compact root, UFS 0 errors, then launchd's known panic and reset to fastboot: `research/laguna-usb-fix/attempts/20261101-215924-first-boot-r1`. Not iOS 26 yet.
 
 ## 2026-11-01: touch bus answers
 

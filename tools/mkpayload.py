@@ -44,13 +44,13 @@ SEG_TABLE = CMDLINE + BOOT_LINE_LENGTH	# 0x2a8
 MAX_SEGS = 64                 # shim/payload.h TGL_MAX_SEGS
 UINT64_MAX = (1 << 64) - 1
 HEADROOM_MIN = 0x4000000      # shim/payload.h metadata placement rule
-# The laguna kernel lineage (mach.laguna, MACHINE_CONFIG=LAGUNA) is linked at
-# the fixed non-KASLR base 0xfffffff004000000 — blazer/shim SHIM_KERNEL_VIRT_BASE,
-# start.s maps phys_base there, and the QEMU smoke's VA->PA math uses it. tegu
-# derived virt_base from the __TEXT 32MB block instead; that picks the wrong
-# block for this kernel (__TEXT starts 48MB above the base, so tegu's rule
-# would place the payload 32MB too low and xnu would fetch garbage).
-KERNEL_VIRT_BASE = 0xfffffff004000000
+# 12377 kernels: virt_base is the 32 MiB block holding the lowest non-empty segment (tegu's rule,
+# physical on 12377 there: __TEXT 0xfffffe0007004000 gives 0xfffffe0006000000, T1SZ 17). start.s adds
+# (mach header PA - physBase) to both bases and maps from the header, so any 32 MiB-aligned
+# base is consistent; this one wastes 16 MiB below the header rather than 48. The 8796 line used the
+# fixed 0xfffffff004000000: pass legacy_base to reproduce it.
+L2_BLOCK = 0x2000000
+LEGACY_VIRT_BASE = 0xfffffff004000000
 
 
 def parse_macho(buf):
@@ -184,7 +184,10 @@ def validate_layout(pieces, virt_base, phys_base, mem_size, kernel_end, adt_size
         raise ValueError('insufficient kernel headroom or metadata overflow')
 
 
-def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None):
+def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None, legacy_base=False):
+    cl = cmdline.encode()
+    if b'\0' in cl or len(cl) >= BOOT_LINE_LENGTH:  # was a silent truncation
+        raise ValueError(f'command line must be NUL-free and under {BOOT_LINE_LENGTH} bytes; got {len(cl)}')
     if ramdisk1_path is not None and not ramdisk_path:
         raise ValueError('--ramdisk1 requires --ramdisk (md0)')
     buf = bytearray(Path(kernel_path).read_bytes())
@@ -193,11 +196,7 @@ def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None)
     segs = [s for s in m['segs'] if s['vmsize']]
     text = m['segs'][0]
     assert text['name'] == '__TEXT' and text['fileoff'] == 0
-    # virt_base: the kernel's fixed link base (see KERNEL_VIRT_BASE above).
-    # It is 32MB-aligned like tegu's, so the same "block below the mach
-    # header" start.s mapping contract holds: phys_base maps virt_base.
-    virt_base = KERNEL_VIRT_BASE
-    assert virt_base % 0x2000000 == 0
+    virt_base = LEGACY_VIRT_BASE if legacy_base else min(s['vmaddr'] for s in segs) & ~(L2_BLOCK - 1)
     assert all(s['vmaddr'] >= virt_base for s in segs), 'segment below the kernel virt base'
     if any(s['fileoff'] > len(buf) or s['filesize'] > len(buf) - s['fileoff'] for s in segs):
         raise ValueError('kernel segment outside source file')
@@ -246,7 +245,6 @@ def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None)
     struct.pack_into('<8sII', out, 0, b'TEGUXNU', 1, len(pieces))
     struct.pack_into('<7Q', out, 0x10, virt_base, m['entry'], adt_off, len(adt_blob), kernel_end,
                      PHYS_BASE, MEM_SIZE)
-    cl = cmdline.encode()[:BOOT_LINE_LENGTH - 1]
     out[CMDLINE:CMDLINE + len(cl)] = cl
     for i, t in enumerate(seg_table):
         struct.pack_into('<4Q', out, SEG_TABLE + 32 * i, *t)
@@ -264,9 +262,10 @@ if __name__ == '__main__':
     ap.add_argument('--cmdline', default='debug=0xc serial=3 cpus=1 keepsyms=1')
     ap.add_argument('--ramdisk', help='root image for md0 (boot with rd=md0)')
     ap.add_argument('--ramdisk1', help='second image for md1 (requires --ramdisk)')
+    ap.add_argument('--legacy-base', action='store_true', help='8796 kernels: fixed 0xfffffff004000000')
     a = ap.parse_args()
     try:
-        blob, info = build(a.kernel, a.adt, a.cmdline, a.ramdisk, a.ramdisk1)
+        blob, info = build(a.kernel, a.adt, a.cmdline, a.ramdisk, a.ramdisk1, a.legacy_base)
     except ValueError as exc:
         ap.error(str(exc))
     open(a.out, 'wb').write(blob)

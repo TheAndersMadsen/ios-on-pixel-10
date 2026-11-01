@@ -18,8 +18,8 @@ import adt  # noqa: E402
 # banks). On the device the first *declared-clean* window may be bank 1 (the
 # low bank holds bl31_dram 0xffe00000 / sec_dram 0xf7000000 firmware carve-outs);
 # probe-write before use (laguna-adt-requirements.md section 3).
-PHYS_BASE = 0x80000000   # laguna: DRAM base (DTB /memory@80000000)
-MEM_SIZE = 0x80000000   # laguna: 2G window (fills 0x80000000..0x100000000)
+PHYS_BASE = 0xa00000000  # physical, 20261101-200840-page16k-r1
+MEM_SIZE = 0x100000000   # 4 GiB, same attempt
 # --bank1 (device only, like tegu's --highmem): the first upper DDR bank from the
 # live FDT (<0x8_80000000 2G>); every known firmware carve-out is in the low bank.
 BANK1_PHYS_BASE = 0x880000000
@@ -99,27 +99,48 @@ QEMU_DBG_IFACE, QEMU_DBG_IFACE_SIZE = 0x0a001000, 0x1000
 
 BOOT_MANIFEST_HASH = hashlib.sha384(b'laguna boot manifest').digest()
 
-# The iOS userland is the iPhone X (iPhone10,3 / D22AP) IPSW. MobileGestalt
-# derives product type, device class, home-button-less UI, artwork etc. from
-# the root identity and /product of the real D22AP device tree. That tree is
-# an Apple artifact (kept out of git): extract it from the IPSW with
-#   tools/remotezip.py URL DeviceTree.d22ap.im4p DIR
-#   ipsw img4 im4p extract DIR/Firmware/all_flash/DeviceTree.d22ap.im4p -o d22ap.adt
-D22AP_ADT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                         '../research/ipsw-x/d22ap.adt')
+# iOS 26 identity: iPhone12,3 / D421AP, tegu's choice (lowest iOS 26 class, no SPTM, TXM
+# or ExclaveOS in the 23G90 BuildManifest, @3x 1125x2436). /product comes from the real
+# tree, an Apple artifact kept out of git: root agent's handoffs/iphone12-dt.md.
+D421AP_ADT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                          '../../ios26-root-r1/apple/dt/DeviceTree.d421ap.bin')
+D421AP_SHA256 = '6bb989988c897e13295219e2f5bbd9df34c766e6863debcf13ec1b407b46d8ad'
+IDENTITY = dict(compatible=('D421AP', 'iPhone12,3'), model='iPhone12,3', target_type='D421',
+                target_sub_type='D421AP', platform_name='t8030', chip_id=0x8030, board_id=0x06,
+                canvas=(1125, 2436), scale=3)
+# Children of /product carried over. tegu carries none (physical on its phone); our
+# phone's iOS 16 boots had haptics. camera, facetime, maps, audio: --product-children=all.
+PRODUCT_CHILDREN = ('haptics',)
+# Names the kernel matches. The tegu series matches google,tegu / tegu,cpu / sweet,display /
+# sweet-fbcon (iokit/KernelConfigTables.cpp, pexpert/arm/pe_serial.c); the 8796 line matched
+# the google,lga ones. IONameMatch takes any entry, so publish both until kernel-blazer settles.
+ROOT_COMPAT = ('google,lga-blazer', 'google,tegu', 'google,lga', 'AppleARM')
+CPU_COMPAT = ('google,lga-cpu', 'tegu,cpu', 'ARM,v8')
+DISPLAY_COMPAT = ('sweet,display', 'laguna,display')
+MAC_WIFI0 = bytes.fromhex('024c47413101')  # synthetic, locally administered
 
 
-def d22ap_product(path=D22AP_ADT):
-    """/product properties of the real D22AP tree, without the syscfg
-    placeholders iBoot would fill in (flag bit set) and the node bookkeeping."""
+def donor_product(path=D421AP_ADT, children=PRODUCT_CHILDREN):
+    """/product of the real D421AP tree, without the syscfg placeholders iBoot would fill in
+    (flag bit set). Fails rather than omit: without /product SpringBoard aborts in a loop."""
     if not os.path.exists(path):
-        print(f'warning: {path} missing, no /product node', file=sys.stderr)
-        return None
-    root, _ = adt.parse(open(path, 'rb').read())
-    for c in root.children:
-        if dict((k, v) for k, f, v in c.props).get('name') == b'product\0':
-            return [(k, v) for k, f, v in c.props if not f and k not in ('name', 'AAPL,phandle')]
-    raise SystemExit(f'{path}: no /product node')
+        raise SystemExit(f'{path} missing: refusing to build an ADT with no /product')
+    raw = open(path, 'rb').read()
+    if path == D421AP_ADT and hashlib.sha256(raw).hexdigest() != D421AP_SHA256:
+        raise SystemExit(f'{path}: not the pinned 23G90 D421AP tree')
+    root, end = adt.parse(raw)
+    if end != len(raw):
+        raise SystemExit(f'{path}: trailing data, not a raw ADT')
+    prod = next((c for c in root.children if c.name == 'product'), None)
+    if prod is None:
+        raise SystemExit(f'{path}: no /product node')
+    def strip(n):
+        return [(k, v) for k, f, v in n.props if not f and k not in ('name', 'AAPL,phandle')]
+    kids = [(c.name, strip(c)) for c in prod.children if children == 'all' or c.name in children]
+    if children != 'all' and {k for k, _ in kids} != set(children):
+        raise SystemExit(f'{path}: /product lacks {children}')
+    return strip(prod), kids
+
 
 u32 = lambda *v: struct.pack('<%dI' % len(v), *v)
 u64 = lambda *v: struct.pack('<%dQ' % len(v), *v)
@@ -178,7 +199,8 @@ def node(name, props=(), children=()):
     return n
 
 
-def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
+def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpus=1,
+          canvas=None, gamut=None, product_children=PRODUCT_CHILDREN, nvram=False, donor=D421AP_ADT, headless=False, disp0=False):
     """qemu=True: same tree, but with QEMU virt's GIC/UART addresses and CNTFRQ
     (tests/smoke-qemu-laguna.sh). bank1=True: kernel RAM in the first upper bank
     (device only; QEMU virt has no RAM there). mem_size overrides the kernel
@@ -209,7 +231,12 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
     # modes (laguna 0x05880000, QEMU virt 0x08000000). A zero ranges parent
     # silently zeroes gPESoCBasePhys (24 MHz timebase, no GIC map).
     soc_base = gicd
-    seed = seed if seed is not None else os.urandom(64)
+    seed = seed if seed is not None else os.urandom(256)
+    if len(seed) != 256 or not any(seed):  # iBoot's size; an all-zero seed reads as none
+        raise SystemExit('random-seed must be 256 non-zero bytes')
+    if type(cpus) is not int or not 1 <= cpus <= (1 if qemu else 8):
+        raise SystemExit(f'invalid cpus {cpus}')
+    canvas = canvas or IDENTITY['canvas']
     phandle = iter(range(1, 1000))
     ph = lambda: ('AAPL,phandle', u32(next(phandle)))
 
@@ -239,14 +266,20 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
         # from /chosen, the pixel size from IOMobileFramebuffer. Scale 0 makes
         # SpringBoard's FBSDisplayMode "infxinf@0x" invalid. 1280x2856 @3x =
         # ~427x952 points (iPhone X class).
-        ('display-scale', u32(3)),
+        ('display-scale', u32(IDENTITY['scale'])),
         # XNU derives IOPlatformUUID (gethostuuid) from these on arm; without
         # them CFPreferences cannot use kCFPreferencesCurrentHost (no ByHost
         # files), so e.g. DataMigration never records LastSystemVersion and
         # migrates on every boot. Synthetic ECID (not the phone's); chip-id
         # of the A11 that the iPhone X userland expects.
         ('unique-chip-id', struct.pack('<Q', LAGUNA_ECID)),
-        ('chip-id', u32(0x8015)),
+        ('chip-id', u32(IDENTITY['chip_id'])),
+        ('board-id', u32(IDENTITY['board_id'])),
+        # MobileGestalt reads this CFData before waiting for a Wi-Fi service (tegu). No Wi-Fi.
+        ('mac-address-wifi0', MAC_WIFI0),
+        # No CTRR or PPL monitor. 12377's ml_unsafe_kernel_text() asserts it was set from this
+        # property, and pmap_bootstrap calls it (machine_routines.c, pmap.c): new with 12377.
+        ('kernel-ctrr-to-be-enabled', u32(0)),
         # check_for_panic_log (pe_init.c) pairs this with /pram to size the
         # kernel panic log: gPanicSize = value, debug_buf_size = value -
         # header (osfmk/kern/debug.c debug_log_init). Device mode only; QEMU
@@ -263,8 +296,13 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
         # IONVRAMCHRPHandler needs the 4 NVRAM properties above on /chosen
         # (v55 wall fix; empty_nvram_proxy documents the exact read order and
         # the adler panic if the bank image checksums drift).
-        *empty_nvram_proxy(),
+        *(empty_nvram_proxy() if nvram else []),
     ], [node('memory-map', [ph()]),
+        # libimage4 panics without this node: cryptexd crash loop on iOS 26 (husky 9b587a5, author
+        # record, via scout). Empty: kern_csr.c:140 finds no iuos, so false, as with no node.
+        node('manifest-properties', [ph()]),
+        # 12377's TEGU config HAS config_csr: this is live. tegu's value 2 =
+        # CSR_ALLOW_UNRESTRICTED_FS, for root-owned dyld caches on an unsealed HFS root. Older note:
         # Local boot policy, read only if CONFIG_CSR is ever enabled: kern_csr.c
         # csr_bootstrap (STARTUP TUNABLES RANK_FIRST) takes csr_config from
         # /chosen/asmb lp-sip0 (u64) and CSR_ALLOW_UNAUTHENTICATED_ROOT from
@@ -278,7 +316,7 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
         # mountable; with CSR off, the shared-cache gate instead runs the
         # vm_unix.c:2539 "#else /* CONFIG_CSR */" mount-identity check, which
         # the root-v7 RAMDisk satisfies (QEMU proof: N1 cache probe, 0 refusals).
-        node('asmb', [ph(), ('lp-sip0', u64(0x6f)), ('lp-sip1', u32(1))])])
+        node('asmb', [ph(), ('lp-sip0', u64(2)), ('lp-sip1', u32(1))])])
 
     # LAGUNA SMP: all eight cores in physical-core order (0-1 Cortex-A520,
     # 2-6 Cortex-A725, 7 Cortex-X4; MPIDR Aff1 0x000-0x700), one homogeneous
@@ -286,11 +324,11 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
     # prefix (N <= 8). QEMU retains its original single-CPU tree: its MPIDRs
     # differ from laguna. Boot core assumed cpu0 (verify on first hardware boot).
     cpu_nodes = []
-    for core in range(1 if qemu else 8):
+    for core in range(cpus):
         cpu_nodes.append(node(f'cpu{core}', [
             ph(),
             ('device_type', cstr('cpu')),
-            ('compatible', cstr('google,lga-cpu') + cstr('ARM,v8')),
+            ('compatible', b''.join(cstr(x) for x in CPU_COMPAT)),
             ('reg', u32(core << 8)),  # actual MPIDR Aff1:Aff0, NOT logical ID
             ('cpu-id', u32(core)),   # descriptive: XNU assigns IDs by DT order
             ('cluster-id', u32(0)),  # descriptive; see ml_parse_cpu_topology
@@ -379,18 +417,18 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
         node('disp0', [
             ph(),
             ('device_type', cstr('display-subsystem')),
-            ('compatible', cstr('laguna,display')),
-            ('canvas-width', u32(1125)),
-            ('canvas-height', u32(2436)),
+            ('compatible', b''.join(cstr(x) for x in DISPLAY_COMPAT)),
+            ('canvas-width', u32(canvas[0])),
+            ('canvas-height', u32(canvas[1])),
         ])])
 
-    fbcon = node('laguna-fbcon', [
+    fbcons = [node(n, [
         ph(),
         ('reg', u64(FB, FB_SIZE)),
         ('width', u32(FB_W)),
         ('height', u32(FB_H)),
         ('stride', u32(FB_STRIDE)),
-    ])
+    ]) for n in ('sweet-fbcon', 'laguna-fbcon')]
 
     # pmap_compute_max_asids requires the node even when no overrides are set.
     # An absent pmap-max-asids property selects XNU's own MAX_ASIDS default.
@@ -407,8 +445,10 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
         ('opposed-power-vol-buttons', u32(1)),
     ])
 
-    product_props = d22ap_product()
-    product = [node('product', [ph()] + product_props)] if product_props else []
+    pprops, pkids = donor_product(donor, product_children)
+    if gamut:
+        pprops = [(k, cstr(gamut) if k == 'artwork-display-gamut' else v) for k, v in pprops]
+    product = [node('product', [ph()] + pprops, [node(n, [ph()] + kp) for n, kp in pkids])]
 
     # Kernel panic log region (device only): check_for_panic_log does
     # SecureDTLookupEntry(0, "pram") + reg[0] -> gPanicBase =
@@ -429,7 +469,8 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
     # /options is REQUIRED by IOPlatformExpert.cpp:1695 (G1's finding: its
     # absence makes createNVRAM() early-return -> gIOOptionsEntry NULL ->
     # assert fires in processTopLevel = the v51/v53 "MACH Reboot" kill).
-    options = node('options', [])
+    # The tegu series' SweetPlatformExpert needs no /options; tegu has none on iOS 26.
+    options = [node('options', [])] if nvram else []
 
     # DC9x00 display-controller node (device only): opens the kernel's
     # laguna_dc9x00_adt_gate() for the read-only probe (io.display.probe)
@@ -441,17 +482,28 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None):
         ph(),
         ('reg', u64(DPU_FE_BE, DPU_FE_BE_SIZE, DPU_DSI2H0, DPU_DSI2H0_SIZE)),
     ])] if not qemu else []
+    pad = lambda t: t.encode().ljust(32, b'\0')
+    if headless:  # first phone boot, blazer's contract: nothing that starts a display driver
+        if not disp0:  # disp0=True: second boot, AppleCLCD matches it; still no fbcon, no laguna-dpu
+            arm_io.children = [c for c in arm_io.children if c.name != 'disp0']
+        fbcons, laguna_dpu = [], []
     return node('device-tree', [
         ph(),
-        ('compatible', cstr('D22AP') + cstr('iPhone10,3') +
-                       cstr('google,lga-blazer') + cstr('google,lga') + cstr('AppleARM')),
-        ('model', cstr('iPhone10,3')),
-        ('target-type', cstr('D22')),
-        ('target-sub-type', cstr('D22AP')),
+        ('compatible', b''.join(cstr(x) for x in IDENTITY['compatible'] + ROOT_COMPAT)),
+        ('model', cstr(IDENTITY['model'])),
+        ('target-type', cstr(IDENTITY['target_type'])),
+        ('target-sub-type', cstr(IDENTITY['target_sub_type'])),
         ('manufacturer', cstr('Apple Inc.')),
         ('#address-cells', u32(2)),
         ('#size-cells', u32(2)),
-    ], [chosen, defaults, cpus, arm_io, fbcon] + laguna_dpu + [buttons] + product + pram + [options])
+        # What iBoot fills from syscfg. Synthetic, not any real device's.
+        ('platform-name', cstr(IDENTITY['platform_name'])),
+        ('serial-number', pad('LGA00BLAZER1')),
+        ('mlb-serial-number', pad('LGA00BLAZER1MLB00')),
+        ('model-number', pad('MWC22')),
+        ('region-info', pad('LL/A')),
+        ('regulatory-model-number', pad('A2160')),
+    ], [chosen, defaults, cpus, arm_io] + fbcons + laguna_dpu + [buttons] + product + pram + options)
 
 
 def _phys_base_arg(argv):
@@ -474,11 +526,28 @@ def _mem_size_arg(argv):
     return None
 
 
+def _opt(argv, name, default=None):
+    for a in argv:
+        if a.startswith(name + '='):
+            return a.split('=', 1)[1]
+    return default
+
+
 if __name__ == '__main__':
-    root = build(qemu='--qemu' in sys.argv, bank1='--bank1' in sys.argv,
-        mem_size=_mem_size_arg(sys.argv), phys_base=_phys_base_arg(sys.argv))
+    argv = sys.argv
+    if os.path.exists(argv[1]) and '--force' not in argv:
+        raise SystemExit(f'refusing to overwrite {argv[1]}')
+    canvas = _opt(argv, '--canvas')
+    pc = _opt(argv, '--product-children')
+    root = build(qemu='--qemu' in argv, bank1='--bank1' in argv,
+        mem_size=_mem_size_arg(argv), phys_base=_phys_base_arg(argv),
+        cpus=int(_opt(argv, '--cpus', '1')), gamut=_opt(argv, '--gamut'), nvram='--nvram' in argv,
+        canvas=tuple(int(x) for x in canvas.split('x')) if canvas else None,
+        product_children=PRODUCT_CHILDREN if pc is None else 'all' if pc == 'all' else tuple(filter(None, pc.split(','))),
+        donor=_opt(argv, '--donor', D421AP_ADT))
     blob = adt.serialize(root)
-    open(sys.argv[1], 'wb').write(blob)
-    if '--dump' in sys.argv:
+    blob += b'\0' * (-len(blob) % 8)
+    open(argv[1], 'wb').write(blob)
+    if '--dump' in argv:
         adt.dump(adt.parse(blob)[0])
-    print(f'{sys.argv[1]}: {len(blob)} bytes', file=sys.stderr)
+    print(f'{argv[1]}: {len(blob)} bytes', file=sys.stderr)
