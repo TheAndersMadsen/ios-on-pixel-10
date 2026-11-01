@@ -23,7 +23,9 @@ Physical, `20261101-213902-ssi-probe-r2`, image `b4121617…`. `SSI_ID_READ`, fi
 
 Physical, `20261101-213642-ssi-probe`, image `d8d6cf4e…`. Same reset `0xc00e` at the same `pd_on` frame, with completion from the message window and 0 reads of `0x5272008`. Observed: that status read isn't the cause; window completion works for read frames. This image still ran the guarded SSI read first, so the fault remains a candidate. Next: same with no SSI read before the votes.
 
-Other ports found (`research/patch-scout-ports-r1/FINDINGS.md`): `superboyyy/hakios-arm64e-dada`, APSL, 12377, our lineage, and `nhansp/ios-husky`, Tensor G3, no license, both record iOS 26 on CPU rendering. Author records, unverified. `research/ios26-dada-r1` builds dada against the tegu-based kernel; parent chooses after both link and the PAC probe.
+Other ports found (`research/patch-scout-ports-r1/FINDINGS.md`): `superboyyy/hakios-arm64e-dada`, APSL, 12377, our lineage, and `nhansp/ios-husky`, Tensor G3, no license, both record iOS 26 on CPU rendering. Author records, unverified.
+
+Decision: tegu's series is the kernel base. Dada's kernel links (`fb9baee0…`) but has 4 KiB pages, no HFS and needs a PAC-signing loader; it stays a parts source. QEMU, not the phone: tegu-based kernel `e4f43487…` reaches launchd exec on the old iOS 16 root with no kernel panic before it (`research/ios26-fleet/handoffs/qemu.md`).
 
 ### 2026-11-01: ssi-id-r1, touch bus probe
 
