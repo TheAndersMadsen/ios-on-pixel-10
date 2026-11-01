@@ -5,6 +5,10 @@
 - Caveats: UNDERRUN seen, CRC registers read 0, so the CRC proof didn't work. The test pattern doesn't use FE0, so RAM scanout is unproved. PPS write effect unknown: ABL's PPS already matched.
 - Next: rung 3, RAM scanout, then the kernel backend.
 
+### 2026-11-01: display-frame-r1d
+
+Physical, `20261101-211212-display-frame-r1d`, image `34183971…`. RAM scanout reached the panel through FE0 layer 0: `PANEL_REPORTS_PIXELS`, `fe0_fetched`, `ram_scanout_reached_panel`. Only the layer address changed: OPR 0, 423, 423, 0, 0, 0 as the nonce said, above the expected 380. Underrun on the first kick only, later kicks 0. DPU SMMU `CR0` 0, not enabled, GBPA 0. CRC registers still read 0. Colours and geometry on glass unconfirmed: nothing filmed, owner has not reported. `all-r1` and `all-r1-safe` built, not booted, and won't be: the owner dropped iOS 16.
+
 ### 2026-11-01: display and touch probes
 
 - r1a, `20261101-205339-display-frame-r1a`: display domain powered, DPU read, chip `0x9400`, no reset.

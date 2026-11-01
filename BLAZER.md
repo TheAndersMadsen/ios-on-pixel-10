@@ -55,6 +55,8 @@ page16k-r1: 16 KiB pages, 4 GiB at `0xa00000000`, 262144 pages, same compact-roo
 
 ## Panel checkpoint (2026-11-01)
 
+display-frame-r1d: pixels from RAM reached the panel; OPR followed the nonce (0, 423, 423, 0, 0, 0), underrun on the first kick only. Not confirmed on glass: `research/display-frame-r1/run/boot-r1d/decoded.json`.
+
 display-frame-r1c: DPU test pattern reached the panel; the owner saw it, and the panel's OPR followed the sequence: `research/display-frame-r1/run/boot-r1c/decoded.json`.
 
 display-dcs-r2: native DSI commands reached the panel, it replied with its ID and power mode `0x9f`, flash commands sent. Visible effect not filmed. `research/display-dcs-r2/run/decoded.json`.
