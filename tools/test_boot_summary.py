@@ -270,6 +270,7 @@ class Xnu12377(unittest.TestCase):
         self.assertEqual((x["stages"][-1]["reads"], x["stages"][-1]["blocks"]), (35, 50))
         self.assertEqual(x["ufs"], {"attached": True, "partition": "userdata_exp.ai", "lun": 0, "done": True, "errors": 0, "dropped": False})
         self.assertEqual(x["panic"]["caller"], 0xfffffe0007cd73cc)
+        self.assertNotIn("\r", x["panic"]["message"])
         self.assertTrue(x["panic"]["message"].startswith("initproc failed to start -- exit reason namespace 2 subcode 0xb"))
         self.assertTrue(s["nonce"]["xnu_match"])
 

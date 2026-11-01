@@ -58,7 +58,9 @@
 #define TGL_UFSH_MAX_READ_BLOCKS (32u + TGL_UFSH_HS_VERIFY_BLOCKS + TGL_UFSH_FALLBACK_BLOCKS) /* enforced at the doorbell */
 #define TGL_UFSH_LU_ENTRY_BLOCKS 16u /* 512 GPT entries per LU */
 #define TGL_UFSH_TARGET_BLOCKS 4u    /* first blocks of the partition */
+#ifndef TGL_UFSH_MANIFEST_BLOCK /* a read-back image overrides it with its root's last block */
 #define TGL_UFSH_MANIFEST_BLOCK 604671u /* UFSSTG1 block of the staged region, build-staging-image.py */
+#endif
 #define TGL_UFSH_SAMPLE_BLOCKS 7u /* partition-relative, TGL_UFSH_SAMPLE_LBAS: same blocks as ufs-read-r2, compared by XNU's test */
 #define TGL_UFSH_GPT_READ_BLOCKS (TGL_UFSH_MAX_READ_BLOCKS - TGL_UFSH_HS_VERIFY_BLOCKS - TGL_UFSH_FALLBACK_BLOCKS - TGL_UFSH_TARGET_BLOCKS - 1u - TGL_UFSH_SAMPLE_BLOCKS) /* target's share is reserved */
 #define TGL_UFSH_ARENA_MIN UINT64_C(0x80000000) /* ufs-dma-r1: bank 0, proven region */

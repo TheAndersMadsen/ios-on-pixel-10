@@ -232,6 +232,7 @@ def read_12377(mirror, console, wrapped, bound, why):
     shim's nonce. An unbound log is reported as such and nothing is read from it."""
     if not bound:
         return {"bound": False, "why": why}
+    mirror = mirror.replace("\r\n", "\n")  # the message buffer ends most lines with CRLF
     same = console_matches(console, mirror)
     # A wrapped mirror lost its start; only then is the console needed, and then it can't be compared.
     text = mirror + ("\n" + console if same or wrapped else "")

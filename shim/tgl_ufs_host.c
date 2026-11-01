@@ -710,7 +710,10 @@ static int read_target(struct st *s)
     }
     {
         /* Same blocks as ufs-read-r2. Each boot's CRCs are the oracle for XNU's read test; no image is required. */
-        static const uint32_t samp[TGL_UFSH_SAMPLE_BLOCKS] = { 4096u,65536u,131072u,262144u,400000u,524288u,604000u, };
+        #ifndef TGL_UFSH_SAMPLE_LIST /* read-back image: blocks chosen from its root */
+#define TGL_UFSH_SAMPLE_LIST 4096u,65536u,131072u,262144u,400000u,524288u,604000u
+#endif
+        static const uint32_t samp[TGL_UFSH_SAMPLE_BLOCKS] = { TGL_UFSH_SAMPLE_LIST };
         for (unsigned i = 0; i < TGL_UFSH_SAMPLE_BLOCKS; i++) {
             if (o->target_last - o->target_first < samp[i]) break;
             if ((r = read_target_block(s, o->target_first + samp[i], 1))) return r;
