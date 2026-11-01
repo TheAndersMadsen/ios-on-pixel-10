@@ -1,5 +1,14 @@
 # Current — 2026-11-01: XNU reads the staged root over UFS; root is not mounted from it yet
 
+### 2026-11-01: display-dcs-r1 and r2, first native panel commands
+
+- Physical, r2 attempt `20261101-195242-display-dcs-r2`, image `c88b7ce7…`, capture `e97bbd3a…`: DSI registers read (core `0x30313030`), PHY up,
+  panel replied in LP mode. Power mode `0x9f` before and after (booster, awake, normal, display on). Full ID DA,DB,DC,A1 = `0a a0 a1 42`, matching
+  stock id `0x42a1a00a` little-endian. Err count 0. All flash commands sent: 1000, 250, 750, 750, 750, 250, 750 ms. No reset, no fault.
+- Not known: whether the panel visibly changed; no film was taken. All-pixels-on `0x23` is in no source. This is not a frame.
+- r1 attempt `20261101-194928-display-dcs-r1` stopped at the ID check, because the expected byte order was wrong. Fixed in r2.
+- Next for display: DPU test pattern or framebuffer path, per `research/ui-touch-r1/FINDINGS.md`.
+
 ### 2026-11-01: ufs-shim-r1 and ufs-xnu-r1
 
 - Physical, `shim/` route (no pass A), attempt `20261101-192655-ufs-shim-r1`, image `6307a6fb…`, capture `1637a007…`: link, commands and 21 READs.
