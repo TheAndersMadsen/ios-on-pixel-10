@@ -86,6 +86,55 @@ def beside_image(image, *names):
     return {}
 
 
+def stamp_boots(slots):
+    """Index of the first slot of each boot. Rebooting an image reuses its nonce:
+    the shim appends to the same trail and cntvct restarts."""
+    starts = [0] if slots else []
+    for index in range(1, len(slots)):
+        now, before = slots[index].get("cntvct"), slots[index - 1].get("cntvct")
+        if now is not None and before is not None and now < before:
+            starts.append(index)
+    return starts
+
+
+def refusal_text(live_text, stamps_text):
+    """Why the shim stopped: its console line, or the first 8 bytes it stamped."""
+    lines = re.findall(r"^(?:REFUSED|WHY)\s+(.+?)\s*$", live_text, re.M)
+    if lines:
+        return lines[-1]
+    for arg in reversed(re.findall(r"REFUSED\s+0x([0-9a-f]{16})\b", stamps_text)):
+        raw = bytes.fromhex(arg)[::-1]
+        if all(0x20 <= byte < 0x7f for byte in raw):
+            return raw.decode("ascii") + "..."
+    return None
+
+
+def not_entered_text(shim, entry, live_text, stamps_text):
+    """Reason text for a boot with no proven XNU entry."""
+    if shim.get("reused") and shim.get("reason") == 5:
+        return "unproven: nonce reused, reader refuses the trail; rebuild the image for a new nonce"
+    why = refusal_text(live_text, stamps_text)
+    if why:
+        return why
+    if shim.get("present") is False:
+        return "no shim stamps in this dump"
+    if shim.get("reason") == 5:
+        return f"shim handed off but no XNU entry record ({entry.get('status')})"
+    return f"shim ended with reason {shim.get('reason_name') or shim.get('reason')}; no refusal text captured"
+
+
+def root_io(text):
+    """UFS root totals from the kernel's deadline panic, if it printed them."""
+    match = re.search(r"(\d+) reads, (\d+) blocks, busy (\d+) ms", text or "")
+    if not match:
+        return None
+    reads, blocks, busy = map(int, match.groups())
+    if not blocks or not busy:
+        return {"reads": reads, "blocks": blocks, "busy_ms": busy}
+    return {"reads": reads, "blocks": blocks, "busy_ms": busy, "ms_per_block": round(busy / blocks, 2),
+            "mib_per_s": round(blocks * 4096 / 1048576 / (busy / 1000), 2)}
+
+
 def decode_ufs(dump, ids, stamps_text, live_text, mirror_text, entry_fresh):
     """UFS result of this boot only. A record with another boot's nonce is residue."""
     out = {"record": None, "link": None, "read": None, "xnu": None,
@@ -151,6 +200,13 @@ def abl_facts(attempt):
     return facts
 
 
+def _sha256(path):
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
 def summarize(attempt):
     attempt = Path(attempt)
     dump_path = attempt / "ramdump/kernel.log"
@@ -162,10 +218,15 @@ def summarize(attempt):
     meta = read_text(attempt / "meta.txt")
     image = (re.search(r"^image: (.*)$", meta, re.M) or [None, None])[1]
     meta_mach = (re.search(r"^mach: (.*)$", meta, re.M) or [None, None])[1]
-    ids = beside_image(image, "ufs-ids.json", "ids.json") if image else {}
+    want_sha = (re.search(r"^image_sha256: (\w+)", meta, re.M) or [None, None])[1]
+    # Files beside the image only describe the boot if the image is still the one booted.
+    image_same = _sha256(image) == want_sha if image and want_sha else False
+    ids = beside_image(image, "ufs-ids.json", "ids.json") if image_same else {}
     if "stamp" in ids:
         ids.setdefault("stamp_nonce", ids["stamp"])
-    profile = beside_image(image, "profile.json") if image else {}
+    profile = beside_image(image, "profile.json") if image_same else {}
+    if meta_mach and not Path(meta_mach).is_absolute():
+        meta_mach = str(ROOT / meta_mach)
     stamps_text = read_text(attempt / "stamps-decode.txt")
     fresh = doc["freshness"]
     shim = fresh["shim_stamps"]
@@ -194,6 +255,13 @@ def summarize(attempt):
             kernel["match"] = hashlib.sha256(Path(meta_mach).read_bytes()).hexdigest() == profile["mach_sha256"]
         except OSError:
             kernel["match"] = None
+    slots = shim.get("slots") or []
+    starts = stamp_boots(slots)
+    live_text = read_text(attempt / "live.log")
+    last_rows = re.findall(r"^\s+\d+\s+\d+\s+(\S+(?:\([^)]*\))?)\s+([A-Z|-]+)\s+0x", stamps_text, re.M)
+    shim_view = dict(shim, reused=len(starts) > 1,
+                     reason_name=(re.search(r"reason=(\S+)", stamps_text) or [None, None])[1])
+    not_entered = None if entry_fresh else not_entered_text(shim_view, entry, live_text, stamps_text)
     ladder = doc.get("ladder") or {}
     return {
         "attempt": attempt.name, "image": image,
@@ -203,12 +271,16 @@ def summarize(attempt):
         "shim": {"nonce": shim.get("nonce"), "reason": shim.get("reason"),
                  "handoff": shim.get("handoff_proven"), "count": shim.get("count"),
                  "dropped": shim.get("dropped"), "valid": shim.get("valid"),
-                 "last": (re.search(r"last stage: (.*)", stamps_text) or [None, None])[1]},
+                 "boots": len(starts),
+                 "boot_stamps": len(slots) - starts[-1] if starts else 0,
+                 "last": f"{last_rows[-1][0]} [{last_rows[-1][1]}]" if last_rows else None},
+        "not_entered": not_entered, "image_same": image_same,
         "nonce": {"stamps": shim.get("nonce"), "image": want_nonce, "xnu": prologue.get("boot_nonce"),
                   "image_match": None if want_nonce is None else shim.get("nonce") == want_nonce,
                   "xnu_match": prologue.get("boot_nonce") == shim.get("nonce") if prologue.get("present") else None,
                   "entry_fresh": entry_fresh, "entry_status": entry.get("status")},
-        "ufs": decode_ufs(dump, ids, stamps_text, read_text(attempt / "live.log"), mirror_text, entry_fresh),
+        "ufs": decode_ufs(dump, ids, stamps_text, live_text, mirror_text, entry_fresh),
+        "root_io": root_io(current["message"]) if current else None,
         "panic": panic, "kernel": kernel,
         "milestone": {"last": ladder.get("last"), "next": ladder.get("next_expected"),
                       "wall": ladder.get("wall"),
@@ -252,25 +324,41 @@ def render(s):
 
     shim, nonce, panic, kernel, mile, reset = (s["shim"], s["nonce"], s["panic"], s["kernel"],
                                                s["milestone"], s["reset"])
-    lines = [f"{s['attempt']}  image {(s['image_sha256'] or 'unknown')[:12]}",
-             f"verdict   {s['verdict']}; stage {s['stage'] or 'none this boot'}"]
+    lines = [f"{s['attempt']}  image {(s['image_sha256'] or 'unknown')[:12]}"]
+    if s["not_entered"]:
+        lines.append(f"XNU not entered: {s['not_entered']}")
+    else:
+        lines.append(f"verdict   {s['verdict']}; stage {s['stage'] or 'none this boot'}")
     full = " (ring full, stamps after this are lost; not a hang)" if shim["dropped"] else ""
     lines.append(f"shim      reason {shim['reason']} handoff {yn(shim['handoff'])} "
                  f"stamps {shim['count']} dropped {shim['dropped']}")
+    if shim["boots"] > 1:
+        lines.append(f"          NONCE REUSED: {shim['boots']} boots in this trail, newest has "
+                     f"{shim['boot_stamps']} stamps")
     lines.append(f"          last {shim['last']}{full}")
     lines.append(f"nonce     stamps {hx(nonce['stamps'])}; image {yn(nonce['image_match'])}; "
                  f"XNU {yn(nonce['xnu_match'])}")
     lines.append(f"          XNU entry this boot: {yn(nonce['entry_fresh'])} ({nonce['entry_status']})")
+    if not s["image_same"]:
+        lines.append("          image rebuilt or gone since this boot; its nonce and UFS ids are not used")
     lines.append(f"ufs       {ufs_line(s['ufs'])}")
+    io = s["root_io"]
+    if io and "ms_per_block" in io:
+        lines.append(f"          root {io['reads']} reads, {io['blocks']} blocks, busy {io['busy_ms']} ms: "
+                     f"{io['ms_per_block']} ms/block, {io['mib_per_s']} MiB/s")
     if panic["current"]:
-        lines.append(f"panic     {panic['message']}")
+        message = panic["message"]
+        lines.append(f"panic     {message[:WIDTH - 10]}")
+        if len(message) > WIDTH - 10:
+            lines.append(f"          {message[WIDTH - 10:WIDTH * 2 - 20].strip()}")
         lines.append(f"          caller {panic['caller']:#x}, {panic['seconds_after_entry']} s after XNU entry")
     elif panic["regions"]:
         gap = panic.get("gap")
-        why = (f"unbound, {gap:.1f} s from XNU entry" if nonce["entry_fresh"] and gap is not None
-               else "residue from an earlier boot")
-        lines.append(f"panic     none shown for this boot; region is {why}")
-        lines.append(f"          region says: {panic['residue_message']}")
+        if nonce["entry_fresh"] and gap is not None:
+            lines.append(f"panic     none shown for this boot; region is unbound, {gap:.1f} s from XNU entry")
+            lines.append(f"          region says: {panic['residue_message']}")
+        else:
+            lines.append("panic     none this boot; the panic region is residue from an earlier boot")
     else:
         lines.append("panic     none in the panic region")
     if kernel.get("match") is False:
@@ -282,7 +370,8 @@ def render(s):
     if nonce["entry_fresh"]:
         lines.append(f"furthest  {mile['last']}; next {mile['next']}; wall {mile['wall']}")
     else:
-        lines.append("furthest  shim only; XNU did not start this boot")
+        lines.append("furthest  shim only" if not (shim["boots"] > 1 and shim["reason"] == 5)
+                     else "furthest  unknown: reader refuses a reused nonce")
     lines.append("reset     " + " ".join(f"{k}={reset[k]}" for k in ("reason", "wdt_sub", "thermal", "pmic_main", "pmic_sub")
                                          if k in reset))
     lines.append(f"          {reset.get('rst_stat', 'RST_STAT unknown')}; SoC {reset.get('soc_temp', '?')}; "

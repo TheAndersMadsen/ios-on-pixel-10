@@ -4,6 +4,7 @@ Every fastboot, adb and USB call goes to a fake; nothing here touches a phone.
 run-attempt.sh writes beneath the repository it finds itself in, so it runs from
 a copy in a temporary tree and cannot reach the real ATTEMPTS.md.
 """
+import hashlib
 import importlib.util
 import json
 import os
@@ -305,9 +306,9 @@ class Bootios(unittest.TestCase):
         self.image = self.repo / "boot.img"
         self.image.write_bytes(b"fake image")
 
-    def run_with(self, runner_body):
+    def run_with(self, runner_body, *extra):
         write_exec(self.repo / "research/laguna-usb-fix/run-attempt.sh", "#!/bin/sh\n" + runner_body)
-        return subprocess.run([str(self.repo / "tools/bootios"), str(self.image), "fake"],
+        return subprocess.run([str(self.repo / "tools/bootios"), str(self.image), "fake", *extra],
                               capture_output=True, text=True, timeout=20)
 
     def test_ends_with_attempt_directory_and_passes_park_wait(self):
@@ -322,6 +323,79 @@ class Bootios(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("ABORT: no phone", result.stdout)
         self.assertTrue(result.stdout.splitlines()[-1].startswith("attempt: none"))
+
+    RECORD = 'echo "args: $*"\necho "ran" > "$(dirname "$0")/ran"\n'
+    UUID = bytes(range(16))
+
+    def ran(self):
+        return (self.repo / "research/laguna-usb-fix/ran").exists()
+
+    def kernel(self, name="mach.k", uuid=UUID, tail=b""):
+        """A minimal Mach-O: a header, one other load command, then LC_UUID."""
+        other = struct.pack("<II", 0x32, 16) + bytes(8)
+        command = struct.pack("<II", 0x1b, 24) + uuid
+        head = struct.pack("<IIIIIIII", 0xfeedfacf, 0x100000c, 0, 2, 2, len(other) + len(command), 0, 0)
+        path = self.repo / name
+        path.write_bytes(head + other + command + tail)
+        return path
+
+    def holds(self, uuid=UUID):
+        self.image.write_bytes(b"image " + uuid + b" rest")
+
+    def test_mach_reaches_runner_as_absolute_path(self):
+        kernel = self.kernel()
+        self.holds()
+        result = self.run_with(self.RECORD, "--mach", str(kernel))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"--mach {kernel}", result.stdout)
+        self.assertIn("kernel sha256: " + hashlib.sha256(kernel.read_bytes()).hexdigest(), result.stdout)
+        self.assertNotIn("no --mach", result.stderr + result.stdout)
+
+    def test_mach_equals_form_and_option_first(self):
+        kernel = self.kernel()
+        self.holds()
+        self.assertIn(f"--mach {kernel}", self.run_with(self.RECORD, f"--mach={kernel}").stdout)
+        first = subprocess.run([str(self.repo / "tools/bootios"), "--mach", str(kernel), str(self.image), "fake"],
+                               capture_output=True, text=True, timeout=20)
+        self.assertIn(f"--mach {kernel}", first.stdout)
+
+    def test_unstripped_build_of_same_kernel_accepted(self):
+        kernel = self.kernel("mach.k.unstripped", tail=b"symbols")
+        self.holds()
+        self.assertEqual(self.run_with(self.RECORD, "--mach", str(kernel)).returncode, 0)
+
+    def test_without_mach_warns_and_passes_none(self):
+        result = self.run_with(self.RECORD)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("no --mach", result.stderr)
+        self.assertNotIn("--mach ", result.stdout.split("args:")[1])
+
+    def test_wait_reaches_runner(self):
+        self.assertIn("--wait-park-after-ep0 480", self.run_with(self.RECORD, "--wait", "480").stdout)
+        self.assertIn("--wait-park-after-ep0 300", self.run_with(self.RECORD, "--wait=300").stdout)
+        self.assertIn("--wait-park-after-ep0 180", self.run_with(self.RECORD).stdout)
+
+    def test_wait_with_mach(self):
+        kernel = self.kernel()
+        self.holds()
+        result = self.run_with(self.RECORD, "--mach", str(kernel), "--wait", "480")
+        self.assertIn(f"--wait-park-after-ep0 480 --mach {kernel}", result.stdout)
+
+    def test_refusals_never_reach_runner(self):
+        self.holds()
+        (self.repo / "not-macho").write_bytes(b"plain text, long enough to hold a header" * 2)
+        wrong = self.kernel("mach.wrong", uuid=bytes(range(1, 17)))
+        no_uuid = self.repo / "mach.none"
+        no_uuid.write_bytes(struct.pack("<IIIIIIII", 0xfeedfacf, 0, 0, 2, 0, 0, 0, 0))
+        cases = (["--mach", str(self.repo / "missing")], ["--mach", str(self.repo / "not-macho")],
+                 ["--mach", str(wrong)], ["--mach", str(no_uuid)],
+                 ["--mach"], ["--mach="], ["--other"], ["third"],
+                 ["--wait"], ["--wait", "soon"], ["--wait", "0"], ["--wait="], ["--wait", "-1"])
+        for extra in cases:
+            with self.subTest(extra=extra):
+                result = self.run_with(self.RECORD, *extra)
+                self.assertEqual(result.returncode, 2)
+                self.assertFalse(self.ran())
 
 
 if __name__ == "__main__":

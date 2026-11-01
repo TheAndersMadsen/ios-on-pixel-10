@@ -1,19 +1,75 @@
 #!/usr/bin/env bash
 # Boot one image on the phone, temporarily, through run-attempt.sh.
-# Usage: tools/bootios <image> <name>
+# Usage: tools/bootios <image> <name> [--mach <kernel Mach-O>] [--wait <seconds>]
+# --wait is how long to wait for the phone to park after the console appears
+# (default 180). A boot meant to run long needs more than its run time.
+# --mach names the kernel inside <image>, so the panic decode uses its symbols.
+# Its LC_UUID must occur in <image>, or the boot is refused before the phone is
+# touched. Stripped and unstripped builds of one kernel share a UUID; use
+# .unstripped for symbols. Without --mach the runner's old default kernel is used.
 # Ends by printing the attempt directory and returns run-attempt.sh's status.
 set -euo pipefail
 ROOT=$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-[ $# -eq 2 ] || { echo 'usage: tools/bootios <image> <name>' >&2; exit 2; }
-image=$1 name=$2
+usage() { echo 'usage: tools/bootios <image> <name> [--mach <kernel Mach-O>] [--wait <seconds>]' >&2; exit 2; }
+image='' name='' mach='' wait=180
+while [ $# -gt 0 ]; do
+    case $1 in
+        --mach) [ $# -ge 2 ] && [ -n "$2" ] || usage; mach=$2; shift 2;;
+        --mach=*) mach=${1#--mach=}; [ -n "$mach" ] || usage; shift;;
+        --wait) [ $# -ge 2 ] || usage; wait=$2; shift 2;;
+        --wait=*) wait=${1#--wait=}; shift;;
+        -*) usage;;
+        *) if [ -z "$image" ]; then image=$1; elif [ -z "$name" ]; then name=$1; else usage; fi; shift;;
+    esac
+done
+[ -n "$image" ] && [ -n "$name" ] || usage
+case $wait in ''|*[!0-9]*) echo "bootios: --wait needs whole seconds: $wait" >&2; exit 2;; esac
+[ "$wait" -gt 0 ] || { echo 'bootios: --wait must be above 0' >&2; exit 2; }
 [ -f "$image" ] || { echo "bootios: image not found: $image" >&2; exit 2; }
+sha() { shasum -a 256 "$1" | awk '{print $1}'; }
+if [ -n "$mach" ]; then
+    [ -f "$mach" ] || { echo "bootios: kernel not found: $mach" >&2; exit 2; }
+    mach=$(cd -P "$(dirname "$mach")" && pwd -P)/$(basename "$mach")
+    python3 -I -c '
+import mmap, struct, sys
+mach, image = sys.argv[1:3]
+with open(mach, "rb") as source:
+    head = source.read(0x10000)
+if len(head) < 32 or struct.unpack_from("<I", head)[0] != 0xfeedfacf:
+    sys.exit(f"bootios: not a 64-bit Mach-O: {mach}")
+uuid, off = None, 32
+for _ in range(struct.unpack_from("<I", head, 16)[0]):
+    if off + 8 > len(head):
+        break
+    cmd, size = struct.unpack_from("<II", head, off)
+    if cmd == 0x1b:
+        uuid = head[off + 8:off + 24]
+        break
+    if size < 8:
+        break
+    off += size
+if uuid is None or len(uuid) != 16:
+    sys.exit(f"bootios: no LC_UUID in {mach}")
+with open(image, "rb") as source, mmap.mmap(source.fileno(), 0, access=mmap.ACCESS_READ) as data:
+    if data.find(uuid) < 0:
+        sys.exit(f"bootios: {mach} is not the kernel in {image}: UUID {uuid.hex()} not found")
+' "$mach" "$image" || exit 2
+fi
 echo "image:  $image"
 echo "size:   $(wc -c < "$image" | tr -d ' ') bytes"
-echo "sha256: $(shasum -a 256 "$image" | awk '{print $1}')"
+echo "sha256: $(sha "$image")"
+if [ -n "$mach" ]; then
+    echo "kernel: $mach"
+    echo "kernel sha256: $(sha "$mach")"
+    mach_args=(--mach "$mach")
+else
+    echo "bootios: warning: no --mach; panic symbols come from the runner's default kernel, which is wrong for current builds" >&2
+    mach_args=()
+fi
 output=$(mktemp "${TMPDIR:-/tmp}/bootios.XXXXXX")
 trap 'rm -f "$output"' EXIT
 rc=0
-"$ROOT/research/laguna-usb-fix/run-attempt.sh" --image "$image" --name "$name" --wait-park-after-ep0 180 2>&1 \
+"$ROOT/research/laguna-usb-fix/run-attempt.sh" --image "$image" --name "$name" --wait-park-after-ep0 "$wait" ${mach_args[@]+"${mach_args[@]}"} 2>&1 \
     | tee "$output" || rc=$?
 attempt=$(sed -n 's/^\[run-attempt\] attempt dir: //p' "$output" | tail -1)
 echo "attempt: ${attempt:-none (stopped before the attempt directory was made)}"

@@ -319,6 +319,19 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(len(decoded["slots"]), 8)
         self.assertEqual(decoded["slots"][-1]["seq"], 8)
 
+    def test_reused_nonce_restarts_times_per_boot(self):
+        slots = [{"t": 1000, "i": 0}, {"t": 2000, "i": 1}, {"t": 100, "i": 2}, {"t": 400, "i": 3}]
+        self.assertEqual(dec.assign_boots(slots), 2)
+        self.assertEqual([s["boot"] for s in slots], [1, 1, 2, 2])
+        header = {"freq": 1000, "t0": 1000}
+        self.assertEqual(dec.delta_ms(header, slots[3]), 300 * 1000.0 / 1000)
+        self.assertEqual(dec.delta_ms(header, slots[1]), 1000.0)
+
+    def test_single_boot_keeps_header_origin(self):
+        slots = [{"t": 1000}, {"t": 2000}]
+        self.assertEqual(dec.assign_boots(slots), 1)
+        self.assertEqual(dec.delta_ms({"freq": 1000, "t0": 500}, slots[0]), 500.0)
+
     def test_selftest_cli_matches_module(self):
         out = subprocess.run(
             [sys.executable, str(TOOLS / "decode-shim-stamps.py"), "--selftest"],

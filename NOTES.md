@@ -72,6 +72,11 @@ boot, resting on a QEMU run. `research/buttons-power-r1/{FINDINGS,STUBS}.md`. Pr
 
 Physical: XNU ran at shift 14 with 4 GiB at `0xa00000000`, same compact-root panic. Detail in `HANDOFF.md`.
 
+### 2026-11-01: userland agent's lead, phone-r1 booting
+
+QEMU, not the phone: with md1 `de340c95` (407 jobs) the same root spawned SpringBoard and backboardd, and drew the boot logo. The Restore branch is not the wall.
+SpringBoard aborts on a bounding path bitmap; suspect missing `/product`. Stability agent's tool fixes applied: `tools/bootios --mach --wait`, `tools/boot-summary.py`.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in

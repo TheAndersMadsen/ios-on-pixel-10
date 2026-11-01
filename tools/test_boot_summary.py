@@ -73,6 +73,36 @@ class Region(unittest.TestCase):
         self.assertEqual(region.find_regions(bytes(cut)), [])
 
 
+class Text(unittest.TestCase):
+    def test_stamp_boots(self):
+        slots = [{"cntvct": 5}, {"cntvct": 9}, {"cntvct": 2}, {"cntvct": 3}]
+        self.assertEqual(summary.stamp_boots(slots), [0, 2])
+        self.assertEqual(summary.stamp_boots(slots[:2]), [0])
+        self.assertEqual(summary.stamp_boots([]), [])
+
+    def test_refusal_prefers_console_then_stamp(self):
+        console = "BOOTARG x\nREFUSED USB transfer active at XNU handoff\n"
+        stamps = "48 49 payload-admit REFUSED 0x6e61727420425355 26135.7\n"
+        self.assertEqual(summary.refusal_text(console, stamps), "USB transfer active at XNU handoff")
+        self.assertEqual(summary.refusal_text("", stamps), "USB tran...")
+        self.assertIsNone(summary.refusal_text("", "REFUSED 0x0000000080000000 1.0\n"))
+        self.assertEqual(summary.refusal_text("WHY usb console bring-up failed\n", ""), "usb console bring-up failed")
+
+    def test_not_entered_covers_reused_handoff(self):
+        reused = summary.not_entered_text({"reused": True, "reason": 5}, {}, "", "")
+        self.assertIn("nonce reused", reused)
+        plain = summary.not_entered_text({"reason": 5, "present": True}, {"status": "x"}, "", "")
+        self.assertIn("no XNU entry record", plain)
+        none = summary.not_entered_text({"reason": 0, "reason_name": "none"}, {}, "", "")
+        self.assertIn("no refusal text", none)
+
+    def test_root_io(self):
+        io = summary.root_io("blazer-root: deadline 300 s, stage mounted, 10287 reads, 10302 blocks, busy 76359 ms")
+        self.assertEqual((io["ms_per_block"], io["mib_per_s"]), (7.41, 0.53))
+        self.assertIsNone(summary.root_io("initproc failed"))
+        self.assertNotIn("ms_per_block", summary.root_io("1 reads, 0 blocks, busy 0 ms"))
+
+
 class Links(unittest.TestCase):
     def test_macho_uuid(self):
         self.assertIsNone(summary.macho_uuid("/nonexistent"))
@@ -103,6 +133,7 @@ class RealAttempts(unittest.TestCase):
                 self.assertTrue(s["panic"]["current"])
                 self.assertIn("initproc failed to start", s["panic"]["message"])
                 self.assertEqual(s["milestone"]["last"], "USERLAND-EXEC")
+                self.assertIsNone(s["not_entered"])
                 self.assertFalse(s["milestone"]["launchd_main"])
                 self.assertEqual(s["kernel"]["match"], False)
 
@@ -117,6 +148,35 @@ class RealAttempts(unittest.TestCase):
                 self.assertEqual(s["ufs"]["ladder"], None)
                 self.assertNotIn("panic     initproc", summary.render(s))
                 self.assertIn("residue", summary.render(s))
+                self.assertIn("XNU not entered:", summary.render(s))
+
+    def test_refused_boots_name_the_refusal(self):
+        for name in ("20261101-201242-ufs-root-r1", "20261101-201517-ufs-root-r1b"):
+            with self.subTest(name):
+                s = self.run_one(name)
+                text = summary.render(s)
+                self.assertIn("XNU not entered: USB transfer active at XNU handoff", text)
+                self.assertNotIn("initproc", text)
+                self.assertFalse(s["panic"]["current"])
+                self.assertIs(s["image_same"], False)
+                self.assertIsNone(s["nonce"]["image_match"])
+
+    def test_reused_nonce_is_called_out(self):
+        s = self.run_one("20261101-201517-ufs-root-r1b")
+        self.assertEqual((s["shim"]["boots"], s["shim"]["boot_stamps"]), (2, 50))
+        self.assertIn("NONCE REUSED", summary.render(s))
+        self.assertEqual(self.run_one("20261101-201242-ufs-root-r1")["shim"]["boots"], 1)
+
+    def test_long_userland_boot(self):
+        s = self.run_one("20261101-201914-ufs-root-r2")
+        self.assertIsNone(s["not_entered"])
+        self.assertTrue(s["panic"]["current"])
+        self.assertIn("blazer-root: deadline 300 s", s["panic"]["message"])
+        self.assertTrue(s["milestone"]["launchd_main"])
+        self.assertEqual(s["milestone"]["last"], "LAUNCHD-MAIN")
+        self.assertIs(s["kernel"]["match"], True)
+        self.assertGreater(s["panic"]["seconds_after_entry"], 300)
+        self.assertEqual(s["root_io"]["ms_per_block"], 7.41)
 
     def test_xnu_boot_ufs(self):
         s = self.run_one(self.XNU)

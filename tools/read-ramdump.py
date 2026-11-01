@@ -69,6 +69,17 @@ def _load_decoder():
 
 ddp = _load_decoder()
 
+
+def _load_panic_region():
+    path = HERE / "panic_region.py"
+    spec = importlib.util.spec_from_file_location("panic_region", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+panic_region = _load_panic_region()
+
 RAMOOPS_PA = 0x95200000
 CONSOLE_SIZE = 0x200000
 PMSG_SIZE = 0x200000
@@ -2129,6 +2140,30 @@ def analyze(data, symcache=None, symbol_error=None, dump_path=None, dump_base=No
                 "panicked": True, "panic_message": None, "frames": [],
                 "stage": current_stage, "stage_record": current_stage_record,
             }
+
+        # XNU's panic region holds the string the mirror and stage records lack.
+        knuf_current, knuf_regions = panic_region.select(data, entry_check)
+        freshness["panic_region"] = {
+            "regions": len(knuf_regions),
+            "current": knuf_current is not None,
+            "offset": knuf_current["offset"] if knuf_current else None,
+            "kernel_uuid": knuf_current["kernel_uuid"] if knuf_current else None,
+        }
+        for region in knuf_regions:
+            gap = panic_region.boot_gap_seconds(region, entry_check)
+            if knuf_current is None and entry_check.get("fresh") and gap is not None:
+                warnings.append(f"panic region at {region['offset']:#x} not bound to this boot: "
+                                f"Boot time is {gap:.1f} s from XNU entry")
+        if knuf_current and not (current_panic and current_panic.get("panic_message")):
+            parsed = _parse_panic_text(
+                knuf_current["text"], symcache, "xnu-panic-region", None,
+                text_base_override, slide_override,
+            )
+            if parsed.get("panic_message"):
+                current_panic = parsed
+            if symcache is not None and knuf_current["kernel_uuid"]:
+                warnings.append(f"panic names kernel UUID {knuf_current['kernel_uuid']}; "
+                                "check it matches --mach")
 
         current_xnu_parts = []
         if fresh_mirror and mirror_text:

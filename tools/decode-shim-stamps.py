@@ -193,10 +193,27 @@ def stage_name(stage):
     return STAGES.get(stage, "stage-0x%04x" % stage)
 
 
+def assign_boots(slots):
+    """Number the boots in a trail. Rebooting an image reuses its nonce, so the
+    shim appends to the same trail, and cntvct restarts. Returns the boot count."""
+    boot, base, previous = 1, None, None
+    for slot in slots:
+        t = slot.get("t")
+        if t is not None and previous is not None and t < previous:
+            boot += 1
+            base = t
+        slot["boot"], slot["boot_t0"] = boot, base
+        if t is not None:
+            previous = t
+    return boot
+
+
 def delta_ms(header, slot):
+    """Time since shim entry of the slot's own boot."""
     if not header["freq"] or slot.get("t") is None:
         return None
-    return (slot["t"] - header["t0"]) * 1000.0 / header["freq"]
+    origin = slot["boot_t0"] if slot.get("boot_t0") is not None else header["t0"]
+    return (slot["t"] - origin) * 1000.0 / header["freq"]
 
 
 def decode(buf, dump_base=DEFAULT_DUMP_BASE):
@@ -206,6 +223,7 @@ def decode(buf, dump_base=DEFAULT_DUMP_BASE):
                          % (SHIM_STAMP_PA, dump_base))
     header = decode_header(buf, off)
     slots = decode_slots(buf, off, header)
+    boots = assign_boots(slots)
     return {
         "pa": SHIM_STAMP_PA,
         "offset": off,
@@ -218,6 +236,7 @@ def decode(buf, dump_base=DEFAULT_DUMP_BASE):
         "freq": header["freq"],
         "dropped": header["dropped"],
         "reason": REASONS.get(header["reason"], "reason-%d" % header["reason"]),
+        "boots": boots,
         "slots": [
             {
                 "i": s["i"],
@@ -227,6 +246,7 @@ def decode(buf, dump_base=DEFAULT_DUMP_BASE):
                 "flags": flag_names(s["flags"]),
                 "arg": "0x%x" % s["arg"],
                 "ms_since_entry": delta_ms(header, s),
+                "boot": s["boot"],
             }
             for s in slots
         ],
@@ -243,19 +263,36 @@ def render(decoded):
                     decoded["dropped"], decoded["reason"] or "none"))
     lines.append("  last stage: %s [%s]"
                  % (decoded["last_stage"], decoded["last_flags"]))
+    if decoded.get("boots", 1) > 1:
+        lines.append("  NONCE REUSED: this trail holds %d boots; reason and last stage are the newest"
+                     % decoded["boots"])
     if not decoded["slots"]:
         lines.append("  (no slots decoded)")
         return "\n".join(lines)
     lines.append("  %-3s %-4s %-26s %-14s %-18s %s"
                  % ("#", "seq", "stage", "flags", "arg", "ms since entry"))
+    boot = 1
     for s in decoded["slots"]:
+        if s.get("boot", 1) != boot:
+            boot = s["boot"]
+            lines.append("  -- boot %d: cntvct restarted; times are from this boot's first stamp --" % boot)
         ms = s["ms_since_entry"]
         lines.append("  %-3d %-4d %-26s %-14s %-18s %s"
                      % (s["i"], s["seq"], s["stage"], s["flags"], s["arg"],
                         "%.1f" % ms if ms is not None else "-"))
     last = decoded["slots"][-1]
-    lines.append("  HANG EVIDENCE: the shim's last recorded stage is #%d %s [%s]"
-                 % (last["i"], last["stage"], last["flags"]))
+    if decoded["reason"] == "handed-off-to-xnu":
+        lines.append("  HANDED OFF: the shim's last stamp is #%d %s [%s]"
+                     % (last["i"], last["stage"], last["flags"]))
+    elif decoded["reason"] == "refused":
+        lines.append("  REFUSED: the shim stopped itself; last stamp is #%d %s [%s]"
+                     % (last["i"], last["stage"], last["flags"]))
+    elif decoded["dropped"]:
+        lines.append("  RING FULL: %d later stamps were lost, so #%d %s [%s] is not where it stopped"
+                     % (decoded["dropped"], last["i"], last["stage"], last["flags"]))
+    else:
+        lines.append("  HANG EVIDENCE: the shim's last recorded stage is #%d %s [%s]"
+                     % (last["i"], last["stage"], last["flags"]))
     return "\n".join(lines)
 
 
