@@ -1,5 +1,11 @@
 # Current — 2026-11-01: backboardd draws frames and SpringBoard runs on the phone, to RAM; nothing on the panel yet
 
+### 2026-11-01: display and touch probes
+
+- r1a, `20261101-205339-display-frame-r1a`: display domain powered, DPU read, chip `0x9400`, no reset.
+- r1b, `20261101-205525-display-frame-r1b`: DPU writes survived, TE seen; stopped by its own PPS check at byte 89, so no frame. Owner saw only bootloader screens.
+- touch-r1, `20261101-205756-touch-r1`, capture `764854df…`: AoC on, no control block at the probed address, pads on GPIO. SSI read faulted; last access PMIC mailbox `0x5272008`, then hardware reset `0xc00e`. Touch controller not reached.
+
 ### 2026-11-01: ufs-speed-r1, HS gear 4 on the phone
 
 - Physical, attempt `20261101-204627-ufs-speed-r1`, image `3efffef6…`, capture `6b08424f…`: PWM-G1 (mode 0x55) to HS gear 4, 2 lanes (mode 0x11), change rc 0 in 3.7 ms, no firmware or calibration sent. 12 of 12 blocks read equal at both speeds, 0 UIC errors.
