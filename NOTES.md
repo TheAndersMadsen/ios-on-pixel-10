@@ -47,6 +47,11 @@ Parent spot-checked; none of this ran on the phone except the capture it reads.
   reroute it. SMMU and display agents read small ABL sections; no further ABL disassembly is requested.
 - Started: qemu agent, `research/fullroot-qemu-r1`, to test the full root in a guest.
 
+### 2026-11-01: handoff agent reviewed
+
+Host only, unapplied: XNU takes over UFS from the shim, gated off by `TGL_UFS_HANDOFF`, `rd=md0` then switch root.
+Not linked, not booted; needs a working link and READ first. `research/ufs-root-handoff-r1/DESIGN.md`.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
