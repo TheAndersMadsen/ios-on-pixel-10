@@ -25,6 +25,11 @@ Physical read-only boot succeeded, 35 reads. Link preconditions hold. Detail in 
 Parent started link, post-link, SMMU, handoff, APFS, dyld, launchd, display and tools agents,
 host-only, in `research/<topic>-r1`. Not yet reviewed. Parent boots ufs-link-r1 after review.
 
+### 2026-11-01: tools agent reviewed
+
+Parent reran tool tests. `capture-fastboot.py --named-only` no longer needs a lease; `tools/bootios`
+waits for park and captures. Neither has run on the phone since the change.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
