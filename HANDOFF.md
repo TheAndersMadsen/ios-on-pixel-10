@@ -10,6 +10,8 @@
 - **QEMU go, not the phone:** `research/ios26-qemu-r1/runs/go-5`: iOS 26.6.2 drew a lock screen with no GPU by 437 s under TCG, 1 vCPU, kernel `1694947e…`, light root plus `persona.kb` and `CAEnableMedina=false`, `rd=md0`. backboardd swapped 1125x2436 BGRA 17 times, 0 panics in 684 s. Frame goes black after about 467 s, unexplained. Not shown: phone root, `rd=ufsroot0`, unlock, frame rate, anything on Tensor. Next: `kernel.ios26-c1` `ef94ff4a…` on the phone route in QEMU, `ios26-phone-r2`, then the owner's approval to write.
 - Owner's approval, 2026-11-01: **one** write of the verified iOS 26 phone root to `userdata_exp.ai`, once it reaches the lock screen in QEMU through the phone's own route. Not spent. A second write needs new approval. Owner wasn't watching the colour test, so glass is unconfirmed; rerun when the owner can watch.
 - Physical, `20261101-224823-ssi-probe-r5`, image `647a5451…`: touch reports work. `TOUCHES_SEEN`, 773 reports, 0 bad, attention toggling, rails off, 0 faults, owner touching. Coordinates decode out of range (report layout wrong, not hardware); touch agent fixing from this capture.
+- Owner's decision, 2026-11-01 23:30, after being told `userdata_exp.ai` is a second device of Android's `/data` with no backup (`research/ios26-fleet/handoffs/android-partition.md`): write once the gate passes, Android risk accepted. Not spent yet.
+- One combined kernel patch: `research/ios26-integrate-r1/combined/ios26-p2-all-in-one.patch` `dd1b16ac…`, pristine xnu-12377.121.6 to kernel `ios26-p2`'s tree `7bfe7df9…`, verified by applying. Outside git: contains unlicensed tegu code.
 - Merged bootchain's tested patches into `shim/` and `tools/`: 12377 boot contract, D421AP ADT, payload.
 
 ## 2026-11-01: moved to iOS 26
