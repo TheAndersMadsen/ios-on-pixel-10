@@ -7,6 +7,9 @@ that the full iOS root can load. The ledger is
 
 ## 2026-11-01 status: UFS controller readable, device absent
 
+ufs-observe-r2 read UFS power domains ON, warm mode 2, pads 8 and 0 low and `inf_smmu` not
+enabled, on the phone with no writes: `research/ufs-observe-r2/result.json`.
+
 ufs-observe-r1 read the controller without writing: HCE=0x3, HCS=0x108, DP=0. ABL logs full UFS
 init of the Samsung KLUDG4UHGC and then shuts it down about 30 s before our reads.
 ufs-link-r1 proposes the stock pre-link sequence from the shipped `ufs.ko`. It and

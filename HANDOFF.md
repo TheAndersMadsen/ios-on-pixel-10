@@ -1,8 +1,29 @@
-# Current — 2026-11-01: UFS has no link yet; ufs-observe-r2 next, then ufs-link-r1
+# Current — 2026-11-01: ufs-observe-r2 clean; device is unpowered-looking and held in reset
+
+### 2026-11-01: ufs-observe-r2 read power, pads and SMMU on the phone
+
+- Physical, attempt `20261101-174259-ufs-observe-r2b`, image `a7fd3cbd…`, capture `261fa855…`,
+  fresh stamp nonce. All 22 + 13 read-only reads committed, rc 0, ISR 0, in 33 ms. Values:
+  `research/ufs-observe-r2/result.json`. No storage or register writes; no UFS link attempted.
+- Observed: PSM_HSIOS, PSM_UFS_HC and PSM_UFS_PHY all ON (0x10). PWR_CTRL `0x23c4c24` matches warm
+  mode 2. HCLKDIV 0x190, TOP+0x200 0, HCS 0x108 (DP=0, same as r1). Last UIC command was
+  HIBERNATE_ENTER, result 0. Pad 8 (`AP2PMIC_UFS_EN`) reads low. Pad 0 (reset) reads low.
+- Observed, `inf_smmu`: CR0=0, CR0ACK=0, GERROR=0, STRTAB_BASE=0, GBPA=0x2e1f with ABORT clear.
+  First read of this SMMU. By my reading of SMMUv3 fields, it is disabled and bypassing, not
+  aborting. Confirm against the Arm spec before relying on it for DMA.
+- Guess, not measured: pad 8 low means the device has no power. No rail voltage was read. Refclk
+  dout/oe fields from the decoder are undefined (known defect); use the raw words.
+- Link preconditions hold, so ufs-link-r1 may run. It will be the first boot that writes UFS
+  registers. Next: build it from the host code, with both LINKs in one boot.
+- Same boot continued to XNU, root mount, launchd exec and dyld, then panic. `launchd` main no.
+- Failed first boot, `20261101-174018-ufs-observe-r2`: refused with -11 before any UFS read, because
+  I changed nonce/epoch without updating `n742_generated_binding.h`. Fixed, no phone effect. Phone
+  parks by itself within about 2 minutes; `tools/bootios` now waits for that and captures.
+- Phone: parked in fastboot, slot b, force-fastboot on.
 
 ### 2026-11-01: first UFS read, link plan reviewed, work now run the tegu way
 
-- Phone: in fastboot (seen 2026-11-01). Parent alone owns USB. No helpers running.
+- Parent alone owns USB. No helpers running.
 - Last UFS boot, ufs-observe-r1: eight read-only reads at `0x3c400000`, no writes. HCE=0x3,
   HCS=0x108 (UCRDY=1, **DP=0**), doorbells 0, run-stop 1/1. Controller enabled, device not
   present. Values: `research/laguna-usb-fix/native-fleet-20261031/N900-root-current-ufs-observation/CURRENT-UFS-OBSERVATION.json`.

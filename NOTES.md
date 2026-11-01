@@ -12,9 +12,13 @@ Latest detail: `HANDOFF.md`.
   display or touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: UFS device not present after ABL's shutdown (HCS.DP=0).
-Next concrete action: apply the review fixes to ufs-observe-r2, build it, boot it with `tools/bootios`. The
+Current blocker: UFS device not present after ABL's shutdown (HCS.DP=0); pads 8 and 0 read low.
+Next concrete action: build ufs-link-r1, boot it with `tools/bootios`. The
 full sequence and ufs-link-r1's preconditions are in `HANDOFF.md`, which holds the handoff detail.
+
+### 2026-11-01: ufs-observe-r2
+
+Physical read-only boot succeeded, 35 reads. Link preconditions hold. Detail in `HANDOFF.md`.
 
 ### How work runs
 
