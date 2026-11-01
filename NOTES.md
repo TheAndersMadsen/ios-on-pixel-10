@@ -13,8 +13,20 @@ Latest detail: `HANDOFF.md`.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
 Current blocker: UFS device not present after ABL's shutdown (HCS.DP=0).
-Next concrete action: apply N916's changes to O2, build it, boot it with `tools/bootios`. The
-full sequence and W1's preconditions are in `HANDOFF.md`, which holds the handoff detail.
+Next concrete action: apply the review fixes to ufs-observe-r2, build it, boot it with `tools/bootios`. The
+full sequence and ufs-link-r1's preconditions are in `HANDOFF.md`, which holds the handoff detail.
+
+### How work runs
+
+- One parent agent does the work, owns USB and runs the boots. It records results here and in
+  `HANDOFF.md` as dated bullets, newest first.
+- Use a helper only for independent work, a few at a time, named by purpose ("touch agent",
+  "shader agent"). The parent checks each result itself and reruns its tests before relying on
+  it, and writes what it found ("Parent reviewed ...: ...; requested ...").
+- Experiments live in `research/<topic>-rN`, with N going up per retry. Say whether each is
+  built, deployed or verified.
+- `research/laguna-usb-fix/native-fleet-20261031/` holds older N-numbered work. Read it as
+  history; do not add to it or use N-numbers.
 
 ### Hardware facts
 
@@ -35,7 +47,7 @@ full sequence and W1's preconditions are in `HANDOFF.md`, which holds the handof
 
 - Attempt ledger: `research/laguna-usb-fix/ATTEMPTS.md`. Captures:
   `research/laguna-usb-fix/attempts/`, `research/laguna-usb-fix/automation/state/device-attempts/`.
-- Earlier agent work by task: `research/laguna-usb-fix/native-fleet-20261031/N*/`.
+- Older agent work: `research/laguna-usb-fix/native-fleet-20261031/N*/`.
 - Kernel tree and build: `research/laguna-foundation/kernel-blazer/`; port patches: `xnu/patches/`.
 - Boot runner: `research/laguna-usb-fix/run-attempt.sh`, called by `tools/bootios`.
 - Root images: `research/workspace/iosroot/`, `research/laguna-image/`,
