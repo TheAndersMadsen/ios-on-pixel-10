@@ -1,4 +1,8 @@
-# Current — 2026-11-01: XNU 12377 boots on the phone
+# Current — 2026-11-01: iOS 26 boots to the home screen on the phone
+
+- **Physical, owner's eyes, `20261101-234344-phone-root-r1`, image `e49b93ca…`, kernel p2 `9ffbe445…`, root r3 `205cb0e2…`, `rd=md0 blazer_ufs_mountroot=1`, read-only, `varfs=1`, one CPU, no GPU: Apple logo about 3.5 min after the boot started at 23:43:44; owner reported the home screen at 23:54:43 CET at the latest (about 11 min). Log capture comes after the boot ends. Touch is off in this boot, so it isn't interactive yet.**
+
+## Earlier today: XNU 12377 boots on the phone
 
 - Physical, attempt `20261101-215924-first-boot-r1`, image `169a5b85…`, kernel `89489d52…` (tegu series, blazer layer). Compact HFS root `3cd4dcb5…` in md0, no md1, no display, no touch, `cpus=1`. Same nonce shim to XNU, entry 6.6 ms after handoff.
 - Observed, in order: `EARLY 1`..`20`, Darwin 25.5.0, 16 KiB, 4 GiB at `0xa00000000`, `hfs: mounted iOSRoot`, UFS takeover with SMMU GBPA `2e1f`, `blazer-ufs-test: done, 0 errors`, `exec launchd`, `EXECOK6` first userspace SVC. Then `initproc failed to start`, namespace 2 subcode 0xb, the same as QEMU on this iOS 16 root; PSCI reset path ran, park 82 s, `0xbab9`.
