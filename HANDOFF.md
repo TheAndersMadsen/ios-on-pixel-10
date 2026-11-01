@@ -1,4 +1,14 @@
-# Current — 2026-11-01: launchd runs natively from the full iOS root over UFS; no UI yet
+# Current — 2026-11-01: backboardd draws frames and SpringBoard runs on the phone, to RAM; nothing on the panel yet
+
+### 2026-11-01: phone-r1 (attempt ufs-ui-r1), first UI processes on the phone
+
+- Physical, attempt `20261101-203354-ufs-ui-r1`, image `8aa00893…`, kernel `b4a0efad…`, capture `7dd5f456…`, md1 `de340c95`, `/product` in the ADT. No storage write.
+- Observed: launchd main; SpringBoard (pid 8) and backboardd (pid 13) ran; backboardd opened `MiniIOMobileFramebuffer`, created a 1125x2436 BGRA surface and made 3 swaps (first at 1083 s log time, about 200 ms each in the driver).
+  Also seen: runningboardd, lsd, configd, powerd, usermanagerd, mediaserverd, others. Search for panic, usertrap, userabort, exit reason: 0 hits. No BoundingPath abort line.
+- It ended because the owner held the power button after about 11 minutes, thinking it was stuck (owner confirmed; capture: 0xccca, `manual-longpress`). Reads were still rising: 75280 at t=590 s, 562.9 s busy, last line 1155.9 s. Free memory 3316 MB.
+- Not shown: pixels on the panel, whether SpringBoard reached its first screen, how long it stays up. systrace was off, so launchd's text is not in this log.
+- Frames only reach RAM: the panel path is `research/display-frame-r1`, then the `research/xnu-fb-r1` backend. Storage takes 95% of the time: `research/ufs-speed-r1`.
+- For the owner: the screen stays dark on these boots, so wait up to the deadline.
 
 ### 2026-11-01: ufs-root-r2, launchd from the full root on the phone
 

@@ -1,11 +1,16 @@
 # Pixel 10 Pro (blazer) bring-up
 
-The Pixel 10 Pro boots our XNU from RAM, mounts the full iOS root from UFS and runs `launchd` main. It has
-no native display or touch. The active work is UFS, so
+The Pixel 10 Pro boots our XNU from RAM, mounts the full iOS root from UFS and runs `launchd`, backboardd and
+SpringBoard, which draw frames to RAM. Nothing reaches the panel yet, and there is no touch. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
-## 2026-11-01 status: launchd runs from the full root
+## 2026-11-01 status: UI processes run
+
+phone-r1: backboardd made 3 frame swaps and SpringBoard ran, no crash, until a manual long press:
+`research/laguna-usb-fix/attempts/20261101-203354-ufs-ui-r1`.
+
+## 2026-11-01: launchd runs from the full root
 
 ufs-root-r2: 16 KiB pages, 4 GiB, APFS over UFS, launchd `hello`, xpcproxy, then our own 300 s deadline panic:
 `research/ufs-root-r1/run/root/decoded-r2.json`.

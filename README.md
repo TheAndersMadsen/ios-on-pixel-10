@@ -1,8 +1,8 @@
 # hackios
 
-**Apple's XNU kernel and iOS 16 userland on the Google Pixel 10 Pro.** `launchd` runs natively from the full root; there is no UI yet.
+**Apple's XNU kernel and iOS 16 userland on the Google Pixel 10 Pro.** SpringBoard runs natively from the full root, but nothing reaches the screen yet.
 
-This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.5 generation) to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The furthest native boot mounts the full iOS root from UFS and runs `launchd`, with no UI. Bring-up detail is in [BLAZER.md](BLAZER.md).
+This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.5 generation) to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The furthest native boot mounts the full iOS root from UFS and runs SpringBoard, with nothing on the panel yet. Bring-up detail is in [BLAZER.md](BLAZER.md).
 
 > Experimental bring-up, not a usable phone OS. Boots are temporary RAM boots; the boot tool leaves `force-fastboot` on. Apple's security model is mostly switched off.
 
@@ -14,13 +14,12 @@ This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.
 | Logs | Shim stamps and XNU message buffer are read back over USB from the fastboot park |
 | Root | HFS+ compact root delivered in the boot image mounts |
 | Root | Full APFS root mounts read-only from UFS, with 16 KiB pages and 4 GiB of RAM |
-| Userland | `launchd` main runs and spawns xpcproxy, on its Restore branch. Once so far |
+| Userland | `launchd`, backboardd and SpringBoard run; backboardd draws frames to RAM. Once so far |
 
 ## What does not work (yet)
 
 - **No native display, touch or stable userland.**
 - **No automatic recovery** has been qualified.
-- **No normal boot:** `launchd` stays on its Restore branch and SpringBoard hasn't run.
 
 Separate results, not native: the iOS 16.5 home screen with touch ran in a pKVM VM on this phone (2026-10-25), and QEMU has rendered the lock and home screens.
 

@@ -9,7 +9,7 @@ Latest detail: `HANDOFF.md`.
   repeatable boots.** Current priority: UFS, so the full root can load.
 - Reached on the phone: XNU, compact HFS+ root, pid 1 userspace, dyld to
   `M11.initializers`, then panic; UFS link, commands and READ work, in shim and XNU. Native DSI commands reach the panel.
-  `launchd` main runs from the full root over UFS. Not reached: normal boot, UI, a native frame, touch, automatic recovery.
+  `launchd`, backboardd and SpringBoard run from the full root over UFS; frames reach RAM. Not reached: a frame on the panel, touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
 Current blocker: no display path to the panel, and 0.53 MiB/s storage. The earlier Restore-branch note was wrong: upstream logs the same line and reaches the home screen. md1 decides the jobs.
