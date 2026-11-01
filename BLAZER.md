@@ -1,7 +1,7 @@
 # Pixel 10 Pro (blazer) bring-up
 
 The Pixel 10 Pro boots our XNU from RAM, mounts the full iOS root from UFS and runs `launchd`, backboardd and
-SpringBoard, which draw frames to RAM. Nothing reaches the panel yet, and there is no touch. The active work is UFS, so
+SpringBoard, which draw frames to RAM. iOS's frames don't reach the panel yet, and there is no touch. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
@@ -54,6 +54,8 @@ init of the Samsung KLUDG4UHGC and then shuts it down about 30 s before our read
 page16k-r1: 16 KiB pages, 4 GiB at `0xa00000000`, 262144 pages, same compact-root panic: `research/page16k-phone-r1/rootkernel/decoded.txt`.
 
 ## Panel checkpoint (2026-11-01)
+
+display-frame-r1c: DPU test pattern reached the panel; the owner saw it, and the panel's OPR followed the sequence: `research/display-frame-r1/run/boot-r1c/decoded.json`.
 
 display-dcs-r2: native DSI commands reached the panel, it replied with its ID and power mode `0x9f`, flash commands sent. Visible effect not filmed. `research/display-dcs-r2/run/decoded.json`.
 

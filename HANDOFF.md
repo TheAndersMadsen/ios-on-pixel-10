@@ -1,4 +1,9 @@
-# Current — 2026-11-01: backboardd draws frames and SpringBoard runs on the phone, to RAM; nothing on the panel yet
+# Current — 2026-11-01: native frames on the panel; SpringBoard runs; iOS not yet on the panel
+
+- Physical, attempt `20261101-210249-display-frame-r1c`, image `0b668164…`, capture `c78f5a31…`. The owner saw the screen flash white (order not reported). Panel OPR per slot 0, 2028, 0, 0, 2028, 2028 for black, white, black, black, white, white. Verdict `PANEL_REPORTS_PIXELS`.
+- Frame-done seen, TE seen, panel error count 0, no reset. DPU test pattern through DSC, command mode kick, no RAM fetch.
+- Caveats: UNDERRUN seen, CRC registers read 0, so the CRC proof didn't work. The test pattern doesn't use FE0, so RAM scanout is unproved. PPS write effect unknown: ABL's PPS already matched.
+- Next: rung 3, RAM scanout, then the kernel backend.
 
 ### 2026-11-01: display and touch probes
 

@@ -81,6 +81,10 @@ SpringBoard aborts on a bounding path bitmap; suspect missing `/product`. Stabil
 
 Physical: HS gear 4, 30 MiB/s, up from 0.53. Detail in `HANDOFF.md`.
 
+### 2026-11-01: display-frame-r1c
+
+Physical: native test pattern on the panel. The owner saw it flash. Detail in `HANDOFF.md`.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
