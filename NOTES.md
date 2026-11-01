@@ -52,6 +52,12 @@ Parent spot-checked; none of this ran on the phone except the capture it reads.
 Host only, unapplied: XNU takes over UFS from the shim, gated off by `TGL_UFS_HANDOFF`, `rd=md0` then switch root.
 Not linked, not booted; needs a working link and READ first. `research/ufs-root-handoff-r1/DESIGN.md`.
 
+### 2026-11-01: QEMU agent reviewed
+
+QEMU only, parent checked the log: full 20F66 root, `rd=md0`, 16 KiB pages: cache maps and launchd says `hello`, no
+panic in 290 guest seconds. Supports that the phone's panic is a compact-root defect; not isolated. Phone still
+needs a physical window above 1 GiB and 16 KiB signatures. `research/fullroot-qemu-r1/FINDINGS.md`.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
