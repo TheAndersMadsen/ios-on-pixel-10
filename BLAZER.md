@@ -7,6 +7,10 @@ SpringBoard, which draw frames to RAM. iOS's frames don't reach the panel yet, a
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
+## 2026-11-01: kernel drives the panel
+
+second-boot-r1: XNU 12377 took over the DPU and scanned out one full-size black frame, no underrun; panic cut the colour sequence: `research/laguna-usb-fix/attempts/20261101-220659-second-boot-r1`.
+
 ## 2026-11-01: XNU 12377 boots
 
 first-boot-r1: the iOS 26-generation kernel ran on the phone to first userspace on the old compact root, UFS 0 errors, then launchd's known panic and reset to fastboot: `research/laguna-usb-fix/attempts/20261101-215924-first-boot-r1`. Not iOS 26 yet.

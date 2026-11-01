@@ -4,6 +4,7 @@
 - Observed, in order: `EARLY 1`..`20`, Darwin 25.5.0, 16 KiB, 4 GiB at `0xa00000000`, `hfs: mounted iOSRoot`, UFS takeover with SMMU GBPA `2e1f`, `blazer-ufs-test: done, 0 errors`, `exec launchd`, `EXECOK6` first userspace SVC. Then `initproc failed to start`, namespace 2 subcode 0xb, the same as QEMU on this iOS 16 root; PSCI reset path ran, park 82 s, `0xbab9`.
 - This is not iOS 26 and has no UI. It's the old compact root on the new kernel. The panic is expected from that root; its cause isn't established (no user PC).
 - `tools/boot-summary.py` misreads this kernel: its "region says" text is stale residue. Read panics with `tools/read-ramdump.py --dump-base 0x95200000 --mach <unstripped>`. `research/ui-integrate-r1/all_decode.py` doesn't fit bootchain's manifest (no `features`).
+- Physical, `20261101-220659-second-boot-r1`, image `c776b80d…`, kernel `72624577…`: the kernel took over the DPU from the shim and scanned out at full size. `tensor-dpu: attached` 1280x2856, first probe (black) fill 8893 us, 1 kick, 1 done, underrun 0, frame 10083 us. launchd's panic on the compact root reset the phone after that first probe, so the six-colour sequence wasn't seen. Next: hold pid 1 until the probe finishes.
 - Merged bootchain's tested patches into `shim/` and `tools/`: 12377 boot contract, D421AP ADT, payload.
 
 ## 2026-11-01: moved to iOS 26
