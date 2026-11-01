@@ -14,6 +14,12 @@
 - Caveats: UNDERRUN seen, CRC registers read 0, so the CRC proof didn't work. The test pattern doesn't use FE0, so RAM scanout is unproved. PPS write effect unknown: ABL's PPS already matched.
 - Next: rung 3, RAM scanout, then the kernel backend.
 
+### 2026-11-01: ssi-probe, second touch bus probe
+
+Physical, `20261101-213642-ssi-probe`, image `d8d6cf4e…`. Same reset `0xc00e` at the same `pd_on` frame, with completion from the message window and 0 reads of `0x5272008`. Observed: that status read isn't the cause; window completion works for read frames. This image still ran the guarded SSI read first, so the fault remains a candidate. Next: same with no SSI read before the votes.
+
+Other ports found (`research/patch-scout-ports-r1/FINDINGS.md`): `superboyyy/hakios-arm64e-dada`, APSL, 12377, our lineage, and `nhansp/ios-husky`, Tensor G3, no license, both record iOS 26 on CPU rendering. Author records, unverified. `research/ios26-dada-r1` builds dada against the tegu-based kernel; parent chooses after both link and the PAC probe.
+
 ### 2026-11-01: ssi-id-r1, touch bus probe
 
 Physical, `20261101-213232-ssi-id-r1`, image `85a0bc31…`, no XNU, no chip traffic. SSI read at `0xdb33058` faulted and the guard caught it. Read frames LPB, SPI rate and cfg rate replied. Then a hardware reset during the first state-changing frame, LSIO_N `pd_on` `0x01000401`: `NO_END`, `0xc00e`, Fatal Error HW, last access status read `0x5272008`. That status read worked through the earlier frames. Guess, untested: the frame resets the phone, or the guarded SSI fault leaves a RAS error that goes fatal; touch-r1 had the same order. Next: same probe with no SSI read before the votes.
