@@ -8,8 +8,8 @@ Latest detail: `HANDOFF.md`.
 - Goal: **Boot native iOS with visible interactive UI, working touch, stability and
   repeatable boots.** Current priority: UFS, so the full root can load.
 - Reached on the phone: XNU, compact HFS+ root, pid 1 userspace, dyld to
-  `M11.initializers`, then panic; UFS link, commands and READ work, in shim and XNU. Native DSI commands reach the panel. Not reached: `launchd` main, root over UFS, a native frame,
-  display or touch, automatic recovery.
+  `M11.initializers`, then panic; UFS link, commands and READ work, in shim and XNU. Native DSI commands reach the panel.
+  Not reached: `launchd` main, root over UFS, a native frame, touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
 Current blocker: root isn't mounted from UFS yet. XNU reads the staged root; the compact root still panics.
