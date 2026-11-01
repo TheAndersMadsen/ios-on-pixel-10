@@ -8,11 +8,12 @@ from pathlib import Path
 import struct
 import subprocess
 import sys
+import tempfile
 import unittest
 
 sys.dont_write_bytecode = True
 TOOLS = Path(__file__).resolve().parent
-ATTEMPTS = TOOLS.parent / "research/laguna-usb-fix/attempts"
+ATTEMPTS = next(p for p in TOOLS.parents if (p / "AGENTS.md").exists()) / "research/laguna-usb-fix/attempts"
 
 
 def load(name, path):
@@ -220,6 +221,86 @@ class RealAttempts(unittest.TestCase):
         result = subprocess.run([sys.executable, str(TOOLS / "boot-summary.py"), "/nonexistent"],
                                 capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 2)
+
+
+class Xnu12377(unittest.TestCase):
+    """Parsing on text, then the real first 12377 boot on the phone."""
+    FIRST = "20261101-215924-first-boot-r1"
+    TEXT = ("TEGU-XNU EARLY 1: arm_init entered\nTEGU-XNU EARLY 20: kprintf\nDarwin Kernel Version 25.5.0\n"
+            "blazer-root: PAGE_SIZE 16384 mem 100000000 at a00000000, deadline 300 s\nBSD root: md0, major 1\n"
+            "blazer-root: stage t 98 ms stage mounted reads 0 blocks 0 busy 0 ms max 0 us last lba 0\n")
+
+    def test_unbound_log_gives_nothing(self):
+        x = summary.read_12377(self.TEXT + "panic(cpu 0 caller 0x1):  old\n", "", False, False, "other nonce")
+        self.assertEqual(x, {"bound": False, "why": "other nonce"})
+
+    def test_furthest_is_by_rank_not_position(self):
+        x = summary.read_12377(self.TEXT + "exec launchd\nEXECOK6: pid1\nEXECOK4: load\n", "", False, True, "")
+        self.assertEqual(x["furthest"], "EXECOK6")
+        self.assertIn("UFS takeover", x["missing"])
+        self.assertNotIn("UFS test", x["missing"])
+
+    def test_stops_early(self):
+        x = summary.read_12377("TEGU-XNU EARLY 1: arm_init entered\n", "", False, True, "")
+        self.assertEqual((x["early_max"], x["furthest"], x["panic"]), (1, "EARLY 1", None))
+
+    def test_stale_console_ignored(self):
+        old = "TEGU-XNU STAGE0\nTEGU-XNU EARLY 19: x\nblazer-ufs-test: done, 7 errors\nEXECOK6: y\n"
+        x = summary.read_12377("TEGU-XNU EARLY 1: arm_init entered\n", old, False, True, "")
+        self.assertFalse(x["console_same"])
+        self.assertEqual((x["early_max"], x["ufs"]["errors"], x["furthest"]), (1, None, "EARLY 1"))
+
+    def test_shim_dropped_tokens(self):
+        x = summary.read_12377(self.TEXT + "blazer-ufs: requested but no live handoff\n", "", False, True, "")
+        self.assertTrue(x["ufs"]["dropped"])
+
+    def real(self):
+        path = ATTEMPTS / self.FIRST
+        if not (path / "ramdump/kernel.log").is_file():
+            self.skipTest("capture absent")
+        return summary.summarize(path)
+
+    def test_real_capture(self):
+        s = self.real(); x = s["xnu12377"]
+        self.assertTrue(x["bound"] and x["console_same"])
+        self.assertEqual(x["early_max"], 20)
+        self.assertEqual(x["furthest"], "EXECOK6")
+        self.assertEqual(x["missing"], [])
+        self.assertEqual([r["stage"] for r in x["stages"]], ["mounted", "takeover", "test", "pid1_exec"])
+        self.assertEqual((x["stages"][-1]["reads"], x["stages"][-1]["blocks"]), (35, 50))
+        self.assertEqual(x["ufs"], {"attached": True, "partition": "userdata_exp.ai", "lun": 0, "done": True, "errors": 0, "dropped": False})
+        self.assertEqual(x["panic"]["caller"], 0xfffffe0007cd73cc)
+        self.assertTrue(x["panic"]["message"].startswith("initproc failed to start -- exit reason namespace 2 subcode 0xb"))
+        self.assertTrue(s["nonce"]["xnu_match"])
+
+    def test_real_capture_screen(self):
+        s = self.real()
+        if not s["image_same"]:
+            self.skipTest("image gone")
+        self.assertTrue(s["kernel"]["match"])
+        out = summary.render(s)
+        self.assertIn("symbols match", out)
+        self.assertIn("proc_prepareexit", out)
+        self.assertNotIn("region says", out)
+        self.assertNotIn("deadline 300 s", out)  # the old boot's text left in the panic region
+        self.assertNotIn("USERLAND-EXEC", out)
+        self.assertNotIn("Early Kernel PANIC", out)
+        self.assertLessEqual(len(out.splitlines()), 24)
+
+    def test_real_mirror_refused_with_another_nonce(self):
+        path = ATTEMPTS / self.FIRST / "ramdump/kernel.log"
+        if not path.is_file():
+            self.skipTest("capture absent")
+        data = bytearray(path.read_bytes())
+        reader = load("read_ramdump", TOOLS / "read-ramdump.py")
+        at = data.find(struct.pack("<Q", 0x31d3df8699e5f377), reader.PMSG_OFF + 0x3f800)
+        self.assertGreater(at, 0)
+        data[at] ^= 1
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "ramdump").mkdir()
+            (Path(d) / "ramdump/kernel.log").write_bytes(data)
+            x = summary.summarize(d)["xnu12377"]
+        self.assertFalse(x["bound"])
 
 
 if __name__ == "__main__":

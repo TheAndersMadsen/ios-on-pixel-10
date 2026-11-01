@@ -5,6 +5,8 @@
 - This is not iOS 26 and has no UI. It's the old compact root on the new kernel. The panic is expected from that root; its cause isn't established (no user PC).
 - `tools/boot-summary.py` misreads this kernel: its "region says" text is stale residue. Read panics with `tools/read-ramdump.py --dump-base 0x95200000 --mach <unstripped>`. `research/ui-integrate-r1/all_decode.py` doesn't fit bootchain's manifest (no `features`).
 - Physical, `20261101-220659-second-boot-r1`, image `c776b80d…`, kernel `72624577…`: the kernel took over the DPU from the shim and scanned out at full size. `tensor-dpu: attached` 1280x2856, first probe (black) fill 8893 us, 1 kick, 1 done, underrun 0, frame 10083 us. launchd's panic on the compact root reset the phone after that first probe, so the six-colour sequence wasn't seen. Next: hold pid 1 until the probe finishes.
+- Physical, `20261101-221612-colour-r1`, image `24ee2462…`, kernel `252b3cbe…`: six full-screen colours scanned out by the kernel; 6 kicks, 6 dones, underrun 0, frames 8.1-9.3 ms, fills 8.7-8.8 ms for every colour (about 2.4 ns per pixel), pid 1 released after 4324 ms. Glass not yet reported by the owner.
+- Physical, `20261101-221852-ssi-probe-r4b`, image `8891e264…`: touch chip powered and identified: rails AVDD 3.3 V and VDD 1.8 V on, read back, `IDENTIFIED`, part `S3916TGA1A0`, TouchComm proto 1, mode 1, build 4542708, rails off at end, 0 faults. Reports not enabled. Earlier `20261101-221308-ssi-probe-r4` stopped itself on a full record before rails. Next: r5, raw reports.
 - Merged bootchain's tested patches into `shim/` and `tools/`: 12377 boot contract, D421AP ADT, payload.
 
 ## 2026-11-01: moved to iOS 26

@@ -19,7 +19,7 @@ import zlib
 
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
+ROOT = next(p for p in HERE.parents if (p / "AGENTS.md").exists())
 DUMP_BASE = 0x95200000
 READ_RECORD = 0x22a000
 READ_BYTES = 0x2000
@@ -60,6 +60,10 @@ def macho_uuid(path):
             head = source.read(0x10000)
     except OSError:
         return None
+    return uuid_of(head)
+
+
+def uuid_of(head):
     if len(head) < 32 or struct.unpack_from("<I", head)[0] != 0xfeedfacf:
         return None
     off = 32
@@ -189,6 +193,90 @@ def _read(raw, ids):
             "sealed": rec.get("sealed")}
 
 
+# Order of a 12377 boot. The log prints EXECOK6 before EXECOK4, so rank by this list, not by position.
+MILESTONES_12377 = (
+    ("banner", r"^Darwin Kernel Version"),
+    ("blazer-root start", r"^blazer-root: PAGE_SIZE"),
+    ("BSD root", r"^BSD root: "),
+    ("root mounted", r"stage mounted\b|^hfs: mounted "),
+    ("UFS takeover", r"stage takeover\b"),
+    ("varfs", r"stage varfs\b"),
+    ("UFS test", r"^blazer-ufs-test: done"),
+    ("load_init_program", r"^load_init_program: attempting"),
+    ("exec launchd", r"^exec launchd"),
+    ("EXECOK4", r"^EXECOK4:"),
+    ("EXECOK6", r"^EXECOK6:"),
+)
+OPTIONAL_12377 = ("varfs", "UFS test")  # only images that ask for them
+IS_12377 = re.compile(r"TEGU-XNU (?:STAGE0|EARLY \d+)|^blazer-root:", re.M)
+STAGE_LINE = re.compile(r"^blazer-root: stage t (\d+) ms stage (\S+) reads (\d+) blocks (\d+) busy (\d+) ms", re.M)
+
+
+def console_text(dump):
+    """Text of the persistent_ram console zone: DBGC, start, size, then the bytes."""
+    if dump[:4] != b"DBGC":
+        return ""
+    used = struct.unpack_from("<I", dump, 8)[0]
+    return dump[12:12 + min(used, 0x200000 - 12)].decode("latin-1")
+
+
+def console_matches(console, mirror):
+    """The console has no nonce. It belongs to this boot only if it opens with the bound mirror's text."""
+    head = mirror[:200]
+    body = console.split("TEGU-XNU STAGE0\n", 1)[-1]
+    return bool(head) and body.startswith(head)
+
+
+def read_12377(mirror, console, wrapped, bound, why):
+    """Milestones, UFS and panic of a 12377 boot from the mirror, which XNUENT1 binds to the
+    shim's nonce. An unbound log is reported as such and nothing is read from it."""
+    if not bound:
+        return {"bound": False, "why": why}
+    same = console_matches(console, mirror)
+    # A wrapped mirror lost its start; only then is the console needed, and then it can't be compared.
+    text = mirror + ("\n" + console if same or wrapped else "")
+    early = [int(n) for n in re.findall(r"TEGU-XNU EARLY (\d+):", text)]
+    reached = [name for name, pattern in MILESTONES_12377 if re.search(pattern, text, re.M)]
+    stages = [dict(ms=int(m[0]), stage=m[1], reads=int(m[2]), blocks=int(m[3]), busy_ms=int(m[4]))
+              for m in STAGE_LINE.findall(mirror)]
+    done = re.search(r"^blazer-ufs-test: done, (\d+) errors", mirror, re.M)
+    attach = re.search(r'^blazer-ufs: "([^"]+)" on LUN (\d+): first block (\w+), (\d+) MiB, read only', mirror, re.M)
+    panic = re.search(r"^panic\(cpu (\d+) caller (0x[0-9a-f]+)\):\s*(.*)$", mirror, re.M)
+    exited = re.search(r"^pid 1 exited -- (.*)$", mirror, re.M)
+    return {"bound": True, "console_same": same, "wrapped": wrapped, "early_max": max(early) if early else None,
+            "reached": reached, "furthest": reached[-1] if reached else (f"EARLY {max(early)}" if early else "XNU entry"),
+            "missing": [name for name, _ in MILESTONES_12377 if name not in reached and name not in OPTIONAL_12377],
+            "stages": stages,
+            "ufs": {"attached": bool(attach), "partition": attach.group(1) if attach else None,
+                    "lun": int(attach.group(2)) if attach else None,
+                    "done": bool(done), "errors": int(done.group(1)) if done else None,
+                    "dropped": "requested but no live" in mirror},
+            "pid1_exit": exited.group(1) if exited else None,
+            "panic": {"cpu": int(panic.group(1)), "caller": int(panic.group(2), 16), "message": panic.group(3)} if panic else None}
+
+
+def payload_uuid(image):
+    """LC_UUID of the kernel in the payload beside this image: what actually booted."""
+    try:
+        with open(Path(image).parent / "payload-usb.bin", "rb") as source:
+            head = source.read(0x2a8 + 32)
+            if head[:7] != b"TEGUXNU":
+                return None
+            source.seek(struct.unpack_from("<Q", head, 0x2a8 + 16)[0])
+            macho = source.read(0x10000)
+    except (OSError, struct.error):
+        return None
+    return uuid_of(macho)
+
+
+def symbol_of(mach, address):
+    """Nearest symbol through the reader's own Mach-O parser, or None."""
+    try:
+        return load("read_ramdump", HERE / "read-ramdump.py").ddp.MachSymCache(mach).lookup_code(address)
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def abl_facts(attempt):
     text = read_text(attempt / "ramdump/abl.log.txt")
     facts = {}
@@ -263,6 +351,17 @@ def summarize(attempt):
                      reason_name=(re.search(r"reason=(\S+)", stamps_text) or [None, None])[1])
     not_entered = None if entry_fresh else not_entered_text(shim_view, entry, live_text, stamps_text)
     ladder = doc.get("ladder") or {}
+    console = console_text(dump)
+    x = None
+    if IS_12377.search(mirror_text or "") or IS_12377.search(console):
+        bound = bool(entry_fresh and prologue.get("present") and prologue.get("entry_valid") and mirror_text and
+                     prologue.get("boot_nonce") == shim.get("nonce"))
+        x = read_12377(mirror_text or "", console, (mirror_doc.get("stream_total") or 0) > (mirror_doc.get("size") or 0),
+                       bound, "no XNU entry record with the shim's nonce")
+        booted = payload_uuid(image) if image_same else None
+        kernel.update(booted_uuid=booted, match=None if not (booted and meta_uuid) else booted == meta_uuid)
+        if x.get("panic") and meta_mach and kernel["match"]:
+            x["panic"]["symbol"] = symbol_of(meta_mach, x["panic"]["caller"])
     return {
         "attempt": attempt.name, "image": image,
         "image_sha256": (re.search(r"^image_sha256: (\w+)", meta, re.M) or [None, None])[1],
@@ -281,6 +380,7 @@ def summarize(attempt):
                   "entry_fresh": entry_fresh, "entry_status": entry.get("status")},
         "ufs": decode_ufs(dump, ids, stamps_text, live_text, mirror_text, entry_fresh),
         "root_io": root_io(current["message"]) if current else None,
+        "xnu12377": x,
         "panic": panic, "kernel": kernel,
         "milestone": {"last": ladder.get("last"), "next": ladder.get("next_expected"),
                       "wall": ladder.get("wall"),
@@ -315,6 +415,35 @@ def ufs_line(ufs):
     return "; ".join(parts)
 
 
+def render_12377(x, lines):
+    """Replaces the panic-region and old-ladder rows: this kernel writes no panic region."""
+    if not x["bound"]:
+        lines.append(f"12377     log not bound to this boot: {x['why']}; nothing read from it")
+        return
+    panic = x["panic"]
+    if panic:
+        lines.append(f"panic     {panic['message'][:WIDTH - 10]}")
+        where = f" {panic['symbol']}" if panic.get("symbol") else ""
+        lines.append(f"          caller {panic['caller']:#x}{where}, from the mirror")
+    else:
+        lines.append("panic     none in this boot's mirror")
+    if x["pid1_exit"]:
+        lines.append(f"pid 1     {x['pid1_exit']}")
+    lines.append(f"early     EARLY up to {x['early_max']}; console {'same text as mirror' if x['console_same'] else 'not compared equal'}"
+                 + ("; mirror wrapped" if x["wrapped"] else ""))
+    if x["stages"]:
+        last = x["stages"][-1]
+        names = " ".join(row["stage"] for row in x["stages"])
+        lines.append(f"root      {names}; at {last['ms']} ms: {last['reads']} reads, {last['blocks']} blocks, busy {last['busy_ms']} ms")
+    ufs = x["ufs"]
+    if ufs["dropped"]:
+        lines.append("ufs test  shim dropped the UFS tokens: no live handoff")
+    elif ufs["attached"] or ufs["done"]:
+        result = f"{ufs['errors']} errors" if ufs["done"] else "NOT finished"
+        lines.append(f"ufs test  {ufs['partition']} LUN {ufs['lun']}: {result}")
+    lines.append(f"furthest  {x['furthest']}" + (f"; not seen: {', '.join(x['missing'])}" if x["missing"] else ""))
+
+
 def render(s):
     def yn(value):
         return {True: "yes", False: "NO", None: "unknown"}[value]
@@ -346,7 +475,10 @@ def render(s):
     if io and "ms_per_block" in io:
         lines.append(f"          root {io['reads']} reads, {io['blocks']} blocks, busy {io['busy_ms']} ms: "
                      f"{io['ms_per_block']} ms/block, {io['mib_per_s']} MiB/s")
-    if panic["current"]:
+    x = s.get("xnu12377")
+    if x:
+        pass
+    elif panic["current"]:
         message = panic["message"]
         lines.append(f"panic     {message[:WIDTH - 10]}")
         if len(message) > WIDTH - 10:
@@ -367,7 +499,9 @@ def render(s):
         lines.append(f"kernel    symbols match: {Path(kernel['decoded_with']).name}")
     else:
         lines.append("kernel    symbols unverified")
-    if nonce["entry_fresh"]:
+    if x:
+        render_12377(x, lines)
+    elif nonce["entry_fresh"]:
         lines.append(f"furthest  {mile['last']}; next {mile['next']}; wall {mile['wall']}")
     else:
         lines.append("furthest  shim only" if not (shim["boots"] > 1 and shim["reason"] == 5)
@@ -376,7 +510,7 @@ def render(s):
                                          if k in reset))
     lines.append(f"          {reset.get('rst_stat', 'RST_STAT unknown')}; SoC {reset.get('soc_temp', '?')}; "
                  f"battery {reset.get('battery', '?')}; park {s['park_seconds']} s")
-    if reset.get("reason") == "0xbab9" and not panic["current"]:
+    if reset.get("reason") == "0xbab9" and not panic["current"] and not (x and x.get("panic")):
         lines.append("note      0xbab9 reads \"Early Kernel PANIC\", but no panic is bound to this boot")
     return "\n".join(line[:WIDTH] for line in lines)
 

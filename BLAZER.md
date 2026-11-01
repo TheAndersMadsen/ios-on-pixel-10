@@ -7,6 +7,14 @@ SpringBoard, which draw frames to RAM. iOS's frames don't reach the panel yet, a
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
+## 2026-11-01: touch chip identified
+
+ssi-probe-r4b: rails on, Synaptics `S3916TGA1A0` answered IDENTIFY over our bus, TouchComm v1, rails off: `research/laguna-usb-fix/attempts/20261101-221852-ssi-probe-r4b`.
+
+## 2026-11-01: six kernel colours
+
+colour-r1: all six full-screen colours scanned out, 0 underruns, in logs: `research/laguna-usb-fix/attempts/20261101-221612-colour-r1`.
+
 ## 2026-11-01: kernel drives the panel
 
 second-boot-r1: XNU 12377 took over the DPU and scanned out one full-size black frame, no underrun; panic cut the colour sequence: `research/laguna-usb-fix/attempts/20261101-220659-second-boot-r1`.
