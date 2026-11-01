@@ -41,8 +41,13 @@
 - Next: apply N916's O2 changes, build O2, boot it, decode, and run W1 only if both UFS
   PSMs and PSM_HSIOS are ON and PWR_CTRL shows warm mode 2. Add ALT-L's discriminator to W1.
 - Unfinished: N916–N920 were interrupted at 17:09 and N921 has no report; partial work is under
-  `research/laguna-usb-fix/native-fleet-20261031/`. No agents are running. Open user decisions: who runs the
-  physical boots, and whether to approve read-only LUN discovery for W3. The phone state
-  above comes from a note, so check it before relying on it.
+  `research/laguna-usb-fix/native-fleet-20261031/`. No agents are running. The phone state above comes from a note, so check it before relying on it.
+- Decisions (user delegated them 2026-11-01, following the ios-tegu approach): the working
+  agent runs temporary boots itself through `tools/bootios`, one at a time, and leaves the
+  phone in fastboot with force-fastboot on between tests. Read-only LUN discovery is approved
+  for W3. W1 runs both LINKs in one boot (N916's discriminator). The interrupted agents are
+  not restarted; read their partial work when a step needs it. Kodiak's platform file stays
+  unfetched. No GitHub remote or publishing until `xnu/patches/` licensing is fixed.
+- Not delegated: storage writes and other destructive steps still need the user's confirmation.
 
 Previous handover in full: `research/legacy-root-20261101/handover.md`.

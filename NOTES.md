@@ -13,7 +13,7 @@ Latest detail: `HANDOFF.md`.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
 Current blocker: UFS device not present after ABL's shutdown (HCS.DP=0).
-Next concrete action: apply N916's changes to O2, build it, ask the user who boots it. The
+Next concrete action: apply N916's changes to O2, build it, boot it with `tools/bootios`. The
 full sequence and W1's preconditions are in `HANDOFF.md`, which holds the handoff detail.
 
 ### Hardware facts
