@@ -50,9 +50,18 @@ int tgl_ufs_port_pad_rd(unsigned w_, uint32_t o, uint32_t *v)
     *v = o == 0 ? pad[w_].param : o == 4 ? pad[w_].dmux : o == 8 ? pad[w_].tx : device_rx(w_);
     return 0;
 }
+#if TGL_UFS_PWM_FALLBACK
+static unsigned relinking, relinks, verify_at;
+#endif
 int tgl_ufs_port_pad_wr(unsigned w_, uint32_t o, uint32_t v)
 {
+#if TGL_UFS_PWM_FALLBACK
+    if (linked && !relinking) V("pad write after link");
+    if (relinking && w_ != 0) V("relink wrote pad %u", w_);
+    if (relinking && o == 8 && !(v & TX_DOUT)) reset_was_low = 2;
+#else
     if (linked) V("pad write after link");
+#endif
     T("PAD %u %x %x", w_, o, v);
     if (o == 0) pad[w_].param = v;
     else if (o == 4) pad[w_].dmux = v;
@@ -62,6 +71,9 @@ int tgl_ufs_port_pad_wr(unsigned w_, uint32_t o, uint32_t v)
     } else V("pad write %x", o);
     if (w_ == 0 && o == 8 && (v & TX_DOUT)) {
         /* reset high: everything before it has to have happened, with the source's waits */
+#if TGL_UFS_PWM_FALLBACK
+        if (relinking && reset_was_low != 2) V("relink: reset never went low");
+#endif
         reset_was_low = 1; power_was_on = pad[1].dmux == 1 && (pad[1].tx & TX_DOUT) && (clocks & 1);
         refclk_before_reset = (clocks & 1) && clk - refclk_t >= 300;
     }
@@ -77,10 +89,79 @@ int tgl_ufs_port_clk_on(uint32_t c, uint64_t *a0, uint64_t *a1)
     return 0;
 }
 int tgl_ufs_port_top_wr(uint32_t o, uint32_t v) { T("TOP %x %x", o, v); if (o == 0x200) top200 = v; else V("top %x", o); return 0; }
+#if TGL_UFS_POWER_MODE
+/* The change as ufshcd_uic_pwr_ctrl sees it. Values the phone has never reported are this model's, not measurements. */
+static unsigned hs, upmcrs, pmc_seen, peer_tact = 7, peer_sets;
+static uint32_t set_attr[0x10000];
+static int pmc(uint32_t mode)
+{
+    static const struct { uint16_t a; uint32_t v; } need[] = { {0x15d4,1},{0x1583,4},{0x1580,2},{0x1584,1},{0x1568,4},{0x1560,2},{0x1569,1},{0x156a,2},
+        {0x15b0,8191},{0x15b1,65535},{0x15b2,32767},{0x15b3,8191},{0x15b4,65535},{0x15b5,32767},{0xd041,8191},{0xd042,65535},{0xd043,32767} };
+    pmc_seen++;
+    if (is("pmc_refused")) return 1;
+#if TGL_UFS_PWM_FALLBACK
+    if (is("relink_fail") || is("fb_crc")) return 1;
+#endif
+    if (is("pmc_no_upms")) return 0;
+    if (is("pmc_link_lost")) { reg[0x20 / 4] |= 0x80; return 0; }
+    if (is("pmc_upmcrs_bad")) { upmcrs = 5; reg[0x20 / 4] |= 0x10; return 0; }
+    for (unsigned i = 0; i < sizeof need / sizeof need[0]; i++)
+        if (set_attr[need[i].a] != need[i].v) { V("PMC with attr %x = %u, want %u", need[i].a, set_attr[need[i].a], need[i].v); return 1; }
+    if (mode != 0x11) { V("PMC mode %x", mode); return 1; }
+    if (reg[0x58 / 4]) V("PMC with a doorbell set");
+    hs = 1; upmcrs = 1; reg[0x20 / 4] |= 0x10;
+    return 0;
+}
+static uint32_t pm_get(uint32_t attr, uint32_t peer)
+{
+    if (peer) {
+        if (attr == 0x1587) return is("gear3") ? 3 : 4;
+        if (attr == 0x15aa) return 4;
+        if (attr == 0x15a8) return is("tact_peer_low") ? 1 : peer_tact;
+        return 0;
+    }
+    switch (attr) {
+    case 0x1581: case 0x1561: return is("one_lane") ? 1 : 2;
+    case 0x1587: return 5;
+    case 0x15aa: return 4;
+    case 0x1571: return hs ? 0x11 : 0x55;
+    case 0x1583: case 0x1568: return hs ? set_attr[attr] : 1;
+    case 0x1580: case 0x1560: return hs ? set_attr[attr] : 1;
+    default: return set_attr[attr];
+    }
+}
+#endif
 static void uic(uint32_t op)
 {
     uint32_t a1 = reg[0x94 / 4], a3 = reg[0x9c / 4], res = 0;
     T("UIC %x %x %x", op, a1 >> 16, a3);
+#if TGL_UFS_POWER_MODE
+    {
+        uint32_t attr = a1 >> 16;
+        if (op == 2) {
+            if (attr == 0x1571) {
+                res = (uint32_t)pmc(a3);
+                reg[0x98 / 4] = res; reg[0x20 / 4] |= 0x400;
+                return;
+            }
+            set_attr[attr] = a3;
+        } else if (op == 4 && attr == 0x15a8) { peer_sets++; peer_tact = a3; }
+        else if (op == 3) {
+            if (is("peer_get_fail") && attr == 0x1587) res = 8;
+            else reg[0x9c / 4] = pm_get(attr, 1);
+            reg[0x98 / 4] = res; reg[0x20 / 4] |= 0x400;
+            return;
+        } else if (op == 1 && attr != 0x15a8 && attr != 0xd000 && attr != 0x41 && attr != 0xc1) {
+            reg[0x9c / 4] = pm_get(attr, 0);
+            reg[0x98 / 4] = 0; reg[0x20 / 4] |= 0x400;
+            return;
+        } else if (op == 1 && attr == 0x15a8 && pmc_seen == 0 && set_attr[0x15a8]) {
+            reg[0x9c / 4] = set_attr[0x15a8];
+            reg[0x98 / 4] = 0; reg[0x20 / 4] |= 0x400;
+            return;
+        }
+    }
+#endif
     if (op == 0x16) {
         if (reset_was_low && power_was_on && refclk_before_reset && (clocks & 3) == 3 && top200 == 0x101 && reg[0xf8 / 4] == 0xc8) linked = 1;
         else res = 1;
@@ -96,6 +177,9 @@ int tgl_ufs_port_hc_rd(uint32_t o, uint32_t *v)
 {
     if (o == 0x00) { *v = REPLAY_CAP; return 0; }
     if (o == 0x34) { *v = hce; return 0; }
+#if TGL_UFS_POWER_MODE
+    if (o == 0x30 && linked) { *v = 0xf | upmcrs << 8; return 0; }
+#endif
     if (o == 0x30) { *v = linked ? 0xf : (hce & 1 ? 0x108 : 0); return 0; }
     *v = reg[o / 4];
     return 0;
@@ -154,6 +238,32 @@ static void device(void)
         memcpy(d, REPLAY_RL, sizeof REPLAY_RL);
     } else if (q[0] == 1 && q[16] == 0x28) {
         uint32_t lba = (uint32_t)q[18] << 24 | (uint32_t)q[19] << 16 | (uint32_t)q[20] << 8 | q[21];
+#if TGL_UFS_POWER_MODE
+        /* After the change: the phone's TARGET reads again, in order. Before it: PWM only. */
+#if TGL_UFS_PWM_FALLBACK
+        if (relinks ? hs : hs != (read_at >= REPLAY_NREADS)) V("READ %u in the wrong mode, hs=%u", read_at, hs);
+#else
+        if (hs != (read_at >= REPLAY_NREADS)) V("READ %u in the wrong mode, hs=%u", read_at, hs);
+#endif
+        if (read_at >= REPLAY_NREADS) {
+#if TGL_UFS_PWM_FALLBACK
+            unsigned at = REPLAY_NREADS - 12u + verify_at++;
+#else
+            unsigned at = REPLAY_NREADS - 12u + (read_at - REPLAY_NREADS);
+#endif
+            if (at >= REPLAY_NREADS || replay_reads[at].lun != q[2] || replay_reads[at].lba != lba) V("HS READ %u: LU %u LBA %u", read_at, q[2], lba);
+            read_at++;
+            if (is("hs_timeout") && read_at == REPLAY_NREADS + 3u) { hang_reads = 1; return; }
+            const uint8_t *hb = block_for(q[2], lba);
+            if (hb) memcpy(d, hb, 4096); else V("no block for LU %u LBA %u", q[2], lba);
+            if (is("hs_crc") && read_at == REPLAY_NREADS + 5u) d[100] ^= 1;
+#if TGL_UFS_PWM_FALLBACK
+            if (is("fb_crc") && relinks && verify_at == 3u) d[100] ^= 1;
+#endif
+            put_le32(u + 8, ocs);
+            return;
+        }
+#endif
         if (!is("strict_headers")) {
             if (read_at >= REPLAY_NREADS || replay_reads[read_at].lun != q[2] || replay_reads[read_at].lba != lba)
                 V("READ %u out of the phone's order: LU %u LBA %u", read_at, q[2], lba);
@@ -213,6 +323,30 @@ static void write_file(const char *p, const void *b, size_t n)
     fwrite(b, 1, n, f);
     fclose(f);
 }
+#if TGL_UFS_PWM_FALLBACK || TGL_UFS_PHY_CHECK
+static int p_top(void *c, uint32_t o, uint32_t *v)
+{
+    (void)c;
+    if (o != 0x100) { V("TOP read %x", o); return -1; }
+    T("TOPRD %x", o);
+    *v = is("phy_init_clear") ? 0x204c24 & ~0x300000u : 0x23c4c24;
+    return is("top_fault") ? -2 : 0;
+}
+static int p_pad(void *c, unsigned w_, uint32_t o, uint32_t *v) { (void)c; return tgl_ufs_port_pad_rd(w_, o, v); }
+static unsigned marks;
+static void p_mark(void *c, unsigned id, unsigned state, int32_t val) { (void)c; T("MARK %u %u", id, state); (void)val; marks++; }
+static int p_relink(void *c)
+{
+    (void)c;
+    verify_at = 0; real_at = 0; hang_reads = 0; hs = 0; upmcrs = 0; relinks++;
+    if (is("relink_fail")) { top200 = 0; return -1; }
+    if (reg[0x60 / 4] & 1) V("relink with the list running");
+    relinking = 1;
+    int r = tgl_ufs_link_relink();
+    relinking = 0;
+    return r;
+}
+#endif
 int main(int ac, char **av)
 {
     if (ac < 4) return 4;
@@ -232,6 +366,9 @@ int main(int ac, char **av)
     printf("L rc=%d attempts=%u up=%u smc=%x again=%d\n", lrc, linkrec[168], linkrec[170], clocks, tgl_ufs_link_run(&lq));
     printf("H %u\n", hc_before);
     static struct tgl_ufsh_ports p = { 0, h_rd, h_wr, sm_rd, p_now, p_delay, p_sync, p_rec };
+#if TGL_UFS_PWM_FALLBACK || TGL_UFS_PHY_CHECK
+    p.top_rd = p_top; p.pad_rd = p_pad; p.relink = p_relink; p.mark = p_mark;
+#endif
     static struct tgl_ufsh_request q;
     static struct tgl_ufsh_result o;
     q.enable = 1; q.epoch = lq.epoch; memcpy(q.nonce, "\xbd\xf5\x82\xb4\x5d\x69\x80\x0a\xf5\x1a\x51\x93\x54\x95\x83\x06", 16);
@@ -254,6 +391,12 @@ int main(int ac, char **av)
         int out = ufsh_finalize(&e, &fp, &r);
         printf("F outcome=%d step=%u ahit=%x hcs=%x\n", out, r.step, r.ahit, r.hcs);
     }
+#if TGL_UFS_POWER_MODE
+    printf("P state=%u hs=%u pmc=%u peer_sets=%u peer_tact=%u\n", o.pmc_state, hs, pmc_seen, peer_sets, peer_tact);
+#if TGL_UFS_PWM_FALLBACK
+    printf("B relinks=%u first=%d marks=%u\n", relinks, o.pmc_first_rc, marks);
+#endif
+#endif
     for (unsigned i = 0; i < ntrace; i++) printf("T %s\n", trace[i]);
     write_file(av[2], rec, sizeof rec);
     write_file(av[3], linkrec, sizeof linkrec);

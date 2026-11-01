@@ -1,4 +1,11 @@
-# Current — 2026-11-01: native frames on the panel; SpringBoard runs; iOS not yet on the panel
+# Current — 2026-11-01: moved to iOS 26
+
+- The owner dropped iOS 16. Branch `ios26` is the working line; `ios16` and tag `ios16-final` hold the frozen line, indexed by `IOS16.md` there. `main` stays at `78d0126`, the shared base. `research/` isn't in git and stays on disk.
+- iOS 26 has not been built or booted here. Host checks: shim, stage and route tests pass, tool tests pass, `tgl_dcs.o` compiled for ARM64 with rung 3. The combined shim has not been built into an image or booted.
+- Latest physical result: RAM scanout on the panel, `20261101-211212-display-frame-r1d`, below.
+- Next: `research/ios26-route-r1/PLAN.md`; `research/tegu-branches-r1/FINDINGS.md`.
+
+## 2026-11-01: native frames on the panel; SpringBoard runs; iOS not yet on the panel
 
 - Physical, attempt `20261101-210249-display-frame-r1c`, image `0b668164…`, capture `c78f5a31…`. The owner saw the screen flash white (order not reported). Panel OPR per slot 0, 2028, 0, 0, 2028, 2028 for black, white, black, black, white, white. Verdict `PANEL_REPORTS_PIXELS`.
 - Frame-done seen, TE seen, panel error count 0, no reset. DPU test pattern through DSC, command mode kick, no RAM fetch.

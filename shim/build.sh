@@ -59,14 +59,16 @@ PY
 UFS_EPOCH=${UFS_IDS%% *}
 UFS_NONCE16=${UFS_IDS#* }
 CFLAGS="-DTGL_UFS_ROUTE=1 -DTGL_UFS_POST_LINK=1 -DTGL_UFS_HANDOFF=$TGL_UFS_HANDOFF -DTGL_STAMP_UFS_FOCUS=1 -DTGL_UFS_EPOCH=${UFS_EPOCH}ULL -DTGL_UFS_RECORD_NONCE=$UFS_NONCE16 $CFLAGS"
-for f in start.S shim.c console.c mmu.c fdt.c loader.c probe.c wdt.c laguna_usb.c laguna_usb_dma.c tgl_cpm.c tgl_display.c tgl_display_power.c tgl_usb_console.c tgl_ufs.c tgl_ufs_link.c tgl_ufs_host.c tgl_ufs_handoff.c tgl_ufs_route.c stamp.c guard.S; do
+for f in start.S shim.c console.c mmu.c fdt.c loader.c probe.c wdt.c laguna_usb.c laguna_usb_dma.c tgl_cpm.c tgl_display.c tgl_display_power.c tgl_usb_console.c tgl_ufs.c tgl_ufs_link.c tgl_ufs_host.c tgl_ufs_handoff.c tgl_ufs_route.c stamp.c guard.S ${TGL_EXTRA_SRC:-}; do
 	$CC $CFLAGS -c $f -o out/${f%.*}.o
 done
+# all-r1 stages, named by ../research/ui-integrate-r1/build.py; empty otherwise.
+EXTRA_O=$(for f in ${TGL_EXTRA_SRC:-}; do printf 'out/%s.o ' "${f%.*}"; done)
 # The image runs wherever ABL puts it with no relocation pass: only the
 # header's image_size (start.o, linked at 0) may be an absolute address.
-abs=$($READELF -r out/shim.o out/console.o out/mmu.o out/fdt.o out/loader.o out/probe.o out/wdt.o out/laguna_usb.o out/laguna_usb_dma.o out/tgl_cpm.o out/tgl_display.o out/tgl_display_power.o out/tgl_usb_console.o out/tgl_ufs.o out/tgl_ufs_link.o out/tgl_ufs_host.o out/tgl_ufs_handoff.o out/tgl_ufs_route.o out/stamp.o out/guard.o | grep -c ABS64 || true)
+abs=$($READELF -r out/shim.o out/console.o out/mmu.o out/fdt.o out/loader.o out/probe.o out/wdt.o out/laguna_usb.o out/laguna_usb_dma.o out/tgl_cpm.o out/tgl_display.o out/tgl_display_power.o out/tgl_usb_console.o out/tgl_ufs.o out/tgl_ufs_link.o out/tgl_ufs_host.o out/tgl_ufs_handoff.o out/tgl_ufs_route.o out/stamp.o out/guard.o $EXTRA_O | grep -c ABS64 || true)
 [ "$abs" = 0 ] || { echo "error: $abs absolute relocations in C objects" >&2; exit 1; }
-LINK out/start.o out/shim.o out/console.o out/mmu.o out/fdt.o out/loader.o out/probe.o out/wdt.o out/laguna_usb.o out/laguna_usb_dma.o out/tgl_cpm.o out/tgl_display.o out/tgl_display_power.o out/tgl_usb_console.o out/tgl_ufs.o out/tgl_ufs_link.o out/tgl_ufs_host.o out/tgl_ufs_handoff.o out/tgl_ufs_route.o out/stamp.o out/guard.o -o out/shim.elf
+LINK out/start.o out/shim.o out/console.o out/mmu.o out/fdt.o out/loader.o out/probe.o out/wdt.o out/laguna_usb.o out/laguna_usb_dma.o out/tgl_cpm.o out/tgl_display.o out/tgl_display_power.o out/tgl_usb_console.o out/tgl_ufs.o out/tgl_ufs_link.o out/tgl_ufs_host.o out/tgl_ufs_handoff.o out/tgl_ufs_route.o out/stamp.o out/guard.o $EXTRA_O -o out/shim.elf
 $OBJCOPY -O binary out/shim.elf out/Image
 # ABL copies the file; pad to image_size so .bss/stacks exist as zeroed bytes.
 size=$($NM out/shim.elf | awk '$3=="_end"{print $1}')
@@ -102,4 +104,8 @@ python3 ../tools/mkbootimg.py --header_version 4 --kernel out/Image --ramdisk ou
 $HOSTCC -O1 -Wall -DTGL_STAMP_HOST -DTGL_STAMP_HOST_CLOCK -o out/host_test console.c laguna_usb.c stamp.c stamp_deadline_test.c host_test.c && ./out/host_test
 # The UFS route, against the phone's recorded replies. A failure fails build.sh.
 python3 -I test_ufs_route.py
+# ufs-speed-r1: the same fake with the power mode change on.
+python3 -I test_ufs_speed.py
+# all-r1: the fallback and the PHY check, on the same fake.
+if [ -f test_all_stages.py ]; then python3 -I test_all_stages.py; fi
 ls -l out/Image out/shim-boot-laguna.img

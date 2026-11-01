@@ -123,6 +123,12 @@ struct st {
     int cmd_rc;
     uint8_t v1[8], v2[8];
     uint8_t req[32], rsp[RSP_LOG_MAX], hdr[GPT_HDR_MAX], ent[GPT_ENTRY_BYTES];
+#if TGL_UFS_POWER_MODE
+    uint32_t target_lba[TGL_UFSH_HS_VERIFY_BLOCKS], target_crc[TGL_UFSH_HS_VERIFY_BLOCKS], target_n;
+#if TGL_UFS_PWM_FALLBACK
+    unsigned fb_quiet;
+#endif
+#endif
 };
 static unsigned attempted;
 static struct st g;
@@ -165,6 +171,10 @@ static void append(struct st *s, unsigned type, unsigned step, const uint32_t *w
 {
     uint32_t n = 8u + nw * 4u + nb, total = ((n + 3u) & ~3u) + 4u, at = 8;
     uint32_t reserve = type == TGL_UFSH_T_END ? 0u : ENTRY_MAX;
+#if TGL_UFS_PWM_FALLBACK
+    /* The first pass has filled most of the 8 KiB: after a failed change, notes, reads and the end only. */
+    if (s->fb_quiet && type != TGL_UFSH_T_GATE && type != TGL_UFSH_T_READ && type != TGL_UFSH_T_END) return;
+#endif
     if (total > sizeof(ebuf) || s->used + total + reserve > TGL_UFSH_RECORD_BYTES) { s->dropped++; return; }
     bzero8(ebuf, total);
     ebuf[0] = (uint8_t)total; ebuf[1] = (uint8_t)(total >> 8); ebuf[2] = (uint8_t)type; ebuf[3] = (uint8_t)step;
@@ -209,7 +219,7 @@ static int uic_once(struct st *s, uint32_t op, uint32_t a1, uint32_t a3, uint32_
 static int uic(struct st *s, uint32_t op, uint32_t a1, uint32_t a3, uint32_t *out)
 {
     /* ufshcd_dme_set_attr: peer sets retry, UFS_UIC_COMMAND_RETRIES tries in total. */
-    unsigned tries = op == 4u ? 3u : 1u;
+    unsigned tries = op == 4u || op == 3u ? 3u : 1u;
     int r = TGL_UFSH_E_UIC;
     for (unsigned i = 0; i < tries; i++) {
         uint32_t got = 0;
@@ -547,6 +557,12 @@ static int read_block(struct st *s, unsigned step, unsigned lun, uint32_t lba, u
         (uint32_t)s->rsp[1] | (uint32_t)s->rsp[6] << 8 | (uint32_t)s->rsp[7] << 16, resid, crc, s->v1_left, s->v2_left, s->v1_dw2 };
     for (unsigned i = 0; i < 8u; i++) { b[i] = s->v1[i]; b[8u + i] = s->v2[i]; }
     if (raw && !r) { for (unsigned i = 0; i < 64u; i++) b[16u + i] = d[i]; nb = 80; }
+#if TGL_UFS_POWER_MODE
+    if (step == TGL_UFSH_P_HS_VERIFY) nb = 0; /* the CRC and the time are the point; the record holds 8 KiB */
+#if TGL_UFS_PWM_FALLBACK
+    if (step == TGL_UFSH_P_PWM_VERIFY) nb = 0;
+#endif
+#endif
     append(s, TGL_UFSH_T_READ, step, w, 13, b, nb);
     return r;
 }
@@ -660,6 +676,15 @@ static int lu_survivable(int r)
 {
     return r == TGL_UFSH_E_SCSI || r == TGL_UFSH_E_OCS || r == TGL_UFSH_E_PROTOCOL || r == TGL_UFSH_E_CAP || r == TGL_UFSH_E_GPT;
 }
+static int read_target_block(struct st *s, uint32_t lba, unsigned raw)
+{
+    uint32_t crc = 0;
+    int r = read_block(s, TGL_UFSH_P_TARGET, s->o->target_lun, lba, raw, &crc);
+#if TGL_UFS_POWER_MODE
+    if (!r && s->target_n < TGL_UFSH_HS_VERIFY_BLOCKS) { s->target_lba[s->target_n] = lba; s->target_crc[s->target_n++] = crc; }
+#endif
+    return r;
+}
 static int read_target(struct st *s)
 {
     volatile uint8_t *d = s->q->arena + A_DATA;
@@ -670,7 +695,7 @@ static int read_target(struct st *s)
     o->phase = TGL_UFSH_P_TARGET;
     if ((r = smmu_gate(s, 0x100u))) return r;
     for (uint32_t i = 0; i < TGL_UFSH_TARGET_BLOCKS && o->target_first + i <= o->target_last; i++) {
-        if ((r = read_block(s, TGL_UFSH_P_TARGET, o->target_lun, o->target_first + i, 1, 0))) return r;
+        if ((r = read_target_block(s, o->target_first + i, 1))) return r;
         if (!i) {
             unsigned ok = 1;
             for (unsigned k = 0; k < 4u; k++) if (d[32u + k] != (uint8_t)nx[k]) ok = 0;
@@ -679,7 +704,7 @@ static int read_target(struct st *s)
     }
     if (o->target_last - o->target_first >= TGL_UFSH_MANIFEST_BLOCK) {
         unsigned ok = 1;
-        if ((r = read_block(s, TGL_UFSH_P_TARGET, o->target_lun, o->target_first + TGL_UFSH_MANIFEST_BLOCK, 1, 0))) return r;
+        if ((r = read_target_block(s, o->target_first + TGL_UFSH_MANIFEST_BLOCK, 1))) return r;
         for (unsigned k = 0; k < 8u; k++) if (d[k] != (uint8_t)mg[k]) ok = 0;
         o->target_manifest = ok;
     }
@@ -688,7 +713,7 @@ static int read_target(struct st *s)
         static const uint32_t samp[TGL_UFSH_SAMPLE_BLOCKS] = { 4096u,65536u,131072u,262144u,400000u,524288u,604000u, };
         for (unsigned i = 0; i < TGL_UFSH_SAMPLE_BLOCKS; i++) {
             if (o->target_last - o->target_first < samp[i]) break;
-            if ((r = read_block(s, TGL_UFSH_P_TARGET, o->target_lun, o->target_first + samp[i], 1, 0))) return r;
+            if ((r = read_target_block(s, o->target_first + samp[i], 1))) return r;
         }
     }
     return 0;
@@ -714,6 +739,251 @@ static int read_pass(struct st *s)
     if (!o->target_found) return TGL_UFSH_E_NOT_FOUND;
     return read_target(s);
 }
+#if TGL_UFS_POWER_MODE
+/* unipro.h. Order: vendor PRE_CHANGE (ufs-google.c:1843-1853), then ufshcd_change_power_mode (ufshcd.c:4452-4499). */
+#define PA_ACTIVETXDATALANES 0x1560u
+#define PA_CONNECTEDTXDATALANES 0x1561u
+#define PA_TXGEAR 0x1568u
+#define PA_TXTERMINATION 0x1569u
+#define PA_HSSERIES 0x156au
+#define PA_PWRMODE 0x1571u
+#define PA_ACTIVERXDATALANES 0x1580u
+#define PA_CONNECTEDRXDATALANES 0x1581u
+#define PA_RXGEAR 0x1583u
+#define PA_RXTERMINATION 0x1584u
+#define PA_MAXRXHSGEAR 0x1587u
+#define PA_TACTIVATE 0x15a8u
+#define PA_GRANULARITY 0x15aau
+#define PA_PWRMODEUSERDATA0 0x15b0u
+#define PA_TXHSADAPTTYPE 0x15d4u
+#define DME_LOCALFC0 0xd041u
+#define DME_LOCALTC0 0xd042u
+#define DME_LOCALAFC0 0xd043u
+#define PA_INITIAL_ADAPT 1u
+#define PA_HS_MODE_B 2u
+#define HS_GEAR 4u  /* ABL's log: "ufshc_power_mode_change HS gear 4"; device is UFS 3.1 */
+#define HS_LANES 2u /* vendor google_pwr_mode */
+#define PWR_FAST_BOTH 0x11u
+#define IS_UPMS 0x10u
+#define UPMCRS(hcs) (((hcs) >> 8) & 7u)
+#define PWR_LOCAL 1u
+#define UIC_GET 1u
+#define UIC_SET 2u
+#define UIC_PEER_GET 3u
+#define UIC_PEER_SET 4u
+#define PMC_TIMEOUT_US 500000u /* ufshcd.c UIC_CMD_TIMEOUT */
+#define MIB(a) ((uint32_t)(a) << 16)
+static void pmc_note(struct st *s, uint32_t where, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e)
+{
+    uint32_t w[6] = { where, a, b, c, d, e };
+    append(s, TGL_UFSH_T_GATE, TGL_UFSH_P_PMC, w, 6, 0, 0);
+}
+/* DME one entry each would overflow the 8 KiB record: values go in pmc_note, and only a failure gets its own T_UIC entry. */
+static int dme_quiet(struct st *s, uint32_t op, uint32_t attr, uint32_t a3, uint32_t *out)
+{
+    /* ufshcd_dme_set_attr, ufshcd_dme_get_attr: peer commands retry, UFS_UIC_COMMAND_RETRIES tries in total. */
+    unsigned tries = op == UIC_PEER_GET || op == UIC_PEER_SET ? 3u : 1u;
+    int r = TGL_UFSH_E_UIC;
+    for (unsigned i = 0; i < tries; i++) {
+        uint32_t got = 0;
+        r = uic_once(s, op, MIB(attr), a3, out ? out : &got);
+        if (!r) return 0;
+        uint32_t w[6] = { op, MIB(attr), a3, out ? *out : got, i, (uint32_t)r };
+        append(s, TGL_UFSH_T_UIC, TGL_UFSH_P_PMC, w, 6, 0, 0);
+        if (r != TGL_UFSH_E_UIC) break;
+    }
+    return r;
+}
+/* ufs_fixups: Samsung, UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE. ufshcd_quirk_tune_host_pa_tactivate, ufshcd.c:8244. */
+static int tune_peer_tactivate(struct st *s)
+{
+    static const uint8_t us[6] = { 1, 4, 8, 16, 32, 100 };
+    uint32_t g = 0, pg = 0, t = 0, pt = 0, t_us, pt_us; int r;
+    if ((r = dme_quiet(s, UIC_GET, PA_GRANULARITY, 0, &g)) || (r = dme_quiet(s, UIC_PEER_GET, PA_GRANULARITY, 0, &pg))) return r;
+    if ((r = dme_quiet(s, UIC_GET, PA_TACTIVATE, 0, &t)) || (r = dme_quiet(s, UIC_PEER_GET, PA_TACTIVATE, 0, &pt))) return r;
+    pmc_note(s, TGL_UFSH_PMC_WHERE_TACT, g, pg, t, pt, 0);
+    if (g < 1u || g > 6u || pg < 1u || pg > 6u) return TGL_UFSH_E_PMC;
+    t_us = t * us[g - 1u]; pt_us = pt * us[pg - 1u];
+    if (t_us >= pt_us) return dme_quiet(s, UIC_PEER_SET, PA_TACTIVATE, t_us / us[pg - 1u] + 1u, 0);
+    return 0;
+}
+/* ufshcd_uic_pwr_ctrl: completion is UPMS, then UPMCRS must say PWR_LOCAL. Only UCCS and UPMS are acknowledged. */
+static int issue_power_mode(struct st *s)
+{
+    uint64_t t0, t; uint32_t v = 0, hcs = 0, polls = 0, us = 0; int r, rc = TGL_UFSH_E_PMC;
+    if ((r = clock_(s, &t0))) return r;
+    for (uint32_t n = 0;; n++) {
+        if ((r = rd(s, R_HCS, &v))) return r;
+        if (v & HCS_UCRDY) break;
+        if ((r = clock_(s, &t))) return r;
+        if (t - t0 >= UIC_TIMEOUT_US || n >= UIC_POLLS_MAX) return TGL_UFSH_E_UIC; /* boot-review-r1: a stopped clock must not mean forever */
+    }
+    if ((r = wr(s, R_IS, IS_UCCS | IS_UPMS)) || (r = wr(s, R_UICARG1, MIB(PA_PWRMODE))) || (r = wr(s, R_UICARG2, 0)) ||
+        (r = wr(s, R_UICARG3, PWR_FAST_BOTH))) return r;
+    s->o->pmc_state = 2;
+    if ((r = wr(s, R_UICCMD, UIC_SET))) return r;
+    if ((r = clock_(s, &t0))) return r;
+    for (;;) {
+        polls++;
+        if ((r = rd(s, R_IS, &v))) return r;
+        if (s->p->now_us(s->p->ctx, &t)) return TGL_UFSH_E_PORT;
+        us = (uint32_t)(t - t0);
+        if (v & IS_FATAL) break;
+        if (v & IS_UCCS) {
+            uint32_t a2;
+            if ((r = rd(s, R_UICARG2, &a2))) return r;
+            if (a2 & 0xffu) break; /* refused: no UPMS will come */
+        }
+        if (v & IS_UPMS) {
+            if ((r = wr(s, R_IS, IS_UCCS | IS_UPMS)) || (r = rd(s, R_HCS, &hcs))) return r;
+            if (UPMCRS(hcs) == PWR_LOCAL) rc = 0;
+            break;
+        }
+        if (us >= PMC_TIMEOUT_US) break;
+        if (s->p->delay_us(s->p->ctx, 10, 10)) return TGL_UFSH_E_PORT;
+    }
+    pmc_note(s, TGL_UFSH_PMC_WHERE_DONE, (uint32_t)rc, v, hcs, us, polls);
+    return rc;
+}
+static int change_power_mode(struct st *s)
+{
+    /* Same order as source. UserData 0..5 and the local timeouts are the DL_* defaults. */
+    static const struct { uint16_t attr, val; } set[] = {
+        { PA_TXHSADAPTTYPE, PA_INITIAL_ADAPT }, { PA_RXGEAR, HS_GEAR }, { PA_ACTIVERXDATALANES, HS_LANES }, { PA_RXTERMINATION, 1 },
+        { PA_TXGEAR, HS_GEAR }, { PA_ACTIVETXDATALANES, HS_LANES }, { PA_TXTERMINATION, 1 }, { PA_HSSERIES, PA_HS_MODE_B },
+        { PA_PWRMODEUSERDATA0 + 0u, 8191 }, { PA_PWRMODEUSERDATA0 + 1u, 65535 }, { PA_PWRMODEUSERDATA0 + 2u, 32767 },
+        { PA_PWRMODEUSERDATA0 + 3u, 8191 }, { PA_PWRMODEUSERDATA0 + 4u, 65535 }, { PA_PWRMODEUSERDATA0 + 5u, 32767 },
+        { DME_LOCALFC0, 8191 }, { DME_LOCALTC0, 65535 }, { DME_LOCALAFC0, 32767 },
+    };
+    int r;
+    for (unsigned i = 0; i < sizeof(set) / sizeof(set[0]); i++)
+        if ((r = dme_quiet(s, UIC_SET, set[i].attr, set[i].val, 0))) return r;
+    return issue_power_mode(s);
+}
+/* What the host now says, as DME GETs. Before the change these show the mode every earlier boot ran in. */
+static int read_mode(struct st *s, uint32_t where)
+{
+    uint32_t got[5];
+    static const uint16_t attr[5] = { PA_PWRMODE, PA_RXGEAR, PA_TXGEAR, PA_ACTIVERXDATALANES, PA_ACTIVETXDATALANES };
+    int r;
+    for (unsigned i = 0; i < 5u; i++) if ((r = dme_quiet(s, UIC_GET, attr[i], 0, &got[i]))) return r;
+    pmc_note(s, where, got[0], got[1], got[2], got[3], got[4]);
+    return 0;
+}
+/* Every block read at PWM, read again at HS. Same bytes or the link is not trusted with a root. */
+static int hs_verify(struct st *s)
+{
+    struct tgl_ufsh_result *o = s->o;
+    int r;
+    o->phase = TGL_UFSH_P_HS_VERIFY;
+    if ((r = smmu_gate(s, 0x500u))) return r;
+    for (uint32_t i = 0; i < s->target_n; i++) {
+        uint32_t crc = 0;
+        if ((r = read_block(s, TGL_UFSH_P_HS_VERIFY, o->target_lun, s->target_lba[i], 0, &crc))) return r;
+        if (crc != s->target_crc[i]) return TGL_UFSH_E_HS_CRC;
+    }
+    return 0;
+}
+#if TGL_UFS_PHY_CHECK || TGL_UFS_PWM_FALLBACK
+static void mark(struct st *s, unsigned id, unsigned state, int32_t val)
+{
+    if (s->p->mark) s->p->mark(s->p->ctx, id, state, val);
+}
+#endif
+#if TGL_UFS_PHY_CHECK
+/* reuse-stability-r1. Recorded for the case HS ever fails, never a reason to refuse: the phone reached HS without these reads.
+ * DME_GET only. The indirect PHY registers need DME_SET of the APB pointer, so they are not read here. */
+static void phy_check(struct st *s)
+{
+    static const struct { uint16_t attr, sel; } get[6] = { {0x8101, 0}, {0x8115, 0}, {0x8019, 4}, {0x8019, 5}, {0x8013, 4}, {0x8013, 5} };
+    uint32_t top = 0, param = 0, dmux = 0, tx = 0, v[6] = { 0 }, failed = 0;
+    void *c = s->p->ctx;
+    mark(s, TGL_UFSH_MARK_PHY, 1, 0);
+    if (!s->p->top_rd || s->p->top_rd(c, 0x100u, &top)) failed |= 1u << 8;
+    if (!s->p->pad_rd || s->p->pad_rd(c, 2u, 0u, &param) || s->p->pad_rd(c, 2u, 4u, &dmux) || s->p->pad_rd(c, 2u, 8u, &tx)) failed |= 1u << 9;
+    pmc_note(s, TGL_UFSH_PMC_WHERE_PHY0, top, param, dmux, tx, 0);
+    for (unsigned i = 0; i < 6u; i++)
+        if (uic_once(s, UIC_GET, MIB(get[i].attr) | get[i].sel, 0, &v[i])) failed |= 1u << i;
+    pmc_note(s, TGL_UFSH_PMC_WHERE_PHY1, v[0], v[1], v[2], v[3], v[4]);
+    pmc_note(s, TGL_UFSH_PMC_WHERE_PHY2, v[5], failed, 0, 0, 0);
+    mark(s, TGL_UFSH_MARK_PHY, 2, (int32_t)failed);
+}
+#endif
+#if TGL_UFS_PWM_FALLBACK
+static int stop_lists(struct st *s);
+static int install_lists(struct st *s);
+/* One device reset and link, the sequence that works at PWM, then the phone's own bring-up and the target blocks compared with the first PWM pass.
+ * No DMA is live here: the caller checked inflight and quarantine, and lists stop first. Any failure returns the first error, and the handoff stays DOWN. */
+static int pwm_fallback(struct st *s, int why)
+{
+    struct tgl_ufsh_result *o = s->o;
+    uint32_t uec[2] = { 0, 0 }, is = 0, hcs = 0, stale = 0; int r; uint32_t n = 0;
+    o->pmc_first_rc = why;
+    (void)rd(s, R_UECPA, &uec[0]); (void)rd(s, R_UECDL, &uec[1]); (void)rd(s, R_IS, &is); (void)rd(s, R_HCS, &hcs);
+    pmc_note(s, TGL_UFSH_PMC_WHERE_FAIL, (uint32_t)why, uec[0], uec[1], is, hcs);
+    if (!s->p->relink) return why;
+    mark(s, TGL_UFSH_MARK_RELINK, 1, why);
+    s->fb_quiet = 1;
+    o->phase = TGL_UFSH_P_PWM_RELINK;
+    if ((r = stop_lists(s))) { o->quarantined = 1; goto out; }
+    if ((r = s->p->relink(s->p->ctx))) { r = TGL_UFSH_E_PMC; goto out; }
+    o->phase = TGL_UFSH_P_POST_CHANGE;
+    if ((r = rd(s, R_IS, &stale)) || (r = wr(s, R_IS, stale)) || (r = wr(s, R_IE, 0)) || (r = post_change(s))) goto out;
+    o->phase = TGL_UFSH_P_LISTS;
+    if ((r = install_lists(s))) goto out;
+    o->phase = TGL_UFSH_P_NOP;
+    if ((r = smmu_gate(s, 0x600u)) || (r = nop(s)) || (r = device_init(s))) goto out;
+    o->phase = TGL_UFSH_P_TUR;
+    if ((r = scsi(s, TGL_UFSH_P_TUR, SCSI_TUR, 0, 0))) goto out;
+    if ((r = read_mode(s, TGL_UFSH_PMC_WHERE_PWM))) goto out;
+    o->phase = TGL_UFSH_P_PWM_VERIFY;
+    for (uint32_t i = 0; i < s->target_n; i++, n++) {
+        uint32_t crc = 0;
+        if ((r = read_block(s, TGL_UFSH_P_PWM_VERIFY, o->target_lun, s->target_lba[i], 0, &crc))) goto out;
+        if (crc != s->target_crc[i]) { r = TGL_UFSH_E_HS_CRC; goto out; }
+    }
+    o->pmc_state = 4;
+out:
+    pmc_note(s, TGL_UFSH_PMC_WHERE_FB_END, (uint32_t)r, n, 0, 0, 0);
+    mark(s, TGL_UFSH_MARK_RELINK, r ? 3 : 2, r);
+    return r ? why : 0;
+}
+#endif
+/* The strong symbol tools/check.py looks for. Doorbells idle: every command above is synchronous, and this checks. */
+int tgl_ufsh_power_mode(struct st *s)
+{
+    struct tgl_ufsh_result *o = s->o;
+    uint32_t rx = 0, tx = 0, local = 0, peer = 0, a, b, reason = 0; int r;
+    o->phase = TGL_UFSH_P_PMC;
+    if ((r = rd(s, R_UTRLDBR, &a)) || (r = rd(s, R_UTMRLDBR, &b))) return r;
+    if (a || b) return TGL_UFSH_E_STATE;
+    if ((r = read_mode(s, TGL_UFSH_PMC_WHERE_BEFORE))) return r;
+    if ((r = dme_quiet(s, UIC_GET, PA_CONNECTEDRXDATALANES, 0, &rx)) || (r = dme_quiet(s, UIC_GET, PA_CONNECTEDTXDATALANES, 0, &tx)) ||
+        (r = dme_quiet(s, UIC_GET, PA_MAXRXHSGEAR, 0, &local)) || (r = dme_quiet(s, UIC_PEER_GET, PA_MAXRXHSGEAR, 0, &peer))) return r;
+    pmc_note(s, TGL_UFSH_PMC_WHERE_CAPS, rx, tx, local, peer, 0);
+#if TGL_UFS_PHY_CHECK
+    phy_check(s);
+#endif
+    /* A device or host unable to do what ABL did: nothing was set, and the link still works at PWM. */
+    if (rx != HS_LANES || tx != HS_LANES) reason = 1;
+    else if (local < HS_GEAR || peer < HS_GEAR) reason = 2;
+    if (reason) { o->pmc_state = 1; pmc_note(s, TGL_UFSH_PMC_WHERE_SKIP, reason, 0, 0, 0, 0); return 0; }
+#if TGL_UFS_PHY_CHECK || TGL_UFS_PWM_FALLBACK
+    mark(s, TGL_UFSH_MARK_PMC, 1, 0); /* sealed before the first SET: a reset from here names the change */
+    o->pmc_state = 2;
+#endif
+    if ((r = tune_peer_tactivate(s)) || (r = change_power_mode(s))) return r == TGL_UFSH_E_PMC ? r : TGL_UFSH_E_PMC;
+#if TGL_UFS_PHY_CHECK || TGL_UFS_PWM_FALLBACK
+    mark(s, TGL_UFSH_MARK_PMC, 2, 0);
+    mark(s, TGL_UFSH_MARK_HS_VERIFY, 1, 0);
+#endif
+    /* Recorded, not judged: the decoder compares them. UPMCRS and the CRCs below are what this route trusts. */
+    if (read_mode(s, TGL_UFSH_PMC_WHERE_AFTER)) return TGL_UFSH_E_PMC;
+    if ((r = hs_verify(s))) return r;
+    o->pmc_state = 3;
+    return 0;
+}
+#endif
 static int stop_lists(struct st *s)
 {
     uint32_t a, b; int r;
@@ -840,6 +1110,15 @@ int tgl_ufsh_run(const struct tgl_ufsh_request *q, const struct tgl_ufsh_ports *
     if (!rc) { o->phase = TGL_UFSH_P_REPORT_LUNS; rc = report_luns(s); }
 #if TGL_UFS_READ
     if (!rc) rc = read_pass(s);
+#endif
+#if TGL_UFS_POWER_MODE
+    if (!rc) rc = tgl_ufsh_power_mode(s);
+#if TGL_UFS_PWM_FALLBACK
+    /* A READ that timed out quarantines or stays in flight: DMA may be live, so no reset of anything, as any READ timeout. */
+    if (rc && o->pmc_state == 2 && !s->inflight && !o->quarantined) rc = pwm_fallback(s, rc);
+    /* A failed read before any SET: the link is the PWM link the reads just used. */
+    if (rc == TGL_UFSH_E_UIC && o->pmc_state == 0 && o->phase == TGL_UFSH_P_PMC && !s->inflight) { o->pmc_state = 1; pmc_note(s, TGL_UFSH_PMC_WHERE_SKIP, 3, 0, 0, 0, 0); rc = 0; }
+#endif
 #endif
     if (o->phase >= TGL_UFSH_P_NOP && !s->inflight) (void)smmu_gate(s, 0x300u); /* recorded: did it hold to the end */
     {

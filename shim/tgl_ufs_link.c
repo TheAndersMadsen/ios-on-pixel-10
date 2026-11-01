@@ -537,6 +537,30 @@ int tgl_ufs_link_run(const struct tgl_ufs_link_request *q)
     return w.final_rc = rc ? rc : (o ? TGL_UFS_LINK_E_OUTPUT : TGL_UFS_LINK_OK);
 }
 int tgl_ufs_link_last_rc(void) { return w.final_rc; }
+#if TGL_UFS_PWM_FALLBACK
+int tgl_ufs_link_relink(void)
+{
+    static unsigned relinked;
+    int rc;
+    if (relinked || !w.attempted || w.final_rc != TGL_UFS_LINK_OK) return TGL_UFS_LINK_E_ONCE;
+    relinked = 1;
+    if (tgl_ufs_port_now(&w.last) || w.last > UINT64_MAX - UINT64_C(5000000)) return w.final_rc = TGL_UFS_LINK_E_CLOCK;
+    w.deadline = w.last + UINT64_C(5000000); w.latched = 0; w.attempts = 0; w.link_up = 0; w.failed_acked = 0; w.route_stage = 1;
+    w.in_flight = 1;
+    /* The same reset-low write as device_on_seq, its wait, then high. The power and refclk pads and both clock votes are untouched. */
+    rc = apply_pad(1u << 0, PARAM_DRV_MASK | PARAM_IE, 1u | PARAM_IE, TX_PUPD_MASK | TX_OE | TX_DOUT, TX_OE, PAD_RESET);
+    if (!rc && tgl_ufs_port_delay(REFCLK_MIN_US, REFCLK_MAX_US)) rc = E_PAD_TIME;
+    if (!rc) rc = resetb_high();
+    w.pad_rc = rc;
+    if (!rc) { w.route_stage = 2; rc = prepare(1000000u); }
+    if (!rc) { w.route_stage = 4; rc = link_sequence(1000000u); }
+    if (!rc && tgl_ufs_port_delay(POST_LINK_MIN_US, POST_LINK_MAX_US)) rc = E_PAD_TIME;
+    w.route_stage = 5; w.route_rc = rc; w.pads_after = pad_levels();
+    w.in_flight = 0;
+    int o = stage(TGL_UFS_LINK_S_DONE, rc ? TGL_UFS_LINK_E_LINK : TGL_UFS_LINK_OK);
+    return w.final_rc = rc ? TGL_UFS_LINK_E_LINK : (o ? TGL_UFS_LINK_E_OUTPUT : TGL_UFS_LINK_OK);
+}
+#endif
 void tgl_ufs_link_note_fault(uint64_t esr, uint64_t far_value)
 {
     if (!w.in_flight) return;

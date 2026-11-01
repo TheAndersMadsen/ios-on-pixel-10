@@ -45,6 +45,8 @@ struct tgl_ufs_link_request {
 };
 int tgl_ufs_link_run(const struct tgl_ufs_link_request *);
 int tgl_ufs_link_last_rc(void);
+/* all-r1: the first link's clocks and power stay; device reset, HCE cycle and link again. Once per boot, after tgl_ufs_link_run succeeded. */
+int tgl_ufs_link_relink(void);
 /* Guard unwind: seals the record as FAULT, no MMIO. */
 void tgl_ufs_link_note_fault(uint64_t esr, uint64_t far_value);
 

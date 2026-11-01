@@ -239,6 +239,18 @@ static int rec_write(void *c, uint32_t off, const uint8_t *b, uint32_t n)
     BARRIER();
     return 0;
 }
+#if TGL_UFS_PHY_CHECK || TGL_UFS_PWM_FALLBACK
+#include "tgl_all.h"
+static int top_rd(void *c, uint32_t o, uint32_t *v)
+{
+    (void)c;
+    if (o != 0x100u || !v) return -1;
+    return probe_read32((uintptr_t)(TOP_PA + o), v) ? 0 : -2; /* the word ufs-observe-r2 read on the phone */
+}
+static int pad_rd_(void *c, unsigned which, uint32_t o, uint32_t *v) { (void)c; return tgl_ufs_port_pad_rd(which, o, v); }
+static int relink_(void *c) { (void)c; return tgl_ufs_link_relink(); }
+static void mark_(void *c, unsigned id, unsigned state, int32_t val) { (void)c; tgl_all_mark(id, state, val); }
+#endif
 int tgl_ufs_route_must_park(void) { return (int)res.quarantined; }
 int tgl_ufs_route_after_link(void)
 {
@@ -252,6 +264,9 @@ int tgl_ufs_route_after_link(void)
     __asm__ volatile("mrs %0, ctr_el0" : "=r"(ctr));
     v->ctx = 0; v->hc_rd = hc_rd; v->hc_wr = hc_wr; v->smmu_rd = smmu_rd; v->now_us = now_us;
     v->delay_us = delay_us; v->sync = sync_; v->rec_write = rec_write;
+#if TGL_UFS_PHY_CHECK || TGL_UFS_PWM_FALLBACK
+    v->top_rd = top_rd; v->pad_rd = pad_rd_; v->relink = relink_; v->mark = mark_;
+#endif
     req.enable = 1; req.epoch = TGL_UFS_EPOCH;
     for (unsigned i = 0; i < 16; i++) req.nonce[i] = nonce[i];
     req.arena = arena; req.arena_bus = (uint64_t)(uintptr_t)arena; req.budget_us = UINT64_C(10000000);

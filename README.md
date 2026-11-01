@@ -1,12 +1,12 @@
 # hackios
 
-**Apple's XNU kernel and iOS 16 userland on the Google Pixel 10 Pro.** SpringBoard runs natively from the full root, but nothing reaches the screen yet.
+**Apple's XNU kernel and iOS 26 userland on the Google Pixel 10 Pro: the target of this branch.** iOS 26 has not booted on this phone. The hardware route below was proven on the earlier iOS 16 line, frozen on branch `ios16`.
 
-This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.5 generation) to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The furthest native boot mounts the full iOS root from UFS and runs SpringBoard, with nothing on the panel yet. Bring-up detail is in [BLAZER.md](BLAZER.md).
+This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The target is XNU 12377 and iOS 26. On iOS 16 (`xnu-8796.121.2`), the furthest native boot mounted the full iOS root from UFS and ran SpringBoard, with iOS's frames only in RAM. Bring-up detail is in [BLAZER.md](BLAZER.md).
 
 > Experimental bring-up, not a usable phone OS. Boots are temporary RAM boots; the boot tool leaves `force-fastboot` on. Apple's security model is mostly switched off.
 
-## What works
+## What works (proven with iOS 16; not yet with iOS 26)
 
 | Area | State |
 | --- | --- |
@@ -15,6 +15,7 @@ This project ports Apple's open-source XNU kernel (`xnu-8796.121.2`, the iOS 16.
 | Root | HFS+ compact root delivered in the boot image mounts |
 | Root | Full APFS root mounts read-only from UFS, with 16 KiB pages and 4 GiB of RAM |
 | Userland | `launchd`, backboardd and SpringBoard run; backboardd draws frames to RAM. Once so far |
+| Display | The shim's DPU code sends pixels from RAM to the panel. iOS's own frames haven't reached it |
 
 ## What does not work (yet)
 
@@ -58,7 +59,7 @@ More in [xnu/README.md](xnu/README.md).
 | `BLAZER.md` | Pixel 10 Pro bring-up status and evidence history |
 | `shim/` | Boot shim |
 | `tools/` | Build, boot and log tools |
-| `xnu/` | Kernel patches and build notes |
+| `xnu/` | Build notes; `ios16-base/patches` is the parts source for the 12377 port |
 | `backup/` | Stock boot images; not committed |
 | `research/` | Evidence, sources and earlier documents; not committed |
 

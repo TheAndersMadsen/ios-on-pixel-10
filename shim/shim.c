@@ -44,6 +44,15 @@
 #include "tgl_ufs_route.h"
 #include "tgl_ufs_link.h"
 #include "guard.h"
+#if TGL_ALL_STAGES
+#include "tgl_all.h"
+#endif
+#if TGL_ALL_DCS
+#include "tgl_dcs.h"
+#endif
+#if TGL_ALL_TOUCH
+#include "tgl_tp.h"
+#endif
 
 #define PSCI_SYSTEM_RESET UINT64_C(0x84000009)
 #define TGL_VERSION	"laguna teguload v3.2 noras + USB console + TSHIMST1"
@@ -523,6 +532,13 @@ void shim_main(uint64_t dtb)
 		unsigned guard_fault = 0;
 		stage = "UFS probe ladder";
 		stage_id = TGL_STAGE_UFS_FIRST;
+#if TGL_ALL_STAGES
+		{
+			static const uint8_t all_nonce[16] = TGL_UFS_RECORD_NONCE;
+			tgl_all_begin(TGL_STAMP_NONCE, all_nonce, TGL_UFS_EPOCH);
+			tgl_all_mark(TGL_ALL_S_UFS, TGL_ALL_ENTER, 0);
+		}
+#endif
 		/* v3.9b (U1, fix A): drive the UFSHCI base + the PSM status
 		 * trio from the ABL FDT's ufs node (reg[0..5], the real
 		 * laguna ufs@3c400000 layout) instead of trusting build-time
@@ -628,6 +644,80 @@ void shim_main(uint64_t dtb)
 	}
 #endif
 #endif
+
+#if TGL_ALL_STAGES
+	/* all-r1. Order is ascending chance of losing what follows: a reset here costs this boot's root, so UFS, already proven, went first
+	 * and the first DPU writes go last. A stage's own failure falls through to XNU; only a pending SError or a watchdog that will not stop ends the boot, by name. */
+	{
+		void (*all_saved_tick)(void) = con_tick;
+		tgl_all_mark(TGL_ALL_S_UFS_DONE, TGL_ALL_DONE, 0);
+#if TGL_ALL_TOUCH
+		{
+			static struct tgl_ufs_wdt_guard tp_wdt;
+			static const uint8_t tp_nonce[16] = TGL_UFS_RECORD_NONCE;
+			uint64_t all_daif, all_isr;
+			stage = "touch-r1";
+			stage_id = TGL_TP_STAGE_ID;
+			con_tick = 0;
+			tgl_all_mark(TGL_ALL_S_TOUCH, TGL_ALL_ENTER, 0);
+			tgl_stamp(TGL_TP_STAGE_ID, TGL_STAMP_F_ENTER, 0);
+			tgl_tp_begin(TGL_STAMP_NONCE, tp_nonce, TGL_UFS_EPOCH, reset_method);
+			int tp_rc = wdt_ufs_guard_start(&tp_wdt, &wdt[1]);
+			tgl_stamp(TGL_STAGE_WDT_PAT, tp_rc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, (uint64_t)tp_wdt.arm_step << 32 | tp_wdt.control_after);
+			__asm__ volatile("mrs %0, daif" : "=r"(all_daif));
+			if (tp_rc) {
+				tgl_tp_refuse(TP_S_ADMIT, TP_C_WDT, tp_wdt.arm_step);
+				tp_rc = TP_C_WDT;
+			} else {
+				tp_rc = (int)tgl_tp_guarded();
+			}
+			uint64_t tp_esr = tgl_guard_esr, tp_far = tgl_guard_far;
+			int tp_stop = wdt_ufs_guard_stop(&tp_wdt);
+			tgl_tp_finish(tp_rc, tp_esr, tp_far, (uint64_t)(uint32_t)tp_stop << 8 | tp_wdt.stop_step);
+			tgl_stamp(TGL_TP_STAGE_ID, tp_rc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, (uint32_t)tp_rc);
+			__asm__ volatile("mrs %0, isr_el1" : "=r"(all_isr));
+			tgl_all_mark(TGL_ALL_S_TOUCH, tp_rc ? TGL_ALL_FELL_THROUGH : TGL_ALL_DONE, tp_rc);
+			if (tp_stop) stage_fail(TGL_STAMP_R_FAULT, "touch watchdog stop failed", tp_wdt.stop_step);
+			if (all_isr & (1u << 8)) stage_fail(TGL_STAMP_R_FAULT, "touch left an SError pending", all_isr);
+			__asm__ volatile("msr daif, %0\n\tisb" :: "r"(all_daif));
+			bringup_gate("post-touch");
+		}
+#endif
+#if TGL_ALL_DCS
+		{
+			static struct tgl_ufs_wdt_guard dcs_wdt;
+			static const uint8_t dcs_nonce[16] = TGL_UFS_RECORD_NONCE;
+			uint64_t all_daif, all_isr;
+			stage = "display-frame-r1";
+			stage_id = TGL_DCS_STAGE_ID;
+			con_tick = 0;
+			tgl_all_mark(TGL_ALL_S_DPU, TGL_ALL_ENTER, 0);
+			tgl_stamp(TGL_DCS_STAGE_ID, TGL_STAMP_F_ENTER, 0);
+			tgl_dcs_begin(TGL_STAMP_NONCE, dcs_nonce, TGL_UFS_EPOCH);
+			int dcs_rc = wdt_ufs_guard_start(&dcs_wdt, &wdt[1]);
+			tgl_stamp(TGL_STAGE_WDT_PAT, dcs_rc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, (uint64_t)dcs_wdt.arm_step << 32 | dcs_wdt.control_after);
+			__asm__ volatile("mrs %0, daif" : "=r"(all_daif));
+			if (dcs_rc) {
+				tgl_dcs_refuse(DCS_S_ADMIT, DCS_C_WDT, dcs_wdt.arm_step);
+				dcs_rc = DCS_C_WDT;
+			} else {
+				dcs_rc = (int)tgl_dcs_guarded();
+			}
+			uint64_t dcs_esr = tgl_guard_esr, dcs_far = tgl_guard_far;
+			int dcs_stop = wdt_ufs_guard_stop(&dcs_wdt);
+			tgl_dcs_finish(dcs_rc, dcs_esr, dcs_far, (uint64_t)(uint32_t)dcs_stop << 8 | dcs_wdt.stop_step);
+			tgl_stamp(TGL_DCS_STAGE_ID, dcs_rc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, (uint32_t)dcs_rc);
+			__asm__ volatile("mrs %0, isr_el1" : "=r"(all_isr));
+			tgl_all_mark(TGL_ALL_S_DPU, dcs_rc ? TGL_ALL_FELL_THROUGH : TGL_ALL_DONE, dcs_rc);
+			if (dcs_stop) stage_fail(TGL_STAMP_R_FAULT, "display watchdog stop failed", dcs_wdt.stop_step);
+			if (all_isr & (1u << 8)) stage_fail(TGL_STAMP_R_FAULT, "display left an SError pending", all_isr);
+			__asm__ volatile("msr daif, %0\n\tisb" :: "r"(all_daif));
+			bringup_gate("post-display");
+		}
+#endif
+		con_tick = all_saved_tick;
+	}
+#endif
 #ifdef TGL_QEMU_TEST
 	/* Explicitly opt-in scratch pixels, never selected by a physical splash
 	 * node name. RAM/reservations and all resident inputs must admit it. */
@@ -660,6 +750,9 @@ void shim_main(uint64_t dtb)
 	 * unrecovered, and nothing between this point and the jump runs long
 	 * enough to trip anything. Guarantees (a) no WDT reset mid-handoff
 	 * and (b) any earlier hang already self-recovered. */
+#if TGL_ALL_STAGES
+	tgl_all_mark(TGL_ALL_S_XNU_JUMP, TGL_ALL_ENTER, 0);
+#endif
 	const char *why = loader_boot((uintptr_t)dtb);
 	tgl_failure_record[0] = 2;
 	{

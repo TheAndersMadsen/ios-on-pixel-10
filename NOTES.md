@@ -1,20 +1,28 @@
-# iOS 16 on blazer (Pixel 10 Pro, Tensor G5) - working notes
+# iOS 26 on blazer (Pixel 10 Pro, Tensor G5) - working notes
 
 ## Pixel 10 Pro port handoff (2026-11-01, current)
 
 Workspace `/Users/andersmadsen/Developer/personal/hackios`. Evidence history: `BLAZER.md`.
 Latest detail: `HANDOFF.md`.
 
-- Goal: **Boot native iOS with visible interactive UI, working touch, stability and
-  repeatable boots.** Current priority: UFS, so the full root can load.
-- Reached on the phone: XNU, compact HFS+ root, pid 1 userspace, dyld to
-  `M11.initializers`, then panic; UFS link, commands and READ work, in shim and XNU. Native DSI commands reach the panel.
-  `launchd`, backboardd and SpringBoard run from the full root over UFS; frames reach RAM. Not reached: a frame on the panel, touch, automatic recovery.
+- Goal: **Boot native iOS 26 with visible interactive UI, working touch, stability and
+  repeatable boots.** The owner dropped iOS 16 on 2026-11-01; that line is frozen on branch `ios16`, tag
+  `ios16-final`. Work here on branch `ios26`. Dated notes below are iOS 16 history, but their hardware facts hold.
+- Reached on the phone, all with iOS 16 and `xnu-8796.121.2`: UFS at HS gear 4, 16 KiB pages, 4 GiB, launchd and SpringBoard from the full root,
+  RAM scanout to the panel from the shim. Not reached: anything on iOS 26 or XNU 12377, iOS's frames on the panel, touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: no display path to the panel. The earlier Restore-branch note was wrong: upstream logs the same line and reaches the home screen. md1 decides the jobs.
-Next concrete action: read phone-r1's result, then HS gear 4, then the display frame tests.
+Current blocker: no route is settled yet. iOS 26 may need a GPU for its UI, and this phone has no GPU driver; unknown, under study in `research/ios26-route-r1`.
+Next concrete action: read `research/ios26-route-r1/PLAN.md` and `research/tegu-branches-r1/FINDINGS.md`, then take the first stage.
 Detail in `HANDOFF.md`.
+
+### Carried from iOS 16 to this branch
+
+- `shim/`: HS gear 4, PHY check, PWM fallback, stage marks (gates off by default) and the DPU code `tgl_dcs.c` from r1d, built with `TGL_ALL_STAGES`, `TGL_ALL_DCS`, `TGL_FRAME_RUNG=3`.
+- `tgl_dcs.h` keeps r1d's record address `0x9542a000`, which is also the UFS record's. Before enabling the DPU stage with UFS on, move it to `0x955e0000`, as `research/ui-integrate-r1/snapshot/` does.
+- `frame_tables.h` holds offsets and PPS generated from GPL-2.0 vendor source; decide its license before publishing.
+- `xnu/ios16-base/patches/`: 8796 drivers, the parts source for a 12377 port. They don't apply to 12377 as they stand.
+- Reference, no license, ideas only: `research/upstream/ios-tegu-gh-20261101`, branch `ios26-bringup` (Pixel 9a, Tensor G4). Its hardware values don't apply here.
 
 ### 2026-11-01: ufs-observe-r2
 
@@ -117,7 +125,7 @@ Physical: native test pattern on the panel. The owner saw it flash. Detail in `H
 - Attempt ledger: `research/laguna-usb-fix/ATTEMPTS.md`. Captures:
   `research/laguna-usb-fix/attempts/`, `research/laguna-usb-fix/automation/state/device-attempts/`.
 - Older agent work: `research/laguna-usb-fix/native-fleet-20261031/N*/`.
-- Kernel tree and build: `research/laguna-foundation/kernel-blazer/`; port patches: `xnu/patches/`.
+- Kernel tree and build: `research/laguna-foundation/kernel-blazer/`; iOS 16 port patches: `xnu/ios16-base/patches/`.
 - Boot runner: `research/laguna-usb-fix/run-attempt.sh`, called by `tools/bootios`.
 - Root images: `research/workspace/iosroot/`, `research/laguna-image/`,
   `research/laguna-usb-fix/root-upgrade/`.
