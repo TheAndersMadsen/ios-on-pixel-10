@@ -4,7 +4,8 @@
 - iOS 26 has not been built or booted here. Host checks: shim, stage and route tests pass, tool tests pass, `tgl_dcs.o` compiled for ARM64 with rung 3. The combined shim has not been built into an image or booted.
 - Latest physical result: RAM scanout on the panel, `20261101-211212-display-frame-r1d`, below.
 - Tegu `d807098` (2026-11-01): its owner reports a buggy but working iOS 26 UI on the 9a, using a Mali Metal driver. We can't run that driver. Owner told us to base on tegu's series, overriding `research/ios26-route-r1/PLAN.md`'s own-tree port; the plan's stages and stop conditions otherwise hold.
-- Running: `research/ios26-kernel-r1`, `research/ios26-root-r1`. Findings: `research/tegu-branches-r1/FINDINGS.md`, `research/patch-scout-chips-r1/FINDINGS.md`.
+- Fleet order, roster and sharing rules: `research/ios26-fleet/` (not in git). Running: kernel, root, blazer, bootchain, display, touch; QEMU go/no-go starts after kernel base and root.
+- Tegu's log records the iOS interface on its phone before its Metal driver: no-GPU state inferred, not on our hardware (`research/ios26-root-r1/FINDINGS.md`). Findings: `research/tegu-branches-r1/FINDINGS.md`, `research/patch-scout-chips-r1/FINDINGS.md`.
 
 ## 2026-11-01: native frames on the panel; SpringBoard runs; iOS not yet on the panel
 
