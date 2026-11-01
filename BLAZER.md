@@ -7,6 +7,10 @@ SpringBoard, which draw frames to RAM. iOS's frames don't reach the panel yet, a
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
+## 2026-11-01: touch reports received
+
+ssi-probe-r5: the chip reported the owner's touches over our own bus; decoding not right yet: `research/laguna-usb-fix/attempts/20261101-224823-ssi-probe-r5`.
+
 ## 2026-11-01: touch chip identified
 
 ssi-probe-r4b: rails on, Synaptics `S3916TGA1A0` answered IDENTIFY over our bus, TouchComm v1, rails off: `research/laguna-usb-fix/attempts/20261101-221852-ssi-probe-r4b`.
