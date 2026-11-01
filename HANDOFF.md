@@ -6,6 +6,8 @@
 - Owner's decisions, 2026-11-02 00:13: battery SPMI reads yes; kernel writes to free blocks in `userdata_exp.ai` for a persistent `/var` yes, build and run; Wi-Fi firmware and GPL PHY table in local boot images yes.
 - Next boots: `phone-touch-r2` (p4, touch, brightness cap), `clk-probe-r1`, `speed-probe-r3`, then p5. Plan and order: `research/ios26-fleet/PLAN.md`.
 
+- **Physical, owner, `phone-touch-r2` (kernel p4, `blazer_touch=1`, brightness cap), 00:33:17: touch works on iOS 26 on the phone, very slow.** Picture still 1125x2436 with bars.
+
 ## Earlier today: XNU 12377 boots on the phone
 
 - Physical, attempt `20261101-215924-first-boot-r1`, image `169a5b85…`, kernel `89489d52…` (tegu series, blazer layer). Compact HFS root `3cd4dcb5…` in md0, no md1, no display, no touch, `cpus=1`. Same nonce shim to XNU, entry 6.6 ms after handoff.
