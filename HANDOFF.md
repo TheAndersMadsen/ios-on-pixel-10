@@ -15,6 +15,10 @@
 - Caveats: UNDERRUN seen, CRC registers read 0, so the CRC proof didn't work. The test pattern doesn't use FE0, so RAM scanout is unproved. PPS write effect unknown: ABL's PPS already matched.
 - Next: rung 3, RAM scanout, then the kernel backend.
 
+### 2026-11-01: ssi-probe-r3, touch bus and PMIC queue work
+
+Physical, `20261101-215211-ssi-probe-r3`, image `7fad8732…`. `PMIC_STATE_READ`, final OK, 0 faults. SSI FIFO depth 256; SRL loopback 4 of 4 bytes matched. Stock PMIC queue initialised and acked; GETs replied: VDD 0, AVDD 0, AVDD selector 210, reset dir 0, val 0. So touch rails are off. No rail, pad or controller write. Next: r4, rails, reset, pads, IDENTIFY.
+
 ### 2026-11-01: ssi-probe-r2, touch bus answers
 
 Physical, `20261101-213902-ssi-probe-r2`, image `b4121617…`. `SSI_ID_READ`, final OK, 0 faults. No SSI read before the votes; LSIO_N `pd_on`, cfg and SPI clock PREPARE, CLI `4,0,0` and reset release all replied. SSI VERSION `0x3430332a` ("403*"), IDR `0xffffffff`, CTRLR0 `0x1070000`. Reset class afterwards is the image's own software reset (`0xbab9`). Inferred from three boots: a guarded read of the unvoted SSI leaves an error that kills the phone at the next state change; `pd_on` itself is safe, and so is status read `0x5272008`. Hard rule: no SSI access before votes reply. Controller not touched yet. Next: FIFO and config, rails, identify.
