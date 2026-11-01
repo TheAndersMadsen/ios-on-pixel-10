@@ -1,11 +1,16 @@
 # Pixel 10 Pro (blazer) bring-up
 
 The Pixel 10 Pro boots our XNU from RAM and reaches dyld startup on a compact root,
-then panics. It has no native display or touch. UFS links, answers commands and READs in the shim; the root is staged. The active work is UFS, so
+then panics. It has no native display or touch. XNU reads the staged root over UFS; it is not mounted from there yet. The active work is UFS, so
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
-## 2026-11-01 status: root staged and read back
+## 2026-11-01 status: XNU reads UFS
+
+ufs-xnu-r1: XNU took over from the shim and read staged blocks with 0 errors:
+`research/ufs-integrate-r1/run/xnu-r1/decoded.json`.
+
+## 2026-11-01: root staged and read back
 
 ufs-stage-r1 rewrote `userdata_exp.ai` with user approval; ufs-read-r3 matched 12 of 12 samples:
 `research/ufs-read-r3/run/decoded.json`.

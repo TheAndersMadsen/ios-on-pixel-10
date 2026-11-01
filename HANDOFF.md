@@ -1,4 +1,15 @@
-# Current — 2026-11-01: iOS root restaged and read back over UFS; XNU does not use UFS yet
+# Current — 2026-11-01: XNU reads the staged root over UFS; root is not mounted from it yet
+
+### 2026-11-01: ufs-shim-r1 and ufs-xnu-r1
+
+- Physical, `shim/` route (no pass A), attempt `20261101-192655-ufs-shim-r1`, image `6307a6fb…`, capture `1637a007…`: link, commands and 21 READs.
+- Physical, attempt `20261101-192828-ufs-xnu-r1`, image `842365a8…`, kernel `d3a4d6c7…`, capture `55f2e02e…`: XNU took over from the shim, found
+  `userdata_exp.ai` (8192 MiB, read only), read 3 raw and 12 partition blocks with CRCs equal to the shim's and staging.img, a 16-block multi-read result 0.
+  `blazer-ufs-test: done, 0 errors`, HCS 0xf, GBPA `0x2e1f` at start and end. Decoded: `research/ufs-integrate-r1/run/xnu-r1/decoded.json`.
+- Same boot then went through the compact root to the known `launchd` panic. Parent reran route test: 87 checks, 20/20 mutants.
+- Observed AHIT 0. Not shown: APFS mounted over UFS, `launchd` from the full root, 16 KiB on the phone.
+- `shim/build.sh` needs `research/ufs-read-r2/run/decoded.json` and `research/ufs-link-r2/decoded.json`, so a fresh clone can't run its tests.
+- Next: full root from UFS (`research/ufs-root-r1`), first panel test (`research/display-dcs-r1`); agents running.
 
 ### 2026-11-01: ufs-stage-r1 and ufs-read-r3
 

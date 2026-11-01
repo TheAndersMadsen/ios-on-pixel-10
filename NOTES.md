@@ -8,12 +8,12 @@ Latest detail: `HANDOFF.md`.
 - Goal: **Boot native iOS with visible interactive UI, working touch, stability and
   repeatable boots.** Current priority: UFS, so the full root can load.
 - Reached on the phone: XNU, compact HFS+ root, pid 1 userspace, dyld to
-  `M11.initializers`, then panic; UFS link, commands and READ work. Not reached: `launchd` main, root over UFS, native
+  `M11.initializers`, then panic; UFS link, commands and READ work, in shim and XNU. Not reached: `launchd` main, root over UFS, native
   display or touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: XNU can't read UFS yet. The root is staged again and reads back in the shim.
-Next concrete action: integrate UFS into `shim/` and XNU takeover, then read blocks through XNU.
+Current blocker: root isn't mounted from UFS yet. XNU reads the staged root; the compact root still panics.
+Next concrete action: boot the full root from UFS with 16 KiB pages and the 4 GiB window.
 Detail in `HANDOFF.md`.
 
 ### 2026-11-01: ufs-observe-r2
