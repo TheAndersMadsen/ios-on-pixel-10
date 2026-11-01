@@ -281,10 +281,12 @@ const char *loader_boot(uintptr_t dtb)
 	{
 		extern int tgl_stamp_boot_us(uint64_t *);
 		uint64_t usb_t0 = 0, usb_now = 0;
+		uint32_t usb_spins = 0; /* dead-counter cap, as tgl_usb_console_wait */
 		tgl_usb_console_service();
 		if (!tgl_stamp_boot_us(&usb_t0))
 			while (laguna_usb_transfer_active() && !tgl_stamp_boot_us(&usb_now) &&
-			    usb_now - usb_t0 < UINT64_C(1000000))
+			    usb_now - usb_t0 < UINT64_C(1000000) &&
+			    ++usb_spins < UINT32_C(10000000))
 				tgl_usb_console_service();
 	}
 	if (laguna_usb_transfer_active()) return "USB transfer active at XNU handoff";

@@ -103,6 +103,7 @@ _Static_assert(A_GUARD + GUARD_BYTES <= TGL_UFSH_ARENA_BYTES, "guard inside aren
 #define SCSI_TRIES 8u
 #define CLEAR_TIMEOUT_US 1000000u
 #define UIC_TIMEOUT_US 500000u
+#define UIC_POLLS_MAX 10000000u /* a stopped clock must not mean forever: these two loops have no delay port */
 #define READY_TIMEOUT_US 100000u
 #define LOG_FLAG_READS 4u
 #define RSP_LOG_MAX 320u
@@ -187,19 +188,19 @@ static int uic_once(struct st *s, uint32_t op, uint32_t a1, uint32_t a3, uint32_
 {
     uint64_t t0, t; uint32_t v; int r;
     if ((r = clock_(s, &t0))) return r;
-    for (;;) {
+    for (uint32_t n = 0;; n++) {
         if ((r = rd(s, R_HCS, &v))) return r;
         if (v & HCS_UCRDY) break;
         if ((r = clock_(s, &t))) return r;
-        if (t - t0 >= UIC_TIMEOUT_US) return TGL_UFSH_E_UIC;
+        if (t - t0 >= UIC_TIMEOUT_US || n >= UIC_POLLS_MAX) return TGL_UFSH_E_UIC;
     }
     if ((r = wr(s, R_IS, IS_UCCS)) || (r = wr(s, R_UICARG1, a1)) || (r = wr(s, R_UICARG2, 0)) ||
         (r = wr(s, R_UICARG3, a3)) || (r = wr(s, R_UICCMD, op))) return r;
-    for (;;) {
+    for (uint32_t n = 0;; n++) {
         if ((r = rd(s, R_IS, &v))) return r;
         if (v & IS_UCCS) break;
         if ((r = clock_(s, &t))) return r;
-        if (t - t0 >= UIC_TIMEOUT_US) return TGL_UFSH_E_UIC;
+        if (t - t0 >= UIC_TIMEOUT_US || n >= UIC_POLLS_MAX) return TGL_UFSH_E_UIC;
     }
     if ((r = wr(s, R_IS, IS_UCCS)) || (r = rd(s, R_UICARG2, &v))) return r;
     if (v & 0xffu) { if (out) *out = v; return TGL_UFSH_E_UIC; }

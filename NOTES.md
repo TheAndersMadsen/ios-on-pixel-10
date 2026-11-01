@@ -12,8 +12,8 @@ Latest detail: `HANDOFF.md`.
   `launchd` main runs from the full root over UFS. Not reached: normal boot, UI, a native frame, touch, automatic recovery.
 - Use temporary `fastboot boot`. Confirm each destructive step with the user.
 
-Current blocker: launchd runs from the full root but on its Restore branch, with no UI and no display path.
-Next concrete action: get launchd to the normal boot and SpringBoard; scanout to the panel.
+Current blocker: no display path to the panel, and 0.53 MiB/s storage. The earlier Restore-branch note was wrong: upstream logs the same line and reaches the home screen. md1 decides the jobs.
+Next concrete action: read phone-r1's result, then HS gear 4, then the display frame tests.
 Detail in `HANDOFF.md`.
 
 ### 2026-11-01: ufs-observe-r2
