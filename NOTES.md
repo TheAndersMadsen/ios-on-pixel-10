@@ -30,6 +30,23 @@ host-only, in `research/<topic>-r1`. Not yet reviewed. Parent boots ufs-link-r1 
 Parent reran tool tests. `capture-fastboot.py --named-only` no longer needs a lease; `tools/bootios`
 waits for park and captures. Neither has run on the phone since the change.
 
+### 2026-11-01: SMMU, dyld, launchd and display agents reviewed
+
+Parent spot-checked; none of this ran on the phone except the capture it reads.
+- Parent confirmed in the r2b capture at offset `0x1000ca`: `initproc failed to start -- exit reason
+  namespace 2 subcode 0xb`. Parent decoded GBPA `0x2e1f`: bypass, Outer Shareable, cacheable. Inference: keep
+  cache maintenance; refuse DMA unless GBPA still matches. Plan: `research/ufs-dma-r1/FINDINGS.md`.
+- Launchd agent: the panic is a compact-root defect (stale ADRP, 8,572 sites by static scan; cause inferred).
+  Do not patch sites one at a time. Reader's "no panic string" and `run-attempt.sh`'s default `--mach` are
+  wrong for current boots. `research/launchd-panic-r1/FINDINGS.md`.
+- Dyld agent: cache needs 16 KiB signatures accepted and a window above 1 GiB; 4 KiB-hardware behaviour
+  untested. `research/dyld-cache-r1/FINDINGS.md`.
+- Display agent: cheapest visible test is display-dcs-r1, one DSI0 boot, user films. Specified, not built.
+  Its ABL reading is from slot a. `research/ui-touch-r1/FINDINGS.md`.
+- An earlier firmware-lifetime task was stopped by a platform safety flag (N520 `STOP-RECORD.md`). Do not
+  reroute it. SMMU and display agents read small ABL sections; no further ABL disassembly is requested.
+- Started: qemu agent, `research/fullroot-qemu-r1`, to test the full root in a guest.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
