@@ -14,6 +14,10 @@
 - Caveats: UNDERRUN seen, CRC registers read 0, so the CRC proof didn't work. The test pattern doesn't use FE0, so RAM scanout is unproved. PPS write effect unknown: ABL's PPS already matched.
 - Next: rung 3, RAM scanout, then the kernel backend.
 
+### 2026-11-01: ssi-probe-r2, touch bus answers
+
+Physical, `20261101-213902-ssi-probe-r2`, image `b4121617…`. `SSI_ID_READ`, final OK, 0 faults. No SSI read before the votes; LSIO_N `pd_on`, cfg and SPI clock PREPARE, CLI `4,0,0` and reset release all replied. SSI VERSION `0x3430332a` ("403*"), IDR `0xffffffff`, CTRLR0 `0x1070000`. Reset class afterwards is the image's own software reset (`0xbab9`). Inferred from three boots: a guarded read of the unvoted SSI leaves an error that kills the phone at the next state change; `pd_on` itself is safe, and so is status read `0x5272008`. Hard rule: no SSI access before votes reply. Controller not touched yet. Next: FIFO and config, rails, identify.
+
 ### 2026-11-01: ssi-probe, second touch bus probe
 
 Physical, `20261101-213642-ssi-probe`, image `d8d6cf4e…`. Same reset `0xc00e` at the same `pd_on` frame, with completion from the message window and 0 reads of `0x5272008`. Observed: that status read isn't the cause; window completion works for read frames. This image still ran the guarded SSI read first, so the fault remains a candidate. Next: same with no SSI read before the votes.

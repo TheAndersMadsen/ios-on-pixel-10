@@ -7,6 +7,10 @@ SpringBoard, which draw frames to RAM. iOS's frames don't reach the panel yet, a
 that the full iOS root can load. The ledger is
 `research/laguna-usb-fix/ATTEMPTS.md`; captures and hashes outrank this summary.
 
+## 2026-11-01: touch bus answers
+
+ssi-probe-r2: touch SSI reads VERSION "403*" after clock and reset votes, no fault; controller not reached: `research/ios26-touch-r1/ssi-probe-r2/run/boot/decoded.json`.
+
 ## 2026-11-01 status: UI processes run
 
 phone-r1: backboardd made 3 frame swaps and SpringBoard ran, no crash, until a manual long press:
