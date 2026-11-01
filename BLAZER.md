@@ -12,8 +12,7 @@ enabled, on the phone with no writes: `research/ufs-observe-r2/result.json`.
 
 ufs-observe-r1 read the controller without writing: HCE=0x3, HCS=0x108, DP=0. ABL logs full UFS
 init of the Samsung KLUDG4UHGC and then shuts it down about 30 s before our reads.
-ufs-link-r1 proposes the stock pre-link sequence from the shipped `ufs.ko`. It and
-ufs-observe-r2 (read-only) are composed and link on the host but have not run. Full detail in `HANDOFF.md`.
+ufs-link-r1 proposes the stock pre-link sequence from the shipped `ufs.ko`; it has not run. Full detail in `HANDOFF.md`.
 
 ## Native boot checkpoint (2026-11-01)
 
@@ -22,7 +21,7 @@ baseline, 28 of 28 expected captures with none missing. The post-I measurement h
 Still compact root and panic. Result:
 `research/laguna-usb-fix/native-fleet-20261031/N857-root-cpu-phase-timing/PHYSICAL-RESULT.json`.
 
-An earlier boot measured the USB `amb_smmu` (`0x05b80000`) in 24 reads; UFS's `inf_smmu` has never been read. Others gave a fresh XNU v2 message buffer through
+An earlier boot measured the USB `amb_smmu` (`0x05b80000`) in 24 reads; UFS's `inf_smmu` was first read by ufs-observe-r2. Others gave a fresh XNU v2 message buffer through
 root, launchd and dyld, then panic.
 
 ## UFS checkpoint (2026-10-28)

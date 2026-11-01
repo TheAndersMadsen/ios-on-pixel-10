@@ -20,11 +20,16 @@ full sequence and ufs-link-r1's preconditions are in `HANDOFF.md`, which holds t
 
 Physical read-only boot succeeded, 35 reads. Link preconditions hold. Detail in `HANDOFF.md`.
 
+### 2026-11-01: helpers running
+
+Parent started link, post-link, SMMU, handoff, APFS, dyld, launchd, display and tools agents,
+host-only, in `research/<topic>-r1`. Not yet reviewed. Parent boots ufs-link-r1 after review.
+
 ### How work runs
 
 - One parent agent does the work, owns USB and runs the boots. It records results here and in
   `HANDOFF.md` as dated bullets, newest first.
-- Use a helper only for independent work, a few at a time, named by purpose ("touch agent",
+- Use helpers for independent work, as many as the work supports, named by purpose ("touch agent",
   "shader agent"). The parent checks each result itself and reruns its tests before relying on
   it, and writes what it found ("Parent reviewed ...: ...; requested ...").
 - Experiments live in `research/<topic>-rN`, with N going up per retry. Say whether each is
@@ -74,5 +79,5 @@ disabled the campaign state and deleted the old scheduled tasks. Boot through `t
 Known leftovers, none used by the build chain: old October scripts and dated docs still
 name old paths; some old git worktrees have stale `.git` pointers (fix with
 `git worktree repair` before `git gc`); `tools/check_v3_integration.py` fails because its
-fixture no longer matches `shim.c`; `tools/bootios` has not yet been run on the phone.
+fixture no longer matches `shim.c`.
 Tool tests pass.
