@@ -214,56 +214,68 @@ candidate; continue apps prerequisite repair/native composition in parallel,
 then resolve joint CPU-context acceptance before GPU/GPT scheduling.
 
 
-## Stock apps and Apple identity goal, 2026-11-02 — host candidate, guest in progress
+## Stock apps and Apple identity, 2026-11-02 — r4 captured, launch guest ready
 
-User requires all apps running plus legitimate device identity/Apple services
-and SEP, and explicitly requested GitHub reuse. Goal ACTIVE, not achieved.
-Original implementation/source assessment committed **c214b86**. No new agents.
-Own namespace `research/ios26-apps-r1/`, `tools/ios_app_*`, tests and
-`docs/IOS-APPS-IDENTITY.md`; phone owner retains sole USB/release/deployment.
-Existing MCM/artwork/sampler/Spotlight hooks were not duplicated or modified.
+User goal ACTIVE: all apps running plus legitimate device identity, Apple services
+and SEP; explicitly requested GitHub reuse. Source commits **c214b86**, **64ffd35**,
+**b840825**; earlier handoff f0a1d4f. Own namespace research/ios26-apps-r1/ and
+tracked tools/ios_app_*, tests, docs/IOS-APPS-IDENTITY.md. No new agents. Phone,
+USB, release and deployment remain with their owner; peer hooks untouched.
 
-Read-only actual stock/r3 inventory:206 top-level app/service bundles retained;
-all49 staged stock apps absent, and first-boot registration is an explicit no-op.
-Missing staged regular bytes1,166,707,757 exceed r3 free553,840,640 before other
-resources. Own20GiB APFS clone restores49 to /Applications, all staged regular
-paths/executables present,4,183,437,312B free before re-seal. Repaired inherited
-stale resource seals in own clone;49 deep ad-hoc signature checks PASS. Real
-registrar uses URL API + fresh installed/nonplaceholder/path readback; never
-invents signer/UDID/registration/launch success. Own51-app explicit manifest.
+Actual stock/r3 inventory:206 top-level service/system bundles retained, all49
+staged apps absent, registration deliberately a no-op. Missing1,166,707,757
+regular bytes exceed553,840,640 free before framework resources. Own20GiB
+clone restores all49; deep signatures PASS after re-sealing own copies. Corrected
+candidate uses CURRENT canonical r3 seed55files byte-identical, including
+persona.kb and Medinafalse, and676 identical baseline jobs + own registrar job.
+Actual p29 TSV consumer ASan/UBSan validates245entries and all source paths.
+Original r3 205cb0e2… and light edd8d9fb… rehashed unchanged.
 
-HOST PASS:7 Python inventory methods; actual Objective-C readback/input policy
-under ASan/UBSan; gate-ON ARM64e objects emit3 expected text symbols, OFF omits;
-final registrar signature/entitlements match; complete current CI PASS (existing
-capture skip1), tracked scanner219 clean. Candidate fsck read-only exit0/OK
-(after raw open fell back to NO WRITE). Registrar SHA714d2c0a…; full candidate
-SHAf4a9a59f07bc8d261ae5d99361a5e3f50247b52439917b90ab73992bf98dc1ee.
-Original light edd8d9fb… and canonical r3 205cb0e2… rehashed unchanged.
-Exact hashes/build/guest argv and diagnostics in own `receipts/`.
+**QEMU registration-r4 COMPLETE**, planned900.4016465s, exit0/root_unchanged true,
+input apps-full-r2 bc9f588340425202c686074202c4d57e2b935d628c47cdf7095deeaa5b0ddd70,
+unchanged p29/hgltrack. Console837,227B matches final mirror byte-for-byte,
+0mismatch/lost tail; SHAe0b2845f423e35b7e8918c5a6b178e593ff5a83b96d14d4e0a76238f5db62b2e.
+Final4MiB ramoops SHAaed2c37f1a569af21d92cfd551599c33e8b6eb1edb58aae9b5fdfa0159bf7a1e.
+No persona abort/kernel panic. Home frame actually draws Photos+Settings icons;
+registrar exec observed, but0positive HKAPPS/readbacks and no representative
+launch acceptance. Exact blocking API UNKNOWN with old stdout logger. All
+capture/input hashes in receipts/registration-r4-result.json; no phone result.
 
-QEMU only:registration-r1 failed backing-file open before CPU; own harness now
-uses QEMU-advised readonly=on,rom=off for immutable MAP_PRIVATE root. r2 mounted
-20GiB HFS then panicked varfs seed40 errno22, saved console7,880B/ramoops. Exact
-file extent17,532,928,000 exceeds fakeUFS's hardcoded8GiB view; actual p29
-n892_read ASan/UBSan test reproduces ARGUMENT/no backend call, mapped toEINVAL.
-No seed file was removed and physical partition bounds were not widened.
-r3 uses existing whole-RAMDisk ADT/rd=md0 contract, SAME root/p29/overlay, no
-fakeUFS/MMIO args, shared guest lock; runner81301. It passes varfs and executes
-launchd, SpringBoard, lsd/MCM; registration/representative launch still pending.
-No physical boot/attempt ID, root/partition/Android/slot/firmware operation here.
+Earlier own r2 guest mounted HFS then seed40 EINVAL: file extent17,532,928,000
+exceeds fakeUFS8GiB view. Actual p29 n892_read sanitizer test reproduces exact
+ARGUMENT->EINVAL/no backend call; no seed removed/physical bounds widened.
+Full RAMDisk route fixes that harness mismatch. Earlier r3 stopped318.613s on
+old-light persona prerequisite; corrected r4 adopts existing canonical seed,
+not a new persona/AKS workaround. All earlier images/captures preserved.
 
-GitHub26 text sources pinned/rehashed: MIT OpenSEP ead61b7 boots SEP firmware
-on virtual Apple platforms but needs SEP execution/mailbox/device backend;
-vphone fd1610d7 documents research activation and no iCloud support. OpenBubbles
-provides Mac-backed Apple-service clients; rustpush's own licence differs.
-Anisette/APNs/provisioning results are not full native iPhone identity. Current
-SweetKeyStore remains fixed-state compatibility, not a supported SEP backend.
-No account login, credential collection, activation request or genuine SEP claim.
+**NEXT, built/fsck-checked, NOT BOOTED:** apps-full-r3.img20GiB SHA
+196809464b5e8fe2fd46b4502a3665b7559285f6cabbf2a6c0cf118c6ce730cb;
+registrar1353bbad3708b192bdf0c82354ca5306487aa7f901cfd081d07dc57f85518eda.
+Only4 own integration files differ; all49 apps/55seed files/676jobs retained.
+New explicit guest-console/C pre-ObjC entry trace plus API phases; exercise
+requests only manifest-selected registered Calculator/Clock/Notes20s apart.
+Requests remain launch_verified=false; actual exec/frame/interaction required.
+Changed host checks PASS:8 inventory methods, actual ObjC readback +5 CLI
+entry/JSON/smoke-policy cases ASan/UBSan, ARM64e ON3textsymbols/OFF absent,
+PAC/finalsignature/exact entitlements. Earlier full CI PASS; no unchanged broad
+rerun. Exact build/guest argv and hashes:receipts/package-r3.json,
+console-smoke-build-r3/, guest-command-r5.json. Underlying Apple APIs unbounded.
 
-Next: finish registration-r3 and extract real51-app results, repair the actual
-failing service if any, then representative app launch/UI survival.20GiB guest
-candidate cannot deploy into current8GiB root; storage isolation/review/concrete
-user approval precede a phone root change. Keep phone queue with its owner.
+One release-boundary check found no QEMU and shared lock available, released
+immediately; both coordination/native parent received final release event.
+**Native Metal gets NEXT one300s offline reference run. Apps waits for its auto
+release event before registration-r5; no slot polling or peer interruption.**
+All own temporary/read-only mounts detached.20GiB exceeds current8GiB allocation;
+no physical deployment/root write or storage/Android/slot/firmware authority.
+
+GitHub26 text sources pinned/rehashed: OpenSEP real virtual SEP firmware boot
+needs a SEP execution/mailbox/device backend; vphone research activation is not
+iCloud support; OpenBubbles supplies Mac-backed Apple-service clients with its
+separate rustpush licensing. No genuine SEP/attestation or Apple login proved.
+SweetKeyStore remains fixed-state compatibility. No credentials/activation
+requests or physical attempt here. Next: consume native release, run the prepared
+registration+launch guest, repair the actual failing API if any, then qualify
+storage/deployment. Full goal remains unmet; details in own HANDOFF.md.
 
 ## Native Metal diagnostic qualified, 2026-11-02 11:21 CET — build only
 
