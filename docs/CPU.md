@@ -29,6 +29,11 @@ health image used `0xa00000000`. Source/link/image checks pass, but CPU, Trusty
 and full placement acceptance remain separate. That review owns reconciliation;
 neither a core nor a RAM-window change is automatic. The GPT profile stays frozen
 and held, including its own source, image, nonce, LU0 transport and `--mach`.
+A distinct parent-built one-A725 derivative, `01eae6c8…`, now matches the existing
+reviewed proposal: one running ADT reg0x200,492-byte line and the same window882.
+CPU host artifact checks pass, including reconstruction of the pinned payload.
+It is not booted or physically accepted; native exact-artifact review and the
+phone owner's admission remain. The original cpu0 image's hold is unchanged.
 One current source/artifact/acceptance/shareability handoff is retained in
 `research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md`; it keeps ordinary UI
 health observations separate from the existing lowered-trip R1/R2 tests.

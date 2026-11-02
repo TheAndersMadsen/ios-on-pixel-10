@@ -619,6 +619,9 @@ required262/health1 at cap16/B40/stages15/guard2/70/high0/probe0. General token
 allowlist unchanged, other kernels/contexts/extra experiments refused. Full check
 rebuilds pinned kernel+ADT+line+overlay payload, preventing metadata relabelling.
 No private parent builder, release governor or current phone image was changed.
+Implementation committed dad0979. Phone owner independently checked actual
+image/K/U/manifest and selected it as practical next common-health candidate;
+final parent admission/new-profile review and slot still pending. No extra flags.
 
 82 image-tool methods +7 CPU-audit methods PASS;7 negative controls on actual
 image copies rejected cap/kernel/RAM/overlay/probe/payload drift and stripped
@@ -670,6 +673,14 @@ GPU p30d8925f4f and frozen GPT21cba4e8/profile34a126b2/host04ba2870 stay HELD:
 cpus1/reg0/no bootcpu, CPU/Trusty/layout gate. GPUwindow882 differs from prior
 GPUhealtha000; existing phone-owner review owns reconciliation. New CPU-health
 five-A725 image clears neither hold and changes no GPU/GPT argv or window.
+Distinct parent-built GPU one-A725 artifact01eae6c83e7e0c3f3adedf3816672fa6e8152b7746e2cf11349eebbb6919135f
+now consumed in the SAME acceptance handoff: original af08/p30 K/U,492B,
+window882, fresh70e0dd927e56e34a, one running reg200/cpus1. CPU host artifact
+composition PASS: independent hashes, full pinned-input payload reconstruction,
+ARM64 FC T/0U and six unchanged existing source/limit inputs. Receipt r3/
+gpu-a725-context-binding.json; native exact-artifact review +phone-owner per-run
+P1/short300/admission remain; runtime CPU/Trusty/IRQ/FF-A/cache/layout unaccepted.
+No boot/slot request, no change to original d892/GPT holds or A520 STOP.
 OFF/FAST captures retained, FAST's startup abort confounds timing/no speed claim.
 Exact known p29 rollbackc203c70e…/K5aad8978/Ucc979153, temporary boots only;
 root/slots/firmware/backups unchanged. docs/status.json evidence text refreshed;
