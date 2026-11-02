@@ -6,6 +6,7 @@
  */
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
+#include <objc/message.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -383,6 +384,63 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
     return complete.count == apps.count ? 0 : 1;
 }
 
+#if defined(HK_STOCK_APPS_LSLOG) && !defined(HK_STOCK_APPS_HOST_FIXTURE)
+/* Diagnostic only (lane 4 after H1/H2): lsd's own account of each refusal. Reads the
+ * system unified-log store (OSLog SPI, entitlement com.apple.logging.local-store) for
+ * entries since `since` from lsd or the LaunchServices/containermanager subsystems, and
+ * emits them as receipts. Changes no registration behaviour; read-only. */
+static void hkDumpLaunchServicesLog(NSDate *since) {
+    progress("lslog_enter", nil);
+    if (!dlopen("/System/Library/Frameworks/OSLog.framework/OSLog", RTLD_NOW)) {
+        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"oslog_framework_unavailable"}); return;
+    }
+    Class storeClass = NSClassFromString(@"OSLogStore");
+    SEL local = NSSelectorFromString(@"localStoreAndReturnError:");
+    if (!storeClass || ![storeClass respondsToSelector:local]) {
+        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"local_store_spi_missing"}); return;
+    }
+    NSError *error = nil;
+    id (*localStore)(id, SEL, NSError **) = (void *)objc_msgSend;
+    id store = localStore(storeClass, local, &error);
+    if (!store) {
+        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"local_store_refused",
+                  @"error_domain": error.domain ?: @"", @"error_code": [NSString stringWithFormat:@"%ld", (long)error.code],
+                  @"error": error.description ?: @""});
+        return;
+    }
+    id (*positionAt)(id, SEL, NSDate *) = (void *)objc_msgSend;
+    id position = positionAt(store, NSSelectorFromString(@"positionWithDate:"), since);
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:
+        @"process == 'lsd' OR process == 'containermanagerd' OR subsystem BEGINSWITH 'com.apple.launchservices' "
+        @"OR subsystem BEGINSWITH 'com.apple.containermanager' OR subsystem BEGINSWITH 'com.apple.LaunchServices'"];
+    id (*enumerate)(id, SEL, NSUInteger, id, NSPredicate *, NSError **) = (void *)objc_msgSend;
+    NSEnumerator *entries = enumerate(store, NSSelectorFromString(@"entriesEnumeratorWithOptions:position:predicate:error:"),
+                                      0, position, predicate, &error);
+    if (!entries) {
+        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"enumerator_refused",
+                  @"error_code": [NSString stringWithFormat:@"%ld", (long)error.code], @"error": error.description ?: @""});
+        return;
+    }
+    unsigned emitted = 0, seen = 0;
+    for (id entry in entries) {
+        seen++;
+        if (emitted >= 600) continue;
+        NSString *message = [entry respondsToSelector:@selector(composedMessage)] ? [entry performSelector:@selector(composedMessage)] : @"";
+        if (message.length > 600) message = [message substringToIndex:600];
+        NSString *process = [entry respondsToSelector:NSSelectorFromString(@"process")] ? [entry valueForKey:@"process"] : @"";
+        NSString *subsystem = [entry respondsToSelector:NSSelectorFromString(@"subsystem")] ? [entry valueForKey:@"subsystem"] : @"";
+        NSString *category = [entry respondsToSelector:NSSelectorFromString(@"category")] ? [entry valueForKey:@"category"] : @"";
+        NSNumber *level = [entry respondsToSelector:NSSelectorFromString(@"level")] ? [entry valueForKey:@"level"] : @0;
+        NSDate *date = [entry respondsToSelector:NSSelectorFromString(@"date")] ? [entry valueForKey:@"date"] : nil;
+        receipt(@{@"event": @"lslog_entry", @"ms": @((unsigned long long)(MAX(0.0, [date timeIntervalSinceDate:since]) * 1000)),
+                  @"process": process ?: @"", @"subsystem": subsystem ?: @"", @"category": category ?: @"",
+                  @"level": level ?: @0, @"message": message ?: @""});
+        emitted++;
+    }
+    receipt(@{@"event": @"lslog", @"available": @YES, @"seen": @(seen), @"emitted": @(emitted)});
+}
+#endif
+
 #ifndef HK_STOCK_APPS_NO_MAIN
 int main(int argc, const char *argv[]) {
     entryMarker();
@@ -403,7 +461,14 @@ int main(int argc, const char *argv[]) {
         }
         progress("framework_loaded", nil);
 #endif
+#if defined(HK_STOCK_APPS_LSLOG) && !defined(HK_STOCK_APPS_HOST_FIXTURE)
+        NSDate *since = [NSDate date];
+        int status = hkRegisterStockApps(@(argv[1]), @(argv[2]), (unsigned)attempts);
+        hkDumpLaunchServicesLog([since dateByAddingTimeInterval:-2.0]);
+        return status;
+#else
         return hkRegisterStockApps(@(argv[1]), @(argv[2]), (unsigned)attempts);
+#endif
     } @catch (NSException *exception) {
         (void)exception;
         receipt(@{@"event": @"error", @"reason": @"workspace_exception"}); return 3;
