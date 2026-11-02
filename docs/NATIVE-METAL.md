@@ -12,6 +12,18 @@ Metal. Host work includes a firmware health path, HMGU v1 wire definitions,
 Metal resource uploads, restricted IOSurface imports and three fixed-layout
 DXT arithmetic group encodings. These are components, not a working stack.
 
+Later physical checkpoint, 2026-11-02: SEND2 accepted the signed firmware
+(`20261102-101843-native-metal-send-p29-r1`). HEALTH5 then failed
+(`20261102-102719-native-metal-health-p29-r1`): started1, KCCB consumed1/1,
+FW connection0, pending FWCCB1/0 and no execution return. No unchanged retry
+is scheduled. Capture/decode the pending firmware message in a reviewed
+diagnostic before requesting another device test. Native Metal is unproved.
+
+Current source reuse decisions and refresh instructions are in
+[NATIVE-METAL-UPSTREAM.md](NATIVE-METAL-UPSTREAM.md), alongside the broader
+[reuse audit](REUSE.md). Adopt exact compatible code with its notices and
+preserve the native PowerVR execution path.
+
 Local evidence and earlier source are under `research/ios26-fleet/handoffs/`.
 The active roster, exact delegated tasks, source paths and result receipts are
 under `research/ios26-metal-native-20261102/`. That directory stays out of git.

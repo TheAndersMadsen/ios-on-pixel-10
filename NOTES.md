@@ -1,3 +1,49 @@
+## Native Metal upstream refresh and physical STOP, 2026-11-02 10:56 CET
+
+User explicitly requests GitHub reuse and an up-to-date fleet. Completed source
+inventory: eight exact GitHub branch heads,24 immutable text source/license
+files, rehashed PASS. Original collector `tools/native_gpu_upstream.py` + curated
+`docs/NATIVE-METAL-UPSTREAM.md` committed as **4cc8c3d**. Output stays ignored in
+`research/ios26-metal-native-20261102/upstream/current.json`; refresh reports head
+changes and never merges. Outside-research output refusal PASS. Linked/hash-bound
+seven existing audit documents from the parallel24-domain audit (3139238/d18fbb4),
+not a second audit collector. Tegu is PRIVATE: authenticated API verified tip
+8e2d75b (three commits/17 files beyond d807098); earlier public404 remains valid.
+No root licence, facts-only use. Main reuse: MIT AdrenoMetal frontend831a9dc,
+standalone AIR parser219f013 (GPL2+ OR LGPL3+,Rust1.98,no Vulkan dependency),
+matching Pixel26.1 donor5940a317 already current17-qpr3-base. No drop-in DXT stack.
+
+**Physical checked, phone-owner captures:** SEND2 attempt
+`20261102-101843-native-metal-send-p29-r1`: len8/cmd1/result0 in185ms,
+purposeful PASS; raw SHA49bff66a19a3da5b1dc42508ee906917ade02385923ebf645413b00563ebaba4.
+HEALTH5 attempt `20261102-102719-native-metal-health-p29-r1` **FAILED**:
+START0,started1,FWconn0/OS1,KCCB1/1,FWCCB1/0,sysdata0/0,compBVNC0/0,
+no execution return, STOP1s/purposeful reset. Raw SHA
+a402278beac84b5b617a1c5b22608296331fb6c44d998a260fdcb79e15b935f6.
+Parent independently rehashed both dumps/selected fresh XNU fields and reran
+strict verifier: FAIL as required. Phone owner added fw==2 acceptance check;
+no duplicate tool edit. Existing26.1 send path shows no separately ORed return
+request flag; do not invent one. Firmware/queue prioritize bounded raw pending
+FWCCB snapshot on timeout and exact matching ABI. **No unchanged retry or
+progression; phone owner holds USB.** This goal parent ran no device command.
+
+Seven implementation milestones returned (validation1/2,AIR1,ISA1,streams1,
+Metal1,surfaces1), with source/packages and host/ARM64 receipts; parent integration
+review remains. Each completed slot was replaced with a fresh implementation
+task: AIR reuse/native bridge, complete ISA, PDS input/resource initialization,
+frontend loading/reuse, actual surface UC/queue wiring and render validation.
+**Ten current owners**, all ten delivered upstream coordination through active
+steers; no delegate polling. Exact current/terminal task IDs, links and briefs:
+`research/ios26-metal-native-20261102/{fleet.json,FLEET.md,successor-briefs.json}`.
+Reports/host test totals never establish phone rendering or execution.
+
+Next: consume source-reviewed firmware diagnostic, compose one shared DDK/BVNC/
+define/layout profile and real VM/context/invalidation/queue adapters; adopt
+reused AIR/frontend code where compatible. Keep compiler, UPL/cache handback and
+authentic engine completion requirements intact. No new physical boot request
+until the diagnostic/repair candidate is concrete and reviewed. Native Metal
+and full original goal remain unproved and active.
+
 ## Reuse audit completed, 2026-11-02 — 24 specialists, 16 concrete follow-ups
 
 Committed **3139238** (`Audit reusable code and tooling across 24 bring-up
