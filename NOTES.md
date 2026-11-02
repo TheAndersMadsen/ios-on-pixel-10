@@ -414,78 +414,77 @@ candidate; continue apps prerequisite repair/native composition in parallel,
 then resolve joint CPU-context acceptance before GPU/GPT scheduling.
 
 
-## Stock apps and Apple identity, 2026-11-02 — registration-r6 ACTIVE
+## Stock apps and Apple identity, 2026-11-02 — r6 captured; Standard-job candidate ready
 
-User goal ACTIVE: all apps running plus legitimate device identity, Apple services
-and SEP. DIRECT constraint: keep Pixel self-contained; no Mac-backed validation
-or tethered service bridge. Host build/test tools remain development tools.
-Own namespace research/ios26-apps-r1/, tools/ios_app_*, tests and
-docs/IOS-APPS-IDENTITY.md. No new agents. Phone/USB/release/deployment and peer
-hooks remain with their owners. Source c214b86/64ffd35/b840825/98b4530,
-latest da2c1a3e3f8be4d28ba4dceb51fa81763b590a34.
+Goal ACTIVE: all stock apps running plus legitimate device identity/Apple services/
+SEP. DIRECT constraint: self-contained Pixel, no Mac-backed validation/tethered
+service bridge. Own research/ios26-apps-r1/, tools/ios_app_* and identity docs.
+No new agents. Phone/USB/release/deployment and peer hooks remain with owners.
+Source c214b86/64ffd35/b840825/98b4530/da2c1a3; admission handoff00ccca4.
 
-Actual stock/r3 inventory:206 top-level service/system bundles retained, all49
-staged apps absent; registration recipe is a no-op. Missing1,166,707,757 regular
-bytes exceed553,840,640 free before framework resources. Own20GiB guest clone
-restores all49 with deep signatures checked, canonical CURRENT r3 seed55files
-including persona.kb/Medinafalse and676 unchanged baseline jobs +own job.
-Actual p29 TSV consumer ASan/UBSan validates245entries and all source paths.
-Original canonical r3 SHA205cb0e2… and light edd8d9fb… rehashed unchanged.
+Actual stock/r3 inventory:206 service/system bundles retained,49 staged apps
+missing; registration recipe no-op. Missing1,166,707,757 regular bytes exceed
+553,840,640 free before framework data. Own20GiB guest root restores all49,
+deep signatures checked; canonical CURRENT r3 seed55files/persona/Medinafalse
+and676 baseline launchd jobs retained +own job. Actual p29 TSV consumer
+ASan/UBSan checked245entries/paths. Canonical r3 205cb0e2… and lightedd8d9fb…
+originals unchanged.20GiB still exceeds8GiB phone allocation; deployment HELD.
 
-r4 COMPLETE900.4016465s/exit0/root unchanged: corrected persona prerequisite,
-Photos+Settings home icons observed, no registration/launch acceptance.
-All837227 console bytes match final mirror0mismatch/0tail; source/result in
-receipts/registration-r4-result.json. Released native's next ONE reference
-batch; it completed/released, then r5 admitted normally. Neither is native
-GPU/SEP/physical-phone acceptance.
+r4 COMPLETE900.4016s/exit0/root unchanged: canonical seed removes old-light
+persona abort; Photos+Settings home icons observed, no registration/launch
+acceptance. All837227 console bytes match mirror0/0. Native's reserved ONE
+reference batch ran/released, then r5 admitted. No native GPU/SEP acceptance.
+r5 COMPLETE900.6059s/exit0/root19680946… unchanged: C main/framework_load/
+framework_loaded/manifest_read positive; no workspace/readbacks/launches.
+Live892546+1331retainedtail=893877B,0mismatch. Neighboring log clocks place
+manifest marker around14:20 of15min, not proof of a long blocked metadata call.
+Final receipts:receipts/registration-r5-{result,phase-context}.json.
 
-r5 COMPLETE900.6058925s/exit0/root19680946… unchanged. Final C main,
-framework_load/framework_loaded and manifest_read POSITIVE; no workspace,
-readbacks or launch requests. Earlier C-entry-only snapshot is superseded.
-Live892546B SHA55a81f265ae179ba998dbe010c7f40ce2ca76fac874c1fcd516853b114bfc94f
-matches mirror0mismatch;1331B finaltail retained/parsed, merged893877B.
-FinalramoopsSHA0be19a4eec91d4454f185daacb9472681fd834bdb744ac7809e1f09b766150c1.
-Exact source/input/capture/cleanup:receipts/registration-r5-result.json.
-This bounds progress before manifest read returns; no MCM/AKS cause established.
+r6 COMPLETE full1200.3457317919238s/exit0/root unchanged. Sourceda2c1a3e,
+rootd90a58d61f60e3260f76499960949ed59e4b65acc4e9358dd3356368fa3072ed,
+registrara2af2c734295dad8b66d6d87e08578bceed982c8030ab1f1c42649dc997b90f6.
+Actual registrar exec +dyld unnest/launchd creation positive, but0 C-main/phase
+receipts in COMPLETE console; exact blocking call/cause UNKNOWN. POSIX/NSData/
+plist/workspace NOT observed; readbacks0/launchrequests0/representativeexec0.
+Final frame Photos+Settings icons only; no representative foreground acceptance.
+Live866344B SHA6ee47439b0d55634e7063e76684aa6806a79eb8a77f26194c0f32965cc20a7f5
+matches mirror0mismatch/0lost;185B finaltail retained/parsed, merged866529B
+SHAc1b720383814ee38324d72f3fbc88e7f1ae24488c8c5482edb1e500a97c56be5.
+Final4MiB ramoopsSHAc46540286ac3a6d1ca62acead61b6cf88030e9472fe02ee738164c918474adcb.
+Regs/exit/intent/allframes/post-run kernel/U/overlay/harness/binary/source hashes
+in receipts/registration-r6-result.json. At12:51:57CET no QEMU, shared lock
+acquired then immediately released, no reservation held. Terminal event sent
+coordinator; own candidate/baseline mounts detached. No phone action.
 
-r6 ACTIVE: ONE normal shared-lock admission, runner28155/QEMU28409, no retry.
-Frozen20GiB apps-full-r4.img SHA
-d90a58d61f60e3260f76499960949ed59e4b65acc4e9358dd3356368fa3072ed;
-registrar a2af2c734295dad8b66d6d87e08578bceed982c8030ab1f1c42649dc997b90f6.
-Only registrar binary changes from prior19680946… image;49apps/55seed files/
-676jobs and three other integration files byte-identical. Same frozen p29 K
-5aad89780e798d730aa00372dd17568917cc81d97fc231df0fcf1a9fda80fca8,
-Ucc979153…, overlay61c38161…/mask0xA0080081, fullRAMDisk route28GiB window.
-Exact argv:receipts/guest-command-r6.json; package-r4/composition-r4/fsck-r4
-and runs/registration-r6/intent.json bind inputs. Host1200/guest1800 budgets
-are QEMU-only; no change to phone p31r1/300s. XNU/launchd progressing, no
-registrar phase yet at early snapshot. Preserve run through terminal capture.
+NEXT host-only candidate apps-full-r5.img20GiB/0444 SHA
+7ee9df1349015fe342e5eb956f82368f55a82889117abecb0100bd80211090d5.
+Only own job ProcessType Background->Standard in two content paths: own plist
+and its cached copy. New tracked tools/ios_app_launchd.plist SHA
+903688134e95ae6a70a505be8c927abbe75a60b44c64eda1e3ec0962b6611553.
+Same binary/manifest,49 apps/55canonical seed files/676baseline jobs verified;
+readonly virtual fsck exit0/OK, only2 scoped root-owner metadata corrections.
+Exact recipe/hash/commands/allowed diffs:receipts/package-r5.json, fsck-r5.json,
+stage_standard_r5.py; guest-command-r7.json. No guest started/reservation held.
+Host Apple launchd manual documents Background resource limits; scheduling is
+only a hypothesis, no cause/improvement/API success established. No peer service
+masked, Interactive/realtime priority, MCM/AKS/container workaround or fake state.
 
-Latest probes: C-only startup/receipt formatting; after-pool marker; exact
-POSIX open/fstat/first8/header errors then original NSData/plist enter+return.
-No file contents emitted, result substituted or fake success. Changed host
-ASan/UBSan fixtures/POSIX+plist probes pass; real gate-ON ARM64e text symbols
-and NSData/plist imports present, OFF absent, PAC/signature/entitlements pass.
-Only affected checks rerun; earlier full CI pass. Expected51 exact installed/
-nonplaceholder/path readbacks, then conditional Calculator/Clock/Notes requests;
-request returns remain launch_verified=false pending actual exec/UI/interaction.
-Underlying synchronous Apple APIs are not timed out by the retry limit.
+Frozen p29 K5aad8978…/Ucc979153… overlay61c38161… mask0xA0080081 unchanged,
+fullRAMDisk28GiB, host1200/guest1800. Same diagnostic binary in both arms, actual
+HK_STOCK_APPS_BUILD=1 ARM64e3textsymbols/OFF absence and imports already checked
+in receipts/read-boundary-r5/. Source is unchanged; no repeated broad suite.
+C-only startup/afterpool and POSIX/header/NSData/plist enter+return probes
+retain actual reads/results. Goal51 exact installed/nonplaceholder/path
+readbacks then conditional Calculator/Clock/Notes requests; return alone keeps
+launch_verified=false, actual exec/foreground/interaction still required.
+Rollback select prior immutable guest root, no physical state changed.
 
-All own image mounts detached.20GiB still exceeds current8GiB allocation;
-no deployable phone root/storage/Android/slot/firmware write or approval implied.
-Earlier r2 seed40 EINVAL was exact17,532,928,000 extent beyond fakeUFS8GiB;
-RAMDisk corrects guest-harness mismatch without physical-bound widening.
-Earlier old-light r3 persona abort does not imply current phone regression.
-
-GitHub pins/research in docs/IOS-APPS-IDENTITY.md and ignored github/sources.json:
-OpenSEP needs SEP execution/mailbox/device backend; vphone does not establish
-iCloud support. OpenBubbles Mac route excluded; public pinned OpenAbsinthe-Stub
-ValidationCtx/key_establishment/sign are todo!, not self-contained validation.
-SweetKeyStore fixed-state compatibility is not a supported SEP backend.
-No Apple login/attestation/SEP acceptance. Next: finish r6 and preserve final
-console+ramoops/registers/frames/exit/input hashes, compare finaltail, release
-lock/guest, send ONE terminal event to coordinator; diagnose exact observed API.
-Full goal remains unmet. Own HANDOFF.md holds captures/rollback/dependencies.
+GitHub source pins/docs retain OpenSEP SEP execution/mailbox/device prerequisites,
+vphone iCloud limits, OpenBubbles Mac route exclusion, public NAC stub TODOs.
+SweetKeyStore fixed state is not a supported SEP/attestation backend. No Apple
+login/activation/SEP success. Next: publish frozen Standard-only candidate/argv,
+normal shared-lock admission under existing reservations; preserve final captures
+and identify actual blocking API if reached. Full goal remains unmet.
 
 ## Native Metal diagnostic qualified, 2026-11-02 11:21 CET — build only
 

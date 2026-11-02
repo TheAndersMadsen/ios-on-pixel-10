@@ -63,7 +63,7 @@ The original [Security status observer](../runtime/bt_keychain_trace/README.md)
 now has host forwarding/concurrency/sanitizer checks, enabled/disabled ARM64e
 objects and a signed iOS26 diagnostic dylib. A concrete existing-p29 guest can
 collect the missing statuses without a new kernel link. Native loading,
-interposition and the actual failure status still require its queued run.
+interposition and the actual failure status still require the proposed run.
 
 ## Reuse sources selected for this hardware
 

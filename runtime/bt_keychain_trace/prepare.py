@@ -83,7 +83,9 @@ def main():
     # D is the harness's parent directory. Keep its layout entirely private.
     (out / 'tools').mkdir()
     harness = out / 'tools/qemu-ufsroot.py'
-    text = text.replace("R = D.parent; BC = R/'ios26-bootchain-r1/tools'", "R = Path(" + repr(str(ROOT / 'research')) + "); BC = R/'ios26-bootchain-r1/tools'", 1)
+    path_anchor = "R = D.parent; BC = R/'ios26-bootchain-r1/tools'"
+    assert text.count(path_anchor) == 1
+    text = text.replace(path_anchor, "R = Path(" + repr(str(ROOT / 'research')) + "); BC = R/'ios26-bootchain-r1/tools'", 1)
     harness.write_text(text.replace(anchor, addition + anchor, 1))
     compile(harness.read_text(), str(harness), 'exec')
     test = out / 'test-overlay'

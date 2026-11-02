@@ -141,6 +141,17 @@ The selector's return value is unused; requests remain labelled
 `launch_verified=false`. Actual exec records, foreground frames and interaction
 are still needed. Registration-only mode never opens apps.
 
+[`ios_app_launchd.plist`](../tools/ios_app_launchd.plist) is the one-shot job for
+the isolated guest candidate. It uses `ProcessType=Standard`. The earlier job
+used `Background`; Apple's local `launchd.plist(5)` manual documents resource
+limits for that classification. Their effect in this guest is unproven.
+The r6 guest completed its 1,200-second capture with registrar exec and dyld
+mapping observed, but no C-main or API phase receipt in the complete retained
+console. Its exact blocking call remains unknown. The Standard variant changes
+only this key in our job and its launchd-cache copy, retaining the registrar
+binary, manifest, apps and all baseline services. It is a scheduling experiment;
+no runtime improvement or registration/launch acceptance is established yet.
+
 The private `research/ios26-apps-r1/` candidate uses an APFS clone of the existing
 20 GiB light root. All 49 app bundles are relocated into `/Applications`; all
 staged regular files are present. The original r3 and light images remain

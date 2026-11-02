@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>org.hackios.stock-apps</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/libexec/hk_app_register</string>
+        <string>exercise</string>
+        <string>/usr/local/share/hackios/stock-apps.plist</string>
+        <string>3</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>LaunchOnlyOnce</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Standard</string>
+    <key>StandardOutPath</key>
+    <string>/dev/console</string>
+    <key>StandardErrorPath</key>
+    <string>/dev/console</string>
+</dict>
+</plist>
