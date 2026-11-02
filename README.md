@@ -71,7 +71,7 @@
 |  | USB host, video out | 🚫 No host stack in open XNU |
 | **Audio** | Speakers, microphones | ⏳ QEMU test queued; depends on always-on chip |
 |  | Haptics | 🟡 Chip found; one effect commanded; felt buzz unconfirmed |
-| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Motion sensor answered directly (ID 0xe8); streaming not run |
+| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved |
 |  | Always-on chip | ⏳ First test built |
 | **Power** | Temperature and thermal guard | ✅ Live temperatures; guard panic verified at a test limit |
 |  | Battery gauge | 🟡 Kernel reads the real gauge: 89%, 4332 mV; status bar unconfirmed |

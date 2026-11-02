@@ -339,7 +339,7 @@
         [
           "Accelerometer, gyro, proximity, light, barometer",
           "active",
-          "Motion sensor answered directly (ID 0xe8); streaming not run"
+          "Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved"
         ],
         [
           "Always-on chip",
