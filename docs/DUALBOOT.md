@@ -69,6 +69,20 @@ CRCs, reciprocal geometry, partition GUID/name uniqueness and non-overlap. A
 capture is explicitly **GPT metadata only**, not a complete partition backup or
 evidence that Android is intact. The EP0 transport is intended for small
 discovery captures; high-throughput whole-partition backup is still needed.
+Every received block is now saved before parsing. A refused capture leaves
+`failure.json` and hashed observations, with no successful `capture.json`.
+
+The first physical attempt, `20261102-105345-dualboot-gpt-readback-r1`, proved one
+exact LU0/LBA0 read through the native service and returned normally at its
+300-second deadline. The host rejected the MBR size before reading GPT headers.
+The retained MBR has one protective entry at LBA1 with size `0xffffffff`, even
+though this LUN is smaller. [UEFI defines the canonical size field](https://uefi.org/specs/UEFI/2.10_A/05_GUID_Partition_Table_Format.html#protective-mbr);
+[Linux explicitly recognizes this saturated form](https://github.com/torvalds/linux/blob/v6.12/block/partitions/efi.c#L193).
+The tool retains canonical-size checking by default. An operator can pass
+`--reviewed-pmbr-sha256 HASH` to accept the saturated form only if the complete
+MBR block matches the independently reviewed hash. All GPT copies, CRCs,
+capacity, bounds and overlap checks remain mandatory. The actual device hash,
+raw bytes and next capture profile stay in ignored research, not this document.
 
 Reproduce host checks with `python3 -I dualboot/validate.py`. If the local XNU
 tree is available, add `--base research/ios26-release-r1/work/xnu` to exercise the
@@ -78,12 +92,12 @@ release tree; `dualboot/validate.py --objects` emits both real ARM64 objects and
 checks their definitions with `BLAZER=1` explicitly present.
 
 A full candidate kernel and temporary image have also been linked and built
-locally. Exact hashes, source/object provenance, build checks and the pending
-phone test are in `research/ios26-dualboot-r2/HANDOFF.md`. The baseline relink
+locally. Exact hashes, source/object provenance, build checks and phone-test
+results are in `research/ios26-dualboot-r2/HANDOFF.md`. The baseline relink
 matches p29 byte-for-byte except its 16-byte `LC_UUID`; only the USB console and
 UFS owner objects are replaced in the candidate. The release tree and artifacts
 are unchanged. A successful host build does not establish device operation.
 
-Physical partition capture, Android integrity, independent iOS storage, chooser
+Complete GPT capture, Android integrity, independent iOS storage, chooser
 input/output, Android handoff, persistence and installed cold boot remain
 unverified. See the active entry in `NOTES.md` for exact validation and commits.

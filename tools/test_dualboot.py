@@ -125,8 +125,60 @@ class GptTests(unittest.TestCase):
                 if self.calls > 5: return b'\0'*(count*d.BLOCK)
                 return super().read(lba, count)
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(d.Refused): d.capture_gpt(Changing(disk_image()), Path(tmp)/'capture')
-            self.assertFalse((Path(tmp)/'capture').exists())
+            out = Path(tmp)/'capture'
+            with self.assertRaises(d.Refused): d.capture_gpt(Changing(disk_image()), out)
+            self.assertFalse((out/'capture.json').exists())
+            failure = json.loads((out/'failure.json').read_text())
+            self.assertFalse(failure['ok'])
+            self.assertFalse(failure['gpt_copies_match'])
+            self.assertGreater(len(failure['observations']), 0)
+            for observation in failure['observations']:
+                self.assertEqual(d.sha((out/observation['file']).read_bytes()), observation['sha256'])
+
+    def test_rejected_first_block_is_retained_without_read_retry(self):
+        class Counted(MemoryReader):
+            calls = 0
+            def read(self, lba, count=1):
+                self.calls += 1
+                return super().read(lba, count)
+        disk = disk_image(); struct.pack_into('<I', disk, 458, 0xffffffff)
+        source = Counted(disk)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)/'failed'
+            with self.assertRaises(d.Refused): d.capture_gpt(source, out)
+            failure = json.loads((out/'failure.json').read_text())
+            self.assertEqual(source.calls, 1)
+            self.assertEqual(len(failure['observations']), 1)
+            self.assertEqual((out/failure['observations'][0]['file']).read_bytes(), disk[:d.BLOCK])
+            self.assertFalse((out/'capture.json').exists())
+            with self.assertRaises(OSError): d.SnapshotReader(out)
+
+    def test_saturated_pmbr_requires_explicit_matching_review_hash(self):
+        disk = disk_image(); struct.pack_into('<I', disk, 458, 0xffffffff)
+        source = MemoryReader(disk); reviewed = d.sha(disk[:d.BLOCK])
+        for review in (None, '0'*64, 'bad'):
+            with self.assertRaises(d.Refused): d.inspect_gpt(source, review)
+        report, _ = d.inspect_gpt(source, reviewed)
+        self.assertEqual(report['protective_mbr']['policy'], 'reviewed-linux-saturated')
+        for sectors in (0, 100, 510, 512, 4095, 0xfffffffe):
+            changed = bytearray(disk); struct.pack_into('<I', changed, 458, sectors)
+            with self.assertRaises(d.Refused): d.inspect_gpt(MemoryReader(changed), d.sha(changed[:d.BLOCK]))
+        # A reviewed saturated PMBR does not rescue bad GPT CRCs or geometry.
+        disk[d.BLOCK+16] ^= 1
+        with self.assertRaises(d.Refused): d.inspect_gpt(MemoryReader(disk), reviewed)
+
+    def test_observation_corruption_and_saturated_snapshot_opt_in(self):
+        disk = disk_image(); struct.pack_into('<I', disk, 458, 0xffffffff)
+        reviewed = d.sha(disk[:d.BLOCK])
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)/'capture'
+            result = d.capture_gpt(MemoryReader(disk), out, reviewed_pmbr_sha256=reviewed)
+            reader = d.SnapshotReader(out)
+            with self.assertRaises(d.Refused): d.inspect_gpt(reader)
+            self.assertTrue(d.inspect_gpt(reader, reviewed)[0]['gpt_copies_match'])
+            file = out/result['observations'][0]['file']
+            bad = bytearray(file.read_bytes()); bad[-1] ^= 1; file.write_bytes(bad)
+            with self.assertRaises(d.Refused): d.SnapshotReader(out)
 
     def test_regular_files_only(self):
         with tempfile.TemporaryDirectory() as tmp:

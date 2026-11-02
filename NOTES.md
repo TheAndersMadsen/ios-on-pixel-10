@@ -1,3 +1,65 @@
+## Dual-boot physical discovery and host correction, 2026-11-02 11:05 CET
+
+Phone owner completed/captured **20261102-105345-dualboot-gpt-readback-r1**;
+this thread independently rehashed raw kernel.log to
+`8845074b9436c8c372b07cd1d1c832173ebd7494ed4b25ec90c7934b9bc04761`
+and inspected current decoded mode/deadline lines. Native exact LU0/LBA0 read
+physically worked, same nonce/entry/LUN/generation1/CRC through cached readback.
+**Full GPT snapshot FAIL:** host rejected saturated PMBR size0xffffffff at start1
+versus31147008-block capacity BEFORE any GPT-header read. The phone owner
+retained cached bytes with INFO/DATA only, no SELECT/storage retry, then ordinary
+deadline300 reset/park (XNU300.5s/payload326.6s,38C/89%/4332mV,0CPMerrors).
+Live304353bytes match RAM0mismatch;296panic-tail bytes not received live.
+
+Retained raw block hash independently matches
+`28894fedd22215fa7fa86b04eeeee270e1ca040c9ca5ec6d157adbe2b2a8c302`,
+CRC0x161dd6f8. One EE protective entry, other3records allzero. Read primary Linux
+v6.12 efi.c:is_pmbr_valid and UEFI2.10A: the former explicitly recognizes maximum
+32-bit size regardless of disk size; UEFI describes canonical bounded size.
+Original host fix keeps strict default and requires EXPLICIT reviewed whole-block
+SHA256 for this saturated form. No arbitrary sizes, hybrid records or GPT checks
+are relaxed. Source receipts/byte analysis ignored in r3/pmbr-review/.
+
+Also fixed observed evidence-loss bug: save EVERY received block before parse;
+failure.json labels incomplete/refused evidence and no successful capture.json
+is written. Saved observations reverify against final metadata offline. **16
+Python tests PASS**, including actual C protocol, no-extra-read failure retention,
+explicit hash requirement, malformed sizes/CRC refusal and observation corruption.
+Kernel/C/image unchanged; no reason to repeat ARM64 builds for this host-only fix.
+
+Separate reviewed follow-up profile prepared in
+`research/ios26-dualboot-r2/phone-test-r2.json`: same immutable image/own --mach,
+new phone-r2 capture directory and explicit reviewed PMBR hash. NOT yet scheduled;
+phone owner is now running sampler verification. Do not independently accessUSB.
+Full GPT/isolation/backups/Android return still unproven. Offline AOSP boot-chain
+inventory is advancing in r3 separately; saved slot-a lacks vendor_kernel_boot,
+DTBO and AVB metadata, and its vendor_boot contains two variants and noDTB.
+No Android, slot, root, partition, firmware or force-fastboot operation here.
+
+## Phone owner live slot, 2026-11-02 11:03 CET — sampler verification
+
+Prior readback attempt20261102-105345 COMPLETE/captured, all304353 livebytes match
+RAM;296finalbytesnotreadlive. RawkernelSHA8845074b9436c8c372b07cd1d1c832173ebd7494ed4b25ec90c7934b9bc04761.
+Expecteddeadline300, XNU300.5s/payload326.6s, PSCI-SW, postreset38C/89%/4332mV,
+0CPMerrors. GPTcapture FAIL protection-MBR geometry; preservedcachedLBA0 raw+CRC,
+noSELECTretry; dualbootparentnotified. FullGPT/Android/isolation remainunknown.
+
+Now exclusive physical attempt `20261102-110205-sampler-verify-p29-r1` RUNNING:
+image02b99c9554d504be6a0b072cafd1752b35e0d68c4c7629dff79f76275ec69b52, samep29
+kernel/unstripped and exact990-byte command line as capturedprofile; onlyoverlay
+changes to0a8046ad28223fa7a5f70a7da6362dbbfabb375f5be3e0a3af13a5f1a49e6096.
+Originaloutput VERIFYmode, noGPU/clock/persistchange. Parent reviewed source,
+identity, pixel-oracle and exactcomposition; independentreviewstillrunning.
+Boot5376/live79750/decoder81693; raw/profiler inios26-opt-20261102/parent.
+Don'tlaunchanotherphoneattempt until captured. CPUmode1audit queued; root/app
+stagingnewparentownsios26-apps-r1 andtools/ios_app_*, noUSB/rootwriteauthorizedbyit.
+
+Committedhostprofiler **e4e4c9c**,17tests+realcaptureverification PASS. Returned
+settings_assets andcpu_fast/boot_services milestones remainHOSTONLY. NewRTC
+integration/presentation-trace agents replaced completed work; sixownSolconfirmed
+11:00 beforeboot_servicesfinished (nowfive). Maintain>=5 andonlySol; exactroster
+underios26-opt-20261102. Nevercountothergoalchildrenfortheminimum.
+
 ## Reuse findings communicated, 2026-11-02 — 21 active owners updated
 
 At the user's explicit request, read the live T3 project inventory and recent

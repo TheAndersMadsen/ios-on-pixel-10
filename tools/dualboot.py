@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import struct
 import sys
@@ -80,6 +81,7 @@ class UsbReader:
         require(0 < nonce < 1 << 64 and 2 < blocks <= 1 << 32, 'nonce/capacity out of range')
         self.device, self.nonce, self.total_blocks = device, nonce, blocks
         self.clock, self.sleep, self.identity = clock, sleep, None
+        self.last_receipts = []
 
     def info(self):
         h, payload = packet(bytes(self.transfer(0xc0, INFO, 0x5242, 1, HEADER.size)))
@@ -115,6 +117,7 @@ class UsbReader:
     def read(self, lba, count=1):
         require(isinstance(lba, int) and isinstance(count, int) and lba >= 0 and count > 0 and
                 count <= 256 and lba + count <= self.total_blocks, 'read outside supplied media capacity/batch bound')
+        self.last_receipts = []
         return b''.join(self.read_block(n) for n in range(lba, lba + count))
 
     def read_block(self, lba):
@@ -146,6 +149,7 @@ class UsbReader:
         require(after['state'] == COMPLETE and
                 tuple(after[k] for k in ('nonce', 'entry', 'lun', 'generation', 'lba', 'crc')) == binding,
                 'block changed before capture finished')
+        self.last_receipts.append({k: after[k] for k in ('nonce', 'entry', 'lun', 'generation', 'lba', 'crc')})
         return bytes(data)
 
 
@@ -229,14 +233,33 @@ def parse_entries(data, h):
     return parts
 
 
-def inspect_gpt(reader):
-    mbr = reader.read(0)
+def inspect_pmbr(mbr, blocks, reviewed_sha256=None):
+    require(len(mbr) == BLOCK, 'short protective MBR block')
     require(mbr[510:512] == b'\x55\xaa', 'protective MBR signature missing')
     entries = [mbr[446+i*16:462+i*16] for i in range(4)]
     protective = [e for e in entries if e[4] == 0xee]
     require(len(protective) == 1 and all(e[4] in (0, 0xee) for e in entries), 'missing or hybrid protective MBR')
+    require(all(not any(e) for e in entries if e[4] == 0), 'nonzero unused protective MBR record')
     start, sectors = struct.unpack_from('<II', protective[0], 8)
-    require(start == 1 and sectors == min(reader.total_blocks - 1, 0xffffffff), 'protective MBR geometry mismatch')
+    expected = min(blocks-1, 0xffffffff)
+    canonical = sectors == expected
+    if reviewed_sha256 is not None:
+        require(re.fullmatch('[0-9a-f]{64}', reviewed_sha256) is not None and sha(mbr) == reviewed_sha256,
+                'protective MBR does not match the separately reviewed block hash')
+    # Linux v6.12 block/partitions/efi.c:is_pmbr_valid explicitly recognizes
+    # 0xffffffff regardless of disk size. Accept that observed vendor form only
+    # with an operator-supplied, separately reviewed block hash. This neither
+    # supplies media capacity nor relaxes any GPT copy/CRC/range requirement.
+    saturated = not canonical and sectors == 0xffffffff and reviewed_sha256 is not None
+    require(start == 1 and (canonical or saturated), 'protective MBR geometry mismatch')
+    return dict(start_lba=start, size_in_lba=sectors, canonical_size_in_lba=expected,
+                policy='uefi-size' if canonical else 'reviewed-linux-saturated',
+                reviewed_sha256=reviewed_sha256)
+
+
+def inspect_gpt(reader, reviewed_pmbr_sha256=None):
+    mbr = reader.read(0)
+    pmbr = inspect_pmbr(mbr, reader.total_blocks, reviewed_pmbr_sha256)
     raw_p, raw_b = reader.read(1), reader.read(reader.total_blocks-1)
     p = parse_header(raw_p, 1, reader.total_blocks)
     b = parse_header(raw_b, reader.total_blocks-1, reader.total_blocks)
@@ -253,6 +276,7 @@ def inspect_gpt(reader):
                 ('backup-header.raw', reader.total_blocks-1, raw_b)]
     return dict(block_bytes=BLOCK, total_blocks=reader.total_blocks,
                 disk_guid=p['disk_guid'], partitions=parts,
+                protective_mbr=pmbr,
                 gpt_copies_match=True, storage_isolation_proven=False,
                 android_integrity_proven=False, full_data_backup=False), segments
 
@@ -285,20 +309,56 @@ def write_new(path, data):
         f.write(data); f.flush(); os.fsync(f.fileno())
 
 
-def capture_gpt(reader, out, fstab=None):
-    report, segments = inspect_gpt(reader)
-    # Re-read every metadata block: refuse a table changing during this capture.
-    for _, lba, data in segments:
-        require(reader.read(lba, len(data)//BLOCK) == data, 'GPT changed during capture')
-    if fstab is not None:
-        report['android_fstab'] = fstab_owners(fstab)
+class RecordingReader:
+    """Save each received block before parsing it, without any retry/extra read."""
+    def __init__(self, reader, out):
+        self.reader, self.out = reader, Path(out)
+        self.total_blocks, self.observations = reader.total_blocks, []
+
+    def read(self, lba, count=1):
+        require(type(lba) is int and type(count) is int and lba >= 0 and 0 < count <= 256 and
+                lba+count <= self.total_blocks, 'capture read range/batch bound')
+        data = bytearray()
+        for block in range(lba, lba+count):
+            require(len(self.observations) < 1100, 'GPT evidence read budget exceeded')
+            part = self.reader.read(block, 1)
+            require(len(part) == BLOCK, 'short captured block')
+            name = f'read-{len(self.observations):04d}-lba-{block:010d}.raw'
+            write_new(self.out/name, part)
+            observation = dict(file=name, lba=block, blocks=1, sha256=sha(part))
+            if isinstance(self.reader, UsbReader):
+                observation['wire_receipt'] = self.reader.last_receipts[-1]
+            self.observations.append(observation)
+            data += part
+        return bytes(data)
+
+
+def capture_gpt(reader, out, fstab=None, reviewed_pmbr_sha256=None):
+    out = Path(out)
+    out.mkdir(mode=0o700, parents=True, exist_ok=False)
+    recording = RecordingReader(reader, out)
+    identity = lambda: dict(zip(('nonce', 'entry', 'lun'), reader.identity)) if isinstance(reader, UsbReader) and reader.identity else None
+    try:
+        report, segments = inspect_gpt(recording, reviewed_pmbr_sha256)
+        # Re-read every metadata block: refuse a table changing during capture.
+        for _, lba, data in segments:
+            require(recording.read(lba, len(data)//BLOCK) == data, 'GPT changed during capture')
+        if fstab is not None:
+            report['android_fstab'] = fstab_owners(fstab)
+    except (ValueError, OSError, KeyError, TypeError) as exc:
+        failure = dict(schema=1, ok=False, purpose='failed/incomplete GPT capture evidence only',
+                       error=str(exc), observations=recording.observations, boot_identity=identity(),
+                       block_bytes=BLOCK, total_blocks=reader.total_blocks,
+                       gpt_copies_match=False, full_data_backup=False, storage_isolation_proven=False,
+                       android_integrity_proven=False)
+        write_new(out/'failure.json', (json.dumps(failure, indent=2)+'\n').encode())
+        raise
     report['purpose'] = 'GPT metadata only; not a partition/data backup or migration approval'
     report['schema'] = 1
     report['segments'] = []
+    report['observations'] = recording.observations
     if isinstance(reader, UsbReader):
         report['boot_identity'] = dict(zip(('nonce', 'entry', 'lun'), reader.identity))
-    out = Path(out)
-    out.mkdir(mode=0o700, parents=True, exist_ok=False)
     for name, lba, data in segments:
         write_new(out/name, data)
         report['segments'].append(dict(file=name, lba=lba, blocks=len(data)//BLOCK, sha256=sha(data)))
@@ -330,6 +390,17 @@ class SnapshotReader:
             self.segments.append((lba, lba+count, data))
         ordered = sorted(self.segments)
         require(all(a[1] <= b[0] for a, b in zip(ordered, ordered[1:])), 'overlapping snapshot segments')
+        observations = self.manifest.get('observations', [])
+        require(isinstance(observations, list) and len(observations) <= 1100, 'snapshot observation bound')
+        for observation in observations:
+            name, lba = observation['file'], observation['lba']
+            require(isinstance(name, str) and Path(name).name == name and name not in names and
+                    name not in ('', '.', '..') and type(lba) is int and observation['blocks'] == 1,
+                    'unsafe/duplicate observation file or range')
+            names.add(name)
+            data = small_file(directory/name, BLOCK)
+            require(len(data) == BLOCK and sha(data) == observation['sha256'] and self.read(lba) == data,
+                    'snapshot observation differs from validated metadata')
 
     def read(self, lba, count=1):
         for first, end, data in self.segments:
@@ -349,18 +420,20 @@ def main(argv=None):
                          help='independently observed READ CAPACITY block count, not a guessed disk size')
     capture.add_argument('--output', required=True)
     capture.add_argument('--fstab')
+    for command in (image, snap, capture):
+        command.add_argument('--reviewed-pmbr-sha256', help='explicitly accept reviewed saturated 0xffffffff PMBR only when this whole-block hash matches')
     capture.add_argument('--wait', type=float, default=60,
                          help='seconds to wait for the USB console to appear (0..300, default 60)')
     a = p.parse_args(argv)
     if a.command == 'inspect-image':
         reader = ImageReader(a.image)
         try:
-            report, _ = inspect_gpt(reader)
+            report, _ = inspect_gpt(reader, a.reviewed_pmbr_sha256)
         finally:
             reader.close()
     elif a.command == 'inspect-snapshot':
         reader = SnapshotReader(a.directory)
-        report, _ = inspect_gpt(reader)
+        report, _ = inspect_gpt(reader, a.reviewed_pmbr_sha256)
         # Recompute layout from raw bytes; never trust cached manifest partitions.
         report['stored_layout_matches'] = report['partitions'] == reader.manifest['partitions']
         require(report['stored_layout_matches'], 'stored layout differs from captured GPT bytes')
@@ -380,7 +453,8 @@ def main(argv=None):
         try:
             require(usb.util.get_string(dev, dev.iProduct) == 'hackios XNU console', 'USB product mismatch')
             reader = UsbReader(dev, a.nonce, a.blocks)
-            report = capture_gpt(reader, a.output, small_file(a.fstab, 1024*1024) if a.fstab else None)
+            report = capture_gpt(reader, a.output, small_file(a.fstab, 1024*1024) if a.fstab else None,
+                                 a.reviewed_pmbr_sha256)
         finally:
             usb.util.dispose_resources(dev)
     print(json.dumps(report, indent=2))
@@ -390,6 +464,6 @@ def main(argv=None):
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except (Refused, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+    except (ValueError, OSError, KeyError, TypeError) as exc:
         print(f'dualboot: refused: {exc}', file=sys.stderr)
         sys.exit(2)
