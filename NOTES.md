@@ -1,3 +1,37 @@
+## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
+
+Committed source/audit/reproduction: **55d423d**, `docs/INFERNO.md` and
+`tools/coreimage/`. Exact root r3: iOS26.6.2/23G90, `205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7`.
+CoreImage UUID6f5abd16-0e3c-3fc3-bcc7-ccefeafbca00. All12 Inferno targets match
+stock after existing PAC rewriting; none of its return stubs was present.
+Selected ONLY `_isWidget` at0x19e041778: eight instruction bytes + one32-byte
+page hash in an owned host clone. CandidateSHA6ba62469f05e553c21c965e092b356e7f2509406064d24299a0b0f9193915a8f.
+Complete-image masked comparison and source rehash PASS; independent5318-page
+signature check0invalid. A second exclusive clone reproduced identical bytes.
+
+**Actual QEMU acceptance:** `control-r3`235.242s and `widget-r3`244.994s, same
+p29kernel5aad8978…, unchanged harness098b2597…, same probe70f877c5…/overlaydedb25c3….
+Control isWidget0: default/GPU/BooleanCPU context nil; numeric software_renderer2
+positive control selects SW and passes all red/CIColorInvert pixels + guards.
+Changed isWidget1: all4 cases selectSW and pass the same pixels/guards. Both
+exit0, input roots unchanged, no recorded console loss; observers restored.
+Strict verifier PASS; eight altered failure receipts rejected. ARM64e object
+has actual probe/observer/pixel-check text symbols; linked probe signature PASS.
+No new kernel build. Full evidence: `research/ios26-inferno-coreimage-r1/receipts/`.
+
+Earlier `control-r1` refused observer ABI; r2 bitmap-backed input failed pixels.
+Those are preserved failures, not acceptance. Bitmap cause remains UNISOLATED.
+No missing-icon, UI speed, Settings/home-script or physical claim. Runs ended
+before480s UI script. Source image unchanged; own read-only mounts detached,
+other owner's stock mount preserved; both owned test inputs parked0444. No USB,
+phone boot, firmware command/download, radio, slot/partition/root write or flash.
+
+Reuse3139238/d18fbb4 incorporated. Battery glyph/container-ready/cloudd/sampler
+remain separate owners' candidates. hgltrack stays single-applied. Forced SW
+must remain separate from native Metal acceptance. Next useful extension is an
+isolated bitmap/import readback diagnostic or process-scoped runtime fallback;
+any phone candidate still belongs to the existing coordinator and is untested.
+
 ## Phone owner result, 2026-11-02 11:11 CET — sampler correct on tested spans; CPU audit live
 
 PhysicalsamplerVERIFY20261102-110205 COMPLETE/captured, image02b99c95… matching
@@ -202,26 +236,6 @@ and named implementation (__TEXT,__text) symbols rechecked. Sources/patch
 unchanged; no duplicate apply, release build/image-tool change or physical claim.
 Receipt research/ios26-cpu-complete-r1/stepdown-review/review.json. Baseline
 cap16, high HOLD; retain separate verify/floors/required/health/R1/R2 stages.
-
-## CoreImage exact-cache audit and QEMU comparison, 2026-11-02 (in progress)
-
-This thread owns only `research/ios26-inferno-coreimage-r1/` and
-`tools/coreimage/`. Exact host root r3 `205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7`,
-iOS26.6.2/23G90; CoreImage UUID `6f5abd16-0e3c-3fc3-bcc7-ccefeafbca00`.
-All12 Inferno CoreImage targets match stock after the existing PAC rewriting;
-none of its requested return stubs was present. Candidate clone `6ba62469…`
-changes only isWidget's first8bytes + one32-byte signature hash. Independent
-5318-page signature check PASS; other11 targets unchanged. No physical action.
-
-QEMU only, existing unchanged harness098b2597… + p29 + identical probe overlay.
-`control-r1` stopped65.8s: observer signature refused, no fallback test.
-`control-r2` observed isWidget0; all3 context creations nil, including explicit
-CPU, so this is NOT renderer acceptance. Candidate `widget-r2` running, own
-runner session17988. Need explain nil control/reference or improve probe before
-claiming a CoreImage fix. Canonical source root and phone untouched; original
-control-r1 input unchanged. Exact receipts/runs under own ignored namespace.
-Reuse audit3139238/d18fbb4 read; Battery glyph/container-ready/cloudd and sampler
-remain their owners' distinct work. No duplicate hgltrack/forced-SW Metal test.
 
 ## Phone owner checkpoint, 2026-11-02 10:57 CET — live profiler integrated, GPT validation stopped
 
