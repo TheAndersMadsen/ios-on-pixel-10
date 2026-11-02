@@ -27,10 +27,10 @@
       "note": "seconds-long test, not under iOS"
     },
     {
-      "value": "31",
-      "unit": "fps",
-      "label": "peak, drawn on the CPU",
-      "note": "was 1.6 s a frame"
+      "value": "0",
+      "unit": "errors",
+      "label": "sampler pixel comparisons",
+      "note": "598.9M pixels; phone speed unmeasured"
     },
     {
       "value": "4.3",
@@ -49,31 +49,31 @@
     {
       "stage": "Now",
       "items": [
-        "Stop the compositor crash on the home key: a fix that tracks its surfaces is built, not run",
-        "Read the GPU's ID, now that the power firmware reports its domain on",
-        "Wi-Fi: load the regulatory data, then scan and join from the kernel",
-        "Motion data: a stream from the chip that answered, then the other sensors on that bus",
-        "Settings' text and colours on the phone: they draw in QEMU"
+        "Measure guarded CPU sampler off/fast after zero mismatches in 598.9 million phone pixel comparisons",
+        "Capture the pending GPU firmware message after failed health completion; native Metal remains incomplete",
+        "Test the Battery artwork correction and container readiness hooks on the phone",
+        "Link and test interactive live USB TAP/HOME with continuing logs",
+        "Restore missing stock apps through the app inventory and registration work"
       ]
     },
     {
       "stage": "Next",
       "items": [
-        "Persistent /var: the first write to free blocks, after the owner's approval",
-        "Volume and power keys into iOS, display off and wake",
-        "Battery percentage from the real gauge, real date and time",
-        "Live USB console, then the link to the Mac",
-        "Brightness control, 60 Hz and frame sync, and the clock governor on every boot"
+        "Verify persistent real settings and isolated storage for Android/iOS dual boot",
+        "Validate volume and power keys, display sleep and wake",
+        "Show the real battery gauge and date/time through native iOS services",
+        "Prove USB networking and the link to the Mac",
+        "Validate thermal step-down before any higher CPU clock profile"
       ]
     },
     {
       "stage": "Later",
       "items": [
-        "GPU firmware through Trusty, then Metal: months away",
-        "Audio and haptics",
-        "All RAM to 12.92 GiB and past it",
-        "Bluetooth, cellular, GPS",
-        "Sleep and standby"
+        "Complete native GPU firmware execution, shader compilation and Metal rendering",
+        "Integrate audio and haptics with actual transport and physical acceptance",
+        "Establish ownership of RAM beyond the working 12.92 GiB",
+        "Complete Wi-Fi association, Bluetooth, cellular and GPS",
+        "Validate sleep, standby and remaining peripherals"
       ]
     }
   ],
@@ -144,7 +144,7 @@
         [
           "120 Hz",
           "partial",
-          "Panel runs at 120, iOS draws about 20–31 fps; rate switch built, not run"
+          "120 Hz panel mode observed; completed iOS frame rate remains unmeasured"
         ],
         [
           "60 Hz mode and frame sync",
@@ -189,7 +189,7 @@
         [
           "Metal drawing",
           "active",
-          "Native GPU rendering incomplete; physical p29 still draws on the CPU"
+          "Native GPU rendering incomplete; CPU sampler verified on tested spans, speed not yet measured"
         ],
         [
           "Video encode and decode",

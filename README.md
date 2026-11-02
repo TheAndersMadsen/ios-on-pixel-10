@@ -39,7 +39,7 @@
 |  | RAM | ✅ 12.92 GiB under iOS for 15 min; memory test passed |
 |  | The rest of the 16 GiB | ❌ Not assigned |
 | **Display** | Full 1280x2856 picture | ✅ Scaled from 1125x2511 |
-|  | 120 Hz | 🟡 Panel runs at 120, iOS draws about 20–31 fps; rate switch built, not run |
+|  | 120 Hz | 🟡 120 Hz panel mode observed; completed iOS frame rate remains unmeasured |
 |  | 60 Hz mode and frame sync | 🔧 Next test |
 |  | Variable refresh down to low rates | ❌ Automatic idle rate isn't built |
 |  | Brightness | 🟡 Capped at about 140 nits; no user control yet |
@@ -47,7 +47,7 @@
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
 |  | GPU firmware through Trusty | 🟡 Physical p29: signed image accepted and firmware started; health completion failed, pending firmware message |
-|  | Metal drawing | ⏳ Native GPU rendering incomplete; physical p29 still draws on the CPU |
+|  | Metal drawing | ⏳ Native GPU rendering incomplete; CPU sampler verified on tested spans, speed not yet measured |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified; root unchanged; real-setting test pending |
@@ -116,27 +116,27 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
-- Stop the compositor crash on the home key: a fix that tracks its surfaces is built, not run
-- Read the GPU's ID, now that the power firmware reports its domain on
-- Wi-Fi: load the regulatory data, then scan and join from the kernel
-- Motion data: a stream from the chip that answered, then the other sensors on that bus
-- Settings' text and colours on the phone: they draw in QEMU
+- Measure guarded CPU sampler off/fast after zero mismatches in 598.9 million phone pixel comparisons
+- Capture the pending GPU firmware message after failed health completion; native Metal remains incomplete
+- Test the Battery artwork correction and container readiness hooks on the phone
+- Link and test interactive live USB TAP/HOME with continuing logs
+- Restore missing stock apps through the app inventory and registration work
 
 **Next**
 
-- Persistent /var: the first write to free blocks, after the owner's approval
-- Volume and power keys into iOS, display off and wake
-- Battery percentage from the real gauge, real date and time
-- Live USB console, then the link to the Mac
-- Brightness control, 60 Hz and frame sync, and the clock governor on every boot
+- Verify persistent real settings and isolated storage for Android/iOS dual boot
+- Validate volume and power keys, display sleep and wake
+- Show the real battery gauge and date/time through native iOS services
+- Prove USB networking and the link to the Mac
+- Validate thermal step-down before any higher CPU clock profile
 
 **Later**
 
-- GPU firmware through Trusty, then Metal: months away
-- Audio and haptics
-- All RAM to 12.92 GiB and past it
-- Bluetooth, cellular, GPS
-- Sleep and standby
+- Complete native GPU firmware execution, shader compilation and Metal rendering
+- Integrate audio and haptics with actual transport and physical acceptance
+- Establish ownership of RAM beyond the working 12.92 GiB
+- Complete Wi-Fi association, Bluetooth, cellular and GPS
+- Validate sleep, standby and remaining peripherals
 
 **Likely out of reach**
 
