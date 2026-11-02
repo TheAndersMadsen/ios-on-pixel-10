@@ -7,6 +7,7 @@
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
 #include <objc/message.h>
+#include <objc/runtime.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -405,12 +406,32 @@ static void hkDumpLaunchServicesLog(NSDate *since) {
     }
     Class storeClass = NSClassFromString(@"OSLogStore");
     SEL local = NSSelectorFromString(@"localStoreAndReturnError:");
-    if (!storeClass || ![storeClass respondsToSelector:local]) {
-        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"local_store_spi_missing"}); return;
+    if (!storeClass) {
+        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"oslogstore_class_missing"}); return;
+    }
+    {   /* r11e: which class methods this build has, so a failure still says what exists. */
+        unsigned n = 0; Method *ms = class_copyMethodList(object_getClass(storeClass), &n);
+        NSMutableArray *names = [NSMutableArray array];
+        for (unsigned i = 0; i < n && i < 64; i++) [names addObject:NSStringFromSelector(method_getName(ms[i]))];
+        free(ms);
+        receipt(@{@"event": @"lslog_methods", @"count": @(n), @"names": [names componentsJoinedByString:@" "]});
     }
     NSError *error = nil;
-    id (*localStore)(id, SEL, NSError **) = (void *)objc_msgSend;
-    id store = localStore(storeClass, local, &error);
+    id store = nil;
+    NSString *route = @"local_store";
+    if ([storeClass respondsToSelector:local]) {
+        id (*localStore)(id, SEL, NSError **) = (void *)objc_msgSend;
+        store = localStore(storeClass, local, &error);
+    } else if ([storeClass respondsToSelector:NSSelectorFromString(@"storeWithURL:error:")]) {
+        /* r11e: system scope returned nil with no error. r11f: open the raw store directly. */
+        id (*withURL)(id, SEL, NSURL *, NSError **) = (void *)objc_msgSend;
+        route = @"url_var_db_diagnostics";
+        store = withURL(storeClass, NSSelectorFromString(@"storeWithURL:error:"),
+                        [NSURL fileURLWithPath:@"/private/var/db/diagnostics" isDirectory:YES], &error);
+    } else {
+        receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"no_store_entry_point"}); return;
+    }
+    receipt(@{@"event": @"lslog_route", @"route": route, @"opened": @(store != nil)});
     if (!store) {
         receipt(@{@"event": @"lslog", @"available": @NO, @"reason": @"local_store_refused",
                   @"error_domain": error.domain ?: @"", @"error_code": [NSString stringWithFormat:@"%ld", (long)error.code],
