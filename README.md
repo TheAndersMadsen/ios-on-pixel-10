@@ -1,27 +1,27 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 36% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 41% of reachable hardware" width="100%"></p>
 
 <h2 align="center">A phone that was never meant to do this.</h2>
 <p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 36% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 41% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>36%</b> across 46 reachable features. Updated 2026-11-02.</p>
+<p align="center"><b>41%</b> across 46 reachable features. Updated 2026-11-02.</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
 | | Status | Features | Counts as |
 | --- | --- | ---: | ---: |
-| ✅ | Works on the phone | 6 | 100% |
+| ✅ | Works on the phone | 9 | 100% |
 | 🟡 | Partly working | 11 | 60% |
-| 🔧 | Built, not run | 5 | 35% |
-| ⏳ | In progress | 12 | 20% |
+| 🔧 | Built, not run | 3 | 35% |
+| ⏳ | In progress | 11 | 20% |
 | ❌ | Not started | 12 | 0% |
 | 🚫 | Likely out of reach | 6 | not counted |
 
@@ -29,13 +29,13 @@
 
 | Block | Feature | Status |
 | --- | --- | --- |
-| **CPU** | 5 A725 cores | 🟡 Up under iOS at 533 MHz for about 8.5 min, to a manual stop; no load test yet |
-|  | CPU clock control | 🟡 Votes read back and measured, before XNU starts; three cores together to 1536 MHz; iOS still runs at 533 |
+| **CPU** | 5 A725 cores | ✅ Ran 15 min under iOS at 1075 MHz, no kernel crash |
+|  | CPU clock control | 🟡 All five A725s at 1075 MHz under iOS for 15 min, 38 C; one core 3052 MHz in a short test |
 |  | Higher clocks, up to the 3052 MHz top | 🟡 Short test only: one core, each step under 1 s, 36 °C; no governor, heat under load unknown |
 |  | 2 A520 cores | 🟡 cpu0 parked in the shim; cpu1 unused |
 |  | X4 core | 🚫 For now: its errata aren't fixed |
 |  | Idle sleep | ✅ By code reading: cores already idle in WFI |
-| **Memory** | Memory and shared cluster clocks | 🟡 A fixed step up held under iOS; 2.85x reached only in a seconds-long test; no governor |
+| **Memory** | Memory and shared cluster clocks | ✅ Raised under iOS for 15 min; memory path up to 2.85x in a short test |
 |  | RAM | 🟡 6.95 GiB seen by XNU in one iOS run; 12.92 GiB is the target |
 |  | The rest of the 16 GiB | ❌ Not assigned |
 | **Display** | Full 1280x2856 picture | ✅ Scaled from 1125x2511 |
@@ -45,18 +45,18 @@
 |  | Brightness | 🟡 Capped at about 140 nits; no user control yet |
 |  | HDR, peak brightness, colour calibration | ❌ Not assigned |
 |  | Always-on display, self-refresh | ❌ Not assigned |
-| **Graphics** | GPU power-on and ID | 🟡 Power firmware reports the domain on; no GPU register or ID read yet |
-|  | GPU firmware through Trusty | ⏳ XNU reached the GPU app in Trusty and it replied, refusing the ping; no firmware loaded |
+| **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
+|  | GPU firmware through Trusty | ⏳ Trusty channel and log work; firmware send awaits approval |
 |  | Metal drawing | ⏳ Months away; everything is CPU-drawn now |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
-|  | Writing (persistent /var) | 🔧 First write awaits approval |
+|  | Writing (persistent /var) | 🟡 First kernel write verified; root checksum intact. /var save not built on the phone |
 |  | Maximum speed | ⏳ Patches being measured |
 | **Input** | Touch | ✅ Works; feel unconfirmed |
 |  | Volume keys | 🟡 Read in a probe |
 |  | Power key | ⏳ Retry needs someone at the phone |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
-| **Connectivity** | Wi-Fi | 🟡 Firmware boots and answered 3 first commands, in a probe boot; no scan, join or network |
+| **Connectivity** | Wi-Fi | 🟡 Radio up; passive scan heard 21 networks on 3 bands; no join yet |
 |  | Bluetooth | ⏳ QEMU test queued, needs Wi-Fi firmware running first |
 |  | Cellular | ⏳ Modem identified; first check built |
 |  | SIM, eSIM | ⏳ Part of cellular |
@@ -69,11 +69,11 @@
 |  | Network over USB | ❌ Not assigned |
 |  | USB host, video out | 🚫 No host stack in open XNU |
 | **Audio** | Speakers, microphones | ⏳ QEMU test queued; depends on always-on chip |
-|  | Haptics | ⏳ First read-only boot stopped early, with nothing sent to the chip |
-| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Motion chip answered its ID read over I2C, without always-on firmware; no data yet, others unread |
+|  | Haptics | 🟡 Chip found; one effect commanded; felt buzz unconfirmed |
+| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Motion sensor answered directly (ID 0xe8); streaming not run |
 |  | Always-on chip | ⏳ First test built |
 | **Power** | Temperature and thermal guard | ✅ Guard's panic path tested; chip zones only, no skin temperature or power reading |
-|  | Battery gauge | 🔧 Probe ready |
+|  | Battery gauge | 🟡 Kernel reads the real gauge: 89%, 4332 mV; status bar unconfirmed |
 |  | Charging control | ❌ Left at the bootloader's settings |
 |  | Wireless charging | ❌ Not assigned |
 |  | Real date and time | 🔧 Ready to test |

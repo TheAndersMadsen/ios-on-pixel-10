@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 916" role="img" aria-label="Progress by hardware block"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5e5ce6"/><stop offset=".5" stop-color="#bf5af2"/><stop offset="1" stop-color="#ff375f"/></linearGradient></defs><rect width="1200" height="916" rx="28" fill="#000"/>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="62" font-size="23" font-weight="600" fill="#f5f5f7">CPU</text>
 <rect x="250" y="46" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c0"><rect x="250" y="46" width="544" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c0)"><rect x="250" y="46" width="544" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;544" keyTimes="0;0.000;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.60s" fill="freeze"/></rect><rect x="794" y="46" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;794" dur="3.2s" begin="1.60s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="62" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">68%</text>
+<clipPath id="c0"><rect x="250" y="46" width="608" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c0)"><rect x="250" y="46" width="608" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;608" keyTimes="0;0.000;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.60s" fill="freeze"/></rect><rect x="858" y="46" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;858" dur="3.2s" begin="1.60s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="62" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">76%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="122" font-size="23" font-weight="600" fill="#f5f5f7">Memory</text>
 <rect x="250" y="106" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c1"><rect x="250" y="106" width="320" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c1)"><rect x="250" y="106" width="320" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;320" keyTimes="0;0.048;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.68s" fill="freeze"/></rect><rect x="570" y="106" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;570" dur="3.2s" begin="1.68s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="122" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">40%</text>
+<clipPath id="c1"><rect x="250" y="106" width="424" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c1)"><rect x="250" y="106" width="424" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;424" keyTimes="0;0.048;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.68s" fill="freeze"/></rect><rect x="674" y="106" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;674" dur="3.2s" begin="1.68s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="122" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">53%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="182" font-size="23" font-weight="600" fill="#f5f5f7">Display</text>
 <rect x="250" y="166" width="800" height="16" rx="8" fill="#1c1c1e"/>
 <clipPath id="c2"><rect x="250" y="166" width="288" height="16" rx="8"/></clipPath>
@@ -16,14 +16,14 @@
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="182" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">36%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="242" font-size="23" font-weight="600" fill="#f5f5f7">Graphics</text>
 <rect x="250" y="226" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c3"><rect x="250" y="226" width="200" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c3)"><rect x="250" y="226" width="200" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;200" keyTimes="0;0.130;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.84s" fill="freeze"/></rect><rect x="450" y="226" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;450" dur="3.2s" begin="1.84s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="242" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">25%</text>
+<clipPath id="c3"><rect x="250" y="226" width="280" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c3)"><rect x="250" y="226" width="280" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;280" keyTimes="0;0.130;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.84s" fill="freeze"/></rect><rect x="530" y="226" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;530" dur="3.2s" begin="1.84s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="242" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">35%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="302" font-size="23" font-weight="600" fill="#f5f5f7">Storage</text>
 <rect x="250" y="286" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c4"><rect x="250" y="286" width="416" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c4)"><rect x="250" y="286" width="416" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;416" keyTimes="0;0.167;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.92s" fill="freeze"/></rect><rect x="666" y="286" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;666" dur="3.2s" begin="1.92s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="302" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">52%</text>
+<clipPath id="c4"><rect x="250" y="286" width="480" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c4)"><rect x="250" y="286" width="480" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;480" keyTimes="0;0.167;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.92s" fill="freeze"/></rect><rect x="730" y="286" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;730" dur="3.2s" begin="1.92s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="302" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">60%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="362" font-size="23" font-weight="600" fill="#f5f5f7">Input</text>
 <rect x="250" y="346" width="800" height="16" rx="8" fill="#1c1c1e"/>
 <clipPath id="c5"><rect x="250" y="346" width="360" height="16" rx="8"/></clipPath>
@@ -41,9 +41,9 @@
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="482" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">39%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="542" font-size="23" font-weight="600" fill="#f5f5f7">Audio</text>
 <rect x="250" y="526" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c8"><rect x="250" y="526" width="160" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c8)"><rect x="250" y="526" width="160" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;160" keyTimes="0;0.286;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="2.24s" fill="freeze"/></rect><rect x="410" y="526" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;410" dur="3.2s" begin="2.24s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="542" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">20%</text>
+<clipPath id="c8"><rect x="250" y="526" width="320" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c8)"><rect x="250" y="526" width="320" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;320" keyTimes="0;0.286;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="2.24s" fill="freeze"/></rect><rect x="570" y="526" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;570" dur="3.2s" begin="2.24s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="542" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">40%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="602" font-size="23" font-weight="600" fill="#f5f5f7">Sensors</text>
 <rect x="250" y="586" width="800" height="16" rx="8" fill="#1c1c1e"/>
 <clipPath id="c9"><rect x="250" y="586" width="160" height="16" rx="8"/></clipPath>
@@ -51,9 +51,9 @@
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="602" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">20%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="662" font-size="23" font-weight="600" fill="#f5f5f7">Power</text>
 <rect x="250" y="646" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c10"><rect x="250" y="646" width="272" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c10)"><rect x="250" y="646" width="272" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;272" keyTimes="0;0.333;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="2.40s" fill="freeze"/></rect><rect x="522" y="646" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;522" dur="3.2s" begin="2.40s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="662" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">34%</text>
+<clipPath id="c10"><rect x="250" y="646" width="312" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c10)"><rect x="250" y="646" width="312" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;312" keyTimes="0;0.333;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="2.40s" fill="freeze"/></rect><rect x="562" y="646" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;562" dur="3.2s" begin="2.40s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="662" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">39%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="722" font-size="23" font-weight="600" fill="#636366">Cameras</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="722" text-anchor="end" font-size="19" fill="#636366">Likely out of reach</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="782" font-size="23" font-weight="600" fill="#636366">Security</text>
