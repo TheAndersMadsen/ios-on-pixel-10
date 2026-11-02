@@ -62,6 +62,16 @@ def segment(lz4, image_len, image_size, flags):
     return hdr + lz4 + b'\0' * (-len(lz4) % 8)
 
 
+def stock_vbmeta(raw):
+    """The signed vbmeta blob from a stock boot image's AVB footer (big-endian AvbFooter)."""
+    f = raw[-64:]
+    if f[:4] != b'AVBf': raise ValueError('stock image has no AVB footer')
+    _, _, orig, off, size = struct.unpack('>IIQQQ', f[4:36])
+    vb = raw[off:off + size]
+    if vb[:4] != b'AVB0': raise ValueError('stock footer does not point at a vbmeta blob')
+    return vb
+
+
 def lz4_decode(lz4):
     with tempfile.TemporaryDirectory() as t:
         src = Path(t) / 'k.lz4'; src.write_bytes(lz4); dst = Path(t) / 'Image'
@@ -118,13 +128,27 @@ def build(a):
         want = 0 if f == 'ramdisk_size' else st[f]
         if nh[f] != want: IT.die(f'boot header {f} {nh[f]!r} != {want!r}')
     if nh['kernel'] != blob: IT.die('kernel blob not embedded intact')
-    avb, key = (IT.pin(IT.AVBTOOL), IT.pin(IT.AVBKEY))
     if len(b) > IT.PARTITION - IT.FOOTER_ROOM: IT.die(f'boot image {len(b)} B does not fit the 64 MiB boot_b partition')
-    run([sys.executable, '-I', str(avb), 'add_hash_footer', '--image', str(boot), '--partition_name', 'boot', '--partition_size',
-         str(IT.PARTITION), '--salt', IT.SALT, '--algorithm', 'SHA256_RSA4096', '--rollback_index', str(IT.ROLLBACK), '--key', str(key)], log)
-    v = run([sys.executable, '-I', str(avb), 'verify_image', '--image', str(boot)], log)
-    (out / 'avb-verify.txt').write_text(v)
-    if 'Successfully verified sha256 hash' not in v: IT.die('AVB verify failed')
+    if a.avb == 'stock':
+        # chooser-v1-r1-t1: with the project test-key footer, KeyMint refused the /data key (-33).
+        # vbmeta_b chains `boot`, so the boot footer's signed vbmeta (key, boot os_version,
+        # security_patch, fingerprint) is part of the root of trust. Transplant it verbatim:
+        # only its hash descriptor mismatches (tolerated on this unlocked phone, as for every
+        # project image); everything KeyMint sees equals a normal boot.
+        vb = stock_vbmeta(stock_raw)
+        part = bytearray(IT.PARTITION); part[:len(b)] = b
+        off = -(-len(b) // 4096) * 4096
+        part[off:off + len(vb)] = vb
+        part[-64:] = b'AVBf' + struct.pack('>IIQQQ', 1, 0, len(b), off, len(vb)) + b'\0' * 28
+        boot.write_bytes(bytes(part))
+        v = f'stock vbmeta transplanted: {len(vb)} B at {off}, sha256 {hashlib.sha256(vb).hexdigest()}; hash descriptor intentionally mismatches'
+    else:
+        avb, key = (IT.pin(IT.AVBTOOL), IT.pin(IT.AVBKEY))
+        run([sys.executable, '-I', str(avb), 'add_hash_footer', '--image', str(boot), '--partition_name', 'boot', '--partition_size',
+             str(IT.PARTITION), '--salt', IT.SALT, '--algorithm', 'SHA256_RSA4096', '--rollback_index', str(IT.ROLLBACK), '--key', str(key)], log)
+        v = run([sys.executable, '-I', str(avb), 'verify_image', '--image', str(boot)], log)
+        if 'Successfully verified sha256 hash' not in v: IT.die('AVB verify failed')
+    (out / 'avb-verify.txt').write_text(v + '\n')
     shutil.copy2(t / 'out/shim.elf', out / 'shim.elf')
     nm = lambda *x: subprocess.run([str(IT.LLVM / 'llvm-nm'), *x, str(out / 'shim.elf')], capture_output=True, text=True, check=True).stdout
     if nm('-u').split(): IT.die('undefined symbols in shim')
@@ -133,7 +157,7 @@ def build(a):
         if not re.search(rf'^[0-9a-fA-F]+ [Tt] {s}$', syms, re.M): IT.die(f'shim lacks text symbol {s}')
     for s in ('tgl_dcs_guarded', 'tgl_fc_entry'):
         if re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present in a chooser image')
-    rec = dict(kind='chooser', version=1, name=a.name, bootable=True, ios_entry=False, ios_root=a.ios_root,
+    rec = dict(kind='chooser', version=1, avb_mode=a.avb, name=a.name, bootable=True, ios_entry=False, ios_root=a.ios_root,
                image=IT.sha(boot), image_bytes=boot.stat().st_size, kernel_blob=IT.sha(out / 'kernel.bin'), kernel_blob_bytes=len(blob),
                shim_bytes=len(shim), segment_offset=seg_off, segment_bytes=len(seg),
                stock=dict(boot_sha256=a.stock_kernel_sha, lz4_sha256=hashlib.sha256(st['kernel']).hexdigest(), lz4_bytes=len(st['kernel']),
@@ -165,6 +189,10 @@ def check(d):
     if hashlib.sha256(lz4).hexdigest() != m['stock']['lz4_sha256'] or csum64(lz4) != cs: sys.exit('stock kernel bytes differ')
     if ilen != m['stock']['image_len'] or isz != m['stock']['image_size']: sys.exit('segment sizes differ')
     if len(b) > IT.PARTITION: sys.exit('image larger than the boot partition')
+    if m.get('avb_mode') == 'stock':
+        f = b[-64:]; _, _, orig, off, size = struct.unpack('>IIQQQ', f[4:36])
+        if f[:4] != b'AVBf' or b[off:off + size][:4] != b'AVB0' or 'sha256 ' + hashlib.sha256(b[off:off + size]).hexdigest() not in (d / 'avb-verify.txt').read_text():
+            sys.exit('transplanted vbmeta differs from the record')
     print('OK', m['name'], 'chooser v1', m['image'])
 
 
@@ -173,6 +201,7 @@ if __name__ == '__main__':
     sub = ap.add_subparsers(dest='cmd', required=True)
     i = sub.add_parser('image'); i.add_argument('name'); i.add_argument('--stock-kernel', required=True)
     i.add_argument('--stock-kernel-sha', required=True); i.add_argument('--ios-root', default='ios_system')
+    i.add_argument('--avb', choices=('stock', 'test'), default='stock', help='stock: transplant the stock boot vbmeta (KeyMint sees a normal boot); test: project test-key footer (r1)')
     i.add_argument('--fdt', help='A0 /sys/firmware/fdt dump: placement host test on real data')
     i.add_argument('--chooser', action='store_true', help='accepted for the image_tool.py spelling')
     c = sub.add_parser('check'); c.add_argument('dir')
