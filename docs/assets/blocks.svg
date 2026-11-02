@@ -36,9 +36,9 @@
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="422" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">23%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="482" font-size="23" font-weight="600" fill="#f5f5f7">USB</text>
 <rect x="250" y="466" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c7"><rect x="250" y="466" width="312" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c7)"><rect x="250" y="466" width="312" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;312" keyTimes="0;0.259;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="2.16s" fill="freeze"/></rect><rect x="562" y="466" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;562" dur="3.2s" begin="2.16s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="482" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">39%</text>
+<clipPath id="c7"><rect x="250" y="466" width="440" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c7)"><rect x="250" y="466" width="440" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;440" keyTimes="0;0.259;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="2.16s" fill="freeze"/></rect><rect x="690" y="466" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;690" dur="3.2s" begin="2.16s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="482" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">55%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="542" font-size="23" font-weight="600" fill="#f5f5f7">Audio</text>
 <rect x="250" y="526" width="800" height="16" rx="8" fill="#1c1c1e"/>
 <clipPath id="c8"><rect x="250" y="526" width="320" height="16" rx="8"/></clipPath>

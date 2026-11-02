@@ -189,7 +189,7 @@
         [
           "Metal drawing",
           "active",
-          "Months away; everything is CPU-drawn now"
+          "Native GPU rendering incomplete; physical p29 still draws on the CPU"
         ],
         [
           "Video encode and decode",
@@ -224,12 +224,12 @@
         [
           "Touch",
           "works",
-          "Works; feel unconfirmed"
+          "Home and Settings work physically; owner confirms slow response and heavy lag"
         ],
         [
           "Scripted taps and keys",
           "partial",
-          "Ran on the phone: a scripted tap opened Settings; the home key then crashed the compositor"
+          "p29 completed 14 token executions and two home returns; push_surface abort absent; separate startup crash remains"
         ],
         [
           "Volume keys",
@@ -298,8 +298,8 @@
         ],
         [
           "Live console",
-          "built",
-          "Next tests"
+          "works",
+          "Physical p29: 1,533,021 live USB bytes matched RAM dump; 0 mismatches, stalls or restarts"
         ],
         [
           "Link to the Mac",

@@ -1,26 +1,26 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 44% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 45% of reachable hardware" width="100%"></p>
 
 <h2 align="center">A phone that was never meant to do this.</h2>
 <p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 44% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 45% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>44%</b> across 47 reachable features. Updated 2026-11-02.</p>
+<p align="center"><b>45%</b> across 47 reachable features. Updated 2026-11-02.</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
 | | Status | Features | Counts as |
 | --- | --- | ---: | ---: |
-| ✅ | Works on the phone | 11 | 100% |
+| ✅ | Works on the phone | 12 | 100% |
 | 🟡 | Partly working | 11 | 60% |
-| 🔧 | Built, not run | 3 | 35% |
+| 🔧 | Built, not run | 2 | 35% |
 | ⏳ | In progress | 10 | 20% |
 | ❌ | Not started | 12 | 0% |
 | 🚫 | Likely out of reach | 6 | not counted |
@@ -47,13 +47,13 @@
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
 |  | GPU firmware through Trusty | ⏳ Trusty channel and log work; firmware send awaits approval |
-|  | Metal drawing | ⏳ Months away; everything is CPU-drawn now |
+|  | Metal drawing | ⏳ Native GPU rendering incomplete; physical p29 still draws on the CPU |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified; root unchanged; real-setting test pending |
 |  | Maximum speed | ⏳ Patches being measured |
-| **Input** | Touch | ✅ Works; feel unconfirmed |
-|  | Scripted taps and keys | 🟡 Ran on the phone: a scripted tap opened Settings; the home key then crashed the compositor |
+| **Input** | Touch | ✅ Home and Settings work physically; owner confirms slow response and heavy lag |
+|  | Scripted taps and keys | 🟡 p29 completed 14 token executions and two home returns; push_surface abort absent; separate startup crash remains |
 |  | Volume keys | 🟡 Read in a probe |
 |  | Power key | ⏳ Retry needs someone at the phone |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
@@ -65,7 +65,7 @@
 |  | NFC | ❌ Reading tags possible at most; Apple Pay is out of reach |
 |  | UWB | ❌ Not assigned; presence unconfirmed |
 | **USB** | Fastboot and logs | ✅ |
-|  | Live console | 🔧 Next tests |
+|  | Live console | ✅ Physical p29: 1,533,021 live USB bytes matched RAM dump; 0 mismatches, stalls or restarts |
 |  | Link to the Mac | ⏳ mux-1 test in QEMU |
 |  | Network over USB | ❌ Not assigned |
 |  | USB host, video out | 🚫 No host stack in open XNU |
