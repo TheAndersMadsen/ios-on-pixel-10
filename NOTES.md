@@ -1,3 +1,11 @@
+## Phone result, 2026-11-02 09:34 CET (parent)
+
+Attempt `20261102-092638-bench-p27-track-r1` is complete/captured; unified exec13328 exited0. **Owner long press**, DER7/RST_STAT4, at XNU238.1s, payload264.7s. No kernel panic observed. No scripted token execution before termination (`HK UI: 18 tokens, start in300s` only). Therefore Settings/home transition benchmark remains untested; no speed claim.
+
+Physical evidence: `hk_env: backboardd gets DYLD_INSERT_LIBRARIES=...`, `HGLTRACK: SWContext slot wrapped, slide0x5440000, reprotect0` (after backboardd respawn too), and `SWEET FB: display on`. **New finding:** backboardd[22] startup NSInvalidArgumentException, NSURL initFileURLWithPath nil string; later backboardd[104] survives to lastHKTOP. This resembles gpugl-p1's documented startup path but cause not isolated. No observed push_surface assert in this capture, but transition wasn't exercised, so not a fix proof. Tj max38C, post-resetABL39C, SOC89%, VCELL4329mV, noCPMerrors/thermalbreadcrumb. The4MiB dump contains duplicated logs. Next: diagnose nil path and await UI owner's controlled shorter script proposal before repeat; do not conflate longpress with autonomous failure. Other thermal/slot/root constraints unchanged.
+
+Fleet dedicated feature roster: first30 launched as explicit gpt-6.1-sol,24 pending capacity. Newly requested dualboot owner is running and must preserve existing storage while investigating hakios/UEFI. Completion events free next slots; no task polling.
+
 ## Parent milestone, 2026-11-02 09:32 CET
 
 **Physical recovered:** `20261102-091607-sensor-stream-r2` completed by deadline 300 s (not a spontaneous crash). Read-only named capture recovered after its host runner was interrupted. Accel + gyro samples through 2400, changing orientation/HID activity; application rotation still unproved. Tj max38C, post-reset ABL39C, SOC89%, VCELL4332mV. Raw kernel log SHA256 `af1cb2cb105a5d3bb7b376db5eff80779de033c847fd1153c6a5e58d1a9e103d`. Decoder output `decoded.txt` inside attempt. README sensor wording corrected, score unchanged.
