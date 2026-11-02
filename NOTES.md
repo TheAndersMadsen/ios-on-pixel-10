@@ -1,3 +1,56 @@
+## CoreImage exact-cache audit and QEMU comparison, 2026-11-02 (in progress)
+
+This thread owns only `research/ios26-inferno-coreimage-r1/` and
+`tools/coreimage/`. Exact host root r3 `205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7`,
+iOS26.6.2/23G90; CoreImage UUID `6f5abd16-0e3c-3fc3-bcc7-ccefeafbca00`.
+All12 Inferno CoreImage targets match stock after the existing PAC rewriting;
+none of its requested return stubs was present. Candidate clone `6ba62469…`
+changes only isWidget's first8bytes + one32-byte signature hash. Independent
+5318-page signature check PASS; other11 targets unchanged. No physical action.
+
+QEMU only, existing unchanged harness098b2597… + p29 + identical probe overlay.
+`control-r1` stopped65.8s: observer signature refused, no fallback test.
+`control-r2` observed isWidget0; all3 context creations nil, including explicit
+CPU, so this is NOT renderer acceptance. Candidate `widget-r2` running, own
+runner session17988. Need explain nil control/reference or improve probe before
+claiming a CoreImage fix. Canonical source root and phone untouched; original
+control-r1 input unchanged. Exact receipts/runs under own ignored namespace.
+Reuse audit3139238/d18fbb4 read; Battery glyph/container-ready/cloudd and sampler
+remain their owners' distinct work. No duplicate hgltrack/forced-SW Metal test.
+
+## Phone owner checkpoint, 2026-11-02 10:57 CET — live profiler integrated, GPT validation stopped
+
+Integrated the returned actual live profiler as `tools/live_profile.py`, tests and
+usage notes. Parent reran17 test methods PASS with ResourceWarning fatal, then
+verified all967,660 p29-profile live bytes against the matching RAM epoch;479
+final bytes absent live contain the expected deadline panic. Three saved PCs
+resolve to exact QuartzCore software samplers. **HK TOP frames+ is per eligible
+layer/admitted flip, NOT completed frames/FPS**; saved PCs do not give CPU shares,
+and injection timestamps do not prove touch-to-glass latency. Original benchmark
+interpolated phases are superseded by actual UITRACE callback times.
+
+Read-only dualboot attempt `20261102-105345-dualboot-gpt-readback-r1` is still
+running its original deadline300. Image21cba4e8… and own unstripped0ce50d8b… hashes
+match; no Android/root/slot/partition write. Host capture stopped exit2 at
+protective MBR geometry mismatch: actual typeEE,start1,sectors0xffffffff versus
+supplied31147008 blocks. No SELECT/read retry. Preserved already-cached LBA0 using
+INFO/DATA only with matching nonce/entry/LUN/generation1/CRC in ignored
+`research/ios26-dualboot-r2/captures/phone-r1-failure/`; blockSHA
+28894fedd22215fa7fa86b04eeeee270e1ca040c9ca5ec6d157adbe2b2a8c302. Dualboot parent
+received exact failure. Normal deadline/capture still pending; no GPT success,
+Android integrity, full backup or dualboot claim. Live reader session61948,
+boot runner11250; no second phone action until both end/capture.
+
+Sampler verify image built from exact p29: `run/sampler-verify-p29-r1/boot.img`
+SHA02b99c9554d504be6a0b072cafd1752b35e0d68c4c7629dff79f76275ec69b52; actual
+hgltrack-preserving overlay0a8046ad… . Independent review running. Verify mode
+retains original pixels and logs candidate comparisons; physical test pending,
+no speedup claim. Six own Sol workers were active after sampler/live_analysis
+completed: settings_assets,cpu_fast,live_input,boot_services,sampler_review,
+usb_network; exact roster underios26-opt-20261102. Reuse audit context received;
+keep these owners/actual runtime paths, no duplicate renderer/profiler. Native
+GPU prior health FAIL still blocks progression/retry without a reviewed change.
+
 ## Native Metal upstream refresh and physical STOP, 2026-11-02 10:56 CET
 
 User explicitly requests GitHub reuse and an up-to-date fleet. Completed source
