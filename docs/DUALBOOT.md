@@ -101,3 +101,36 @@ are unchanged. A successful host build does not establish device operation.
 Complete GPT capture, Android integrity, independent iOS storage, chooser
 input/output, Android handoff, persistence and installed cold boot remain
 unverified. See the active entry in `NOTES.md` for exact validation and commits.
+
+## Android recovery component inventory
+
+`tools/android_bootset.py` inventories regular local boot-chain copies using the
+unmodified pinned AOSP unpacker in `third_party/aosp_bootimg/`. It independently
+bounds image sections and vendor fragments before extraction, then compares
+extracted bytes and metadata with AOSP. It records kernel, generic ramdisk,
+boot signature, vendor fragment types/board IDs, DTB and bootconfig extents and
+hashes. Unsafe fragment names, overlaps, gaps, truncation and source changes
+are refused. Outputs inside this checkout must be under ignored `research/`.
+
+Example, using only already saved images:
+
+```
+python3 -I tools/android_bootset.py --slot a \
+  --image boot=research/workspace/hardware/recovery-current-a/boot_a.img \
+  --image init_boot=research/workspace/hardware/recovery-current-a/init_boot_a.img \
+  --image vendor_boot=research/workspace/hardware/recovery-current-a/vendor_boot_a.img \
+  --output research/android-bootset-a-NEW
+```
+
+The inspected saved slot-a set lacks `vendor_kernel_boot_a`, DTBO and AVB
+metadata. Its vendor boot image has no DTB and carries two ramdisk variants;
+the table alone does not establish which variants ABL selects. Older files
+labelled slot b have different capture histories and are not a proven matching
+recovery set. The inventory always distinguishes structural validation from
+AVB-chain verification, independently trusted stock keys, current slot identity,
+Android integrity and physical dispatch. None of those follows from a filename
+or successful unpack. No boot/slot change is performed by this tool.
+
+Run owned synthetic and malformed-image tests with
+`python3 -I tools/test_android_bootset.py`; the vendored tool makes these checks
+independent of local research artifacts or network access.

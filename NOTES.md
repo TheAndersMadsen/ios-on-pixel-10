@@ -1,3 +1,65 @@
+## Phone owner result, 2026-11-02 11:11 CET — sampler correct on tested spans; CPU audit live
+
+PhysicalsamplerVERIFY20261102-110205 COMPLETE/captured, image02b99c95… matching
+p29/overlay0a8046ad… . Realconstructorinstalled once, selfcheckPASS/reprotect0,
+hgltrackpreserved. Final598888390fullspanpixelscompared,594003511eligibleinterior
+pixels,0mismatch/0latch/0longspan. Projectiveidentity0: thatfastbranchhasNOphysical
+coverage. NoBBabort/push_surface; userHomeSettingsworks/samevisualissues. Script
+66tokens/1569eventscomplete,maxlate2437us/maxcall2763us; notglasslatency. Noactual
+speedgainclaimedfromVERIFY. Independentreviewreturnednocodefindings,147additional
+boundary/fallbackcasesPASS; no physicalproofconflation.
+
+DumpSHA0184107434bcafd022484c399048e54517b8334f720cc290c7cdf0ec8107de18.
+Live2588366bytes/0lost,662finaldumpbytesnotlive; retainedhead+tail2096461bytescompare
+0mismatch,491905bytesliveonlybecauseRAMwrapped. Strictepochcanonicalprofilerchecks
+only1047914currenttailbyteswhenheadhasnooverlap; doNOTclaimentirelivefileRAMverified.
+Expecteddeadline300,XNU300.6s/payload327.2s,PSCI-SW,39C/SOC89/4332,0CPMerrors.
+Newtools/live_profile.pyreportretainsinterleavedTOPwarnings/nofabricatedFPS.
+
+Currentexclusivephoneattempt `20261102-110932-cpu0-audit-p29-r1` RUNNING: image
+226eba4f…/unchangedp29,read-onlycpu0MRSbeforeexistingfiveA725baseline533handoff,
+noOFF/reentry/highclocks. Parent reviewedactualsource/gates andreran7hosttestsPASS;
+exactimage/kernel/Uhashesmatch/checkPASS. Runner39426/live53040. Nootherdevice
+commanduntilcapture. CPUparentkeepssource/acceptance; resultnotyetknown.
+
+Releaseonly: floor0772addedf9f6ec67/series1172,0773addedb03d04d1/series1173;
+source/exportscommitted, clean; probecompile0/high0. No fullnewkernel/linkyet.
+Typedliveinput1410+nativeGPUstandalonetimeoutdiagnosticreview/buildnext; noGPU
+healthretryuntilreviewednewartifactsandseparateslot. Sampleroffimageee70fb73… and
+fast128674c9… built/checkspending; oldp29unchanged. Artworkisolatedf89f74c6… built
+andchecked, notbooted. UpdatedGPThostprofilef329418 received,queuedforlaterreview.
+FiveownSolactiveafterreviewcompletion; addedSpotlight-runtime successorbecause
+newcapturestillshows~onecoreCPUafterUIreplayends. Actualcauseunproved; nofakeSEP/
+authsuccess/blanketdaemonkillrequested. Otherappsgoalownsios26-apps-r1, noUSB.
+
+## Android boot-chain inventory milestone, 2026-11-02 11:11 CET (host only)
+
+PMBR/failure-evidence correction committed **f329418**. Changed host profile and
+explicit reviewed MBR hash delivered for coordinator review after sampler;
+no new physical attempt by this thread, no USB use. r1 physical result remains
+ONE exact LBA0 read, host GPT rejection, not a successful GPT snapshot.
+
+Implemented `tools/android_bootset.py` using UNMODIFIED pinned AOSP unpacker
+`d2bb0af5ba6d3198a3e99529c97eda1be0b5a093`, SHAa9d26097…; Apache notice,
+full licence and source provenance in third_party/aosp_bootimg/. Original wrapper
+independently bounds every v4 component/vendor-fragment, then compares extracted
+bytes + fragment metadata with AOSP. No generated commands executed. Input
+hash/stat preserved, only ignored extract/inventory outputs. **8 host tests PASS**
+on owned AOSP-produced fixtures/malformed extent and name cases; both bootset
+and readback tests included in CI's research-free list. No kernel/C change here.
+
+**Observed saved slot-a recovery gap:** boot kernel20437225bytes; init_boot
+ramdisk2830598; vendor_boot two variants (empty/platform +16K/none), NO DTB.
+No saved vendor_kernel_boot_a, DTBO or AVB metadata in that set. Old files marked
+slot b have mixed capture histories and different structural contents; they are
+NOT a proved matching/current/stock recovery set. A valid header/extraction is
+not a trusted AVB key/chain, complete backup, Android integrity or safe dispatch.
+Exact private hashes/extents/results: research/ios26-dualboot-r3/{HANDOFF.md,
+inventory-evidence.json,stock-a-r2/inventory.json,saved-b-mixed-r1/inventory.json}.
+Next: finish real GPT capture, get matching boot dependency copies and verified
+AVB graph/key provenance; full backups/isolation/chooser/Android return unfinished.
+No Android/slot/root/GPT/firmware/force-fastboot operation or new agent here.
+
 ## Dual-boot physical discovery and host correction, 2026-11-02 11:05 CET
 
 Phone owner completed/captured **20261102-105345-dualboot-gpt-readback-r1**;
