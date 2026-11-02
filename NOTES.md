@@ -1,3 +1,26 @@
+## Inferno source assessment, 2026-11-02 (host only)
+
+Committed assessment: `a127747`, `docs/INFERNO.md`. Reviewed the current official
+Inferno `26b36cc8d59535ed1d9963faab25ac576111edcb` and website
+`596403e772703cc8478a7444dec26a3203ff2a58` through their public Git API; the old
+GitHub mirror was archived/moved, so its older support issues are stale.
+Current guide documents iOS26 support and software-rendering limitations.
+
+**Observed source:** filesystem patcher fixes the same SWContext missing
+`track_surface` call addressed by our physically tested hgltrack. Additional
+CoreImage (`_isWidget` and GPU/GL choices), wallpaper and Neutrino software paths
+are concrete leads, not established fixes for our missing assets or lag. No
+native Tensor G5 DXT driver supplied. Do not layer duplicate surface tracking
+or globally disable renderer paths during native Metal validation.
+
+**No build, emulator/phone boot, device command, restore, firmware download,
+root/partition/slot write or runtime deployment in this assessment.** Existing
+phone attempts remain with their coordinator; the active device handoff below
+is preserved. Public source copies/hash receipts: `research/ios26-inferno-r1/`
+(ignored). Next: inventory exact23G90 cache symbols/patch state, then one
+optional reversible compatibility change in our existing QEMU harness before
+returning a concrete candidate to the phone owner. Benefit remains untested.
+
 ## Native Metal firmware test preparation, 2026-11-02 10:20 CET
 
 Concrete progress, HOST ONLY: built/check-verified two isolated p29 RAM images:
