@@ -1,3 +1,16 @@
+## Dual-boot checkpoint commit, 2026-11-02 10:47 CET
+
+Implementation committed as **13a77d8** (`Add native read-only UFS capture for
+dual-boot storage discovery`), including original service/host tools/tests,
+image-token guards, licensing and docs. Pre-commit tracked-artifact check PASS,
+160files clean. Read-only candidate image/hash, all build receipts and phone
+acceptance remain in the 10:44 entry and `research/ios26-dualboot-r2/HANDOFF.md`.
+Internal request to the sole phone owner delivered as steering; awaiting its
+scheduling/result event, not independently using USB. No physical attempt by
+this thread; full dual boot and Android integrity remain unproved. Next: obtain
+fresh GPT capture, then design isolated storage and complete data backups before
+any destructive migration approval. Goal remains active.
+
 ## Dual-boot readback implementation, 2026-11-02 10:44 CET (host only)
 
 Original native read-only USB/UFS discovery service and strict host GPT verifier
