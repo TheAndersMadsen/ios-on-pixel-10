@@ -1,10 +1,12 @@
 # Working on hackios
 
-- Read `NOTES.md` before starting; it contains the project goal, hardware facts,
-  current blocker, local artifact locations and the next concrete action.
-- The user switches agents frequently. Update the active handoff in `NOTES.md`
-  after each milestone and before stopping. Record commits, attempt IDs, exact
-  build/boot results and unfinished work. Distinguish observations from guesses.
+- Read `NOTES.md` for current truth, then `HANDOFF.md` and only the one task
+  document named there. Do not recursively read `research/` or old journals;
+  retrieve a named receipt or bounded log excerpt when verification is needed.
+- Keep `NOTES.md` short: replace affected current statements after each milestone
+  instead of appending session history. Put exact commits, attempt IDs, hashes and
+  build/boot receipts in the named research directory and link them. Distinguish
+  source/host/QEMU/physical evidence and observations from guesses.
 - Commit completed changes. Local single-file cross-compiles are useful before
   spending a full kernel build or a boot.
 - The coordination thread is the sole writer of the shared root Git index and

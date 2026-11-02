@@ -1,265 +1,36 @@
-# Android and iOS 26 on Pixel 10 Pro
+# Storage and dual boot
 
-The goal is an on-phone chooser, independent storage for each OS, persistent iOS
-data, and a tested route back to Android. **This is not working dual boot yet.**
+Scope: preserve Android while establishing verified iOS storage, recovery and a physical OS chooser on Pixel 10 Pro.
 
-The current iOS root is in `userdata_exp.ai`. The saved stock Android fstab
-includes that partition as an F2FS `/data` expansion alias. Its reservation state
-is unknown, and its original contents were not backed up before earlier approved
-iOS writes. A raw backup made now preserves the current bytes; it cannot recover
-the original Android bytes. Keep Android boot held until storage ownership and
-recovery are established.
+## Current result
 
-## Implementation order
+- **Physical:** Android is restored on slot b with normal boot and `/data`; restoration exceptions are recorded in the recovery handoff.
+- **Physical:** no iOS root is deployed. Android recovery overwrote and reformatted `userdata_exp.ai`; old root, alias, capacity and write-approval instructions are historical.
+- **Physical:** strict GPT r5a rejected nonzero backup-header reserved padding. Both header CRCs passed; no declared array was captured, so there is no GPT acceptance.
+- **Offline/source:** the r5a padding holds 31 complete LUN0 entries packed after the 92-byte header, matching the factory FBPT `partition:0` table 31/31 (name, size, type and unique GUID). Transport, readback core, scratch and DMA-bounce reuse cannot produce that layout, so media contents written by the device GPT writer is the likely origin. This is unproven until the declared arrays are captured. `tools/dualboot.py` now saves the complete metadata plan raw before running the unchanged strict parser ([diagnosis](../research/ios26-dualboot-r7/gpt-r5a-trace/diagnosis.json)).
+- **Inference:** LUN0 has no unallocated region. FBPT `userdata` grows to `last_usable`; Android shows 35 LUN0 partitions with `userdata` last; and `/data` (userdata + `userdata_exp.ai` multi-device F2FS) matches that size within 2 MiB. Isolated iOS storage therefore requires an attended Android shrink/migration ([decision](../research/ios26-dualboot-r7/STORAGE-DECISION.json)).
+- **Physical gate:** no read-only GPT candidate is admissible. Every UFS readback recipe binds `blazer_ufs_root=userdata_exp.ai`, now part of Android `/data`.
+- **Host/source:** readback, GPT validation, chooser policy and Android-handoff preparation exist, but they are not an operational phone menu, Android dispatcher or dual boot.
 
-1. Capture both GPT copies and their complete entry arrays through the native
-   read-only UFS path. Check CRCs, geometry, overlap, and agreement. Capture and
-   verify the current iOS region and Android recovery dependencies before writes.
-2. Establish Android's actual F2FS device/alias state. Design an isolated iOS
-   allocation from the verified layout. Do not treat a missing alias file, an
-   apparent GPT gap, or free filesystem bytes as permission to reuse blocks.
-   No in-place shrink of encrypted/zoned F2FS is assumed supported. If a wipe or
-   repartition is necessary, prepare its exact backup, migration and rollback
-   sequence for the owner's separate approval.
-3. Implement a chooser above the working Pixel shim/XNU handoff, with visible
-   choices, physical input and a deterministic recovery choice. Initially use
-   temporary boot images. Prove Android handoff with the complete stock boot
-   chain; do not mark slots unbootable to escape the menu.
-4. Test iOS → Android → iOS repeatedly, checking both roots and iOS data after
-   each switch. Test a cold start, power interruption, recovery, Android update,
-   and failure of either OS. Install a persistent chooser only after the
-   temporary route and rollback are demonstrated and the owner approves the
-   exact boot-image change.
+## Remaining work
 
-Google's bootloader, firmware, slot metadata and existing backups remain intact
-during development. A boot menu alone does not meet acceptance.
+1. Owner: approve a readback bind that names or exposes no Android partition, with a fresh CPU-context review, before one complete read-only capture. Do not relax the parser or allocate from this geometry.
+2. Establish a fresh storage/recovery baseline: current strict GPT and ownership, independent verified backups, isolated iOS capacity, persistent data, migration and rollback, followed by explicit approval for any write.
+3. Build a temporary chooser with physical display/input and a verified stock-Android handoff while preserving slots, firmware and the existing boot chain.
+4. Test repeated switching, cold boot, interrupted power, recovery and OS failure before proposing any persistent chooser installation.
 
-## HakiOS reference
+## Acceptance before expanding scope
 
-[HakiOS UEFI, pinned at 687fa6c6](https://github.com/oosexgang/hakios-uefi/tree/687fa6c6a5a70f43184de92980e0a76eea5f2c4b)
-uses Mu-Silicium and starts a loader from an in-memory payload. That separation
-is useful here. Its Qualcomm platform, memory addresses and proprietary drivers
-do not establish Tensor G5 support. A full Tensor EFI platform can be added
-later; it is not a prerequisite for extending our existing working XNU loader.
+- Repeated read-only captures pass strict checks for both GPT headers and complete entry arrays, with current Android ownership established.
+- Independent backups and a tested Android rollback/recovery path survive the proposed storage operation; raw ciphertext alone is insufficient.
+- A physical temporary menu boots both OSes through their intended chains without slot or firmware workarounds.
+- Repeated iOS ↔ Android switches preserve both installations and iOS data, including cold boot and failure recovery.
 
-[HakiOS's dual-boot documentation](https://github.com/oosexgang/hakios-xnu-kernel/blob/96ffbc532e970f3540885755d457e401e04d4707/docs/dual-boot.md)
-describes carving a dedicated partition, erasing Android data, replacing a boot
-slot and changing slot bootability. Those device-specific installation commands
-must not be run on this Pixel.
+## Evidence and source
 
-## Current work
-
-The prior `research/ios26-feature-dualboot-r1` contains a host-tested chooser
-policy without a hardware adapter. It does not display a menu or launch Android.
-The first implementation is a native USB/UFS readback service and host GPT
-verifier, kept read-only on the phone. Kernel patches with existing unlicensed
-context, device captures, GPT GUIDs and raw backup bytes stay under ignored
-`research/ios26-dualboot-r2/`. Original readback code and host tooling can be
-tracked separately.
-
-`dualboot/readback.c` implements the block-cache state machine. The XNU adapter
-queues reads on its own worker, validates the existing exact-read receipts and
-serves cached RAM over USB. It is off unless `blazer_usb_readback=1`, supports
-only the already attached physical LUN and constructs no write command. The
-host binds every chunk to the image nonce, boot entry, LUN, generation, LBA and
-CRC. It stops on a mismatch and never reconnects or repeats a selection.
-
-`tools/dualboot.py` verifies both GPT headers and complete entry arrays, their
-CRCs, reciprocal geometry, partition GUID/name uniqueness and non-overlap. A
-capture is explicitly **GPT metadata only**, not a complete partition backup or
-evidence that Android is intact. The EP0 transport is intended for small
-discovery captures; high-throughput whole-partition backup is still needed.
-Every received block is now saved before parsing. A refused capture leaves
-`failure.json` and hashed observations, with no successful `capture.json`.
-
-The first physical attempt, `20261102-105345-dualboot-gpt-readback-r1`, proved one
-exact LU0/LBA0 read through the native service and returned normally at its
-300-second deadline. The host rejected the MBR size before reading GPT headers.
-The retained MBR has one protective entry at LBA1 with size `0xffffffff`, even
-though this LUN is smaller. [UEFI defines the canonical size field](https://uefi.org/specs/UEFI/2.10_A/05_GUID_Partition_Table_Format.html#protective-mbr);
-[Linux explicitly recognizes this saturated form](https://github.com/torvalds/linux/blob/v6.12/block/partitions/efi.c#L193).
-The tool retains canonical-size checking by default. An operator can pass
-`--reviewed-pmbr-sha256 HASH` to accept the saturated form only if the complete
-MBR block matches the independently reviewed hash. All GPT copies, CRCs,
-capacity, bounds and overlap checks remain mandatory. The actual device hash,
-raw bytes and next capture profile stay in ignored research, not this document.
-
-Reproduce host checks with `python3 -I dualboot/validate.py`. If the local XNU
-tree is available, add `--base research/ios26-release-r1/work/xnu` to exercise the
-actual adapter against the real exact-read ABI. `tools/stage_dualboot_readback.py`
-produces a private source fixture and context-bearing patch without changing the
-release tree; `dualboot/validate.py --objects` emits both real ARM64 objects and
-checks their definitions with `BLAZER=1` explicitly present.
-
-A full candidate kernel and temporary image have also been linked and built
-locally. Exact hashes, source/object provenance, build checks and phone-test
-results are in `research/ios26-dualboot-r2/HANDOFF.md`. The baseline relink
-matches p29 byte-for-byte except its 16-byte `LC_UUID`; only the USB console and
-UFS owner objects are replaced in the candidate. The release tree and artifacts
-are unchanged. A successful host build does not establish device operation.
-
-The later GPT attempt is **held for CPU and phone-owner context review**. The
-existing image uses `cpus=1` without `bootcpu`; the subsequent cpu0 A520 audit
-found a required workaround bit clear. The earlier LBA0 observation does not
-resolve that prerequisite. Preserve the immutable image and arguments. An A725
-context requires a separately identified, explicitly reviewed image, source,
-nonce, readback transport and matching unstripped kernel. The corrected host
-PMBR profile is frozen; this hold authorizes no retry or additional read scope.
-See [the shared coordination policy](COORDINATION.md).
-
-Complete GPT capture, Android integrity, independent iOS storage, chooser
-input/output, Android handoff, persistence and installed cold boot remain
-unverified. See the active entry in `NOTES.md` for exact validation and commits.
-
-## Prepared Android handoff contract
-
-`dualboot/android_handoff.c` adds a default-OFF, preparation-only contract for
-the exact DP11 reference described below. It checks current source identities,
-the complete reference graph, board and ramdisk selection, prepared byte ranges,
-memory reservations, recoverable backups, isolated storage, CPU context and
-firmware quiescence. Receipt hashes identify evidence; an independent trusted
-producer must verify the evidence and its field bindings. No such runtime
-producer is implemented. Reference-only input refuses, and even a complete
-synthetic input can return only `PREPARED`, never dispatch Android. The code
-performs no storage access, payload copy, register operation, reset or OS entry.
-
-Run the standalone owned synthetic checks and actual enabled ARM64 object proof:
-
-```sh
-python3 -I dualboot/validate_android.py \
-  --output research/dualboot-android-check-NEW
-```
-
-The validator explicitly compiles `HK_ANDROID_HANDOFF=0` and `=1`, executes the
-actual C contract under ASan/UBSan, and checks nonempty executable ARM64 text.
-The current checks pass 8 disabled and 20,482 enabled assertions. Generated
-objects, logs and exact source hashes stay under ignored research. These are
-host results, with physical acceptance and Android dispatch explicitly false.
-The original MIT files contain reference hashes and parsed format facts; no
-Android binary or upstream implementation is included.
-
-A private chooser adapter and preparation wrapper have also been composed
-against the current root `shim/` used by `tools/image_tool.py`, preserving its
-CPU-audit check. Enabled ARM64 call sites and host tests pass. Earlier worker
-proofs used the historical bootchain shim; the parent composition records that
-distinction. Existing shim/policy context remains private, and canonical shim,
-release source and frozen phone artifacts are unchanged. Physical input, a
-panel presenter, verified iOS continuation and Android dispatcher remain absent;
-this does not provide an operational boot menu. Exact patches, provenance and
-results are in `research/ios26-dualboot-r5/integration/`.
-
-## Android recovery component inventory
-
-`tools/android_bootset.py` inventories regular local boot-chain copies using the
-unmodified pinned AOSP unpacker in `third_party/aosp_bootimg/`. It independently
-bounds image sections and vendor fragments before extraction, then compares
-extracted bytes and metadata with AOSP. It records kernel, generic ramdisk,
-boot signature, vendor fragment types/board IDs, DTB and bootconfig extents and
-hashes. Unsafe fragment names, overlaps, gaps, truncation and source changes
-are refused. Outputs inside this checkout must be under ignored `research/`.
-
-Example, using only already saved images:
-
-```
-python3 -I tools/android_bootset.py --slot a \
-  --image boot=research/workspace/hardware/recovery-current-a/boot_a.img \
-  --image init_boot=research/workspace/hardware/recovery-current-a/init_boot_a.img \
-  --image vendor_boot=research/workspace/hardware/recovery-current-a/vendor_boot_a.img \
-  --output research/android-bootset-a-NEW
-```
-
-The inspected saved slot-a set lacks `vendor_kernel_boot_a`, DTBO and AVB
-metadata. Its vendor boot image has no DTB and carries two ramdisk variants;
-the table alone does not establish which variants ABL selects. Older files
-labelled slot b have different capture histories and are not a proven matching
-recovery set. The inventory always distinguishes structural validation from
-AVB-chain verification, independently trusted stock keys, current slot identity,
-Android integrity and physical dispatch. None of those follows from a filename
-or successful unpack. No boot/slot change is performed by this tool.
-
-A separate saved-file check with pinned AOSP AVB tooling also found that
-`recovery-current-a/init_boot_a.img` fails its embedded payload hash although its
-metadata signature verifies. A second AOSP `verify_image` run on a read-only copy
-confirms the digest mismatch. This is evidence about the saved file, not proof
-of the phone's current Android state or the cause of the mismatch. Exclude it
-from a verified recovery set. A saved vendor boot image uses algorithm `NONE`;
-the upstream helper reports success for unsigned metadata too, so signature
-presence and top-level key/chain trust must be checked separately.
-
-The inspected older slot-b files also fail to supply a verified recovery set.
-Their saved `init_boot` and one saved `vendor_boot` fail payload hashes; the
-separate boot backup passes its embedded signature and payload checks. Its
-rollback index is lower than the saved slot-a metadata. Current device rollback
-state and root trust remain unproved. An archived `init_boot` readback matches
-the same failing bytes.
-
-Two other archived readbacks pass embedded signature and payload verification,
-but use a different signing key from the examined slot-a images. The archived
-boot contains a gzip kernel named `boot-v6-walla.Image` that reports
-`7.3.0-next-20261022`. These files do not establish a matching stock Android
-recovery set. Keep content identity, provenance and root trust explicit even
-when the upstream verifier exits successfully.
-
-Both saved init ramdisks contain Magisk backup entries. A host-only experiment
-used [pinned upstream Magisk](https://github.com/topjohnwu/Magisk/tree/33bfff7ce750c27f157ddb4580e36bf842d6d95b)
-to restore and repack scratch copies. Its CPIO test returned stock status, and
-the original signed metadata remained byte-identical, but AOSP payload checks
-still failed for both results. Neither result is an accepted restore image.
-Preserve the originals and obtain an independently verified matching component;
-successful ramdisk restoration alone does not establish a valid stock image.
-
-An independently downloaded **same-build factory reference** is now available
-for `DP11.261002.005`. The complete archive matches Google's published SHA-256.
-Pinned AOSP tools verify five signed metadata blocks, four parent/child key
-bindings, 28 payload hashes and six hashtrees. Factory `boot` and `vendor_boot`
-exactly match the saved slot-a copies. Factory `init_boot` matches the original
-image SHA-1 recorded in that copy's Magisk backup. The missing
-`vendor_kernel_boot`, DTBO and AVB reference files are also present. Source,
-commands, hashes and results are in ignored
-`research/ios26-dualboot-r4/factory-google-dp11/HANDOFF.md`.
-
-This qualifies the stock reference, not the phone's current contents, configured
-root of trust, protected rollback state or a complete recovery backup. Keep the
-modified saved copies intact. The frozen GPT profile and CPU-context hold remain
-unchanged; the factory reference authorizes no restore, boot or firmware change.
-
-Run owned synthetic and malformed-image tests with
-`python3 -I tools/test_android_bootset.py`; the vendored tool makes these checks
-independent of local research artifacts or network access.
-
-## Storage and recovery prerequisites
-
-The apps owner's 20 GiB root image exceeds the current 8 GiB alias. Host guest
-success cannot establish deployable phone capacity. A new allocation needs a
-verified GPT, Android alias ownership, room for persistent iOS data, complete
-backups and a reviewed migration/rollback sequence. No alias-aware resize or
-metadata-decryption path is qualified for this phone.
-
-Back up current raw bytes and independently verify readable user-file recovery.
-Android [metadata encryption protects its key with KeyMint and Verified Boot](https://source.android.com/docs/security/features/encryption/metadata);
-raw ciphertext alone does not demonstrate recoverability after a reset or key
-state change. The reported normal UFS LUNs also do not constitute an RPMB or
-secure-key backup. Keep original backups intact and use an independent storage
-destination; a host filesystem clone is not an independent copy.
-
-The downloaded package also contains a sparse `userdata_exp.ai` image. Bounded
-offline inspection maps all 130 chunks to 8,000,000,000 logical bytes. Matching
-F2FS superblocks in its 64 KiB prefix identify the factory `/intelligence`
-filesystem without a DEVICE_ALIAS feature. This characterizes the payload, not
-its parent Android `/data` alias reservation, encryption keys or current live
-ownership. It is not a full filesystem-integrity check, the alias's actual
-pre-write contents, migration space or permission to restore it. No mount,
-handwritten inode walker or alias-aware shrink is qualified. After archive and
-reference staging, the refreshed host-space observation no longer fits the
-reported normal-LUN backup plus the 40 GiB working reserve. Recheck capacity and
-qualify an independent destination before staging a backup.
-
-After GPT acceptance, the smallest proposed AVB discovery starts with the first
-block of the owner-selected slot's top-level `vbmeta`, if it is in the attached
-LUN. Its bounded authenticated/auxiliary extents and descriptors determine the
-next dependency request. [AVB describes chained keys and A/B naming](https://android.googlesource.com/platform/external/avb/+/761178607206f4cb2af79ed9eec52d8cbd814adb/README.md);
-an embedded valid signature still needs an independently trusted root key.
-Current host capture supports GPT only. Additional metadata reads need a
-separate reviewed host consumer and exact LBA list; no live scope expansion is
-implied. Full payload hashes, missing boot roles, slot/rollback state and Android
-integrity remain separate acceptance requirements.
+- [GPT r5a failure analysis](../research/ios26-dualboot-r6/gpt-r5a-failure/analysis.json)
+- [Backup-padding candidates](../research/ios26-dualboot-r6/gpt-r5a-failure/padding-entry-candidates.json)
+- [Android restoration and exceptions](../research/factory-alias-restore-r1/HANDOFF.md)
+- [Readback build and physical receipts](../research/ios26-dualboot-r2/HANDOFF.md)
+- [Verified factory reference](../research/ios26-dualboot-r4/factory-google-dp11/HANDOFF.md)
+- [Chooser/host integration](../research/ios26-dualboot-r5/integration/)

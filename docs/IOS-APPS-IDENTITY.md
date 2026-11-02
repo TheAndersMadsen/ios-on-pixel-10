@@ -1,200 +1,34 @@
-# Stock apps, device identity and Apple services
+# Stock apps, identity and Apple services
 
-2026-11-02. Active goal: all stock apps running on the native Pixel iOS 26
-port, with device identity and Apple services. This milestone establishes the
-missing app content and concrete upstream implementations. It does not
-establish phone app launches, Apple account login or SEP-backed security.
-The user requires a **self-contained Pixel**: no Mac-backed validation or
-tethered Apple-service bridge. Mac build/test tools remain development tools.
+Scope: run stock iOS 26 apps and legitimate Apple services on a self-contained Pixel, without fake SEP/identity results or a Mac runtime bridge.
 
-## What is actually missing
+## Current result
 
-Read-only inventories of the stock 23G90 OS volume and constructed r3 root
-confirm that both contain **206 top-level `/Applications` bundles**, mostly
-services. The stock OS also contains **49 staged app bundles**. All 49 are
-absent from r3, including Safari, Clock, Calculator, Notes, Contacts and Files.
-The first-boot recipe's `auto()` explicitly skips app registration, even if its
-feature flag is enabled. A Settings-only home screen therefore has two
-concrete prerequisites: app content restoration and LaunchServices registration.
-Registration and SpringBoard visibility still require runtime observation.
+- **Host:** the 20 GiB guest image restores all 49 missing staged apps and passes deep signature checks. `apps-full-r6.img` is current; `apps-full-r5.img` is the rollback image.
+- **QEMU:** r8 ended normally after its 1200-second capture with the root unchanged. Calculator, Clock and Notes URL registration returned false and fresh readback did not list them.
+- **QEMU:** r8 has no selected-app registration acceptance and no representative app exec, foreground UI or interaction acceptance.
+- **Physical:** no apps image is deployed and no stock-app registration or launch is accepted on the phone.
+- `SweetKeyStore` is fixed-state compatibility, not a SEP backend. Apple login, activation, attestation and native Apple services remain unaccepted; Mac tools are development-only.
 
-The missing staged files total **1,166,707,757 bytes**. The existing 8 GiB
-root has **553,840,640 bytes available**. That is insufficient before block
-rounding, filesystem metadata and the framework resources also pruned from r3.
-Do not shrink the restored apps by dropping their resources or overwrite
-Android storage to make the image fit. Coordinate the eventual image size
-with the isolated-storage work in [DUALBOOT.md](DUALBOOT.md).
+## Remaining work
 
-`tools/ios_app_inventory.py` reads two mounted roots and writes a local JSON
-inventory and optional registration manifest. It checks bundle identifiers,
-executables, partial resource trees and capacity. It reports malformed internal
-bundles separately. The current stock source has two `.app` directories without
-Info.plist (DisplayCal and RepairCal); they are not silently counted as usable
-apps. A filesystem result never counts as a launch test.
+1. Diagnose the observed LaunchServices registration refusal at its real service boundary, then obtain accepted registration and fresh installed-path readback in QEMU.
+2. After readback, prove selected app exec, foreground rendering and interaction; expand to every restored stock app and repair actual framework, container or service failures.
+3. Establish networking, real time, securityd/keychain and supported AKS behavior before designing an on-device SEP/identity path; never substitute fabricated credentials or skipped checks.
+4. Consider physical deployment only after guest acceptance and a fresh approved storage/recovery plan.
 
-## How other projects implement the security and service pieces
+## Acceptance before expanding scope
 
-### OpenSEP: an actual firmware boot path, requiring a SEP execution environment
+- All intended apps register at their real paths and remain visible through fresh LaunchServices enumeration.
+- Representative apps execute, reach the foreground and survive interaction; ultimately each restored stock app passes this sequence.
+- Physical app results are captured separately from QEMU and bound to an approved, deployable image.
+- Identity and each Apple service work entirely on the Pixel with genuine security semantics; a model string, profile or compatibility keystore is not acceptance.
 
-Verified [OpenSEP ead61b7](https://github.com/owngoal-dev/OpenSEP/tree/ead61b7b31013bb983348be69bf6a91f69d03b56)
-and its MIT licence. Its
-[README](https://github.com/owngoal-dev/OpenSEP/blob/ead61b7b31013bb983348be69bf6a91f69d03b56/README.md)
-reports iOS 26/27 boots on vphone and an activation screen on a QEMU iPhone
-model. This is a real SEP boot-ROM replacement that hands over to SEP firmware.
-It is useful evidence that SEP emulation is possible.
+## Evidence and source
 
-Its [external contract](https://github.com/owngoal-dev/OpenSEP/blob/ead61b7b31013bb983348be69bf6a91f69d03b56/docs/external-contract.md)
-requires a separate AArch64 core execution context, prescribed memory, mailbox
-events, device blocks and a firmware handoff. It is not an XNU keybag driver or
-a port for Tensor's Trusty hardware. A Pixel adoption would first need an
-isolated SEP emulation backend and an AP-side transport; none is implemented
-here. Booting firmware would still not establish Apple manufacturing identity.
-
-### vphone: virtual SEP storage and research activation
-
-Verified [vphone fd1610d7](https://github.com/Lakr233/vphone-cli/tree/fd1610d7928aacd6cbc060722bb27fd7d2c76315),
-MIT. Its [machine-identity experiments](https://github.com/Lakr233/vphone-cli/blob/fd1610d7928aacd6cbc060722bb27fd7d2c76315/Research/Host/machine_identity_and_clone.md)
-show that SEPStorage, NVRAM and the guest disk must be retained together;
-regenerating SEPStorage independently panics the guest. This is an important
-persistence contract for a future emulator backend, not a transplantable device
-credential.
-
-Its [activation patch](https://github.com/Lakr233/vphone-cli/blob/fd1610d7928aacd6cbc060722bb27fd7d2c76315/VPhoneExecutable/VPhoneCommand/FirmwarePatcher/CustomFirmware/ExecutablePatches/MobileActivation/CustomFirmwareMobileActivation.swift)
-selects research self-activation. Its
-[UDID hook](https://github.com/Lakr233/vphone-cli/blob/fd1610d7928aacd6cbc060722bb27fd7d2c76315/VPhoneGuestComponents/MISFix/MISFixDeviceIdentity.c)
-affects provisioning/profile checks, with documented limits. Neither proves
-Apple server recognition. On October 8 the maintainer explicitly said
-[iCloud is not supported](https://github.com/Lakr233/vphone-cli/issues/629).
-
-### OpenBubbles/rustpush: working service clients with Mac-backed validation
-
-Verified [OpenBubbles eed1b633](https://github.com/OpenBubbles/openbubbles-app/tree/eed1b6332efbb17adbf5ebfa2263ad770169f75e),
-whose Apache-2.0 [README](https://github.com/OpenBubbles/openbubbles-app/blob/eed1b6332efbb17adbf5ebfa2263ad770169f75e/README.md)
-documents iMessage, FaceTime, Find My and shared albums, requiring access to a
-Mac and an Apple account. This is a concrete route to some Apple services on
-non-Apple clients.
-
-The [hardware setup](https://github.com/OpenBubbles/openbubbles-app/blob/eed1b6332efbb17adbf5ebfa2263ad770169f75e/lib/app/layouts/setup/pages/rustpush/hw_inp.dart)
-actually fetches validation data through a Mac bridge. The reviewed
-[rustpush macOS implementation](https://github.com/OpenBubbles/rustpush/blob/b3c96c23e1aae78d1229ebaccb12027624f1eaff/src/macos.rs)
-constructs a Mac-specific activation description and performs the validation
-session with `open_absinthe::nac::ValidationCtx`. It does not attach a SEP to the
-Android client. Its service implementations may inform a separate client, but
-are not a drop-in backend for stock iOS Messages, AuthKit, securityd or iCloud
-Settings. rustpush has a separate licence and an OpenBubbles-specific exception;
-the app's Apache licence does not cover the library automatically. No source,
-hardware credentials or account data were imported into this port.
-
-The pinned public `open-absinthe` dependency is
-[OpenAbsinthe-Stub 1f8dc73](https://github.com/OpenBubbles/OpenAbsinthe-Stub/tree/1f8dc73a311e7b4d94a868972a6816c8a2c14e44).
-Its [README](https://github.com/OpenBubbles/OpenAbsinthe-Stub/blob/1f8dc73a311e7b4d94a868972a6816c8a2c14e44/README.md)
-identifies it as a nonfunctional mock. In the
-[actual public code](https://github.com/OpenBubbles/OpenAbsinthe-Stub/blob/1f8dc73a311e7b4d94a868972a6816c8a2c14e44/src/nac.rs),
-`ValidationCtx::new`, `key_establishment` and `sign` are unimplemented. This
-dependency does not provide reusable on-device authentication cryptography.
-The working Mac-backed route is excluded by the user's runtime constraint.
-
-### Anisette and pypush: separate, narrower prerequisites
-
-[Dadoum's Anisette server](https://github.com/Dadoum/anisette-v3-server/tree/684895737aaf1a1c4586fcd5b67509ffd500a36c)
-provides authentication metadata used by sideloading clients. Its
-[October 2026 issue](https://github.com/Dadoum/anisette-v3-server/issues/61)
-documents changed server checks and platform consistency failures. A successful
-Anisette request does not establish complete iCloud, IDS or activation support.
-
-[pypush 71aa2e44](https://github.com/JJTech0130/pypush/tree/71aa2e4442061596f75e6b02dfad613330127b5b)
-currently documents APNs client support during a rewrite, with iMessage features
-temporarily removed. Its SSPL licence and the distinction between an APNs
-certificate and full iPhone activation rule out treating it as a ready identity
-package. No activation requests were sent in this investigation.
-
-Inferno also has a real SEP emulation reference; its current guide explicitly
-lists iServices and passcode/biometrics as unavailable. Its active source moved
-away from GitHub. See [INFERNO.md](INFERNO.md) for current pins and limitations.
-
-## Implementation and next acceptance
-
-`tools/ios_app_register.m` is an independent registrar using URL registration,
-informed by vphone's public LaunchServices API usage. It reads the source-derived
-manifest and verifies each identifier at its actual installed path using fresh
-enumeration. Placeholders, wrong paths and missing executables fail. It never
-overrides signer identities, alters a UDID or treats API acceptance as a launch.
-It is default-off at compilation (`HK_STOCK_APPS_BUILD=1` enables it).
-Phase receipts precede framework loading, workspace connection, enumeration and
-URL registration, so an unfinished synchronous API call remains identifiable.
-Fresh enumeration has `all_applications_enter`/`all_applications_return` markers.
-`register_url` precedes URL construction; `register_url_call_enter` follows it,
-and the return marker records the original accepted/refused result. These finer
-markers are host-built follow-up diagnostics; the frozen r7 guest predates them.
-Attempt counts limit retries; they do not cancel or time out Apple's APIs.
-The logger explicitly opens the guest console, with a C entry marker before
-main's first Objective-C operation. Startup phase formatting uses only C;
-normal receipts also avoid NSJSONSerialization. A separate marker follows
-autorelease-pool entry. Host fixtures write only to stderr and cannot
-contact the host workspace.
-The metadata-read probe records POSIX open/read errors, size and binary-plist
-header status, then the original NSData read and plist-parser entry/return.
-It does not print file contents or substitute a different read/parser result.
-
-Optional `exercise` mode schedules its explicit `smoke_bundle_ids` first (at
-most eight distinct selected identifiers), retaining every manifest entry. It
-requests each selected app once as soon as its fresh registration readback
-succeeds, then continues registering the remaining apps.
-Generate those with `--manifest ... --smoke BUNDLE_ID` on the inventory tool.
-Each requested app must first pass registration readback. The registrar waits
-20 seconds after each request for the existing guest capture to observe UI.
-The selector's return value is unused; requests remain labelled
-`launch_verified=false`. Actual exec records, foreground frames and interaction
-are still needed. Registration-only mode never opens apps.
-
-[`ios_app_launchd.plist`](../tools/ios_app_launchd.plist) is the one-shot job for
-the isolated guest candidate. It uses `ProcessType=Standard`. The earlier job
-used `Background`; Apple's local `launchd.plist(5)` manual documents resource
-limits for that classification. Their effect in this guest is unproven.
-The r6 guest completed its 1,200-second capture with registrar exec and dyld
-mapping observed, but no C-main or API phase receipt in the complete retained
-console. Its exact blocking call remains unknown. The Standard variant changes
-only this key in our job and its launchd-cache copy, retaining the registrar
-binary, manifest, apps and all baseline services. It is a scheduling experiment;
-no runtime improvement or registration/launch acceptance is established yet.
-
-The private `research/ios26-apps-r1/` candidate uses an APFS clone of the existing
-20 GiB light root. All 49 app bundles are relocated into `/Applications`; all
-staged regular files are present. The original r3 and light images remain
-unchanged. A first-boot job calls the registrar with the explicit 51-app manifest
-(49 staged plus Settings and Phone). The candidate is larger than the phone's
-current root allocation and is for guest tests only. Package verification and
-guest results must be recorded in that directory's handoff, never inferred from
-this document. Legacy resource envelopes need validation after relocation.
-
-Guest integration must retain the **current r3** `/var` seed and preferences,
-including `persona.kb` and `CAEnableMedina=false`, plus its launchd baseline.
-The old light root predates those requirements. Its first full-RAMDisk guest
-demonstrated a missing-persona startup abort, not lost persona support on the
-physical r3. The corrected candidate copies all 55 r3 seed files byte-for-byte,
-preserves its 676 launchd jobs, and adds only the own registrar job. Its 245 seed
-entries are parsed and source paths checked with the actual p29 consumer.
-
-Use the whole-RAMDisk backend for this 20 GiB guest. The fake UFS test path
-deliberately retains the physical 8 GiB view; a real seed file at offset
-17,532,928,000 was refused with EINVAL. An actual-reader host reproduction
-confirmed that bound. Neither seed deletion nor a widened physical partition
-view is an appropriate correction. All 49 restored bundles have since passed
-deep resource/signature verification in the private clones.
-
-Next acceptance is sequential: valid code/resource signatures and PAC rewriting
-on the candidate, fresh guest LaunchServices read-back, then an actual launch
-and representative interaction for each app. Required framework data, extension
-registration, MCM and AKS failures must be repaired at their actual seams. The
-phone owner alone schedules a physically suitable candidate after its existing
-sampler work. No new storage or root write is authorized by this document.
-
-The local `SweetKeyStore` currently supplies fixed unlocked-state compatibility,
-not a SEP backend. Before account work: verify network, real time, actual
-securityd/keychain results, supported AKS operations and each required service.
-Mac-backed service clients offer a possible additional route, while stock-iOS
-integration and legitimate Apple attestation remain unproved. Apple's
-[SEP description](https://support.apple.com/en-gb/guide/security/sec59b0b31ff/web)
-and [attestation requirements](https://support.apple.com/guide/security/managed-device-attestation-sec8a37b4cb2/web)
-explain the hardware-bound identity boundary. A compatibility model string,
-skipped setup screen or profile is not acceptance for those requirements.
+- [Current r6 image](../research/ios26-apps-r1/artifacts/apps-full-r6.img)
+- [Rollback r5 image](../research/ios26-apps-r1/artifacts/apps-full-r5.img)
+- [r8 console: registration/readback results](../research/ios26-apps-r1/runs/registration-r8/console.log)
+- [r8 terminal status](../research/ios26-apps-r1/runs/registration-r8/exit.json)
+- [r8 frozen-input receipt](../research/ios26-apps-r1/receipts/freeze-r8.json)
+- [Registrar source](../tools/ios_app_register.m)

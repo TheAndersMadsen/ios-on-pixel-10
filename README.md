@@ -1,28 +1,28 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 46% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 47% of reachable hardware" width="100%"></p>
 
 <h2 align="center">A phone that was never meant to do this.</h2>
 <p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 46% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 47% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>46%</b> across 47 reachable features. Updated 2026-11-02.</p>
+<p align="center"><b>47%</b> across 47 reachable features. Updated 2026-11-02.</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
 | | Status | Features | Counts as |
 | --- | --- | ---: | ---: |
 | ✅ | Works on the phone | 12 | 100% |
-| 🟡 | Partly working | 12 | 60% |
-| 🔧 | Built, not run | 2 | 35% |
-| ⏳ | In progress | 9 | 20% |
-| ❌ | Not started | 12 | 0% |
+| 🟡 | Partly working | 13 | 60% |
+| 🔧 | Built, not run | 1 | 35% |
+| ⏳ | In progress | 10 | 20% |
+| ❌ | Not started | 11 | 0% |
 | 🚫 | Likely out of reach | 6 | not counted |
 
 <details><summary><b>See every feature</b></summary>
@@ -31,8 +31,8 @@
 | --- | --- | --- |
 | **CPU** | 5 A725 cores | ✅ Ran 15 min under iOS at 1075 MHz, no kernel crash |
 |  | CPU clock control | ✅ Governor ran 15 min under iOS: 533–1075 MHz on demand, 125 clock reads within 2%, 33–35 °C |
-|  | Higher clocks, up to the 3052 MHz top | 🟡 Short test only: one core, each step under 1 s, 36 °C; the governor stops at 1075 MHz for now |
-|  | 2 A520 cores | 🟡 cpu0 parked in the shim; cpu1 unused |
+|  | Higher clocks, up to the 3052 MHz top | 🟡 533–1075 MHz under iOS; p30 health image bytes agree, checker repairs/admission pending. Sustained higher-clock acceptance still pending |
+|  | 2 A520 cores | 🟡 cpu0 audit found CAS workaround bit9 clear; both A520s remain excluded. Firmware query/reference sources pinned |
 |  | X4 core | 🚫 For now: its errata aren't fixed |
 |  | Idle sleep | ✅ By code reading: cores already idle in WFI |
 | **Memory** | Memory and shared cluster clocks | ✅ Raised under iOS for 15 min; memory path up to 2.85x in a short test |
@@ -40,47 +40,47 @@
 |  | The rest of the 16 GiB | ❌ Not assigned |
 | **Display** | Full 1280x2856 picture | ✅ Scaled from 1125x2511 |
 |  | 120 Hz | 🟡 120 Hz panel mode observed; completed iOS frame rate remains unmeasured |
-|  | 60 Hz mode and frame sync | 🔧 Next test |
+|  | 60 Hz mode and frame sync | 🔧 Latest phone profile uses 60 Hz; actual frame cadence and completed-frame timing remain unmeasured |
 |  | Variable refresh down to low rates | ❌ Automatic idle rate isn't built |
-|  | Brightness | 🟡 Capped at about 140 nits; no user control yet |
+|  | Brightness | 🟡 140-nit cap retained; brightness source integrated, slider/transport acceptance still unproved |
 |  | HDR, peak brightness, colour calibration | ❌ Not assigned |
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
-|  | GPU firmware through Trusty | 🟡 Physical p29: signed image accepted and firmware started; health completion failed, pending firmware message |
-|  | Metal drawing | ⏳ Native GPU rendering incomplete; CPU sampler verified on tested spans, speed not yet measured |
+|  | GPU firmware through Trusty | 🟡 A725 diagnostic reached SEND/START and captured a 112-byte firmware DEBUG_DUMP; strict health still fails |
+|  | Metal drawing | ⏳ Native GPU rendering remains incomplete; sampler pixel checks pass, while startup crashes confound speed claims |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified; root unchanged; real-setting test pending |
 |  | Maximum speed | ⏳ Patches being measured |
-| **Input** | Touch | ✅ Home and Settings work physically; owner confirms slow response and heavy lag |
-|  | Scripted taps and keys | 🟡 p29 completed 14 token executions and two home returns; push_surface abort absent; separate startup crash remains |
+| **Input** | Touch | ✅ Owner confirmed Home and Settings in the combined p32 phone test; backboardd respawns and UI stability remain unresolved |
+|  | Scripted taps and keys | 🟡 Remote HOME visibly worked; TAP dispatched but required manual app recovery. No automatic retry or clean TAP acceptance |
 |  | Volume keys | 🟡 Read in a probe |
 |  | Power key | ⏳ Retry needs someone at the phone |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
-| **Connectivity** | Wi-Fi | 🟡 Radio up, join code ready; passive scan heard 25 networks; no join yet |
-|  | Bluetooth | 🟡 Firmware running; passive scan heard 51 addresses at 4 Mbaud; not connected to iOS yet |
-|  | Cellular | ⏳ Modem identified; first check built |
-|  | SIM, eSIM | ⏳ Part of cellular |
+| **Connectivity** | Wi-Fi | 🟡 BCM4390 passive scan proven; native discovery source integrated and iOS 26 scan ABI checked. Settings join and packet traffic unproved |
+|  | Bluetooth | 🟡 Firmware/H4 proven; QEMU daemon capture shows keychain errors. Native HCI attachment, Settings pairing and profiles unproved |
+|  | Cellular | ⏳ S5400 identified; pad probe only. PCIe0, modem boot and native CommCenter service remain unfinished |
+|  | SIM, eSIM | ⏳ No qualified SIM access or native cellular service yet; depends on modem transport and boot |
 |  | GPS | ❌ Not assigned |
 |  | NFC | ❌ Reading tags possible at most; Apple Pay is out of reach |
 |  | UWB | ❌ Not assigned; presence unconfirmed |
 | **USB** | Fastboot and logs | ✅ |
-|  | Live console | ✅ Physical p29: 1,533,021 live USB bytes matched RAM dump; 0 mismatches, stalls or restarts |
-|  | Link to the Mac | ⏳ mux-1 test in QEMU |
-|  | Network over USB | ❌ Not assigned |
+|  | Live console | ✅ Combined p32: 879,706 live bytes matched the final RAM mirror, zero mismatches/loss; final tail retained separately |
+|  | Link to the Mac | ⏳ Console/input transport works; native mux pairing and app-service connection remain unproved |
+|  | Network over USB | ⏳ ECM source integrated and host-tested; review and physical binding/traffic gates remain open |
 |  | USB host, video out | 🚫 No host stack in open XNU |
 | **Audio** | Speakers, microphones | ⏳ QEMU test queued; depends on always-on chip |
 |  | Haptics | 🟡 Chip found; one effect commanded; felt buzz unconfirmed |
 | **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved |
 |  | Always-on chip | ⏳ First test built |
 | **Power** | Temperature and thermal guard | ✅ Live temperatures; guard panic verified at a test limit |
-|  | Battery gauge | 🟡 Kernel reads the real gauge: 89%, 4332 mV; status bar unconfirmed |
+|  | Battery gauge | 🟡 Native powerd consumed five fresh samples at 89% / 4332 mV and posted percentage notifications; visible percentage unverified |
 |  | Charging control | ❌ Left at the bootloader's settings |
 |  | Wireless charging | ❌ Not assigned |
-|  | Real date and time | 🔧 Ready to test |
+|  | Real date and time | 🟡 Physical RTC GET_TIME and OS calendar publication succeeded; visible date/time acceptance remains pending |
 | **Cameras** | Cameras, flash | 🚫 Likely months: sensor details aren't public |
 | **Security** | Fingerprint, Face ID | 🚫 Tied to Apple's security chip |
-|  | Secure enclave | 🚫 Stand-ins only, so the passcode doesn't encrypt anything |
+|  | Secure enclave | 🚫 Apple SEP is absent; the current key-store provider cannot wrap keys. Native data-protection support remains incomplete |
 | **Apple services** | Activation, iMessage, App Store purchases | 🚫 Need a real iPhone's identity |
 
 </details>
@@ -92,6 +92,20 @@
 <!-- status:end -->
 
 ---
+
+<!-- latest-checkpoint:begin -->
+
+## Current checkpoint
+
+Native iOS 26 reached human-confirmed Home and Settings on the Pixel, but the UI
+is unstable and native Metal, radios, stock-app launches and dual boot remain
+incomplete. Android has been restored; the former on-phone iOS root is gone, so
+future deployment requires a fresh storage/recovery plan.
+
+Read [NOTES.md](NOTES.md) for current state and [HANDOFF.md](HANDOFF.md) for next
+actions. The percentage above is a planning checklist, not release readiness.
+
+<!-- latest-checkpoint:end -->
 
 ## Quick start
 
@@ -116,19 +130,19 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
-- Measure guarded CPU sampler off/fast after zero mismatches in 598.9 million phone pixel comparisons
-- Capture the pending GPU firmware message after failed health completion; native Metal remains incomplete
-- Test the Battery artwork correction and container readiness hooks on the phone
-- Link and test interactive live USB TAP/HOME with continuing logs
-- Restore missing stock apps through the app inventory and registration work
+- Resolve startup/compositor crashes and measure frame completion before promoting sampler speed
+- Analyze the captured GPU firmware DEBUG_DUMP and complete strict health
+- Qualify native battery/clock presentation and interactive TAP/HOME behavior
+- Finish native Wi-Fi scan delivery and the Bluetooth keychain prerequisite on existing transports
+- Complete stock-app registration, readbacks and representative foreground launches
 
 **Next**
 
-- Verify persistent real settings and isolated storage for Android/iOS dual boot
+- Verify persistent real settings and isolated, recoverable storage for Android/iOS dual boot
 - Validate volume and power keys, display sleep and wake
-- Show the real battery gauge and date/time through native iOS services
-- Prove USB networking and the link to the Mac
-- Validate thermal step-down before any higher CPU clock profile
+- Verify visible battery percentage, real date/time and brightness control
+- Repair and physically qualify USB ECM networking, then native mux pairing
+- Complete CPU health and thermal step-down before higher clocks or A520 admission
 
 **Later**
 
@@ -152,7 +166,7 @@ serial number, IMEI, MAC address or account name.
 
 ## How it boots
 
-This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5), running XNU 12377 and the iOS 26 userland. Boots are temporary RAM boots through `fastboot boot`; the boot tool leaves `force-fastboot` on. The root image is on `userdata_exp.ai`.
+This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5), running XNU 12377 and the iOS 26 userland. Physical development used temporary RAM boots through `fastboot boot`; the boot tool leaves `force-fastboot` on. Before Android recovery, the root image was deployed in `userdata_exp.ai`. That former root was overwritten and reformatted during recovery, so **no iOS root is currently deployed** and future storage placement requires a fresh reviewed plan.
 
 ```
 ABL (stock Google bootloader, unlocked)
@@ -170,9 +184,9 @@ There is no serial console. The diagnostics live in reserved RAM at `0x95200000`
 | Path | What |
 | --- | --- |
 | `AGENTS.md` | How to work on this repository |
-| `HANDOFF.md` | Latest state and next step, newest first |
-| `NOTES.md` | Goal, hardware facts, artifact locations and dated working notes |
-| `BLAZER.md` | Pixel 10 Pro bring-up status and evidence history |
+| `NOTES.md` | Short current state, blockers, canonical artifacts and task routes |
+| `HANDOFF.md` | Immediate next actions only |
+| `BLAZER.md` | Pointer to current notes and archived hardware history |
 | `docs/` | Build guide, licensing, status data and README images |
 | `shim/` | Boot shim |
 | `tools/` | Build, boot and log tools |

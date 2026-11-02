@@ -12,7 +12,7 @@
     {
       "value": "5/5",
       "label": "fast cores up under iOS",
-      "note": "A725s, 15 min runs, governor 533–1075 MHz"
+      "note": "A725s, 15 min runs, governor 533\u20131075 MHz"
     },
     {
       "value": "3052",
@@ -33,37 +33,37 @@
       "note": "598.9M pixels; phone speed unmeasured"
     },
     {
-      "value": "4.3",
-      "unit": "min",
-      "label": "to home screen",
-      "note": "from 11, estimated from logs"
+      "value": "300",
+      "unit": "s",
+      "label": "combined phone capture",
+      "note": "Home/Settings confirmed; crashes remain"
     },
     {
-      "value": "37",
-      "unit": "°C",
-      "label": "peak chip temperature",
-      "note": "5 cores at 533 MHz, light load"
+      "value": "41",
+      "unit": "\u00b0C",
+      "label": "p32 end temperature",
+      "note": "Five A725s; guarded 300-second capture"
     }
   ],
   "roadmap": [
     {
       "stage": "Now",
       "items": [
-        "Measure guarded CPU sampler off/fast after zero mismatches in 598.9 million phone pixel comparisons",
-        "Capture the pending GPU firmware message after failed health completion; native Metal remains incomplete",
-        "Test the Battery artwork correction and container readiness hooks on the phone",
-        "Link and test interactive live USB TAP/HOME with continuing logs",
-        "Restore missing stock apps through the app inventory and registration work"
+        "Resolve startup/compositor crashes and measure frame completion before promoting sampler speed",
+        "Analyze the captured GPU firmware DEBUG_DUMP and complete strict health",
+        "Qualify native battery/clock presentation and interactive TAP/HOME behavior",
+        "Finish native Wi-Fi scan delivery and the Bluetooth keychain prerequisite on existing transports",
+        "Complete stock-app registration, readbacks and representative foreground launches"
       ]
     },
     {
       "stage": "Next",
       "items": [
-        "Verify persistent real settings and isolated storage for Android/iOS dual boot",
+        "Verify persistent real settings and isolated, recoverable storage for Android/iOS dual boot",
         "Validate volume and power keys, display sleep and wake",
-        "Show the real battery gauge and date/time through native iOS services",
-        "Prove USB networking and the link to the Mac",
-        "Validate thermal step-down before any higher CPU clock profile"
+        "Verify visible battery percentage, real date/time and brightness control",
+        "Repair and physically qualify USB ECM networking, then native mux pairing",
+        "Complete CPU health and thermal step-down before higher clocks or A520 admission"
       ]
     },
     {
@@ -89,12 +89,12 @@
         [
           "CPU clock control",
           "works",
-          "Governor ran 15 min under iOS: 533–1075 MHz on demand, 125 clock reads within 2%, 33–35 °C"
+          "Governor ran 15 min under iOS: 533\u20131075 MHz on demand, 125 clock reads within 2%, 33\u201335 \u00b0C"
         ],
         [
           "Higher clocks, up to the 3052 MHz top",
           "partial",
-          "533–1075 MHz under iOS; p30 health image bytes agree, checker repairs/admission pending. Sustained higher-clock acceptance still pending"
+          "533\u20131075 MHz under iOS; p30 health image bytes agree, checker repairs/admission pending. Sustained higher-clock acceptance still pending"
         ],
         [
           "2 A520 cores",
@@ -149,7 +149,7 @@
         [
           "60 Hz mode and frame sync",
           "built",
-          "Next test"
+          "Latest phone profile uses 60 Hz; actual frame cadence and completed-frame timing remain unmeasured"
         ],
         [
           "Variable refresh down to low rates",
@@ -159,7 +159,7 @@
         [
           "Brightness",
           "partial",
-          "Capped at about 140 nits; no user control yet"
+          "140-nit cap retained; brightness source integrated, slider/transport acceptance still unproved"
         ],
         [
           "HDR, peak brightness, colour calibration",
@@ -184,12 +184,12 @@
         [
           "GPU firmware through Trusty",
           "partial",
-          "Physical p29: signed image accepted and firmware started; health completion failed, pending firmware message"
+          "A725 diagnostic reached SEND/START and captured a 112-byte firmware DEBUG_DUMP; strict health still fails"
         ],
         [
           "Metal drawing",
           "active",
-          "Native GPU rendering incomplete; CPU sampler verified on tested spans, speed not yet measured"
+          "Native GPU rendering remains incomplete; sampler pixel checks pass, while startup crashes confound speed claims"
         ],
         [
           "Video encode and decode",
@@ -224,12 +224,12 @@
         [
           "Touch",
           "works",
-          "Home and Settings work physically; owner confirms slow response and heavy lag"
+          "Owner confirmed Home and Settings in the combined p32 phone test; backboardd respawns and UI stability remain unresolved"
         ],
         [
           "Scripted taps and keys",
           "partial",
-          "p29 completed 14 token executions and two home returns; push_surface abort absent; separate startup crash remains"
+          "Remote HOME visibly worked; TAP dispatched but required manual app recovery. No automatic retry or clean TAP acceptance"
         ],
         [
           "Volume keys",
@@ -254,22 +254,22 @@
         [
           "Wi-Fi",
           "partial",
-          "Radio up, join code ready; passive scan heard 25 networks; no join yet"
+          "BCM4390 passive scan proven; native discovery source integrated and iOS 26 scan ABI checked. Settings join and packet traffic unproved"
         ],
         [
           "Bluetooth",
           "partial",
-          "Firmware running; passive scan heard 51 addresses at 4 Mbaud; not connected to iOS yet"
+          "Firmware/H4 proven; QEMU daemon capture shows keychain errors. Native HCI attachment, Settings pairing and profiles unproved"
         ],
         [
           "Cellular",
           "active",
-          "Modem identified; first check built"
+          "S5400 identified; pad probe only. PCIe0, modem boot and native CommCenter service remain unfinished"
         ],
         [
           "SIM, eSIM",
           "active",
-          "Part of cellular"
+          "No qualified SIM access or native cellular service yet; depends on modem transport and boot"
         ],
         [
           "GPS",
@@ -299,17 +299,17 @@
         [
           "Live console",
           "works",
-          "Physical p29: 1,533,021 live USB bytes matched RAM dump; 0 mismatches, stalls or restarts"
+          "Combined p32: 879,706 live bytes matched the final RAM mirror, zero mismatches/loss; final tail retained separately"
         ],
         [
           "Link to the Mac",
           "active",
-          "mux-1 test in QEMU"
+          "Console/input transport works; native mux pairing and app-service connection remain unproved"
         ],
         [
           "Network over USB",
-          "open",
-          "Not assigned"
+          "active",
+          "ECM source integrated and host-tested; review and physical binding/traffic gates remain open"
         ],
         [
           "USB host, video out",
@@ -359,7 +359,7 @@
         [
           "Battery gauge",
           "partial",
-          "Kernel reads the real gauge: 89%, 4332 mV; status bar unconfirmed"
+          "Native powerd consumed five fresh samples at 89% / 4332 mV and posted percentage notifications; visible percentage unverified"
         ],
         [
           "Charging control",
@@ -373,8 +373,8 @@
         ],
         [
           "Real date and time",
-          "built",
-          "Ready to test"
+          "partial",
+          "Physical RTC GET_TIME and OS calendar publication succeeded; visible date/time acceptance remains pending"
         ]
       ]
     },
@@ -399,7 +399,7 @@
         [
           "Secure enclave",
           "out",
-          "Stand-ins only, so the passcode doesn't encrypt anything"
+          "Apple SEP is absent; the current key-store provider cannot wrap keys. Native data-protection support remains incomplete"
         ]
       ]
     },

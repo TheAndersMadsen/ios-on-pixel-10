@@ -7,7 +7,7 @@
 | [BUILD.md](BUILD.md) | Build a phone image and boot it; every local input and its pin |
 | [COORDINATION.md](COORDINATION.md) | Active owners, priorities, test batching, readiness and the phone queue |
 | [CONNECTIVITY.md](CONNECTIVITY.md) | Native Wi-Fi, Bluetooth and cellular evidence, dependencies, reusable sources and acceptance |
-| [REUSE.md](REUSE.md) | 24-agent source audit: reusable code, exact pins, compatibility limits and next integration tasks |
+| [REUSE.md](REUSE.md) | Ranked reusable sources, exact pins, licences and adaptation boundaries |
 | [DUALBOOT.md](DUALBOOT.md) | Android/iOS storage isolation, chooser acceptance and read-only bring-up |
 | [IOS-APPS-IDENTITY.md](IOS-APPS-IDENTITY.md) | Missing stock apps, LaunchServices restoration, GitHub SEP and Apple-service implementations |
 | [LICENSING.md](LICENSING.md) | What each path is, what must be audited before a public release |
@@ -19,9 +19,9 @@
 | Document | What |
 | --- | --- |
 | [README](../README.md) | Overview, progress, quick start |
-| [NOTES.md](../NOTES.md) | Goal, hardware facts, artifact locations, active handoff |
-| [HANDOFF.md](../HANDOFF.md) | Latest state and next step, newest first |
-| [BLAZER.md](../BLAZER.md) | Pixel 10 Pro bring-up status and evidence history |
+| [NOTES.md](../NOTES.md) | Short current truth, blockers, canonical artifacts and task routes |
+| [HANDOFF.md](../HANDOFF.md) | Immediate next actions only; older physical journals are in ignored research |
+| [BLAZER.md](../BLAZER.md) | Pointer to current notes and the archived hardware history |
 | [AGENTS.md](../AGENTS.md) | Rules for working on this repository |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | How boots are run, safety rules, what never gets committed |
 | [SECURITY.md](../SECURITY.md) | The security position and how to report a problem |
@@ -30,4 +30,9 @@
 
 ## Not in git
 
-`research/` holds the evidence and the current state: attempt captures, agents' handoffs, the iOS 26 kernel series and sources. So some links in `NOTES.md` and `HANDOFF.md` are dead on a clean clone. `research/ios26-fleet/STATUS.md` and `research/ios26-fleet/HARDWARE.md` are the fuller records on the owner's machine.
+`research/` holds attempt captures, agent handoffs, kernel series, sources and
+canonical artifacts on the owner's machine. Start with `research/README.md` for
+the current index, historical classifications and retention policy; the old
+`research/ios26-fleet/` board and plan are not live state. The 2026-11-02 cleanup
+manifest records removed intermediate/duplicate artifacts and their hashes, so
+some old reproduction paths now require deliberate rebinding to canonical inputs.
