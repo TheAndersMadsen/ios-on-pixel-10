@@ -383,6 +383,7 @@ def build(a):
         if p_expect and (p_mode or p_table): die('--expect-test-block is for a kernel with no mask, after the test')
     epoch = int(time.time()); c = cmdline(a, epoch)
     if 'userdata_exp.ai' in c: die('command line names userdata_exp.ai, a member of Android /data: bind ios_system (GOAL.md A7)')
+    if re.search(r'(^|\s)blazer_persist(_\w+)?=', c): die('blazer_persist is bound at compile time to LBA 2500838 (userdata_exp.ai, now Android /data): no persistence until the ios_data writer exists (GOAL.md A7)')
     if a.bootcpu:  # the same line plus the token. --first-boot and --second-boot lines also get the reset path and the per-core report
         if a.bootcpu not in BOOTCPUS or not 1 <= a.cpus <= 5: die(f'--bootcpu: one of {BOOTCPUS}, at cpus 1 to 5')
         if b'blazer_bootcpu' not in Path(a.kernel).read_bytes(): die('kernel has no blazer_bootcpu gate')
