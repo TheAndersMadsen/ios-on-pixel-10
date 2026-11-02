@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include "tgl_fastcore.h"
 #include "tgl_stamp.h"
+#include "tgl_cpu_audit.h"
 
 #define PSCI_FEATURES     UINT64_C(0x8400000A)
 #define PSCI_CPU_ON_64    UINT64_C(0xC4000003)
@@ -157,6 +158,9 @@ const char *tgl_fastcore_handoff(uint64_t core, uint64_t entry_pa, uint64_t ba_p
 		tgl_stamp(TGL_FC_STAGE, TGL_STAMP_F_REFUSED, fc_mpidr());
 		return "fc-self";
 	}
+#if TGL_CPU_AUDIT
+	if (!tgl_cpu_audit_prepare()) return "fc-audit";
+#endif
 	rc = fc_smc(PSCI_FEATURES, PSCI_CPU_ON_64, 0, 0);
 	if ((int32_t)rc < 0) {
 		tgl_stamp(TGL_FC_STAGE, TGL_STAMP_F_REFUSED, (uint64_t)rc);

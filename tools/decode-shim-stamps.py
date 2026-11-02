@@ -112,6 +112,12 @@ STAGES = {
     0x0053: "ufs-live",
     0x0054: "ufs-stage",
     0x0055: "ufs-link",
+    0x00e7: "cpu0-audit",
+    0x00e8: "cpu0-midr",
+    0x00e9: "cpu0-el",
+    0x00ea: "cpu0-sctlr-el2",
+    0x00eb: "cpu0-revidr",
+    0x00ec: "cpu0-actlr",
 }
 
 FLAGS = [(0x0001, "ENTER"), (0x0002, "DONE"), (0x0004, "TIMEOUT"),

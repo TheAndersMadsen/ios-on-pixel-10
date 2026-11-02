@@ -37,6 +37,24 @@ PHONE_ARGS = ('debug=0x8 serial=3 cpus=1 ROUTE msgbuf=1048576 varfs=1 blazer_ufs
 TOUCH_ARG = 'blazer_touch=1'
 BOOTCPUS = ('0x200', '0x300', '0x500')  # ios26-fastcore-r1: the A725s speed-probe-r3 ran. Shim and mkadt refuse any other. --cpus up to 5 adds the other A725s
 FC_FLAGS, FC_SRC = '-DTGL_FASTCORE=1', 'tgl_fastcore.c tgl_fastcore_s.S'
+CPU_AUDIT_FLAGS, CPU_AUDIT_SRC = '-DTGL_CPU_AUDIT=1', 'tgl_cpu_audit.c'
+
+def cpu_audit_profile(a):
+    """Only cpu0 register reads on the proven five-A725, 533 MHz route. docs/CPU.md."""
+    if not getattr(a, 'cpu_audit', False): return False
+    if (not a.phone_root or a.bootcpu != '0x200' or a.cpus != 5 or
+        getattr(a, 'cpu_order', None) is not None or getattr(a, 'phone_deadline', None) != 300 or
+        a.first_boot or a.second_boot or a.test_kernel or a.preflight):
+        die('--cpu-audit needs --phone-root --bootcpu 0x200 --cpus 5 --phone-deadline 300')
+    extra = set(phone_extra(a.phone_args))
+    allowed = {'blazer_thermal=2', 'blazer_thermal_panic_c=70', 'blazer_smp_report=1',
+               'blazer_smp_test=1', 'blazer_usbcon=1', 'blazer_usbcon_ch9=1'}
+    if not extra <= allowed or not {'blazer_thermal=2', 'blazer_thermal_panic_c=70',
+                                    'blazer_smp_report=1', 'blazer_smp_test=1'} <= extra:
+        die('--cpu-audit needs armed thermal70 + SMP report/self-test, baseline clocks and no other experiments')
+    if a.touch or a.var_overlay or a.var_overlay_sha or a.args or a.md0 or a.md1 or a.dpu:
+        die('--cpu-audit: no touch/overlay/other profile')
+    return True
 # handoffs/smp.md. Cores for cpus=N, logical order. cpu7 is refused: X4 REVIDR 0x3, 3076789 not fixed, until its control bits are read (parent's rule).
 CPU_ORDER_MAX_CORE = 6
 def cpu_order(text):
@@ -222,6 +240,7 @@ def build(a):
     name = ('test-' + a.name) if a.test_kernel and not a.name.startswith('test-') else a.name
     out = RUN/name
     if out.exists(): die(f'{out} exists: an image is not rebuilt after handover. Use a new name')
+    audit = cpu_audit_profile(a)
     if a.soak is not None:
         if not name.startswith('soak-') or a.first_boot or a.second_boot or a.phone_root or a.dpu or a.md0 or a.md1 or a.args or a.route != 'ufs': die('--soak: name soak-*, no other profile')
         if b'blazer-ufs-fullcheck: pass' not in Path(a.kernel).read_bytes(): die('kernel has no soak passes')
@@ -296,6 +315,7 @@ def build(a):
     if a.phone_root:  # handoffs/limits.md. 300: handoffs/persist.md, a stage boot that ends by itself, shorter than any limit. Default on either fast shape: 900
         if c.count('blazer_deadline=1800') != 1: die('phone line has no single 1800 s deadline')
         c = c.replace('blazer_deadline=1800', f'blazer_deadline={pd}' if pd else FC_DEADLINE if a.bootcpu or order else 'blazer_deadline=1800')
+    if audit: c += ' blazer_cpu0_audit=1'
     if len(c) >= mkpayload.BOOT_LINE_LENGTH: die(f'command line {len(c)} bytes, shim limit {mkpayload.BOOT_LINE_LENGTH - 1}')
     out.mkdir(parents=True)
     if a.fullcheck:
@@ -309,6 +329,9 @@ def build(a):
         rb = PW.choose(a.readback, a.readback_sha)
     env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(LLVM), 'HOSTCC': '/usr/bin/cc', 'TGL_UFS_HANDOFF': '1',
            'EXTRA_CFLAGS': SHIM_FLAGS + (' ' + DPU_FLAGS if a.dpu else '') + (' ' + FC_FLAGS if a.bootcpu else ''), 'TGL_EXTRA_SRC': 'tgl_all.c' + (' tgl_dcs.c' if a.dpu else '') + (' ' + FC_SRC if a.bootcpu else '')}
+    if audit:
+        env['EXTRA_CFLAGS'] += ' ' + CPU_AUDIT_FLAGS
+        env['TGL_EXTRA_SRC'] += ' ' + CPU_AUDIT_SRC
     window = int(getattr(a, 'window_base', None) or hex(PHYS), 16)  # handoffs/ram.md
     if rb: env['EXTRA_CFLAGS'] += f" -DTGL_UFSH_MANIFEST_BLOCK={rb['last']}u -DTGL_UFSH_SAMPLE_LIST=" + ','.join(f'{n}u' for n in rb['samples'])
     root = mkadt.build(headless=a.first_boot or a.phone_root or a.soak is not None, disp0=a.second_boot or a.phone_root, cpus=a.cpus, canvas=tuple(map(int, a.canvas.split('x'))) if a.canvas else None, gamut=a.gamut, boot_mpidr=int(a.bootcpu, 16) if a.bootcpu else 0, cpu_order=order, phys_base=window)
@@ -341,10 +364,12 @@ def build(a):
     nm = lambda *x: subprocess.run([str(LLVM/'llvm-nm'), *x, str(out/'shim.elf')], capture_output=True, text=True, check=True).stdout
     if nm('-u').split(): die('undefined symbols in shim')
     syms = nm(); want = ['tgl_ufsh_power_mode', 'tgl_ufs_link_relink', 'tgl_all_mark'] + (['tgl_dcs_guarded'] if a.dpu else []) + (['tgl_fc_entry', 'tgl_fastcore_handoff'] if a.bootcpu else [])
+    if audit: want += ['tgl_cpu_audit_configure', 'tgl_cpu_audit_prepare']
     for sym in want:
         if not re.search(rf'\s{sym}$', syms, re.M): die(f'shim lacks {sym}')
     if not a.dpu and re.search(r'\stgl_dcs_guarded$', syms, re.M): die('DPU stage present though off')
     if not a.bootcpu and re.search(r'\stgl_fc_entry$', syms, re.M): die('fastcore present though off')
+    if not audit and re.search(r'\stgl_cpu_audit_prepare$', syms, re.M): die('CPU audit present though off')
     log = (out/'build.log').read_text()
     tests = {k: re.search(p, log) for k, p in dict(route=r'ufs route host test: \d+ checks, 0 failed', route_mutants=r'mutants \d+/\d+ caught', speed=r'ufs speed host test: \d+ checks, 0 failed', stages=r'all-stage host test: \d+ checks, 0 failed').items()}
     miss = [k for k, m in tests.items() if not m]
@@ -358,6 +383,7 @@ def build(a):
                tests={k: m.group(0) for k, m in tests.items()}, avb=avbt.strip().splitlines()[-1], decode=f'python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/{name}/manifest.json',
                shim_copy=tree(SHIM), tools={n: sha(X/n) for n in ('adt.py', 'image_tool.py', 'mkadt.py', 'mkbootimg.py', 'mkpayload.py')})
     if window != PHYS: rec['window_base'] = hex(window)
+    if audit: rec['cpu_audit'] = dict(mode=1, core=0, read_only=True, a520_support_accepted=False)
     if many: rec.update(cpus=len(order) if order else a.cpus, **({'cpu_order': order} if order else {}))  # no shape, no new keys
     if a.fullcheck:
         import fullcheck as FC
@@ -387,6 +413,7 @@ def check(d):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter); sub = ap.add_subparsers(dest='cmd', required=True)
     i = sub.add_parser('image'); i.add_argument('name'); i.add_argument('--kernel', required=True); i.add_argument('--kernel-sha', required=True)
+    i.add_argument('--cpu-audit', action='store_true', help='read-only cpu0 firmware audit on baseline five A725s; docs/CPU.md')
     i.add_argument('--route', choices=['ufs', 'md'], default='ufs'); i.add_argument('--md0'); i.add_argument('--md1'); i.add_argument('--cpus', type=int, default=1); i.add_argument('--cpu-order', help='cores for cpus=N in logical order, e.g. 5,6,2,3,4,1,0. handoffs/smp.md'); i.add_argument('--dpu', action='store_true')
     i.add_argument('--canvas'); i.add_argument('--gamut'); i.add_argument('--args'); i.add_argument('--test-kernel', action='store_true'); i.add_argument('--legacy-base', action='store_true'); i.add_argument('--phone-root', action='store_true', help='PHONE-ROOT.md: --route ufs on ios26-phone-r1'); i.add_argument('--soak', type=int, help='N read-only passes, not a phone-run image; 0: the not-live line'); i.add_argument('--preflight', action='store_true', help='--phone-root line on the old partition content, labelled, not bootable'); i.add_argument('--touch', action='store_true', help='--phone-root plus blazer_touch=1, nothing else'); i.add_argument('--phone-deadline', type=int, help='1800, or 3600 with blazer_thermal=2: handoffs/cpmlock.md'); i.add_argument('--soak-whole', help='whole crc the passes must give, hex'); i.add_argument('--phone-args', help='extra tokens for --phone-root, allow-list only'); i.add_argument('--var-overlay', help='overlay file for hk_overlay=MASK'); i.add_argument('--var-overlay-sha'); i.add_argument('--bootcpu', help='0x200, 0x300 or 0x500: run XNU on that core, ios26-fastcore-r1. Parent only, after speed-probe-r3'); i.add_argument('--qemu-run'); i.add_argument('--phone-route'); i.add_argument('--readback', help='root image: sample its blocks for read-back'); i.add_argument('--readback-sha'); i.add_argument('--fullcheck', help='same root as --readback: read all of it and log CRCs'); i.add_argument('--persist', type=int, choices=[2, 3], help='with --fullcheck: blazer_persist=N, handoffs/persist.md'); i.add_argument('--persist-table', help='table.json: the pass skips its blocks, blazer_ufs_fullcheck=2, and so does the list'); i.add_argument('--expect-test-block', help='TABLE.json:A or :B: the list for a kernel with no mask after blazer_persist=2 wrote that pattern'); i.add_argument('--window-base', choices=(hex(PHYS), '0x882000000'), help='kernel RAM base, handoffs/ram.md'); i.add_argument('--second-boot', action='store_true', help='first-boot contract plus shim DPU stage, disp0 and the scanout arguments'); i.add_argument('--first-boot', action='store_true', help="blazer's first phone boot contract: headless ADT, md0 only, fixed base and command line")
     c = sub.add_parser('check'); c.add_argument('dir')

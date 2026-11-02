@@ -18,6 +18,7 @@
 #include "laguna_usb.h"
 #include "tgl_display.h"
 #include "tgl_ufs.h"
+#include "tgl_cpu_audit.h"
 #if TGL_FASTCORE
 #include "tgl_fastcore.h"
 #endif
@@ -320,6 +321,10 @@ const char *loader_boot(uintptr_t dtb)
 		 * returns here on cpu0, and shim_main resets. tgl_fastcore.h. */
 		uint64_t fc_core;
 		int fc = tgl_fastcore_parse((const char *)p->cmdline, TGL_BOOT_LINE_LENGTH, &fc_core);
+#if TGL_CPU_AUDIT
+		int audit = tgl_cpu_audit_configure((const char *)p->cmdline, TGL_BOOT_LINE_LENGTH);
+		if (audit < 0 || (audit && fc != 1)) return "fc-audit-token";
+#endif
 		if (fc) {
 			const char *fc_why = fc < 0 ? "fc-token" : tgl_fastcore_handoff(fc_core, entry_pa, ba_pa);
 			LB_FAIL(fc_why);
