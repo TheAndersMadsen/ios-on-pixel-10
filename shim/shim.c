@@ -45,6 +45,9 @@
 #include "tgl_ufs_link.h"
 #include "guard.h"
 #include "tgl_scanout_takeover.h"
+#if defined(TGL_CHOOSER) && TGL_CHOOSER
+#include "chooser.h"
+#endif
 #if TGL_ALL_STAGES
 #include "tgl_all.h"
 #endif
@@ -333,6 +336,18 @@ void shim_main(uint64_t dtb)
 		fdt_error = tgl_fdt_memory((const void *)(uintptr_t)dtb,
 		    TGL_FDT_MAX_SIZE, &memory);
 	if (!fdt_error && memory.psci_method) reset_method = memory.psci_method;
+
+#if defined(TGL_CHOOSER) && TGL_CHOOSER
+	/* A2 chooser: the Android branch must run before any console, display
+	 * record, USB, UFS or CPM work and must never quiesce a watchdog. It
+	 * returns only with a refusal; a refusal resets (force-fastboot parks). */
+	stage = "chooser";
+	stage_id = TGL_STAGE_CHOOSER_ENTER;
+	if (fdt_error)
+		stage_fail(TGL_STAMP_R_REFUSED, fdt_error, dtb);
+	stage_fail(TGL_STAMP_R_REFUSED,
+	    tgl_chooser_run(dtb, &memory, shim_con_tick, 0), 0);
+#endif
 
 	stage = "console init";
 	stage_id = TGL_STAGE_CONSOLE_INIT;

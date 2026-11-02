@@ -110,4 +110,10 @@ python3 -I test_ufs_speed.py
 if [ -f test_all_stages.py ]; then python3 -I test_all_stages.py; fi
 # The DPU stage on a fake bus, gate TGL_DCS_BRIGHT off and on. No mutants here: run test_dcs_bright.py itself for those.
 if [ -f test_dcs_bright.py ]; then python3 -I test_dcs_bright.py --quick; fi
+# A2 chooser: menu/segment/placement and the lz4 decoder on hand-made inputs.
+# tools/chooser_image.py reruns both binaries on the real A0 kernel and FDT.
+if [ -f chooser_test.c ]; then
+	$HOSTCC -O1 -Wall -Wextra -DTGL_CHOOSER_HOST -o out/chooser_test chooser.c fdt.c chooser_test.c && ./out/chooser_test
+	$HOSTCC -O2 -Wall -Wextra -o out/lz4_test lz4.c lz4_test.c && ./out/lz4_test
+fi
 ls -l out/Image out/shim-boot-laguna.img
