@@ -30,6 +30,12 @@
 - (BOOL)isPlaceholder;
 @end
 
+@interface NSObject (HKContainerManager)
++ (id)containerWithIdentifier:(NSString *)identifier createIfNecessary:(BOOL)create
+    existed:(BOOL *)existed error:(NSError **)error;
+- (NSURL *)url;
+@end
+
 static void progress(const char *, NSString *);
 static void fileReadProbe(NSString *);
 static id readPlist(NSString *path) {
@@ -118,6 +124,33 @@ static void receipt(NSDictionary *record) {
         else token(&line, "null", 4);
     }
     finishLine(&line);
+}
+
+/* Diagnostic only (H2, registration-h2-r10): ask the real MobileContainerManager
+ * for the app's data container exactly as an installer would, and record its
+ * actual answer. Never synthesizes a container, path or success. */
+static void containerProbe(NSString *identifier) {
+    progress("container_probe_enter", identifier);
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+    Class mcm = Nil;
+#else
+    dlopen("/System/Library/PrivateFrameworks/MobileContainerManager.framework/MobileContainerManager", RTLD_NOW);
+    Class mcm = NSClassFromString(@"MCMAppDataContainer");
+#endif
+    if (![mcm respondsToSelector:@selector(containerWithIdentifier:createIfNecessary:existed:error:)]) {
+        receipt(@{@"event": @"container_probe", @"bundle_id": identifier, @"available": @NO});
+        return;
+    }
+    BOOL existed = NO; NSError *error = nil;
+    id container = [mcm containerWithIdentifier:identifier createIfNecessary:YES existed:&existed error:&error];
+    NSString *path = [container respondsToSelector:@selector(url)] ? [container url].path : nil;
+    NSString *text = error.description ?: @"";
+    if (text.length > 400) text = [text substringToIndex:400];
+    receipt(@{@"event": @"container_probe", @"bundle_id": identifier, @"available": @YES,
+              @"returned": @(container != nil), @"existed": @(existed),
+              @"path": path ?: [NSNull null], @"error_domain": error.domain ?: [NSNull null],
+              @"error_code": error ? [NSString stringWithFormat:@"%ld", (long)error.code] : [NSNull null], @"error": text});
+    progress("container_probe_return", identifier);
 }
 
 static void progress(const char *phase, NSString *identifier) {
@@ -311,6 +344,7 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                 progress("registration_readback", identifier);
                 verified = hkStockAppIsListed(workspace, identifier, path);
                 if (!verified && registering) {
+                    containerProbe(identifier);
                     progress("register_url", identifier);
                     NSURL *bundleURL = [NSURL fileURLWithPath:path isDirectory:YES];
                     progress("register_url_call_enter", identifier);
