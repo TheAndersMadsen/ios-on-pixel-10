@@ -32,16 +32,27 @@ and held, including its own source, image, nonce, LU0 transport and `--mach`.
 A distinct parent-built one-A725 derivative, `01eae6c8…`, now matches the existing
 reviewed proposal: one running ADT reg0x200,492-byte line and the same window882.
 CPU host artifact checks pass, including reconstruction of the pinned payload.
-It is not booted or physically accepted; native exact-artifact review and the
-phone owner's admission remain. The original cpu0 image's hold is unchanged.
+The CPU source/guard/IRQ design conditionally accepts that exact bounded
+one-A725 experiment. Powered parked cpu0, the existing barriers and single-core
+transport guards remain required. Native's existing reservation/placement
+check and the phone owner's attended P1/300-second admission remain. Live
+CPU/Trusty/IRQ/cache/full-map and firmware acceptance are unobserved; this is
+not a slot. The original cpu0 image's hold is unchanged.
+The exact GPT r5 proposal SHA256
+`feb2b799e9a5afdfb083a118e5b2e8b217b4b437299d02ef922286114dc4fa35`
+has CPU **build-only composition acceptance**: all77 source pins checked,
+same readback K30db07c5/U0ce50d8b, a000/4GiB window,528-byte line and one
+running logical0/reg0x200. It remains unbuilt at this checkpoint. Actual new
+image/shim/nonces/LU0/transport/own-U binding and exact-context admission are
+separate; no GPU acceptance transfers to GPT. The old21cba/profile34a stays held.
 One current source/artifact/acceptance/shareability handoff is retained in
 `research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md`; it keeps ordinary UI
 health observations separate from the existing lowered-trip R1/R2 tests.
 The completed sampler OFF/FAST comparison is confounded by FAST's initial
-BaseBoard NSURL-nil abort and establishes no speed improvement. The next phone
-test remains the owner's p29 artwork/passive-MCM run with sampler OFF. The new
-CPU-health common baseline is pending admission; isolated thermal R1/R2 and
-higher clocks retain their existing gates.
+BaseBoard NSURL-nil abort and establishes no speed improvement. The active phone
+test is the owner's distinct combined p32 UI profile, with CPU-health gates
+off. The CPU-health candidate is held for checker repair and final admission;
+isolated thermal R1/R2 and higher clocks retain their existing gates.
 
 `shim/tgl_cpu_audit.c` supplies a read-only, default-off precursor. It checks
 cpu0's identity, EL2, and disabled MMU/data/instruction caches, records REVIDR,
@@ -128,8 +139,8 @@ in git. The existing phone coordinator retains exclusive USB/boot ownership.
 
 ## Remaining acceptance toward 100%
 
-The first thermal/governor common configuration is now a built host-checked
-image, `research/images/cpu-health-p30-r2/boot.img`, SHA256
+The first thermal/governor common-configuration candidate is
+`research/images/cpu-health-p30-r2/boot.img`, SHA256
 `463ffa618a39174fc4252894f312e650f89aea9e81e081e04b03ac69cd57e776`.
 It has **not booted**. `tools/image_tool.py image … --cpu-health` is a dedicated profile
 for the exact reviewed p30 kernel and existing overlay. It supplies the existing
@@ -138,19 +149,33 @@ releases, required mask262 and thermal-owner health. High clocks and the
 lowered-trip probe remain off. The general phone-token allowlist is unchanged.
 
 The profile checks the CPU count, boot core, RAM/ADT placement, overlay and
-kernel identities. Image checking reconstructs the entire payload from those
-pinned inputs, so a changed manifest cannot conceal different embedded bytes.
-The new shim has six named ARM64 executable-text entries and zero undefined
-symbols; the existing p30 kernel text receipt is retained. Tests:82 image-tool
-methods,7 audit methods and7 refusals against copies of the real image's data.
-The build reports the existing DCS unused-variable warning; no new kernel build
-or runtime acceptance is claimed.
+kernel identities and reconstructs the payload sidecar. A later independent
+review found two admission gaps: `check` accepted a different signed boot image
+beside that sidecar, and manifest nonces could contradict the compiled shim.
+The original candidate's actual bytes still agree. The phone owner owns the
+narrow checker repair and affected refusal tests; CPU makes no overlapping
+image-tool edit. Boot admission stays held until that repair and final review.
+The original shim has six named ARM64 executable-text entries and zero undefined
+symbols; the existing p30 kernel text receipt is retained. Prior tests were82
+image-tool methods,7 audit methods and7 real-data refusals; those totals did
+not cover the two new findings. The existing DCS unused-variable warning remains.
+No new kernel build or runtime acceptance is claimed.
 
 Exact build/boot argv, matching unstripped hash, nonce, PASS/FAIL/STOP and
 rollback are in the single current `acceptance/CPU-NEXT.md` handoff. The phone
-owner reviews and schedules it after its current capture. This common baseline
+owner repairs/rechecks it and decides admission after its current capture.
+It stays outside the active combined p32 profile. This common baseline
 changes fail-stop/release policy; it is not an extra passive flag for a UI A/B.
 Current p30 is probe0 and cannot run the separate existing R1/R2 tests.
+
+The verified same-build DP11 factory vendor files now supply the previously
+missing stock skin policy reference. It uses eight board thermistors, history
+and a model; the current XNU guard reads ten Tj zones and does not implement
+skin or battery protection. Pinned Google6.12 NTC calibration/protocol sources
+and Apache-2.0 AOSP merge/unit references are recorded with exact hashes in
+`research/ios26-cpu-complete-r3/thermal-policy/README.md`. Live policy selection,
+NTC readiness and model behavior remain unobserved. These resources remove a
+source-information gap, not the physical higher-clock prerequisite or cap hold.
 
 Before higher-clock testing, `tools/cpu_dvfs_check.py` extends the existing
 99-row literal check with strict saved-table identity, explicit-level and unit

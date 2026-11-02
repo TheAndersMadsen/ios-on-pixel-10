@@ -94,7 +94,7 @@
         [
           "Higher clocks, up to the 3052 MHz top",
           "partial",
-          "533–1075 MHz under iOS; p30 thermal-health image built and checked. Sustained higher-clock acceptance still pending"
+          "533–1075 MHz under iOS; p30 health image bytes agree, checker repairs/admission pending. Sustained higher-clock acceptance still pending"
         ],
         [
           "2 A520 cores",
