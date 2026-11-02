@@ -46,6 +46,52 @@ for CPU/phone context; no new image/kernel/argv or XNU-gate build claim. Next:
 accepted CPU context + strict GPT, recoverable current backups/alias ownership,
 isolated allocation, actual chooser/Android handoff and repeated OS switching.
 
+## Connectivity goal, 2026-11-02 — native daemon diagnostic prepared
+
+Goal ACTIVE/incomplete. Own source/docs **59a25b0**, **3119ece**; full handoff in ignored
+research/ios26-connectivity-r1/HANDOFF.md; acceptance docs/CONNECTIVITY.md.
+No new delegate, guest/phone attempt, USB/radio/firmware/root/slot/storage action.
+Phone/release owner2ff85bbd retains exclusivity; self-contained runtime required.
+
+Exact old bt-3 kernel84385359/Ucb809077 disassembly PROVES misplaced noreturn
+on returning hk_exit_trace: filter/copy/limit tests removed, infinite frame loop,
+exit1 continuation absent. NEVER rerun old bt-3. Reused worker's bounded extract,
+independently rehashed1,357,901,361B console5b82abb6/exitreceipt/binary; capture
+lost1,034,263,045B. Daemon normal exit/absence of HCI cannot be concluded.
+One call-site-consistent candidate slide248c000 points to LE root-key/keychain
+startup failure, but runtime main header/status absent: INFERENCE, not cause.
+
+Original runtime/exit_trace replacement default-OFF/32records/12addresses uses
+real XNU backtrace_user and records mainheader/sharedslide-known/end/error.
+ASan/UBSan+TSan actual-source tests PASS; enabled ARM64 observer+actual kern_exit
+and BLAZER0 controls PASS; TEXT/relocations prove normal exit continuation;
+noreturn mutant rejected. r1/r2 header and r3 checker failures retained, finalr4
+patch437dc391cfbfd23357da213e143707f59cb6d6107c7a98c6b05bde248cd6a63e on
+e67445e6. NO full link/image/guest/runtime acceptance; owner received delivery.
+
+Consumed Wi-Fi discovery42f5d719 +BT lifecyclef4776885 handoffs, not duplicated;
+BT review stays with phone owner. Complete23G90 scan/result/events still absent.
+Recovered14 exact GPL S5400 source references193074B at5940a317; verified Google
+tag peeleda64b2a31 and matching wire header except include path. No vendor code
+import/phone identity proof. Primary refs/hashes stay in resources/manifest.json.
+Built original runtime/bt_keychain_trace: default-OFF, exact bluetoothd opt-in,
+forwards actual four Security APIs/arguments/results/errno; logs only PID/ID,
+operation/status/caller and actual mainheader/slide,64calls per process. No key
+or query payload dump/fake success. ASan/UBSan+TSan,3mutants,ARM64e ON4TEXT/OFF
+empty,signature/PAC checks PASS. Final keychain-check-r5 dylib288cab36831e883d
+27cc05ba291a80ab53e2afe2b4a2bef1d9ce40656e364414; real iOS loader/API NOT RUN.
+Private guest-r3 overlay6377a3f136c597c62b7c8e35960cad4338f48224caa6ed298195a602d03f42ac,
+samep29/root205cb0e2/hgl61c38161; soleenv extended/42other records exact;
+actual XNU overlay/exec consumer PASS. Synthetic BT nub guest-only; no fakeHCI,
+BlueTool swap/old exittrace/radio. Exact420s/--wait0 argv in plan.json; shared
+coordinator received candidate, release/admission NOT CONFIRMED; no slot polling.
+Minor preparation guard/docs landed in peer6b3ddce during HEAD race; retry found
+no pending own source changes. All earlier failed checker/prep attempts retained.
+Next: existing guest-release event, one immediate claim; actual load/API return
+capture, then repair proven prerequisite. No native connectivity acceptance yet.
+Cellular CP-off/platform/PCIe0/DMA/boot and native service integration unresolved.
+
+
 ## Dualboot saved recovery checked, 2026-11-02 12:16 CET — exact factory download authorized
 
 Milestone **41828ff**, HOST ONLY. Five older saved B artifacts checked with pinned
