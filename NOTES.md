@@ -32,6 +32,13 @@ must remain separate from native Metal acceptance. Next useful extension is an
 isolated bitmap/import readback diagnostic or process-scoped runtime fallback;
 any phone candidate still belongs to the existing coordinator and is untested.
 
+Shared QEMU lock was free/no QEMU process at11:15:11CET after both guests
+finished; check released immediately. Apps owner1c8ae1db notified by steer
+`inferno-coreimage-slot-released-20261102-r3`; phone coordinator2ff85bbd received
+results/limits via `inferno-coreimage-qemu-evidence-20261102-r3`. Both deliveries
+reported steered/running; neither requests a new task or physical action.
+Coordination receipts are in the ignored experiment directory. Handoff7eaed8c.
+
 ## Phone owner result, 2026-11-02 11:11 CET — sampler correct on tested spans; CPU audit live
 
 PhysicalsamplerVERIFY20261102-110205 COMPLETE/captured, image02b99c95… matching
