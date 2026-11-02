@@ -33,7 +33,7 @@ capture exclusivity in its latest checkpoint below; no new boot authority.
 User goal: take CPU's84% feature score to100%. Counted gaps are sustained
 higher clocks and both A520s under XNU; X4 remains excluded by the existing
 status model. Goal ACTIVE, score unchanged84. No new agents/delegates started.
-Source/test/docs commit **a338f4a** adds a read-only cpu0 firmware audit,
+Source/test/docs commit **a338f4a** (handoff3763fe3) adds a read-only cpu0 firmware audit,
 strict dedicated image profile and nonce-bound verifier; acceptance docs/CPU.md.
 Reuse3139238/d18fbb4 and four requested reports read; no vendor source import,
 new frequency, duplicate governor/thermal implementation or allowlist expansion.
@@ -60,14 +60,24 @@ MPIDR/EL_DROP/headerreason5 protocol; a synthetic HANDOFF-DONE slot is not real.
 Its PASS is only cpu0 bits9/38 prerequisite; A520 support stays unaccepted.
 
 **No new physical attempt, USB/device command, emulator boot, firmware send,
-root/partition/slot write or flash.** Sequential audit slot requested from
-existing phone owner; message delivered, scheduling/capture NOT confirmed.
+root/partition/slot write or flash.** Phone owner has confirmed the image/argv
+received and QUEUED for a reviewed sequential slot after the current GPT
+capture/deadlinepark and sampler check; no new audit attempt/capture yet.
 Owner alone boots/usesUSB. Trap, missing bit, refusal or unexpected reset STOPs
 this A520 stage; no blind retry/speculative workaround write. Higher-clock
 0773 remains with cpu_fast/phone owner, no duplicate import. Next: owner reviews
 and captures this immutable audit, then independent cpu1/workaround/topology/
 coherency/sustained acceptance; separate actual thermal downvote/floor-release
 and higher-clock acceptance still required before CPU can reach100%.
+
+CPU parent independently reviewed existing floor0772 + cpu_fast0773
+SHAfe42596427faa1551ee594731b524ec3f89f9dcc5c118c84aa8448dba4a249fc.
+Reran actual unchanged thermal producer + governor ASan/UBSan to OWN namespace:
+probe0=709 assertions PASS, probe1=3840 PASS; existing ARM64 object identities
+and named implementation (__TEXT,__text) symbols rechecked. Sources/patch
+unchanged; no duplicate apply, release build/image-tool change or physical claim.
+Receipt research/ios26-cpu-complete-r1/stepdown-review/review.json. Baseline
+cap16, high HOLD; retain separate verify/floors/required/health/R1/R2 stages.
 
 ## CoreImage exact-cache audit and QEMU comparison, 2026-11-02 (in progress)
 
