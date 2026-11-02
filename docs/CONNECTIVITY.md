@@ -59,6 +59,12 @@ Next: actual load-address evidence and bounded Security API return statuses,
 then repair the specific observed prerequisite while retaining real keychain
 and daemon semantics.
 
+The original [Security status observer](../runtime/bt_keychain_trace/README.md)
+now has host forwarding/concurrency/sanitizer checks, enabled/disabled ARM64e
+objects and a signed iOS26 diagnostic dylib. A concrete existing-p29 guest can
+collect the missing statuses without a new kernel link. Native loading,
+interposition and the actual failure status still require its queued run.
+
 ## Reuse sources selected for this hardware
 
 The [Wi-Fi](reuse/2026-11-02/wifi.md) and
