@@ -1,3 +1,65 @@
+## Dualboot r5 host integration, 2026-11-02 — build-only accepted, physical gates held
+
+User requested ASAP progress with lots of agents. Eight bounded native workers
+completed; all remain within their assigned ignored namespaces, no children or
+device actions. Root Git/index HOLD ACK sent; no root commit in flight and
+staged scope EMPTY at ACK. Coordinator64220e88 is now sole root Git writer;
+all eight workers received the rule. Own completed source awaits that writer.
+
+Original MIT Android preparation contract promoted unchanged from frozen worker
+source to dualboot/android_handoff.{c,h}, android_reference_data.h and
+test_android_handoff.c, with new dualboot/validate_android.py. Standalone parent
+check canonical-contract-r1 PASS: ASan/UBSan OFF8/ON20482; actual enabled ARM64
+hk_android_prepare2968B TEXT, OFF8B. No I/O, payload copying or Android entry;
+missing trusted runtime producer refuses. Reference-only input refuses; owned
+synthetic reaches PREPARED ONLY. Default gate OFF; no shim/image-token admission.
+
+Private chooser and Android wrapper now PARENT-COMPOSED against CURRENT root
+shim/loader.c c0383956..., which tools/image_tool.py actually uses. Earlier
+workers' proofs used historical774e484d. Current composition preserves CPU
+audit include/configure, explicitly enables its ARM64 call, verifies chooser
+and contract TEXT/call sites; ASan/UBSan actual-source adapter/FDT ON/OFF PASS.
+OFF shim/FDT objects byte-identical; loader_boot bytes identical, appended OFF
+wrapper retained. Patchd6ca17b3..., RESULTdec00a73... in integration/current-shim-r1/.
+No canonical shim/release/image edit; unlicensed historical policy/context stays
+private. Physical input/presenter/iOS continuation/Android dispatcher absent.
+
+Parent verified all8 delivery manifests/531 indexed files; actual stock-reference
+consumer exit0, real failed GPT exit3STOP, backup/isolation exit2STOP. Parent
+composition summary5476c92e... in integration/parent-check-r1/RESULT.json. Frozen
+strict acceptor remains bound to original image/nonce; future A725 capture needs
+its exact separately reviewed binding, not silent reuse of the old identity.
+Alias all130 sparse chunks/8e9B and matching F2FS /intelligence superblocks
+characterized, NOT live parent /data reservation/encryption/ownership/integrity.
+Latest planning snapshot12:14:31Z free154245615616B vs raw+40GiB170666229760B:
+DOES NOT FIT, short16420614144B; independent destination/key recovery unqualified.
+
+Original feb2b799 build REFUSED before image: phone-root guard permits2511,
+not proposed2436; our in-memory check missed that guard. Old log/receipts kept.
+Exact corrected proposal e9ec048c... in context-r5a/ changes ONLY output name+
+canvas1125x2511, SAME77 production pins/K/U/a000/oneA725/LU0/fourgates/528B/300s.
+CPU production prewriteed7f9326 rejects old/passes new to first mkdir then STOP,
+no output/image/compiler; exact CPU BUILD-ONLY33e6b2d5 CLOSED, no further review.
+Binder764c132d/preflight9dc3b9b9 explicitly check newname+actual ADT canvas2511.
+Parent r2 integrityPASS/contextHOLD; r1 caught mutable CPU-NEXT drift, explicitly
+replaced only informational memo with immutable CPU4f5a74d5 decision. Phone alone
+builds/binds after COMPLETE p32 attempt20261102-132258 capture. No physical
+admission. Any later checker P1/P2/tool drift needs explicit source rebind.
+Original21cba/profile34a126b2/host04ba2870 unchanged and HELD; no timestamp or slot
+claimed, no GPU acceptance transferred, no USB/new kernel/image action by us.
+
+Named native request completed ONLY3 existing reference files; RESULT95c958d3...
+and ARTIFACTS2e1deb4b... in native-named-evidence/. Userspace b0529b51/c73c1b73
+match supplied refs; libsrv26.1@7036548, Vulkan literal UNKNOWN; KM a627805f
+literal26.1@6967606/srcversionABSENT. Exact GNU IDs/vermagic/source hashes sent
+once to native owner; build labels/scmversion do not pin source/private ABI.
+
+Full goal ACTIVE/incomplete. Detailed hashes, argv, PASS/FAIL/STOP, changed gates,
+rollback and owned commit scope: research/ios26-dualboot-r5/HANDOFF.md. Next:
+owner's repaired-source binding + actual A725 artifact/context review and one
+strict GPT capture; then recoverable backups, live alias ownership/independent
+storage and real phone input/presentation/OS dispatch with repeated switching.
+
 ## Dualboot same-build factory reference verified, 2026-11-02 12:46 CET — no phone change
 
 Milestone **612be2b**. User explicitly accepted preview/SDK terms for the exact

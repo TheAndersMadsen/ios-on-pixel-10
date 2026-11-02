@@ -111,6 +111,43 @@ Complete GPT capture, Android integrity, independent iOS storage, chooser
 input/output, Android handoff, persistence and installed cold boot remain
 unverified. See the active entry in `NOTES.md` for exact validation and commits.
 
+## Prepared Android handoff contract
+
+`dualboot/android_handoff.c` adds a default-OFF, preparation-only contract for
+the exact DP11 reference described below. It checks current source identities,
+the complete reference graph, board and ramdisk selection, prepared byte ranges,
+memory reservations, recoverable backups, isolated storage, CPU context and
+firmware quiescence. Receipt hashes identify evidence; an independent trusted
+producer must verify the evidence and its field bindings. No such runtime
+producer is implemented. Reference-only input refuses, and even a complete
+synthetic input can return only `PREPARED`, never dispatch Android. The code
+performs no storage access, payload copy, register operation, reset or OS entry.
+
+Run the standalone owned synthetic checks and actual enabled ARM64 object proof:
+
+```sh
+python3 -I dualboot/validate_android.py \
+  --output research/dualboot-android-check-NEW
+```
+
+The validator explicitly compiles `HK_ANDROID_HANDOFF=0` and `=1`, executes the
+actual C contract under ASan/UBSan, and checks nonempty executable ARM64 text.
+The current checks pass 8 disabled and 20,482 enabled assertions. Generated
+objects, logs and exact source hashes stay under ignored research. These are
+host results, with physical acceptance and Android dispatch explicitly false.
+The original MIT files contain reference hashes and parsed format facts; no
+Android binary or upstream implementation is included.
+
+A private chooser adapter and preparation wrapper have also been composed
+against the current root `shim/` used by `tools/image_tool.py`, preserving its
+CPU-audit check. Enabled ARM64 call sites and host tests pass. Earlier worker
+proofs used the historical bootchain shim; the parent composition records that
+distinction. Existing shim/policy context remains private, and canonical shim,
+release source and frozen phone artifacts are unchanged. Physical input, a
+panel presenter, verified iOS continuation and Android dispatcher remain absent;
+this does not provide an operational boot menu. Exact patches, provenance and
+results are in `research/ios26-dualboot-r5/integration/`.
+
 ## Android recovery component inventory
 
 `tools/android_bootset.py` inventories regular local boot-chain copies using the
@@ -205,10 +242,14 @@ state change. The reported normal UFS LUNs also do not constitute an RPMB or
 secure-key backup. Keep original backups intact and use an independent storage
 destination; a host filesystem clone is not an independent copy.
 
-The downloaded package also contains a sparse `userdata_exp.ai` image whose
-header describes an 8,000,000,000-byte expanded image. This supplies a factory
-baseline, not the alias's actual pre-write contents or current F2FS reservation
-state. It is not migration space or permission to restore it. After archive and
+The downloaded package also contains a sparse `userdata_exp.ai` image. Bounded
+offline inspection maps all 130 chunks to 8,000,000,000 logical bytes. Matching
+F2FS superblocks in its 64 KiB prefix identify the factory `/intelligence`
+filesystem without a DEVICE_ALIAS feature. This characterizes the payload, not
+its parent Android `/data` alias reservation, encryption keys or current live
+ownership. It is not a full filesystem-integrity check, the alias's actual
+pre-write contents, migration space or permission to restore it. No mount,
+handwritten inode walker or alias-aware shrink is qualified. After archive and
 reference staging, the refreshed host-space observation no longer fits the
 reported normal-LUN backup plus the 40 GiB working reserve. Recheck capacity and
 qualify an independent destination before staging a backup.
