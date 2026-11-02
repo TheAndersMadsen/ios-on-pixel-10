@@ -551,95 +551,81 @@ No new core implementation claim for this one-off audit. Full GPT capture,
 complete backups/isolated allocation and native chooser/Android return still
 unfinished. Keep goal active and all existing storage/boot holds intact.
 
-## CPU acceptance checkpoint, 2026-11-02 — physical audit FAIL, one next-action handoff
+## CPU acceptance checkpoint, 2026-11-02 — common health image ready, A520 STOP
 
-CPU goal unfinished, score84 unchanged. Execution BLOCKED on external gates.
-Policy99c96136 consumed; no new workers,
-runner, governor, test matrix, release/image/tool-admission or device action.
-One exact handoff: research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md plus
-next-action.json, physical-audit.json, physical-summary.json, p30-text-symbols.txt.
-It binds actual hashes/argv/gates, positive/FAIL/STOP, shareability and rollback.
-Latest context-update.json consumes the EXISTING phone-owner context review;
-no new review/worker, source implementation or scheduling request.
+User explicitly resumed CPU engineering/resource search after fa5a08f's blocked
+snapshot. CPU objective unfinished, score84; actual source/image progress below.
+Only phone owner schedules USB/boots/release links. No new helper/review fleet,
+governor implementation, kernel build, clock-cap raise or device action here.
 
-**PHYSICAL:** phone-owner attempt20261102-110932-cpu0-audit-p29-r1 COMPLETE.
-Raw677292244c24d02b4b5dd5177e58317054f62031fc25e15b7bf46c50df457e8f;
-our fresh strict verdict exactly equals parent's saved verdict: complete nonce-
-bound cpu0 audit MIDR410fd801/REVIDR3/EL2/MCIoff, ACTLR0x4000000000 bit38set,
-bit9CLEAR => prerequisite FAIL/STOP; A520 support NOT accepted. Actual five
-A725s/SMP0errors, intended deadline300. Parent reports XNU302.2s,PSCI-SW,
-postreset39C/SOC89/4332mV,0CPMerrors. Live2140336bytes/0lost;2096830 overlap
-matches0mismatch,43506 live-only afterRAMwrap,293 finaltailnotlive. No A520
-retry/OFF/re-entry/cpu1/register write. Read-only image226eba4f… unchanged.
+**NEW HOST-READY IMAGE:** research/images/cpu-health-p30-r2/boot.img
+SHA463ffa618a39174fc4252894f312e650f89aea9e81e081e04b03ac69cd57e776.
+Exact existing p30 K9bbc57038f46622e8faa2ac2d04fd595184a305d959bf8ee8c5202e825e74e55,
+own U5dc553c614d2c9ee65fa21451aa72db550e696e2e3318cee5095a87b94aabeea,
+overlay61c38161…; five A725/bootcpu0x200/window882/canvas1125x2511/deadline300.
+Actual1000B common line, nonce0x086bfc50b95d57f3. NOT BOOTED/physicalacceptancefalse.
 
-**HOST completed:** bd7326c original DVFS identity/explicit-level/unit validator
-+7methods,18 real saved domain/rung rows each p29/original0773 PASS;4 mutated
-real-record CLI failures rejected; unchanged GPL lookup oracle103 ASan/UBSan
-assertions PASS. Existing decoder pinneda3baf953…, vendor6.12@5940a317; copied
-GPL text/notices remain ignored. Full CI PASS; CPU invocation landed in7e43b70.
-Own dvfs/*.json receipts. Tables/link/symbols never raise operating-point gates.
+Implemented dedicated tracked tools/image_tool.py image … --cpu-health profile
+for the EXISTING cpu_fast common-health plan. It supplies verify1/floors1/
+required262/health1 at cap16/B40/stages15/guard2/70/high0/probe0. General token
+allowlist unchanged, other kernels/contexts/extra experiments refused. Full check
+rebuilds pinned kernel+ADT+line+overlay payload, preventing metadata relabelling.
+No private parent builder, release governor or current phone image was changed.
 
-Parent floor0772=f9f6ec67/1172 +0773=b03d04d1/1173. Actual current governor
-0d1c4acf… equals original reviewed joint709/3840 sanitizer/text-symbol source.
-p30 kernel9bbc5703…/matching U5dc553c6… rehashed,8 real executable-text entries
-checked; probe0/high0, compiled probe refusal present/R2 verification absent.
-Ordinary-health image NOT BUILT; exact proposed argv uses actual p30 artifacts
-and existing peer plan. Parent admission/composition review still needed.
+82 image-tool methods +7 CPU-audit methods PASS;7 negative controls on actual
+image copies rejected cap/kernel/RAM/overlay/probe/payload drift and stripped
+receipt. Build/check/AVB/embedded payload PASS. Native shim ARM64 ELF,6 real T
+implementation symbols/0undefined, audit/CAS-probe absent; existing DCS warning1
+(pps_before_n unused global) recorded. Existing p30 eight final executable-text
+receipts retained. Interrupted r1 build stopped before shim finished: partial
+artifacts retained, no image/manifest/process; successful r2 used a fresh name.
 
-Share existing ordinary cap16 clock/status/thermal/profiler with reviewed UI
-common config. New health/floors/required/verify alter fail-stop policy, so first
-establish a common functional baseline; not passive logging or a speed A/B.
-1000B health line; optional existing WFI observer1020B if separately reviewed,
-held common in timing arms. Never alter reserved990B OFF/FAST pair. Existing
-lowered-trip R1/R2 stages stay isolated, require separate probe1/high0 kernel;
-current p30 cannot run them. Need real two-poll/direct per-domain downvotes,
-fresh all-five AMU, actual DSU/LPCM floor releases and advancing independent
-thermal guard; no forced heat/load, generic-line PASS or cap13/high promotion.
-OFF and FAST are now captured; FAST's initial BaseBoard NSURL-nil abort absent
-in OFF confounds timing, no speed/FPS/visual promotion. Next ready test remains
-phone-owner p29 artwork+passiveMCM/samplerOFF, no CPU-health/AKS/newkernel addition.
-CPU common-baseline proposal stays unbuilt/pending admission, same argv retained.
+ONE updated handoff research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md plus
+next-action.json; old3001911 proposal frozen byte-for-byte in frozen-3001911/.
+Exact completed build/check argv, proposed owner-only boot argv with own --mach,
+source/image/kernel/U/overlay/nonce/placement, PASS/FAIL/STOP/shareability/rollback
+and tests: research/ios26-cpu-complete-r3/phone-test.json +native/negative receipts.
+Phone-owner common-config/artifact admission still required. Current p31r1
+input/presentation/AKS capture/queue stays untouched; no automatic CPU slot.
 
-**Cross-goal HOLD:** actual manifests+ADTs confirm GPU p30 diag d8925f4f… and
-GPT image21cba4e8… eachcpus1/reg0/no bootcpu => unfixed cpu0 A520. GPU stays
-BUILD ONLY, GPT owner explicitly HELD frozen profile SHA34a126b2…/host04ba2870…;
-prior evidence preserved, no new argv/image or automatic A725 substitution.
-CPU/phone/feature owners must review context/Trusty or nonce/LU0/transport/ownU.
-Both are in the SAME CPU handoff, and phone/coordinator received changed blocker.
-Consumed gpu_cpu_context_review/REVIEW.md SHA952cb01d… plus native parent's
-SOURCE/LINK/IMAGE PASS receipt. Original GPU DRAM882000000/size100000000 differs
-from original p29 GPU healtha00000000/same size. CPU/Trusty/full-layout HOLD
-persists; no automatic window/core change or new A520 workaround. Existing
-review owns reconciliation; its conditional one-A725 BUILD ONLY proposal is
-not an image/slot/context acceptance. Both manifests' exact image/kernel/U,
-nonces/ADT/placement and frozen GPT34a126b2/host04ba2870 are bound in context-update.
-Ordinary five-A725 UI has used window882; that does not certify GPU FF-A/Trusty.
+This is a functional baseline with new fail-stop/release gates, not passive UI
+logging or a timing A/B. Required PASS: fresh all-five identity/AMU/transaction
+verification plus configured/valid0x106 advancing coherent thermal polls with
+mode2/guard70 through intended deadline; stale/missing essential evidence is
+INCOMPLETE, guard/clock/CPM/reset failure STOP. No forced heat/load/fault injection.
+Existing floor0772=f9f6ec67/1172 and0773=b03d04d1/1173 already integrated; governor
+source0d1c4acf… unchanged from joint709/3840 source tests and actual ARM64 proof.
+Current p30 probe0 cannot run lowered-trip R1/R2: existing isolated stages still
+need parent-built probe1/high0 kernel and fresh direct L16->L18->L20, all-five
+AMU, actual DSU/LPCM releases and advancing independent guard. High/P3/P7 HOLD.
 
-Primary review: exact A520 SDENissue12 section4.3.16 + TF-A62844b5… prescribes
-bit9. Exact r0p1 TRM102517_0001_04 now retrieved/hash-bound: A.1.7 pp183–185
-permits EL2 reads while EL3 can trap writes; A.1.23 pp226–228 ACTLREN bit0/reset0,
-ACTLR_EL3 inaccessible at EL2. Actual post-firmware write permission and reset
-persistence remain UNKNOWN; no safe live write path established. PDF SHA69b35057…,
-text3dd7f76f…/official metadata in ignored privilege/, completed original review
-5088002c… . Unvalidated ignored CAS-probe draft WITHDRAWN, never compiled,
-submitted for integration, built or booted; six production files equal recorded
-baseline. No new workaround, MSR/EL3/firmware change, device or build action.
-Current CPU-NEXT SHAaec7faca… /next-action851fdbe2… /context-updateb1710b26… .
-Only metadata/hash/whitespace checks for this docs milestone; prior host/ARM64
-receipts retained, no unchanged-suite rerun or new compile/physical PASS.
-Goal still needs both A520s working and sustained higher-clock physical
-acceptance; no score update or completion claim.
+**A520 actual prerequisite FAIL:**20261102-110932-cpu0-audit-p29-r1 complete,
+raw677292244c24d02b4b5dd5177e58317054f62031fc25e15b7bf46c50df457e8f;
+strict own verdict equals parent's. MIDR410fd801/REVIDR3/EL2/MCIoff,
+ACTLR0x4000000000 bit38set/bit9clear. Five A725 SMP0errors, expecteddeadline300,
+XNU302.2s. Live2140336/0lost,2096830overlap/0mismatch,43506live-only afterwrap,
+293finaltailnotlive. No unchanged A520 retry/OFF/reentry/cpu1/register write.
+Both A520s and sustained higher-clock XNU work are still required for100.
 
-Blocked audit after three consecutive goal turns (7424c92,3001911,current):
-previous turn was real source/receipt progress; current revalidation found same
-A520 FAIL and no newly admitted CPU-health image/probe1 kernel. Actual governor
-still0d1c4acf…; proposed image hashnull, no proposed cpu-* health/stage manifest
-in either candidate tree. Existing cpu0-audit evidence remains retained.
-Host work is complete for the existing handoff; runtime acceptance cannot be
-inferred or replaced by another helper/repeated suite. No live wait claimed.
-Receipt acceptance/blocker-audit.json preserves requirements and unblock events.
-Resume on the existing phone owner's changed source/context/artifact/capture
-receipt; retain its artwork/UI queue. No new request, build, boot or device action.
+**RESOURCES USED/PINNED:** r3/resources/sources.json +README. Arm/TF-A62844b5…
+BSD-3-Clause A520 workaround and Errata Management ABI actual header/handler;
+version/support/per-erratum SMC queries can report firmware policy without a
+CPUACTLR setter. Phone support UNKNOWN, not booted; no automatic mitigation
+acceptance if it conflicts with the real missing bit. Matching Google6.12
+5940a317 towerci privileged-register SMC is interconnect MMIO, NOT a documented
+CPU-system-register write path; GPL reference only, no implementation imported.
+Exact r0p1 TRM102517_0001_04 still leaves EL3 permission/persistence unknown.
+Unvalidated CAS draft stays withdrawn. Existing original DVFS validatorbd7326c
+and pinned helper/domain/level/unit oracle retained, no older Tensor tables.
+
+GPU p30d8925f4f and frozen GPT21cba4e8/profile34a126b2/host04ba2870 stay HELD:
+cpus1/reg0/no bootcpu, CPU/Trusty/layout gate. GPUwindow882 differs from prior
+GPUhealtha000; existing phone-owner review owns reconciliation. New CPU-health
+five-A725 image clears neither hold and changes no GPU/GPT argv or window.
+OFF/FAST captures retained, FAST's startup abort confounds timing/no speed claim.
+Exact known p29 rollbackc203c70e…/K5aad8978/Ucc979153, temporary boots only;
+root/slots/firmware/backups unchanged. docs/status.json evidence text refreshed;
+no invented score promotion before corresponding physical captures pass.
 
 ## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
 

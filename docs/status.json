@@ -94,12 +94,12 @@
         [
           "Higher clocks, up to the 3052 MHz top",
           "partial",
-          "Short test only: one core, each step under 1 s, 36 °C; the governor stops at 1075 MHz for now"
+          "533–1075 MHz under iOS; p30 thermal-health image built and checked. Sustained higher-clock acceptance still pending"
         ],
         [
           "2 A520 cores",
           "partial",
-          "cpu0 parked in the shim; cpu1 unused"
+          "cpu0 audit found CAS workaround bit9 clear; both A520s remain excluded. Firmware query/reference sources pinned"
         ],
         [
           "X4 core",

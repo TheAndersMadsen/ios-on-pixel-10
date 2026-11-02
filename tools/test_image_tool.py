@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Host tests for the ADT, payload and image tool. No Apple data needed except the pinned donor."""
 import json, os, struct, subprocess, sys, tempfile, unittest
+from unittest.mock import patch
 from pathlib import Path
 sys.dont_write_bytecode = True
 X = Path(__file__).resolve().parent; sys.path[:0] = [str(X)]
@@ -440,5 +441,86 @@ class BootArgsLayout(unittest.TestCase):
         s = (T.SHIM/'loader.c').read_text(); self.assertIn('#define BOOT_LINE_LENGTH\t1024', s); self.assertIn('== 1144', s)
         h = T.R/'ios26-kernel-r1/work/xnu/pexpert/pexpert/arm64/boot.h'
         if h.exists(): self.assertIn('#define BOOT_LINE_LENGTH 1024', h.read_text())
+
+class CpuHealthProfile(unittest.TestCase):
+    def ns(self, **kw):
+        a = TwoShapes().ns(cpu_health=True, name='cpu-health-unit', phone_root=True,
+            preflight=False, bootcpu='0x200', cpus=5, window_base='0x882000000',
+            phone_deadline=300, kernel_sha=T.CPU_HEALTH_KERNEL_SHA, qemu_run='overlay-1',
+            canvas=T.PHONE_CANVAS, var_overlay='overlay.ovl', var_overlay_sha=T.CPU_HEALTH_OVERLAY_SHA)
+        for k, v in kw.items(): setattr(a, k, v)
+        return a
+
+    def test_exact_common_configuration_and_default_refusal(self):
+        a = self.ns(); self.assertTrue(T.cpu_health_profile(a))
+        self.assertEqual(a.phone_args, T.CPU_HEALTH_ARGS)
+        self.assertEqual(len(T.cpu_health_line().encode()), 1000)
+        with self.assertRaises(SystemExit): T.phone_extra(T.CPU_HEALTH_ARGS)
+        for t in ('blazer_gov_verify=1', 'blazer_gov_health=1', 'blazer_gov_probe=1', 'blazer_gov_hi=0'):
+            with self.assertRaises(SystemExit): T.phone_extra(t)
+        a = self.ns(phone_args=' '.join(reversed(T.CPU_HEALTH_ARGS.split())))
+        self.assertTrue(T.cpu_health_profile(a)); self.assertEqual(a.phone_args, T.CPU_HEALTH_ARGS)
+        self.assertFalse(T.cpu_health_profile(self.ns(cpu_health=False)))
+
+    def test_refuses_changed_context_before_outputs(self):
+        for k, v in [('kernel_sha', '0'*64), ('bootcpu', '0x300'), ('bootcpu', None), ('cpus', 1),
+                ('cpus', 6), ('window_base', '0xa00000000'), ('phone_deadline', 900),
+                ('var_overlay_sha', '0'*64), ('var_overlay', None), ('canvas', None),
+                ('qemu_run', 'other'), ('phone_root', False), ('phone_route', 'ufsroot'),
+                ('cpu_order', ''), ('cpu_order', '0,1')]:
+            with self.subTest(k=k, v=v), self.assertRaises(SystemExit): T.cpu_health_profile(self.ns(**{k:v}))
+        for k in ('cpu_audit', 'test_kernel', 'preflight', 'touch', 'dpu', 'legacy_base',
+                'first_boot', 'second_boot', 'fullcheck', 'readback', 'persist', 'soak'):
+            with self.subTest(k=k), self.assertRaises(SystemExit): T.cpu_health_profile(self.ns(**{k:True}))
+
+    def test_refuses_removed_added_duplicate_or_high_tokens(self):
+        toks = T.CPU_HEALTH_ARGS.split()
+        for i in range(len(toks)):
+            with self.subTest(removed=toks[i]), self.assertRaises(SystemExit):
+                T.cpu_health_profile(self.ns(phone_args=' '.join(toks[:i]+toks[i+1:])))
+        for t in ('blazer_gov_cap=13', 'blazer_gov_hi=0', 'blazer_gov_probe=1', 'blazer_cpu0_cas_probe=1',
+                'blazer_aoc=1', 'blazer_gpu_tipc=5', 'blazer_persist=1', 'blazer_thermal=1'):
+            with self.subTest(added=t), self.assertRaises(SystemExit):
+                T.cpu_health_profile(self.ns(phone_args=T.CPU_HEALTH_ARGS+' '+t))
+        with self.assertRaises(SystemExit): T.phone_extra(T.CPU_HEALTH_ARGS+' blazer_gov_health=1', cpu_health=True)
+
+    def fixture(self, tmp):
+        # Exercise the real payload producer/checker with owned Mach-O bytes.
+        k = Path(tmp)/'kernel'; k.write_bytes(macho(text=0xfffffe0007004000))
+        ov = Path(tmp)/'overlay'; ov.write_bytes(b'owned-overlay-fixture')
+        blob = adt.serialize(mkadt.build(headless=True, disp0=True, cpus=5,
+            boot_mpidr=0x200, canvas=(1125,2511), phys_base=0x882000000))
+        blob += b'\0'*(-len(blob)%8); p = Path(tmp)/'adt'; p.write_bytes(blob)
+        raw, _ = mkpayload.build(k, p, T.cpu_health_line(), None, None, False, ov)
+        m = dict(mach=T.sha(k), bootcpu='0x200', cpus=5, phone_root=True, route='ufs',
+            cmdline=T.cpu_health_line(), cmdline_bytes=1000, adt_facts=T.adt_facts(blob),
+            window_base='0x882000000', var_overlay=dict(path=str(ov),sha256=T.sha(ov)),
+            cpu_health=dict(version=1,cap=16,required_mask=262,high_clock=False,
+                stepdown_probe=False,physical_acceptance=False,kernel_path=str(k)))
+        return m, blob, raw
+
+    def test_embedded_bytes_and_context_are_bound(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            m, blob, raw = self.fixture(tmp)
+            with patch.object(T,'CPU_HEALTH_KERNEL_SHA',m['mach']), patch.object(T,'CPU_HEALTH_OVERLAY_SHA',m['var_overlay']['sha256']):
+                T.check_cpu_health(m,blob,raw)
+                for key, value in [('mach','0'*64),('bootcpu','0x300'),('cpus',1),('cmdline',m['cmdline'].replace('cap=16','cap=13')),('window_base','0xa00000000')]:
+                    n = {**m,key:value}
+                    with self.subTest(key=key), self.assertRaises(SystemExit): T.check_cpu_health(n,blob,raw)
+                # Stripping the receipt and lying about the manifest line still
+                # exposes the real health tokens in the embedded payload header.
+                n = {**m, 'cpu_health':None, 'cmdline':'debug=0x8 cpus=5'}
+                with self.assertRaises(SystemExit): T.check_cpu_health(n,blob,raw)
+                changed = bytearray(raw); changed[-1] ^= 1
+                with self.assertRaises(SystemExit): T.check_cpu_health(m,blob,changed)
+                # A different, structurally valid ADT cannot be relabelled.
+                other = adt.serialize(mkadt.build(headless=True,disp0=True,cpus=5,
+                    boot_mpidr=0x300,canvas=(1125,2511),phys_base=0x882000000))
+                with self.assertRaises(SystemExit): T.check_cpu_health(m,other,raw)
+                for key in ('kernel_path','physical_acceptance','stepdown_probe','high_clock','required_mask'):
+                    n = {**m,'cpu_health':{**m['cpu_health'],key:True}}
+                    with self.subTest(key=key), self.assertRaises(SystemExit): T.check_cpu_health(n,blob,raw)
+                Path(m['cpu_health']['kernel_path']).write_bytes(b'changed source')
+                with self.assertRaises(SystemExit): T.check_cpu_health(m,blob,raw)
 
 if __name__ == '__main__': unittest.main()

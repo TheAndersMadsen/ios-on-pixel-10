@@ -67,6 +67,16 @@ source metadata and extracted-text receipts remain in ignored research.
 The source review establishes no safe write path. No write probe or new A520
 workaround is admitted, and this audit authorizes no register/firmware change.
 
+There is a firmware query path to investigate before a register-write experiment:
+TF-A's [Errata Management ABI handler](https://gbmc.googlesource.com/trusted-firmware-a/+/62844b5a4a706dab67b68b9588dd44605597aa17/services/std_svc/errata_abi/errata_abi_main.c)
+and [interface definitions](https://gbmc.googlesource.com/trusted-firmware-a/+/62844b5a4a706dab67b68b9588dd44605597aa17/include/services/errata_abi_svc.h)
+provide version, support and per-erratum queries. They report firmware policy;
+they do not install a workaround or prove the observed bit9 clear is harmless.
+Support on this phone remains unknown. The matching Google6.12 towerci
+`SMC_CMD_PRIV_REG` path instead accesses interconnect MMIO; it is not evidence
+for a CPUACTLR write service. Pinned reference files, licences and hashes are
+retained in `research/ios26-cpu-complete-r3/resources/`, with no vendor code imported.
+
 Two gates are required: compile `TGL_CPU_AUDIT=1` with `TGL_FASTCORE=1`, and
 runtime exact `blazer_cpu0_audit=1`. Missing/0 leaves the audit off; malformed,
 duplicate or unterminated tokens refuse the loader path. Only the dedicated
@@ -112,6 +122,30 @@ and scheduling state. No dump, firmware, identifier or Apple artifact belongs
 in git. The existing phone coordinator retains exclusive USB/boot ownership.
 
 ## Remaining acceptance toward 100%
+
+The first thermal/governor common configuration is now a built host-checked
+image, `research/images/cpu-health-p30-r2/boot.img`, SHA256
+`463ffa618a39174fc4252894f312e650f89aea9e81e081e04b03ac69cd57e776`.
+It has **not booted**. `tools/image_tool.py image … --cpu-health` is a dedicated profile
+for the exact reviewed p30 kernel and existing overlay. It supplies the existing
+1,000-byte plan: five A725s at cap16, guard70, verification, bounded floor
+releases, required mask262 and thermal-owner health. High clocks and the
+lowered-trip probe remain off. The general phone-token allowlist is unchanged.
+
+The profile checks the CPU count, boot core, RAM/ADT placement, overlay and
+kernel identities. Image checking reconstructs the entire payload from those
+pinned inputs, so a changed manifest cannot conceal different embedded bytes.
+The new shim has six named ARM64 executable-text entries and zero undefined
+symbols; the existing p30 kernel text receipt is retained. Tests:82 image-tool
+methods,7 audit methods and7 refusals against copies of the real image's data.
+The build reports the existing DCS unused-variable warning; no new kernel build
+or runtime acceptance is claimed.
+
+Exact build/boot argv, matching unstripped hash, nonce, PASS/FAIL/STOP and
+rollback are in the single current `acceptance/CPU-NEXT.md` handoff. The phone
+owner reviews and schedules it after its current capture. This common baseline
+changes fail-stop/release policy; it is not an extra passive flag for a UI A/B.
+Current p30 is probe0 and cannot run the separate existing R1/R2 tests.
 
 Before higher-clock testing, `tools/cpu_dvfs_check.py` extends the existing
 99-row literal check with strict saved-table identity, explicit-level and unit

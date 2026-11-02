@@ -38,6 +38,85 @@ TOUCH_ARG = 'blazer_touch=1'
 BOOTCPUS = ('0x200', '0x300', '0x500')  # ios26-fastcore-r1: the A725s speed-probe-r3 ran. Shim and mkadt refuse any other. --cpus up to 5 adds the other A725s
 FC_FLAGS, FC_SRC = '-DTGL_FASTCORE=1', 'tgl_fastcore.c tgl_fastcore_s.S'
 CPU_AUDIT_FLAGS, CPU_AUDIT_SRC = '-DTGL_CPU_AUDIT=1', 'tgl_cpu_audit.c'
+# The existing cpu_fast0773 common-health plan, frozen to reviewed p30. This
+# profile admits no new clock level and is separate from the lowered-trip probe.
+CPU_HEALTH_KERNEL_SHA = '9bbc57038f46622e8faa2ac2d04fd595184a305d959bf8ee8c5202e825e74e55'
+CPU_HEALTH_OVERLAY_SHA = '61c38161efd809bdac15f9f167e5431a4f116b54bf42c7280411480fa37bea2a'
+CPU_HEALTH_ARGS = ('blazer_touch=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_cost=1 '
+                   'blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 '
+                   'hk_fb_refresh=60 hk_overlay=0xA0080081 hk_top=30 hk_crashinfo=1 blazer_battery=1 '
+                   'blazer_mem=13 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 '
+                   'blazer_gov=1 blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 hk_ui_trace=1 '
+                   'blazer_usbcon=1 blazer_usbcon_ch9=1 hk_ui=90:h,w5,l,r,x5 blazer_gov_verify=1 '
+                   'blazer_gov_floors=1 blazer_thermal_required=262 blazer_gov_health=1')
+CPU_HEALTH_KEYS = {'blazer_gov_verify', 'blazer_gov_floors', 'blazer_thermal_required', 'blazer_gov_health'}
+
+def cpu_health_profile(a):
+    """One source-bound cap16 health configuration, not a general token allowlist."""
+    if not getattr(a, 'cpu_health', False): return False
+    if (not a.phone_root or a.bootcpu != '0x200' or a.cpus != 5 or
+        a.kernel_sha != CPU_HEALTH_KERNEL_SHA or a.phone_route != 'md0-mountroot' or
+        a.qemu_run != 'overlay-1' or a.canvas != PHONE_CANVAS or
+        getattr(a, 'cpu_order', None) is not None or
+        getattr(a, 'window_base', None) != '0x882000000' or a.phone_deadline != 300 or
+        not a.var_overlay or a.var_overlay_sha != CPU_HEALTH_OVERLAY_SHA):
+        die('--cpu-health requires reviewed p30, five A725s/bootcpu0x200, window882, pinned overlay, canvas and deadline300; docs/CPU.md')
+    if any(getattr(a, k, None) for k in ('cpu_audit', 'cpu_order', 'first_boot', 'second_boot',
+            'test_kernel', 'preflight', 'touch', 'dpu', 'md0', 'md1', 'args', 'gamut',
+            'legacy_base', 'fullcheck', 'readback', 'readback_sha', 'persist',
+            'persist_table', 'expect_test_block', 'soak_whole')) or getattr(a, 'soak', None) is not None or a.route != 'ufs':
+        die('--cpu-health cannot combine another profile or experiment')
+    if a.phone_args:
+        phone_extra(a.phone_args, cpu_health=True)
+    a.phone_args = CPU_HEALTH_ARGS
+    return True
+
+def cpu_health_line():
+    c = PHONE_ARGS.replace('ROUTE', PHONE_ROUTES['md0-mountroot'])
+    return set_cpus(c, 5).replace('blazer_deadline=1800', 'blazer_deadline=300') + ' ' + CPU_HEALTH_ARGS + ' blazer_bootcpu=0x200'
+
+def check_cpu_health(m, blob, payload):
+    """Bind the profile to actual ADT/payload bytes and the pinned inputs again."""
+    record = m.get('cpu_health')
+    actual_line = payload[mkpayload.CMDLINE:mkpayload.SEG_TABLE].split(b'\0', 1)[0].decode('ascii', errors='replace')
+    if not record:
+        if any(t.split('=')[0] in CPU_HEALTH_KEYS for t in (m['cmdline'] + ' ' + actual_line).split()):
+            die('CPU health tokens without the dedicated profile receipt')
+        return
+    expected = dict(version=1, cap=16, required_mask=262, high_clock=False,
+                    stepdown_probe=False, physical_acceptance=False)
+    if (not isinstance(record, dict) or record != {**expected, 'kernel_path': record.get('kernel_path')} or
+        any(type(record[k]) is not type(v) for k, v in expected.items()) or
+        not isinstance(record['kernel_path'], str) or not record['kernel_path']):
+        die('CPU health profile receipt differs')
+    if (m['mach'] != CPU_HEALTH_KERNEL_SHA or m['bootcpu'] != '0x200' or m.get('cpus') != 5 or
+        m.get('cpu_order') is not None or not m.get('phone_root') or m.get('route') != 'ufs' or
+        m['cmdline'] != cpu_health_line() or actual_line != m['cmdline'] or
+        m['cmdline_bytes'] != len(cpu_health_line().encode())):
+        die('CPU health kernel/topology/command line differs')
+    facts = adt_facts(blob)
+    nodes = next(n for n in ADT.parse(blob)[0].children if n.name == 'cpus').children
+    regs = [struct.unpack('<I', n.prop('reg'))[0] for n in nodes]
+    if (facts != m['adt_facts'] or facts['dram'] != ['0x882000000', '0x100000000'] or
+        facts['canvas'] != [1125, 2511] or facts['boot_reg'] != 0x200 or
+        regs != [0x200, 0x300, 0x400, 0x500, 0x600] or m.get('window_base') != '0x882000000' or
+        [n.prop('state') for n in nodes] != [b'running\0'] + [b'stopped\0'] * 4 or
+        [struct.unpack('<I', n.prop('cpu-id'))[0] for n in nodes] != list(range(5))):
+        die('CPU health ADT/memory context differs')
+    check_cpu_line(blob, m['cmdline'])
+    kernel = pin((Path(record['kernel_path']), CPU_HEALTH_KERNEL_SHA))
+    ov = m.get('var_overlay')
+    if not isinstance(ov, dict) or ov.get('sha256') != CPU_HEALTH_OVERLAY_SHA:
+        die('CPU health overlay receipt differs')
+    overlay = pin((Path(ov['path']), CPU_HEALTH_OVERLAY_SHA))
+    # Rebuild through the real payload producer: a manifest assertion alone must
+    # not hide a different kernel, line, overlay or memory placement in the image.
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        adt_file = Path(tmp)/'laguna.adt'; adt_file.write_bytes(blob)
+        try: rebuilt, _ = mkpayload.build(kernel, adt_file, cpu_health_line(), None, None, False, overlay)
+        except ValueError as e: die(str(e))
+    if rebuilt != payload: die('CPU health embedded payload differs from pinned inputs')
 
 def cpu_audit_profile(a):
     """Only cpu0 register reads on the proven five-A725, 533 MHz route. docs/CPU.md."""
@@ -96,10 +175,13 @@ def check_cpu_line(blob, line):
     if said != [f'cpus={len(nodes)}']: die(f'line says {said}, ADT has {len(nodes)} CPU nodes')
     if any(n.prop('cluster-type') != b'\0\0\0\0' for n in nodes): die('cluster-type must stay 0: MAX_CPU_CLUSTERS is 1')
     if 0x700 in [struct.unpack('<I', n.prop('reg'))[0] for n in nodes]: die('X4 in the ADT: refused, handoffs/smp.md')
-def phone_extra(text):
+def phone_extra(text, *, cpu_health=False):
     """Validated tokens for --phone-args. Refuses anything off the list, and repeats: PE_parse takes one value."""
     toks = (text or '').split(); names = [t.split('=', 1)[0] for t in toks]
     if len(set(names)) != len(names): die(f'repeated token in --phone-args: {text}')
+    if cpu_health:
+        if sorted(toks) != sorted(CPU_HEALTH_ARGS.split()): die('--cpu-health arguments differ from the frozen common configuration')
+        return toks
     for t, n in zip(toks, names):
         if t not in PHONE_EXACT and not (n in PHONE_ALLOWED and re.fullmatch(PHONE_ALLOWED[n], t)): die(f'--phone-args: {t} is not on the list')
     if 'blazer_usb_readback=1' in toks:
@@ -153,7 +235,7 @@ def cmdline(a, epoch):
         return ('debug=0x8 serial=3 cpus=1 rd=md0 blazer_ufs_mountroot=1 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=userdata_exp.ai '
                 f'blazer_ufs_lun=0 blazer_ufs_test=1 blazer_ufs_fullcheck={a.soak} blazer_deadline=1500 blazer_panic=1')
     if a.phone_root:  # read-only HFSX root on UFS, RAM /private/var from varfs: PHONE-ROOT.md
-        return PHONE_ARGS.replace('ROUTE', PHONE_ROUTES[a.phone_route]) + (' ' + TOUCH_ARG if getattr(a, 'touch', False) else '') + ''.join(' ' + t for t in phone_extra(getattr(a, 'phone_args', None)))
+        return PHONE_ARGS.replace('ROUTE', PHONE_ROUTES[a.phone_route]) + (' ' + TOUCH_ARG if getattr(a, 'touch', False) else '') + ''.join(' ' + t for t in phone_extra(getattr(a, 'phone_args', None), cpu_health=getattr(a, 'cpu_health', False)))
     if a.first_boot:  # blazer's contract, verbatim. userdata_exp.ai on LUN 0: physical, 20261101-201914-ufs-root-r2
         return 'debug=0x8 serial=3 cpus=1 rd=md0 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=userdata_exp.ai blazer_ufs_lun=0 blazer_ufs_test=1 ' + (f"blazer_ufs_deadline=1200 blazer_ufs_fullcheck={2 if getattr(a, 'persist_table', None) else 1}" + (f" blazer_persist={a.persist}" if getattr(a, 'persist', None) else '') if getattr(a, 'fullcheck', None) else 'blazer_ufs_deadline=300') + ' unentitled_ios_sim_launch=1' + (' ' + SECOND_ARGS if a.second_boot else '')
     root = 'rd=ufsroot0 rootfstype=hfs' if a.route == 'ufs' else 'rd=md0 blazer_ufs_mountroot=1'
@@ -181,7 +263,7 @@ def overlay_groups(blob):
 
 def check_overlay(a):
     """hk_overlay and the file go together, or the boot panics or the file does nothing. Every mask bit must name a group: else the kernel panics before launchd."""
-    toks = [t for t in phone_extra(a.phone_args) if t.startswith('hk_overlay=')]
+    toks = [t for t in phone_extra(a.phone_args, cpu_health=getattr(a, 'cpu_health', False)) if t.startswith('hk_overlay=')]
     if not a.var_overlay:
         if toks: die('hk_overlay needs --var-overlay: the kernel panics with no overlay in the image')
         if a.var_overlay_sha: die('--var-overlay-sha without --var-overlay')
@@ -241,6 +323,7 @@ def build(a):
     name = ('test-' + a.name) if a.test_kernel and not a.name.startswith('test-') else a.name
     out = RUN/name
     if out.exists(): die(f'{out} exists: an image is not rebuilt after handover. Use a new name')
+    health = cpu_health_profile(a)
     audit = cpu_audit_profile(a)
     if a.soak is not None:
         if not name.startswith('soak-') or a.first_boot or a.second_boot or a.phone_root or a.dpu or a.md0 or a.md1 or a.args or a.route != 'ufs': die('--soak: name soak-*, no other profile')
@@ -251,7 +334,7 @@ def build(a):
     if order:
         if a.bootcpu: die('--cpu-order and --bootcpu: --bootcpu parks cpu0, which --cpu-order needs. For a fast boot core, --bootcpu --cpus. handoffs/smp.md')
         if a.cpus != 1: die('--cpu-order sets cpus=N from its length: no --cpus')
-    if 'blazer_fast_first=1' in phone_extra(getattr(a, 'phone_args', None)) and not order: die('blazer_fast_first=1 goes with --cpu-order: on --bootcpu --cpus the cores are alike, handoffs/fastcore.md section 0')
+    if 'blazer_fast_first=1' in phone_extra(getattr(a, 'phone_args', None), cpu_health=health) and not order: die('blazer_fast_first=1 goes with --cpu-order: on --bootcpu --cpus the cores are alike, handoffs/fastcore.md section 0')
     if a.phone_root:
         if a.first_boot or a.second_boot or a.dpu or a.md0 or a.md1 or a.args or a.gamut or a.route != 'ufs' or (a.cpus != 1 and not a.bootcpu): die('--phone-root is the recipe as written: no other options')
         if a.canvas not in (None, PHONE_CANVAS): die(f'--phone-root takes only --canvas {PHONE_CANVAS}')
@@ -278,9 +361,9 @@ def build(a):
         if miss: die(f'kernel lacks what the phone root needs: {miss}')
         if a.touch and b'blazer_touch' not in buf: die('kernel has no blazer_touch')
         if ov and b'HKVarOverlay' not in buf: die('kernel does not read HKVarOverlay')
-        for t in phone_extra(a.phone_args):
+        for t in phone_extra(a.phone_args, cpu_health=health):
             if t.split('=')[0].encode() not in buf: die(f'kernel does not read {t}')
-        extra = phone_extra(a.phone_args)
+        extra = phone_extra(a.phone_args, cpu_health=health)
         if 'blazer_keys=1' in extra and b'blazer-keys: polling pads' not in buf: die('kernel holds keys until keys-probe-r1 passes: handoffs/cpmlock.md')
         if any(t.startswith('blazer_thermal_panic_c=') for t in extra) and 'blazer_thermal=2' not in extra: die('blazer_thermal_panic_c needs blazer_thermal=2')
         if getattr(a, 'phone_deadline', None) not in (None, 300, 1800, 3600): die('--phone-deadline: 300, 1800 or 3600')
@@ -290,7 +373,7 @@ def build(a):
         if a.phone_route == 'md0-mountroot' and b'rooting on ufsroot0' not in buf: die('kernel lacks the md0-mountroot route (blazer 0530)')
     if a.touch and not a.phone_root: die('--touch goes with --phone-root')
     if a.phone_args and not a.phone_root: die('--phone-args goes with --phone-root')
-    if a.touch and 'blazer_touch' in [t.split('=')[0] for t in phone_extra(a.phone_args)]: die('blazer_touch given twice')
+    if a.touch and 'blazer_touch' in [t.split('=')[0] for t in phone_extra(a.phone_args, cpu_health=health)]: die('blazer_touch given twice')
     p_mode, p_table, p_expect = getattr(a, 'persist', None), getattr(a, 'persist_table', None), getattr(a, 'expect_test_block', None)
     if p_mode or p_table or p_expect:  # handoffs/persist.md: the fullcheck line only
         if not (a.first_boot and getattr(a, 'fullcheck', None)) or a.second_boot: die('--persist, --persist-table, --expect-test-block go with --first-boot --fullcheck')
@@ -368,6 +451,8 @@ def build(a):
     if audit: want += ['tgl_cpu_audit_configure', 'tgl_cpu_audit_prepare']
     for sym in want:
         if not re.search(rf'\s{sym}$', syms, re.M): die(f'shim lacks {sym}')
+        if health and not re.search(rf'^[0-9a-fA-F]+ [Tt] {sym}$', syms, re.M):
+            die(f'CPU health shim lacks executable text for {sym}')
     if not a.dpu and re.search(r'\stgl_dcs_guarded$', syms, re.M): die('DPU stage present though off')
     if not a.bootcpu and re.search(r'\stgl_fc_entry$', syms, re.M): die('fastcore present though off')
     if not audit and re.search(r'\stgl_cpu_audit_prepare$', syms, re.M): die('CPU audit present though off')
@@ -386,6 +471,10 @@ def build(a):
     if window != PHYS: rec['window_base'] = hex(window)
     if audit: rec['cpu_audit'] = dict(mode=1, core=0, read_only=True, a520_support_accepted=False)
     if many: rec.update(cpus=len(order) if order else a.cpus, **({'cpu_order': order} if order else {}))  # no shape, no new keys
+    if health:
+        rec['cpu_health'] = dict(version=1, cap=16, required_mask=262, high_clock=False,
+                                stepdown_probe=False, physical_acceptance=False, kernel_path=str(Path(a.kernel).resolve()))
+        check_cpu_health(rec, blob, raw)
     if a.fullcheck:
         import fullcheck as FC
         mask = FC.table_mask(p_table) if p_table else None
@@ -409,12 +498,14 @@ def check(d):
         print('payload version 1: built before the 1024-byte line; hashes only, this shim source validates version 2')
     elif contract_check(d/'payload-usb.bin') != m['plan']: sys.exit('plan differs')
     if 'cpus' in m: check_cpu_line((d/'laguna.adt').read_bytes(), m['cmdline'])
+    check_cpu_health(m, (d/'laguna.adt').read_bytes(), (d/'payload-usb.bin').read_bytes())
     print('OK', m['name'], 'bootable' if m['bootable'] else 'NOT BOOTABLE', m['image'])
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter); sub = ap.add_subparsers(dest='cmd', required=True)
     i = sub.add_parser('image'); i.add_argument('name'); i.add_argument('--kernel', required=True); i.add_argument('--kernel-sha', required=True)
     i.add_argument('--cpu-audit', action='store_true', help='read-only cpu0 firmware audit on baseline five A725s; docs/CPU.md')
+    i.add_argument('--cpu-health', action='store_true', help='frozen p30 cap16 common health acceptance profile; supplies exact phone arguments; docs/CPU.md')
     i.add_argument('--route', choices=['ufs', 'md'], default='ufs'); i.add_argument('--md0'); i.add_argument('--md1'); i.add_argument('--cpus', type=int, default=1); i.add_argument('--cpu-order', help='cores for cpus=N in logical order, e.g. 5,6,2,3,4,1,0. handoffs/smp.md'); i.add_argument('--dpu', action='store_true')
     i.add_argument('--canvas'); i.add_argument('--gamut'); i.add_argument('--args'); i.add_argument('--test-kernel', action='store_true'); i.add_argument('--legacy-base', action='store_true'); i.add_argument('--phone-root', action='store_true', help='PHONE-ROOT.md: --route ufs on ios26-phone-r1'); i.add_argument('--soak', type=int, help='N read-only passes, not a phone-run image; 0: the not-live line'); i.add_argument('--preflight', action='store_true', help='--phone-root line on the old partition content, labelled, not bootable'); i.add_argument('--touch', action='store_true', help='--phone-root plus blazer_touch=1, nothing else'); i.add_argument('--phone-deadline', type=int, help='1800, or 3600 with blazer_thermal=2: handoffs/cpmlock.md'); i.add_argument('--soak-whole', help='whole crc the passes must give, hex'); i.add_argument('--phone-args', help='extra tokens for --phone-root, allow-list only'); i.add_argument('--var-overlay', help='overlay file for hk_overlay=MASK'); i.add_argument('--var-overlay-sha'); i.add_argument('--bootcpu', help='0x200, 0x300 or 0x500: run XNU on that core, ios26-fastcore-r1. Parent only, after speed-probe-r3'); i.add_argument('--qemu-run'); i.add_argument('--phone-route'); i.add_argument('--readback', help='root image: sample its blocks for read-back'); i.add_argument('--readback-sha'); i.add_argument('--fullcheck', help='same root as --readback: read all of it and log CRCs'); i.add_argument('--persist', type=int, choices=[2, 3], help='with --fullcheck: blazer_persist=N, handoffs/persist.md'); i.add_argument('--persist-table', help='table.json: the pass skips its blocks, blazer_ufs_fullcheck=2, and so does the list'); i.add_argument('--expect-test-block', help='TABLE.json:A or :B: the list for a kernel with no mask after blazer_persist=2 wrote that pattern'); i.add_argument('--window-base', choices=(hex(PHYS), '0x882000000'), help='kernel RAM base, handoffs/ram.md'); i.add_argument('--second-boot', action='store_true', help='first-boot contract plus shim DPU stage, disp0 and the scanout arguments'); i.add_argument('--first-boot', action='store_true', help="blazer's first phone boot contract: headless ADT, md0 only, fixed base and command line")
     c = sub.add_parser('check'); c.add_argument('dir')
