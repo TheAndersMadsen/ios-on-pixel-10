@@ -391,7 +391,8 @@ unfinished. Keep goal active and all existing storage/boot holds intact.
 
 ## CPU acceptance checkpoint, 2026-11-02 — physical audit FAIL, one next-action handoff
 
-CPU goal ACTIVE, score84 unchanged. Policy99c96136 consumed; no new workers,
+CPU goal unfinished, score84 unchanged. Execution BLOCKED on external gates.
+Policy99c96136 consumed; no new workers,
 runner, governor, test matrix, release/image/tool-admission or device action.
 One exact handoff: research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md plus
 next-action.json, physical-audit.json, physical-summary.json, p30-text-symbols.txt.
@@ -466,6 +467,17 @@ Only metadata/hash/whitespace checks for this docs milestone; prior host/ARM64
 receipts retained, no unchanged-suite rerun or new compile/physical PASS.
 Goal still needs both A520s working and sustained higher-clock physical
 acceptance; no score update or completion claim.
+
+Blocked audit after three consecutive goal turns (7424c92,3001911,current):
+previous turn was real source/receipt progress; current revalidation found same
+A520 FAIL and no newly admitted CPU-health image/probe1 kernel. Actual governor
+still0d1c4acf…; proposed image hashnull, no proposed cpu-* health/stage manifest
+in either candidate tree. Existing cpu0-audit evidence remains retained.
+Host work is complete for the existing handoff; runtime acceptance cannot be
+inferred or replaced by another helper/repeated suite. No live wait claimed.
+Receipt acceptance/blocker-audit.json preserves requirements and unblock events.
+Resume on the existing phone owner's changed source/context/artifact/capture
+receipt; retain its artwork/UI queue. No new request, build, boot or device action.
 
 ## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
 
