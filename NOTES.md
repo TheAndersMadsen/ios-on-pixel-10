@@ -1,3 +1,43 @@
+## Dualboot saved recovery checked, 2026-11-02 12:16 CET — exact factory download authorized
+
+Milestone **41828ff**, HOST ONLY. Five older saved B artifacts checked with pinned
+AOSP76117860 buffers + independent verify_image on new0400 copies. Binit_boot
+38f73a4c... FAILS payload; old tiny vendor_boot FAILS; backupboot8d981942...
+signature+payloadPASS; backupvendor_boot and vendor_kernel_boot payloadPASS but
+algorithmNONE/unsigned. Brollback1788566400 versus savedA1791158400; actual
+protected rollback/current slot/trusted graph unproved. All originals unchanged.
+
+Both A/B init ramdisks have Magisk backup entries. Built UNMODIFIED upstream
+Magisk33bfff7ce750c27f157ddb4580e36bf842d6d95b/GPLv3 as native ARM64 HOST tool,
+SHAfbec4b38fe2f4af7e9ccaac05298232deb7eae1377f92ea37e5ab36cf3a84d61.
+Initial host panic-strategy link failed; r2 profile panic=abort builds without
+implementation change. First scratch config extractionmode000 refused hostread;
+r2 chmods ONLY extracted scratch file. Actual cpio test1->0/restore/repack for
+both; signed metadata byte-identical/signaturevalid but AOSPpayloadFAIL for BOTH,
+original-backupSHA1 unmatched. NO restored candidate accepted or phone restore.
+Exact argv/env/source/tool/artifact hashes+logs in r3/saved-recovery-candidates-r1/,
+ARTIFACTS.json pins20receipts/recipes; source tree clean. No XNU build/gate claim.
+
+Archived init_boot readback matches same failing Bbytes. Archived boot/vendor
+readbacks4f6e583e.../5a039972... pass signature+payload but keyff01aa84... differs
+from savedA244baaf7...; no Google/root trust established. Actual AOSP component
+inventoryPASS; boot gzip names boot-v6-walla.Image, bounded decode reports Linux
+7.3.0-next-20261022, not a verified stock Android set. Do not merge these backups.
+
+User explicitly ACCEPTED Google's preview/SDK terms and authorized11.4GB exact
+blazer DP11.261002.005 factory download for OFFLINE verification, no phone action.
+GoogleHEAD200/11447024427B, expected archiveSHA9ac046a4275f1a5032cb6e7768de349d8b01811c0de7b41fc259a178f5fde40c.
+Download ACTIVE unified session60280; receipt/partial under ios26-dualboot-r4/
+factory-google-dp11/. Whole archive hash NOT VERIFIED YET; do not use partial.
+Live listing now newerDP11.261016.003; exact oldURL/expected hash from earlier
+primary reference, bodyhash must independently match. No factory script executes.
+
+GPT profile34a126b2/host04ba2870 rehashed unchanged, CPU/phone context HOLD still
+applies. Phone owner has exclusive USB; its115426 UI run/capture untouched.
+Next: finish/check exact archive, inventory matching boot/AVB dependencies;
+accepted CPU-context GPT, full backups, alias/decryption ownership, isolated
+capacity and Android handoff/repeated switches remain required for full dualboot.
+
 ## Phone owner checkpoint, 2026-11-02 12:09 CET — Battery visible, 15-minute UI active
 
 RUNNING:20261102-115426-phone-p29-art-container-15m-r1, temporary image
