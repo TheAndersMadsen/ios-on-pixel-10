@@ -128,6 +128,9 @@ main's first Objective-C operation. Startup phase formatting uses only C;
 normal receipts also avoid NSJSONSerialization. A separate marker follows
 autorelease-pool entry. Host fixtures write only to stderr and cannot
 contact the host workspace.
+The metadata-read probe records POSIX open/read errors, size and binary-plist
+header status, then the original NSData read and plist-parser entry/return.
+It does not print file contents or substitute a different read/parser result.
 
 Optional `exercise` mode registers the same manifest, then requests only its
 explicit `smoke_bundle_ids` (at most eight distinct selected identifiers).

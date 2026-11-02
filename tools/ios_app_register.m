@@ -6,10 +6,12 @@
  */
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifndef HK_STOCK_APPS_BUILD
@@ -28,10 +30,19 @@
 - (BOOL)isPlaceholder;
 @end
 
+static void progress(const char *, NSString *);
+static void fileReadProbe(NSString *);
 static id readPlist(NSString *path) {
+    fileReadProbe(path);
+    progress("plist_data_read_enter", nil);
     NSData *data = [NSData dataWithContentsOfFile:path options:0 error:NULL];
-    return data ? [NSPropertyListSerialization propertyListWithData:data
-        options:NSPropertyListImmutable format:NULL error:NULL] : nil;
+    progress(data ? "plist_data_read_return" : "plist_data_read_failed", nil);
+    if (!data) return nil;
+    progress("plist_parse_enter", nil);
+    id value = [NSPropertyListSerialization propertyListWithData:data
+        options:NSPropertyListImmutable format:NULL error:NULL];
+    progress(value ? "plist_parse_return" : "plist_parse_failed", nil);
+    return value;
 }
 
 static void consoleBytes(const void *bytes, size_t size) {
@@ -115,6 +126,36 @@ static void progress(const char *phase, NSString *identifier) {
     struct JSONLine line = {0}; token(&line, "HKAPPS: {\"event\":\"phase\",\"phase\":", 33);
     stringValue(&line, phase); token(&line, ",\"pid\":", 7); numberValue(&line, (unsigned)getpid());
     token(&line, ",\"bundle_id\":", 13); stringValue(&line, identifier ? identifier.UTF8String : NULL);
+    finishLine(&line);
+}
+
+static void fileReadProbe(NSString *path) {
+    // Observe only the existing manifest/Info.plist path. Retain the original
+    // Foundation read/parser below; no alternate data, permission or success.
+    progress("plist_path_encode_enter", nil);
+    const char *name = path.fileSystemRepresentation;
+    progress("plist_path_encode_return", nil);
+    int openError = 0, statError = 0, readError = 0;
+    unsigned long long size = 0; ssize_t bytes = -1; char header[8] = {0};
+    int fd = name ? open(name, O_RDONLY | O_CLOEXEC) : -1;
+    if (fd < 0) openError = name ? errno : EINVAL;
+    else {
+        struct stat st;
+        if (fstat(fd, &st)) statError = errno; else size = (unsigned long long)st.st_size;
+        bytes = read(fd, header, sizeof(header)); if (bytes < 0) readError = errno;
+        close(fd);
+    }
+    struct JSONLine line = {0};
+    const char prefix[] = "HKAPPS: {\"event\":\"plist_posix_read\",\"path\":";
+    token(&line, prefix, sizeof(prefix) - 1); stringValue(&line, name);
+    token(&line, ",\"open_errno\":", 14); numberValue(&line, (unsigned)openError);
+    token(&line, ",\"stat_errno\":", 14); numberValue(&line, (unsigned)statError);
+    token(&line, ",\"read_errno\":", 14); numberValue(&line, (unsigned)readError);
+    token(&line, ",\"file_bytes\":", 14); numberValue(&line, size);
+    token(&line, ",\"header_bytes\":", 16); numberValue(&line, bytes < 0 ? 0 : (unsigned long long)bytes);
+    token(&line, ",\"binary_plist\":", 16);
+    token(&line, bytes == 8 && !memcmp(header, "bplist00", 8) ? "true" : "false",
+        bytes == 8 && !memcmp(header, "bplist00", 8) ? 4 : 5);
     finishLine(&line);
 }
 
