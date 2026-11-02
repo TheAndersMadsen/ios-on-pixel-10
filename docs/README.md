@@ -6,6 +6,7 @@
 | --- | --- |
 | [BUILD.md](BUILD.md) | Build a phone image and boot it; every local input and its pin |
 | [COORDINATION.md](COORDINATION.md) | Active owners, priorities, test batching, readiness and the phone queue |
+| [CONNECTIVITY.md](CONNECTIVITY.md) | Native Wi-Fi, Bluetooth and cellular evidence, dependencies, reusable sources and acceptance |
 | [REUSE.md](REUSE.md) | 24-agent source audit: reusable code, exact pins, compatibility limits and next integration tasks |
 | [DUALBOOT.md](DUALBOOT.md) | Android/iOS storage isolation, chooser acceptance and read-only bring-up |
 | [IOS-APPS-IDENTITY.md](IOS-APPS-IDENTITY.md) | Missing stock apps, LaunchServices restoration, GitHub SEP and Apple-service implementations |
