@@ -1,0 +1,145 @@
+{
+  "schema": "hackios.reuse-audit.sources.v1",
+  "date": "2026-11-02",
+  "scope": "Parent spot checks of selected public text sources, not a complete source/licence audit. No upstream source bytes are stored in this file. URLs are pinned.",
+  "files": [
+    {
+      "name": "panel",
+      "url": "https://gitlab.com/api/v4/projects/grapheneos%2Fkernel_pixel_6.12/repository/files/private%2Fgoogle-modules%2Fdisplay%2Fpanels%2Fmuzel%2Fpanel-gs-bmea.c/raw?ref=5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c",
+      "sha256": "85509623505c411cc457c60e3a1a7b0777306d6723dc3688f5bc7bdc7dadf9f0",
+      "bytes": 103470,
+      "markers": {
+        "SPDX-License-Identifier: MIT": true,
+        "bmea_set_brightness": true,
+        "google,gs-bzea": true
+      },
+      "equals_existing_local_donor": true,
+      "license_evidence": "MIT",
+      "proposed_use": "Selected panel routines may be adapted with notices."
+    },
+    {
+      "name": "gpu-mmu",
+      "url": "https://gitlab.com/api/v4/projects/grapheneos%2Fkernel_pixel_6.12/repository/files/private%2Fgoogle-modules%2Fpowervr%2Fpvrsrvkm%2Fservices%2Fserver%2Fdevices%2Frgxmmuinit.c/raw?ref=5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c",
+      "sha256": "500677f7c78f94d37372f57b2249ade644b0dfb63aadc91720c2e80ab3d3af35",
+      "bytes": 52069,
+      "markers": {
+        "RGXMMUInit": true,
+        "MIT": true,
+        "sRGXMMUPTEConfig_16KBDP": true
+      },
+      "equals_existing_local_donor": true,
+      "license_evidence": "Dual MIT/GPLv2; MIT option in inspected file",
+      "proposed_use": "Selected MMU definitions/routines; preserve complete MIT notices."
+    },
+    {
+      "name": "air-manifest",
+      "url": "https://raw.githubusercontent.com/steelbrain/metal2vulkan/219f01365dc4c8eb346816c405b5b17403793764/crates/metal2vulkan-air/Cargo.toml",
+      "sha256": "4a0d6a7129d58418b74bc98e6cfaeeb731b34d4165f773603632b6b5b152481c",
+      "bytes": 1499,
+      "markers": {
+        "metal2vulkan-air": true,
+        "sha2": true,
+        "license.workspace": true
+      },
+      "license_evidence": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "proposed_use": "Host frontend evaluation; runtime dependency/licensing not selected."
+    },
+    {
+      "name": "air-api",
+      "url": "https://raw.githubusercontent.com/steelbrain/metal2vulkan/219f01365dc4c8eb346816c405b5b17403793764/crates/metal2vulkan-air/src/lib.rs",
+      "sha256": "3493c5c995143406af9c1a00b13a2edd98d9c6c6e0709e86ad034947858d5ad2",
+      "bytes": 5326,
+      "markers": {
+        "pub mod bitcode": true,
+        "pub mod container": true,
+        "pub mod abi": true
+      },
+      "license_evidence": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "proposed_use": "Host frontend evaluation; no native DXT backend."
+    },
+    {
+      "name": "car-parser",
+      "url": "https://raw.githubusercontent.com/blacktop/ipsw/a8f1f5219865f01c6d7a6ef9f29b61c5fbfb7388/pkg/car/car.go",
+      "sha256": "6ea030ab84109557ecd59fb0e72b8034cfe04fff1f09a1c8dfee42ad11ed293d",
+      "bytes": 31796,
+      "markers": {
+        "MetadataOnly": true,
+        "VariantQuery": true
+      },
+      "license_evidence": "MIT repository licence; dependencies separate",
+      "proposed_use": "Use existing external host parser before vendoring."
+    },
+    {
+      "name": "libyuv-row",
+      "url": "https://chromium.googlesource.com/libyuv/libyuv/+/79ca9187e540faaaca47b34622e110d07f335d05/source/row_neon64.cc?format=TEXT",
+      "sha256": "801d879b20c1dbe14fcc05e1a97dac43a9edacc43f2cc00bd30f11942f0a4fdb",
+      "bytes": 287911,
+      "markers": {
+        "InterpolateRow_NEON": true
+      },
+      "license_evidence": "BSD-3-Clause; accompanying patent grant",
+      "proposed_use": "Conditional single-axis row backend; full scaler differs numerically."
+    },
+    {
+      "name": "wave6",
+      "url": "https://gitlab.com/api/v4/projects/grapheneos%2Fkernel_pixel_6.12/repository/files/private%2Fgoogle-modules%2Fvideo%2Fcnm%2Fwave6_regdefine.h/raw?ref=5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c",
+      "sha256": "e6d3cf9cf5fe92097caa747bdb22f5fb1687df9700dac77a25f7672f5f564ae2",
+      "bytes": 57900,
+      "markers": {
+        "BSD": true,
+        "LGPL": true,
+        "W6_CMD_DEC": true
+      },
+      "license_evidence": "Dual BSD-3-Clause/LGPL-2.1-only; BSD option",
+      "proposed_use": "Register inventory/header reuse with original notices; surrounding driver separate."
+    },
+    {
+      "name": "u100",
+      "url": "https://gitlab.com/api/v4/projects/grapheneos%2Fkernel_pixel_6.12/repository/files/private%2Fgoogle-modules%2Fuwb%2Fslsi%2Fu100%2Fuwb_link.c/raw?ref=5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c",
+      "sha256": "9dc799aa4e98098b0b0e39499ae5294592e27b27629e4fe9b89de18a12f24b88",
+      "bytes": 9902,
+      "markers": {
+        "GPL": true,
+        "get_uci_payload_len": true,
+        "handle_full_duplex": true
+      },
+      "license_evidence": "SPDX GPL-2.0 in inspected file",
+      "proposed_use": "Wire-contract reference under existing project policy."
+    },
+    {
+      "name": "car-command",
+      "url": "https://raw.githubusercontent.com/blacktop/ipsw/a8f1f5219865f01c6d7a6ef9f29b61c5fbfb7388/cmd/ipsw/cmd/car.go",
+      "sha256": "7f6e4e7d9c418163ea9780cb079e302e23c85b69c586b4fba9c04656e218d8ff",
+      "bytes": 10621,
+      "markers": {
+        "metadata-only": true,
+        "json": true
+      },
+      "license_evidence": "MIT repository licence; dependencies separate",
+      "proposed_use": "Existing metadata-only JSON CLI."
+    },
+    {
+      "name": "air-license",
+      "url": "https://raw.githubusercontent.com/steelbrain/metal2vulkan/219f01365dc4c8eb346816c405b5b17403793764/LICENSE",
+      "sha256": "672ded943eeab6d5fdb81c68fd3cf4e2a10fc324dc52c23feb8dded444b9207b",
+      "bytes": 1114,
+      "markers": {
+        "GPL-2.0-or-later OR LGPL-3.0-or-later": true
+      },
+      "license_evidence": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "proposed_use": "Licence evidence; no adoption decision."
+    },
+    {
+      "name": "air-workspace",
+      "url": "https://raw.githubusercontent.com/steelbrain/metal2vulkan/219f01365dc4c8eb346816c405b5b17403793764/Cargo.toml",
+      "sha256": "e2fc374386d6ee10854f9c2996a8c3858cbb4f86f549f15c93dacf20cc4db439",
+      "bytes": 2515,
+      "markers": {
+        "rust-version = \"1.98\"": true,
+        "GPL-2.0-or-later OR LGPL-3.0-or-later": true
+      },
+      "license_evidence": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "proposed_use": "Rust 1.98/package boundary evidence."
+    }
+  ]
+}

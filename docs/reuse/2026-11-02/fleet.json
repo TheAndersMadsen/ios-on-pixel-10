@@ -1,0 +1,130 @@
+{
+  "audit_date": "2026-11-02",
+  "launch_interface": "collaboration.spawn_agent",
+  "model": "gpt-6.1-sol (inherited)",
+  "scope": "Research only; reports are evidence assessments, not implementation or physical proof.",
+  "launched_agents": 24,
+  "agents": [
+    {
+      "task_name": "/root/reuse_tegu",
+      "report": "tegu.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_hakios",
+      "report": "hakios-ports.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_pixel_vendor",
+      "report": "pixel-vendor.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_pvr_kernel",
+      "report": "powervr-kernel.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_pvr_compiler",
+      "report": "powervr-compiler.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_metal_runtime",
+      "report": "metal-runtime.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_cpu_renderer",
+      "report": "cpu-rendering.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_assets_compositor",
+      "report": "assets-compositor.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_dma_vm",
+      "report": "dma-memory.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_display",
+      "report": "display-panel.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_hid_touch",
+      "report": "hid-input.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_wifi",
+      "report": "wifi.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_bluetooth",
+      "report": "bluetooth.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_audio_haptics",
+      "report": "audio-haptics.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_sensors",
+      "report": "sensors.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_power_clocks",
+      "report": "power-clocks.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_storage",
+      "report": "storage-filesystems.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_dualboot",
+      "report": "dualboot-loaders.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_usb",
+      "report": "usb-networking.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_tooling",
+      "report": "development-tooling.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_darwin_services",
+      "report": "darwin-services.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_media_radios",
+      "report": "media-radios.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_local_backlog",
+      "report": "local-backlog.md",
+      "result": "completed"
+    },
+    {
+      "task_name": "/root/reuse_broad_discovery",
+      "report": "broad-discovery.md",
+      "result": "completed"
+    }
+  ],
+  "completion": "All 24 assignments completed; this is a historical audit roster, not a live process inventory."
+}

@@ -1,0 +1,243 @@
+{
+  "schema": "hackios.reuse-audit.tasks.v1",
+  "date": "2026-11-02",
+  "scope": "Proposed bounded follow-ups, not active delegations, implementation claims or device authorization. Follow existing coordinator ownership and per-file provenance.",
+  "tasks": [
+    {
+      "id": "R01",
+      "priority": "P0",
+      "state": "proposed",
+      "title": "Extend source locks and the feature ledger",
+      "work_avoided": "Avoid mixed source generations and repeated pending/already-integrated audits.",
+      "reuse": "Existing provenance/stage manifests; extend the concurrent native-GPU source collector rather than creating another.",
+      "local_seam": "Source receipts + release series + selected image manifests",
+      "first_proof": "Wrong pin/hash, old UFS offset/mask fixture, absent adapter and host-runner exit0/GPU FAIL must be classified correctly.",
+      "limits": "Source metadata is not physical acceptance.",
+      "reports": [
+        "pixel-vendor.md",
+        "local-backlog.md",
+        "development-tooling.md"
+      ]
+    },
+    {
+      "id": "R02",
+      "priority": "P0",
+      "state": "proposed",
+      "title": "Share one native GPU ABI profile",
+      "work_avoided": "Avoid repeated manual firmware/context/MMU layout reconstruction.",
+      "reuse": "MIT-side Volcanic DDK and existing firmware/VM/queue layout probes.",
+      "local_seam": "measure_vendor.py + queue/tools/layout.c + vm evidence",
+      "first_proof": "Actual native adapters consume one generated profile and refuse deliberate size/offset/BVNC/DDK disagreement.",
+      "limits": "Captured health FAIL remains STOP; matching ABI/real execution unproved.",
+      "reports": [
+        "powervr-kernel.md",
+        "dma-memory.md"
+      ]
+    },
+    {
+      "id": "R03",
+      "priority": "P0",
+      "state": "proposed",
+      "title": "Finish the current guarded sampler",
+      "work_avoided": "Use already implemented optimization and original-output oracle.",
+      "reuse": "Existing original NEON worker; libyuv single-axis row primitive only if profiling justifies it.",
+      "local_seam": "sampler/hsampler.c + hs_hook.c + differential harness",
+      "first_proof": "Exact bytes, refusal/fallback/call coverage and emitted ARM64 implementation symbols; compare any narrow backend against actual original.",
+      "limits": "No phone speed claim until a controlled coordinator-run profile.",
+      "reports": [
+        "cpu-rendering.md",
+        "local-backlog.md"
+      ]
+    },
+    {
+      "id": "R04",
+      "priority": "P0",
+      "state": "proposed",
+      "title": "Add a catalog/variant manifest adapter",
+      "work_avoided": "Avoid writing another CAR/BOM parser and chasing filenames manually.",
+      "reuse": "Pinned MIT ipsw metadata-only parser; BSD host CoreUI cross-check.",
+      "local_seam": "Existing settings_assets investigation",
+      "first_proof": "Distinguish missing catalog/name/exact variant, unsupported layout and runtime lookup; use known visible, failing, canonical and nonexistent names.",
+      "limits": "Modern layout/runtime fallback may differ; derived manifests stay ignored.",
+      "reports": [
+        "assets-compositor.md"
+      ]
+    },
+    {
+      "id": "R05",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Finish display admission/drain, then reuse panel command helpers",
+      "work_avoided": "Avoid reconstructing revision-aware brightness/idle DCS policy.",
+      "reuse": "MIT panel/command/revision helpers; matching completion code as reference.",
+      "local_seam": "presentFlip/stop + tdpu_panel_*",
+      "first_proof": "Reference ownership survives refusal, timeout/late completion and stop; fake transport verifies revision selection, error and delay order.",
+      "limits": "Keep current panel limits; physical completion/rate behavior separate.",
+      "reports": [
+        "display-panel.md"
+      ]
+    },
+    {
+      "id": "R06",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Complete WLAN registry publication",
+      "work_avoided": "Reuse a demonstrated Darwin discovery shape.",
+      "reuse": "APSL2 HakiOS WLAN ancestry and observed-address publication.",
+      "local_seam": "Existing BlazerWiFiStart, shared BlazerNetServices",
+      "first_proof": "Host IOKit fixture checks correct ancestry, real wlan parent, byte-exact observed address and allocation/attach failure cleanup.",
+      "limits": "Real ifnet/node/address required; runtime benefit unmeasured.",
+      "reports": [
+        "wifi.md",
+        "hakios-ports.md",
+        "darwin-services.md"
+      ]
+    },
+    {
+      "id": "R07",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Add a station mailbox and scan snapshot converter",
+      "work_avoided": "Avoid hand-authoring Darwin station/request plumbing.",
+      "reuse": "HakiOS station/Apple80211 boundary over existing BCM4390 IPC9 owner.",
+      "local_seam": "GET-only adapter + b4 polling thread",
+      "first_proof": "Synthetic passive-scan records preserve bounded IEs; queue ordering, timeout/cancel, duplicate BSSID and malformed-length cases reach actual adapter.",
+      "limits": "iOS26 request ABI, supported channels and real completion needed; no association in first task.",
+      "reports": [
+        "wifi.md"
+      ]
+    },
+    {
+      "id": "R08",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Prepare a Wave6 command inventory",
+      "work_avoided": "Use newly located source instead of more command-register disassembly.",
+      "reuse": "BSD-option exact vendor wave6_regdefine.h; GPL lifecycle as reference.",
+      "local_seam": "Existing video_control wake/sleep planner",
+      "first_proof": "Pinned symbol/register inventory agrees with wake/sleep constants and separates undocumented command-bank fields.",
+      "limits": "Hardware submission, firmware lifecycle and VideoToolbox absent.",
+      "reports": [
+        "media-radios.md"
+      ]
+    },
+    {
+      "id": "R09",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Prepare a U100/UCI host decoder",
+      "work_avoided": "Avoid inventing link framing and protocol enums.",
+      "reuse": "Exact U100 GPL reference + Apache AOSP UCI schemas/parser/test blocks.",
+      "local_seam": "Existing U100 inventory/design",
+      "first_proof": "Compare bounded native decoder with generated standard golden vectors; test HAL/internal-header distinction, alignment, truncation and fragments.",
+      "limits": "No SPI/reset/radio action; Samsung vendor commands and live identity remain unknown.",
+      "reports": [
+        "media-radios.md"
+      ]
+    },
+    {
+      "id": "R10",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Evaluate standalone AIR as an independent frontend",
+      "work_avoided": "Save future metadata/intrinsic/canonicalization maintenance while retaining existing subset.",
+      "reuse": "Pinned metal2vulkan-air; existing MIT frontend is baseline, not discarded.",
+      "local_seam": "hackios.air.f32-buffer-plan.v1 + hmn compile peer seam",
+      "first_proof": "Owned single_add/buffer_add inputs produce agreeing bindings/order/refusals; malformed/poison/FP-mode inputs stay explicit.",
+      "limits": "Copyleft boundary and Rust 1.98 unresolved for runtime; no DXT emission supplied.",
+      "reports": [
+        "metal-runtime.md",
+        "powervr-compiler.md",
+        "local-backlog.md"
+      ]
+    },
+    {
+      "id": "R11",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Tighten ECM control and transfer conformance",
+      "work_avoided": "Reuse independent class rules without a new USB controller owner.",
+      "reuse": "MIT TinyUSB/Apache Zephyr request and ZLP logic.",
+      "local_seam": "Existing un_setup/un_tx_pump/DWC3 completion path",
+      "first_proof": "Actual-source tests preserve frame bytes, handle exact-maxpacket ZLP and reject unsupported/full-index control requests across reset.",
+      "limits": "Bulk DMA, Mac binding and packets still need separate physical evidence.",
+      "reports": [
+        "usb-networking.md"
+      ]
+    },
+    {
+      "id": "R12",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Preserve QMP events in one harness",
+      "work_avoided": "Replace copied monitor clients that discard asynchronous events.",
+      "reuse": "Official qemu.qmp host library.",
+      "local_seam": "One existing leased QEMU harness",
+      "first_proof": "Fake socket interleaves event/reply/error/EOF; all survive into bounded receipts and cleanup completes.",
+      "limits": "Host dependency licence/version; no new VM manager or boot needed for proof.",
+      "reports": [
+        "development-tooling.md"
+      ]
+    },
+    {
+      "id": "R13",
+      "priority": "P1",
+      "state": "proposed",
+      "title": "Consume existing RTC, MotionProbe and BT capture work",
+      "work_avoided": "Avoid repeating already delivered implementations and guest runs.",
+      "reuse": "RTC0657, built MotionProbe, completed bt-3 capture.",
+      "local_seam": "Current RTC path, RAM overlay app packaging, existing symbolication",
+      "first_proof": "Rerun existing RTC checks; verify app packaging contracts; extract a bounded BT exit/load receipt with explicit loss/unknown-frame status.",
+      "limits": "These are three owner-specific follow-ups, not one physical feature pass.",
+      "reports": [
+        "local-backlog.md",
+        "sensors.md",
+        "bluetooth.md"
+      ]
+    },
+    {
+      "id": "R14",
+      "priority": "P2",
+      "state": "proposed",
+      "title": "Differential-test ASTC before a texture import",
+      "work_avoided": "Avoid decoder bitstream authoring and debugging.",
+      "reuse": "Compact explicit-MIT decoder + Apache Arm decompressor oracle.",
+      "local_seam": "Owned compressed-texture upload boundary",
+      "first_proof": "Owned blocks/footprints, odd edges, alpha, sRGB policy, invalid blocks and guard bytes agree after explicit RGBA/BGRA normalization.",
+      "limits": "Only if actual ASTC requests exist; no diagnosed icon cause.",
+      "reports": [
+        "tegu.md",
+        "broad-discovery.md"
+      ]
+    },
+    {
+      "id": "R15",
+      "priority": "P2",
+      "state": "proposed",
+      "title": "Reuse a deterministic service-profile planner",
+      "work_avoided": "Avoid manual disabled-job list comparison and rollback ownership mistakes.",
+      "reuse": "MIT vphone select/reconcile/owned logic and host tests.",
+      "local_seam": "Existing overlay generation, container/cloudd owner",
+      "first_proof": "Fixture dependency conflicts, unknown OS/groups, failed enable and rollback preserve unrelated labels/records.",
+      "limits": "VM dependency findings are review inputs; no automatic mass-disable/enable policy.",
+      "reports": [
+        "darwin-services.md"
+      ]
+    },
+    {
+      "id": "R16",
+      "priority": "P2",
+      "state": "proposed",
+      "title": "Cross-check GPT/F2FS with external offline tools",
+      "work_avoided": "Avoid a second handwritten metadata walker.",
+      "reuse": "libfdisk read-only oracle, alias-aware f2fs-tools after readable metadata exists.",
+      "local_seam": "Existing tools/dualboot.py synthetic fixtures/readback",
+      "first_proof": "Explicit4096-byte sectors, CRC/geometry/overlap/truncation comparisons and before/after image hashes; recovery-tolerant outputs stay distinct from strict acceptance.",
+      "limits": "Encrypted metadata/alias state and complete captures unresolved; no writes/mounts/device paths.",
+      "reports": [
+        "storage-filesystems.md",
+        "dualboot-loaders.md"
+      ]
+    }
+  ]
+}
