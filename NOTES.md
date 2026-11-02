@@ -1,3 +1,7 @@
+## Fleet review block, 2026-11-02 09:35 CET
+
+AoC feature task rejected for possible cybersecurity risk, stopped without rephrasing/rerouting. Other hardware work continues. Freed slot assigned dedicated A725 owner (explicit gpt-6.1-sol); roster now31 launched including1 rejected,23 pending capacity. Details in features-20261102/fleet.json and BOARD.
+
 ## Phone result, 2026-11-02 09:34 CET (parent)
 
 Attempt `20261102-092638-bench-p27-track-r1` is complete/captured; unified exec13328 exited0. **Owner long press**, DER7/RST_STAT4, at XNU238.1s, payload264.7s. No kernel panic observed. No scripted token execution before termination (`HK UI: 18 tokens, start in300s` only). Therefore Settings/home transition benchmark remains untested; no speed claim.
