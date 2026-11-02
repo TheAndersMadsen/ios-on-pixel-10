@@ -112,7 +112,7 @@ def inventory(source, root):
     }
 
 
-def registration_manifest(report, only=()):
+def registration_manifest(report, only=(), smoke=()):
     requested = set(only)
     apps = [r for r in report["apps"] if "error" not in r and (
         r["bundle_id"] in requested if requested else
@@ -124,8 +124,13 @@ def registration_manifest(report, only=()):
         raise ValueError("duplicate app identifiers in stock inventory")
     if not apps:
         raise ValueError("no applications selected")
-    return {"schema": "hackios-stock-apps-v1", "apps": [
+    if len(smoke) > 8 or len(set(smoke)) != len(smoke) or set(smoke) - found:
+        raise ValueError("smoke plan needs at most eight distinct selected app identifiers")
+    result = {"schema": "hackios-stock-apps-v1", "apps": [
         {"bundle_id": r["bundle_id"], "path": r["target_path"]} for r in apps]}
+    if smoke:
+        result["smoke_bundle_ids"] = list(smoke)
+    return result
 
 
 def main():
@@ -135,9 +140,12 @@ def main():
     p.add_argument("--out", required=True, type=Path)
     p.add_argument("--manifest", type=Path)
     p.add_argument("--only", action="append", default=[], metavar="BUNDLE_ID")
+    p.add_argument("--smoke", action="append", default=[], metavar="BUNDLE_ID")
     args = p.parse_args()
+    if (args.only or args.smoke) and not args.manifest:
+        p.error("--only and --smoke require --manifest")
     report = inventory(args.source, args.root)
-    manifest = registration_manifest(report, args.only) if args.manifest else None
+    manifest = registration_manifest(report, args.only, args.smoke) if args.manifest else None
     # Exclusive output creation also prevents accidentally overwriting a source.
     with args.out.open("x") as stream:
         json.dump(report, stream, indent=2, sort_keys=True)

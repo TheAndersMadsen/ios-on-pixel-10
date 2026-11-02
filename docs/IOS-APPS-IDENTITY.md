@@ -112,6 +112,18 @@ It is default-off at compilation (`HK_STOCK_APPS_BUILD=1` enables it).
 Phase receipts precede framework loading, workspace connection, enumeration and
 URL registration, so an unfinished synchronous API call remains identifiable.
 Attempt counts limit retries; they do not cancel or time out Apple's APIs.
+The logger explicitly opens the guest console, with a C entry marker before
+Objective-C initialization. Host fixtures write only to stderr and cannot
+contact the host workspace.
+
+Optional `exercise` mode registers the same manifest, then requests only its
+explicit `smoke_bundle_ids` (at most eight distinct selected identifiers).
+Generate those with `--manifest ... --smoke BUNDLE_ID` on the inventory tool.
+Each requested app must first pass registration readback. The registrar waits
+20 seconds between requests for the existing guest capture to observe UI.
+The selector's return value is unused; requests remain labelled
+`launch_verified=false`. Actual exec records, foreground frames and interaction
+are still needed. Registration-only mode never opens apps.
 
 The private `research/ios26-apps-r1/` candidate uses an APFS clone of the existing
 20 GiB light root. All 49 app bundles are relocated into `/Applications`; all

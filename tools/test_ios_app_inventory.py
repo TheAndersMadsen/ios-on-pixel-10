@@ -76,6 +76,15 @@ class InventoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.inventory(self.source, self.root)
 
+    def test_smoke_plan_only_opens_explicit_selected_identifiers(self):
+        self.app(self.source / "private/var/staged_system_apps")
+        report = module.inventory(self.source, self.root)
+        self.assertNotIn("smoke_bundle_ids", module.registration_manifest(report))
+        self.assertEqual(module.registration_manifest(report, smoke=["example.clock"])["smoke_bundle_ids"], ["example.clock"])
+        for invalid in [["example.other"], ["example.clock", "example.clock"]]:
+            with self.assertRaises(ValueError):
+                module.registration_manifest(report, smoke=invalid)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,7 @@
  */
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +20,7 @@
 @interface NSObject (HKAppWorkspace)
 + (id)defaultWorkspace;
 - (BOOL)registerApplication:(NSURL *)url;
+- (void)openApplicationWithBundleID:(NSString *)identifier;
 - (NSArray *)allApplications;
 - (NSString *)applicationIdentifier;
 - (NSURL *)bundleURL;
@@ -32,12 +34,43 @@ static id readPlist(NSString *path) {
         options:NSPropertyListImmutable format:NULL error:NULL] : nil;
 }
 
+static void consoleBytes(const void *bytes, size_t size) {
+    // iOS launchd stdout wiring is not itself evidence that a marker reached
+    // the console. Open the same explicit console used by the existing probes.
+    // Fixture builds never write to the host's real console.
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+    int fd = STDERR_FILENO;
+#else
+    int fd = open("/dev/console", O_WRONLY | O_NOCTTY | O_CLOEXEC);
+    if (fd < 0) fd = STDERR_FILENO;
+#endif
+    const char *cursor = bytes;
+    while (size) {
+        ssize_t n = write(fd, cursor, size);
+        if (n <= 0) break;
+        cursor += n; size -= (size_t)n;
+    }
+    if (fd != STDERR_FILENO) close(fd);
+}
+
+#ifndef HK_STOCK_APPS_NO_MAIN
+static void entryMarker(void) {
+    // Runs before the first Objective-C/autorelease/JSON operation in main.
+    char line[128];
+    int n = snprintf(line, sizeof(line), "HKAPPS: {\"event\":\"main_entry_c\",\"pid\":%u}\n", (unsigned)getpid());
+    if (n > 0 && (size_t)n < sizeof(line)) consoleBytes(line, (size_t)n);
+}
+#endif
+
 static void receipt(NSDictionary *record) {
     NSData *data = [NSJSONSerialization dataWithJSONObject:record options:NSJSONWritingSortedKeys error:NULL];
     if (data) {
-        // Prefix permits extraction from interleaved kernel/daemon console logs.
-        fprintf(stdout, "HKAPPS: %.*s\n", (int)data.length, (const char *)data.bytes);
-        fflush(stdout);
+        char line[2048];
+        if (data.length > sizeof(line) - 9) return;
+        memcpy(line, "HKAPPS: ", 8);
+        memcpy(line + 8, data.bytes, data.length);
+        line[8 + data.length] = '\n';
+        consoleBytes(line, 9 + data.length);
     }
 }
 
@@ -93,9 +126,28 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
         }
         [identifiers addObject:entry[@"bundle_id"]]; [paths addObject:entry[@"path"]];
     }
-    BOOL registering = [action isEqual:@"register"];
+    BOOL exercising = [action isEqual:@"exercise"];
+    id smokeIDs = manifest[@"smoke_bundle_ids"];
+    if (exercising) {
+        if (![smokeIDs isKindOfClass:NSArray.class] || ![smokeIDs count] || [smokeIDs count] > 8) {
+            receipt(@{@"event": @"error", @"reason": @"invalid_smoke_plan"}); return 2;
+        }
+        NSMutableSet *seen = [NSMutableSet set];
+        for (id identifier in smokeIDs) {
+            if (![identifier isKindOfClass:NSString.class] || ![identifiers containsObject:identifier]
+                || [seen containsObject:identifier]) {
+                receipt(@{@"event": @"error", @"reason": @"invalid_smoke_plan"}); return 2;
+            }
+            [seen addObject:identifier];
+        }
+    }
+    BOOL registering = ![action isEqual:@"query"];
     progress(@"workspace_connect", nil);
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+    Class cls = Nil; // A fixture CLI must never contact the Mac's workspace.
+#else
     Class cls = NSClassFromString(@"LSApplicationWorkspace");
+#endif
     id workspace = [cls respondsToSelector:@selector(defaultWorkspace)] ? [cls defaultWorkspace] : nil;
     if (![workspace respondsToSelector:@selector(allApplications)]
         || (registering && ![workspace respondsToSelector:@selector(registerApplication:)])) {
@@ -143,14 +195,35 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
     receipt(@{@"event": @"summary", @"expected": @(apps.count),
               @"registration_verified": @(complete.count), @"launch_verified": @0,
               @"all_registered": @(complete.count == apps.count)});
+    if (exercising) {
+        if (![workspace respondsToSelector:@selector(openApplicationWithBundleID:)]) {
+            receipt(@{@"event": @"error", @"reason": @"launch_selector_unavailable"}); return 3;
+        }
+        for (NSString *identifier in smokeIDs) {
+            if (![complete containsObject:identifier]) {
+                receipt(@{@"event": @"launch_skipped", @"bundle_id": identifier,
+                          @"reason": @"registration_not_verified", @"launch_verified": @NO});
+                continue;
+            }
+            progress(@"launch_request", identifier);
+            // This selector's return type differs in historical headers. Its
+            // return value is deliberately unused. Only actual exec/UI evidence
+            // from the guest can establish a launch and surviving foreground UI.
+            [workspace openApplicationWithBundleID:identifier];
+            receipt(@{@"event": @"launch_request_returned", @"bundle_id": identifier,
+                      @"launch_verified": @NO, @"settle_seconds": @20});
+            sleep(20);
+        }
+    }
     return complete.count == apps.count ? 0 : 1;
 }
 
 #ifndef HK_STOCK_APPS_NO_MAIN
 int main(int argc, const char *argv[]) {
+    entryMarker();
     @autoreleasepool { @try {
-        if ((argc != 3 && argc != 4) || (strcmp(argv[1], "register") && strcmp(argv[1], "query"))) {
-            fprintf(stderr, "usage: hk_app_register query|register MANIFEST.plist [ATTEMPTS 1..12]\n"); return 2;
+        if ((argc != 3 && argc != 4) || (strcmp(argv[1], "register") && strcmp(argv[1], "query") && strcmp(argv[1], "exercise"))) {
+            fprintf(stderr, "usage: hk_app_register query|register|exercise MANIFEST.plist [ATTEMPTS 1..12]\n"); return 2;
         }
         char *end = NULL;
         unsigned long attempts = argc == 4 ? strtoul(argv[3], &end, 10) : 1;
