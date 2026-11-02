@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Live XNU console over USB, from a kernel booted with blazer_usbcon=1 or 2.
 
-Reads the XNU-MSGBUF mirror over EP0 from 1209:0002 "hackios XNU console" while iOS boots, and writes it to the
+Reads the XNU-MSGBUF mirror over EP0 from 1209:0002 (console) or 1209:0003 (ECM), "hackios XNU console", and writes it to the
 terminal with time since connect. Read-only unless --reset-after or an explicit local TAP/HOME request is given. Never touches 1209:0001, so
 it runs beside tools/usb_log.py, which owns the shim's gadget. Run it with the runner's Python, TEGU_PYTHON, which
 has pyusb.
@@ -36,6 +36,7 @@ import sys
 import time
 
 VID, PID = 0x1209, 0x0002
+PIDS = (PID, 0x0003)            # same device-recipient EP0 protocol; never select shim PID0001
 PRODUCT = 'hackios XNU console'
 REQ_READ, REQ_STATUS, REQ_RESET = 0x5a, 0x5f, 0x5c
 RESET_VALUE, RESET_INDEX = 0x5447, 1
@@ -223,7 +224,11 @@ def is_timeout(exc):
 
 
 class UsbBackend:
-    """pyusb, imported here so --verify and the tests need none of it."""
+    """Device-recipient EP0 only; no interface claim, detach or configuration call.
+
+    Opening through libusb still needs host permission; coexistence with the Mac
+    ECM driver must be physically checked. Import pyusb only for the USB owner.
+    """
 
     def __init__(self):
         import usb.core
@@ -232,7 +237,11 @@ class UsbBackend:
         self.error = usb.core.USBError
 
     def find(self):
-        return self.core.find(idVendor=VID, idProduct=PID)
+        for pid in PIDS:
+            device = self.core.find(idVendor=VID, idProduct=pid)
+            if device is not None:
+                return device
+        return None
 
     def open(self):
         device = self.find()
@@ -505,6 +514,11 @@ class Console:
                 if device is None:
                     if self.controller and self.controller.poll():
                         self.controller.reply(dict(state='refused', error='notready: kernel console not connected', ui_observed=False))
+                    # An enumerable handle may keep failing vendor STATUS.
+                    # Bound all reopen paths, including descriptor-readable ones.
+                    if gone_at is not None and self.clock() - gone_at >= args.gone_exit:
+                        result = gone_reason
+                        break
                     device = self.open_or_none()
                     if device is None:
                         if gone_at is not None and self.clock() - gone_at >= args.gone_exit:

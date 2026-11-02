@@ -166,6 +166,23 @@ class Tests(unittest.TestCase):
         console.run()
         self.assertEqual(path.read_bytes(), bytes(phone.stream))
 
+    def test_descriptor_readable_reconnect_status_failures_obey_gone_exit(self):
+        phone = FakePhone(self.clock)
+        phone.emit(b'last complete line\n')
+        original = phone.ctrl_transfer
+        def transfer(*args, **kwargs):
+            if self.clock.now >= 101:
+                raise FakeUSBError('vendor console gone, descriptor still present', 19)
+            return original(*args, **kwargs)
+        phone.ctrl_transfer = transfer
+        console, _, _ = make(phone, self.clock, timeout=100, gone_exit=3)
+        self.assertEqual(console.run(), 0)
+        self.assertTrue(phone.present)
+        self.assertGreater(console.summary['connects'], 1)
+        self.assertEqual(console.summary['end'], 'console unavailable')
+        self.assertLess(self.clock.now, 105)
+        self.assertEqual(console.summary['bytes'], len(phone.stream))
+
     def test_stale_enumeration_does_not_keep_a_dead_reader_alive(self):
         phone = FakePhone(self.clock)
         phone.emit(b'last complete line\n')
