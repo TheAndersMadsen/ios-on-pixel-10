@@ -35,8 +35,10 @@ replacement. Do not start another fleet or restart completed tasks for a count.
    isolated helper. Both have useful host work while the phone is occupied.
 4. Take the changed GPU diagnostic and corrected read-only GPT capture through
    their CPU/context and artifact reviews, then the phone owner's separate slots.
-5. Advance thermal floor/downvote acceptance and A520 source review through their
-   existing stages. Higher clocks remain held; repeat neither unchanged failure.
+5. CPU source/host handoff is complete and its goal is BLOCKED at 84% (fa5a08f),
+   pending accepted runtime/context/artifact/capture evidence. Keep its existing
+   floor/downvote stages and explicit unblock events; do not restart it for
+   another helper, unchanged audit or host suite. Higher clocks remain held.
 
 A ready useful test can proceed while another owner finishes optional work.
 Readiness, dependency removal and user-visible benefit determine the order.
@@ -49,7 +51,7 @@ existing pinned source inventories.
 | --- | --- | --- |
 | Sampler OFF | Attempt `20261102-111800-sampler-off-p29-r1` captured at expected deadline, unchanged p29, image `ee70fb73…`, raw `6ecc43d9…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
 | Sampler FAST | Attempt `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`, COMPLETE/captured; script matches OFF, live 997,224 bytes all match RAM; known startup abort confounds timing | Actual fast-path coverage is 1,437,573,559 eligible pixels, identity branch zero; FAST does not compare pixels. Owner missed the visual window. No speed/FPS/visual promotion |
-| UI observations | Next ready p29 artwork + passive MCM composition `42bb3b73…` passes actual overlay consumer (45 records/453-byte environment); image BUILDING, 1,800-second inspection window | One artwork behavior change, sampler OFF and passive container result/error/PID; existing profiler. No AKS/new kernel/health/input/ECM additions. Ready work proceeds without optional tracing |
+| UI observations | Next p29 `phone-p29-art-container-15m-r1` BUILDING, composition `42bb3b73…` passes actual overlay consumer (45 records/453-byte environment); qualified default 900-second inspection window | One artwork behavior change, sampler OFF and passive container result/error/PID; existing profiler. No AKS/new kernel/health/input/ECM additions. Ready work proceeds without optional tracing |
 | New CPU health baseline | `7424c92` acceptance handoff, p30 present; proposed image NOT BUILT, literal-admission/common-config review pending; no slot request | New verification/floor/required-sensor/health gates need functional acceptance before sharing an unchanged configuration in later UI timing arms |
 | GPU timeout diagnostic | Native parent independently verifies p30 SOURCE/LINK/IMAGE PASS; diagnostic stays BUILD ONLY for CPU/Trusty and RAM-layout context | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset after exact accepted context |
 | GPT readback r2 | Host PMBR correction `f329418`, reviewed hash and frozen profile; no reservation here | Both GPT copies, CRC/geometry/agreement, saved-byte offline verification and bounded failure evidence; separate storage capture |
@@ -59,6 +61,13 @@ The OFF/FAST pair already uses a 990-byte command line. Do not append optional
 boot flags or replace either artifact mid-pair. Additional diagnostics belong
 in a subsequent checked image/overlay. A single comparison does not justify
 a broad speed claim; repeat only if workload variance or a decision requires it.
+
+The earlier explicit 900-second and 1,800-second UI proposals were both refused
+before an image/boot. The five-A725 shape is qualified for the existing
+`FC_DEADLINE=900` default when `--phone-deadline` is omitted; builder
+`test_deadlines` covers this. The correct inspection window is 15 minutes.
+This changes no allowlist, clock, guard or CPU context. The refused 30-minute
+proposal is superseded; do not reuse it.
 
 p30 is already linked once from release-tree source `af08a9f5`: parent reports
 176-series/combined proof, zero undefined symbols and 276 checklist checks.
@@ -79,21 +88,26 @@ defects requires a separately identified p31 and acceptance. Never relabel p30.
 ## Shared QEMU queue
 
 The existing /tmp/fleet/qemu-guest-slot.lock remains the admission authority.
-Current Apps registration-r4 keeps its planned run, final capture and cleanup.
-A read-only host snapshot identified Python43866/QEMU44168 and lock43866;
-native parent's earlier r3/PID observation was stale. The corrected guest has
-passed persona and is drawing while LaunchServices processes the larger app set;
-registration readback remains pending.
+Both explicit release handoffs completed, without interruption or polling:
 
-After Apps sends an explicit capture-complete and lock-release event, native
-Metal has the next one bounded 300-second offline OWN shader-reference run:
-five pinned SPIR-V inputs, 60 pinned harness inputs, no disk or NIC, immutable
-76,498,796-byte CPIO
-`2a1654e53d9d22405bf44161896f223fde60064b527b13d9cb72f25a4301214f`.
-The existing native parent runs it under the shared lock and returns its capture,
-input-hash/cleanup proof and release event. Apps can then take its next guest for
-registration plus representative launches if needed. Compiler reference output
-is not native GPU execution or firmware-health acceptance.
+1. Apps registration-r4 completed its planned 900.4016465 seconds, exit0/root
+   unchanged. All 837,227 console bytes match the final mirror; persona aborts
+   and kernel panics zero, Photos/Settings home frame observed. Registrar exec
+   occurred but HKAPPS/readback zero: registration/launch remain unaccepted.
+   Final evidence: research/ios26-apps-r1/receipts/registration-r4-result.json.
+2. The one native five-OWN-source reference batch then completed in 7.963927916
+   seconds within its 300-second bound. Console155,033 bytes, runnerexit0;
+   post-batch init-exit panic retained. Five pipeline/cache calls returned0;
+   extraction/semantic analysis remains pending. All 60 inputs and CPIO hash
+   stayed unchanged. The CPIO is hash-pinned, mode0644, not mode-readonly:
+   `2a1654e53d9d22405bf44161896f223fde60064b527b13d9cb72f25a4301214f`,
+   76,498,796 bytes. Reference output is not native GPU/health acceptance.
+3. Release was relayed back to Apps. Registration-r5 now runs once via the shared
+   lock, runner1718, source b840825 and candidate
+   `196809464b5e8fe2fd46b4502a3665b7559285f6cabbf2a6c0cf118c6ce730cb`.
+   It adds explicit console/C-entry/API phases, 51 registration readbacks and
+   conditional Calculator/Clock/Notes requests. Actual guest exec/foreground
+   frames are still required; no registration or launch PASS is implied.
 
 Apps and native Metal send release events directly to each other and the
 coordination thread using mode auto. A refused claim gets one blocker report;
@@ -155,6 +169,10 @@ are not touch-to-glass measurements.
   at its intended deadline. Strict audit failed: ACTLR bit38 set, bit9 clear;
   five-A725 SMP passed. No A520/OFF/re-entry/cpu1/register write or unchanged retry.
   CPU parent is reviewing privilege/reset context on primary sources, host only.
+  Latest CPU handoff300191 pins the exact r0p1 TRM: EL2 reads do not prove EL3
+  permission for writes or persistence. No safe live write path is established;
+  its ignored CAS-probe draft is withdrawn and never executed. Goal is now
+  BLOCKED on the recorded external acceptance gates, with production unchanged.
 - **One-core test recipes:** p30 GPU diagnostic `d8925f4f…` and dualboot
   `phone-test-r2.json` use `cpus=1` without `blazer_bootcpu`. CPU parent identified
   that GPU recipe as entering unfixed cpu0 A520; coordination also checked the
@@ -162,7 +180,7 @@ are not touch-to-glass measurements.
   context acceptance before scheduling. A possible A725 recipe is a changed
   image/context, never an automatic argument substitution.
   Phone owner's existing context reviewer also found p30's RAM window base
-  0x882 differs from prior health's 0xa000. Bind CPU, Trusty and full memory
+  0x882000000 differs from prior health's 0xa00000000. Bind CPU, Trusty and full memory
   layout in the existing review; source/link/image PASS does not clear this
   difference. No automatic window or core replacement is accepted.
 - **Apps:** commit `c214b86` supplies the inventory/registrar and host tests.
@@ -189,10 +207,14 @@ are not touch-to-glass measurements.
   Do not remove seed data or widen physical partition bounds to bypass this.
 - **Native Metal:** `9db93cb` and the ignored
   `research/ios26-metal-native-20261102/integration/CONTRACT.md` freeze the
-  measured profile and UC-r2's next actual adapter/provider composition.
+  measured profile. Completed UC-r2 is frozen; UC-r3 now owns the single actual
+  kernel/provider composition and AIR-r4 the linked userspace assembly.
   FW ACTIVE/compatibility, true DMA/context/MMUCACHE, compute command body,
   USC retirement/launch and authentic engine/cache/UPL handback remain blockers.
   A diagnostic capture ending at timeout remains health FAIL.
+  Local UM26.1@7036548 differs from donor/profile26.1@6967606. Agreement on a
+  120-byte body, CSW or PDS alone does not establish compatibility; reconcile
+  this through the existing shared contract, without a second broker/profile.
 - **Recovery/storage:** saved init_boot has a valid metadata signature but
   fails its payload hash; the set also lacks matching dependencies/trusted AVB
   graph. It is not a verified restore set. Android integrity and isolated iOS

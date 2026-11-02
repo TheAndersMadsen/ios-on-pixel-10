@@ -1,37 +1,45 @@
-## Shared QEMU handoff queued, 2026-11-02 — sampler pair captured
+## Shared QEMU handoffs completed, 2026-11-02 — Apps r5 and 15-minute phone plan
 
-Native parent independently qualified p30 SOURCE/LINK/IMAGE PASS: exact K9bbc5703/
-U5dc553c6/image d8925f4f, seven final text symbols, zero undefined and both
-344068-byte firmware copies148aacc5 by symbol/section/header. Receipt:
-research/ios26-metal-native-20261102/integration/diagnostic-review-r1/p30-parent-review.json.
-CPU/Trusty CONTEXT HOLD remains; phone's existing reviewer also flagged RAM
-window0x882 versus prior health0xa000. No automatic core/window substitution,
-new image or health slot. CPU/native/phone owners received that changed context.
+Apps registration-r4 captured full planned900.4016465s, exit0/root unchanged.
+All837227consolebytes match final mirror/no lost tail; persona abort0/panic0,
+Photos+Settings home frame observed. Registrar exec but HKAPPS/readback0, no
+registration/launch acceptance. Receipt receipts/registration-r4-result.json in
+research/ios26-apps-r1. Apps explicitly released; coordination relayed to native.
 
-One read-only host snapshot identified CURRENT Apps registration-r4:
-Python43866/QEMU44168, shared lock43866; native's earlier r3/PIDs were stale.
-Apps reports persona passed/drawing, LS still processing, readback pending.
-Its current planned run/final capture/cleanup stays intact. NEXT queued guest
-is native parent's one bounded300s/no-disk/no-NIC OWN five-source reference batch,
-CPIO2a1654e5…/76498796B/60 pinned harness inputs. Apps sends explicit release
-to native+this thread after capture/cleanup; native claims existing lock, runs
-once, then returns capture/cleanup/release event for Apps' next launch guest.
-No release/free-slot claim yet. No status/lock polling or guest interruption.
-UC/VM/FW/streams composition and Apps host launch preparation continue meanwhile.
+Native's ONE reserved five-OWN-source reference run then ended in7.963927916s,
+runnerexit0/console155033B SHA8979ad56…; post-batch init-exit panic preserved.
+CPIO2a1654e5…/76498796B/all60 input hashes unchanged; mode0644, hash-pinned.
+Five pipeline/cache calls returned0; extraction/semantic analysis still pending,
+not native engine/firmware-health proof. Native released; coordination forwarded
+to Apps. registration-r5 ACTIVE once, runner1718/candidate19680946…/b840825,
+51 readbacks plus conditional Calculator/Clock/Notes requests. Actual exec/
+foreground frames still required, none accepted. No other guest queued here.
 
-Phone owner confirms OFF20261102-111800 and FAST20261102-112806 COMPLETE/captured:
-66tokens/1569events/39C/intendeddeadline, all953870+997224 livebytes match RAM,
-zero lost/mismatches. FAST1.437573559B eligible pixels, identity0/uncompared;
-known initial BB NSURLnil abort absent in OFF confounds timing. No speed/FPS/
-visual promotion; owner missed visual window. Next ready p29 artwork+passiveMCM,
-samplerOFF, composition42bb3b73… actual consumerPASS45records/453Benv, image
-BUILDING/window1800 for inspection. No AKS/newkernel/CPUhealth/input/ECM addition.
-900 profile was refused before build; no900 boot.
+Correction to e082d35 handoff: an extra assumed read-only-mode assertion failed
+after CPIO size/hash passed; I committed before resolving it. Actual mode0644
+is now explicit; hash-pinned contents stayed unchanged. Remaining docs/receipt
+checks completed separately, with failures stopping further commit steps.
+Apps' checked five-file commit b840825 released the Git window; no lock removed
+or foreign staged changes consumed. Own shared-NOTES section updated in place.
 
-Four existing-owner steering deliveries and exact queue snapshot:
-research/ios26-orchestration-20261102/qemu-reference-queue.json.
-Shared docs/COORDINATION.md updated. No new agent/review task, build, guest,
-phone/USB operation or runtime acceptance by orchestration.
+Phone next p29 artwork+passiveMCM/samplerOFF composition42bb3b73…/453Benv remains
+the ready path. BOTH explicit900 and explicit1800 proposals were refused before
+image/boot. Correct new phone-p29-art-container-15m-r1 omits --phone-deadline,
+using existing qualified/tested FC_DEADLINE900 for this five-A725 shape:15min,
+not30. No limits/guard/context bypass, new CPUhealth/AKS/input/ECM addition.
+OFF/FAST captured but FAST initial BB NSURLnil abort confounds speed comparison.
+
+Native p30 independent source/link/image PASS still CPU/Trusty/full-layout HOLD:
+0x882000000 versus prior0xa00000000; same image d8925f4f, no substitutions.
+UC-r3/AIR-r4 own ONE kernel/userspace composition; UM7036548 versus donor6967606
+compatibility remains unresolved. CPU source/host handoff300191/fa5a08f complete,
+goal BLOCKED at84 pending accepted runtime/context/artifact/capture unblock;
+no helper/review/retry or ACTLR write. Exact r0p1 TRM still leaves firmware write
+permission/persistence unknown; ignored CAS draft WITHDRAWN/unexecuted.
+GPT profile34a126b2 and host04ba2870 remain HELD.
+
+Queue/release/verification receipts under research/ios26-orchestration-20261102/.
+No guest, build, phone/USB operation or runtime promotion by orchestration.
 
 
 ## Reuse attribution reconciled, 2026-11-02 — F2FS alias check
