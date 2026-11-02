@@ -1,3 +1,28 @@
+## Dualboot actual r5a, 2026-11-02 — host context accepted, GPT awaits phone slot
+
+Phone-built image21b3de7e... now has exact CPU host-contextffb52c45 and dualboot
+feature host acceptance4995696e. Parent actual preflight83dede46 integrityPASS,
+contextbbdf79b9/binding6c720be0/nonce0x6acda2c6f42050ad MATCH; only phone exact-
+context/per-runP1/533/300/attended-stop admission/sequential slot remain after
+current GPU capture. Same K30db/U0ce5/a000/oneA725/2511/LU0/fourgates/528B/300s.
+No runtime CPU/IRQ/cache/LU0/readback/strictGPT or physical/slot claim. Source
+package handed to sole root writer remains frozen; no index writes by us.
+
+Frozen d64 strict consumer kept unchanged. Explicit recorded-consumer-binding
+JSONdd9eb3ec maps ONLY new expected image+nonce to reviewed6c720be0, preserves
+frozen host04ba/profile34a/PMBR/two-pass policy and runtimefalse. Two focused
+synthetic controls PASSac2e30d1: originalnonce rejects/new identity consistency
+passes14 observations/7 metadata blocks. This proves no phone provenance.
+Actual future capture will be accepted offline only after owner runtime event.
+
+User explicitly answered independent backup destination: NONE AVAILABLE YET.
+BACKUP-DESTINATION-STATUS.json records that source statement, no volume probe.
+Backup staging, migration and safe Android switching stay HELD; raw source/key/
+readable-file recoverability and bulk transport remain unqualified. This does
+not block the reviewed read-only GPT discovery. No deletion/purchase/storage
+operation or new phone request inferred. Details MILESTONE-r5a-actual.json and
+context-r5a/{feature-owner-context-acceptance,recorded-consumer-binding}.json.
+
 ## Dualboot r5 host integration, 2026-11-02 — build-only accepted, physical gates held
 
 User requested ASAP progress with lots of agents. Eight bounded native workers
@@ -59,6 +84,52 @@ rollback and owned commit scope: research/ios26-dualboot-r5/HANDOFF.md. Next:
 owner's repaired-source binding + actual A725 artifact/context review and one
 strict GPT capture; then recoverable backups, live alias ownership/independent
 storage and real phone input/presentation/OS dispatch with repeated switching.
+
+## Phone owner checkpoint, 2026-11-02 13:33 CET — combined p32 boot CAPTURED
+
+User's combine-and-boot request executed: temporary p32 image
+ d0a898fed473792a521979492cff96d5776575b090806b3c3a1db32a044e39b0
+attempt20261102-132258-phone-p32-combined-ui-r1; phone returned FASTBOOT.
+Nested source6eaadfa3,188series/299checks/0undefined; Kc3a9a937cb10ed4b4fd51aeb4d846acdd19df45a3bd04e98ef7b5c26ac0bea6e,
+U1c4d5ad3e569a81e06522f66ed1dd41477c89c28fc0da56097ddbc1514f9195a.
+Actual _end envelope/allpayloadbytes +ELFcode +compiledstampnonce8954d2362ae3b270
+independently bound, cmdline1018B. Overlay7d610456... retains44unrelatedrecords.
+FiveA725/bootcpu200/window882/cap16B40/thermal2fast1/70/60Hz/deadline300.
+Newruntime RTCbounds/batterystatus+receipt/bright140/AKSlog; input/presentation
+retained. Optional HOG/clock/crashinfo/UFS-cost/AKStrace removed to fit; no hidden
+append/truncation. RTC/ECM/WiFi/battery/brightness/AKSlog/BTsource integrated.
+0847 FEfreshness P1s and direct-container RW/NX P2 remain excluded. Radio/ECM,
+CPUhealth/high/probe/A520/GPU/Trustyexperiment/AoC/persist/storagewrites OFF.
+
+Raw879706B a19909d863670c420632c8667e25ee1b3597b408ac1cc57759aa94a4f0dfed47
+compares0mismatch/0lost against currentdump c782247ad68fb1a3e02314b24aaae982a3719afd765d205d78040d7aa99c1515;
+709finaltailbytes absentlive. Expected deadline300, XNU300.6/payload327.3s,
+PSCI-SW,41C/89%/4332mV/0CPM. Reader ended normally,1connect/0timeouts/0lost.
+Human explicitly confirms Home AND Settings work during combined boot. Logs also
+contain initial BB SIGABRT plus7laterSIGSEGV/respawns and9PRESENTsnapshots queued0;
+this contradiction remains unresolved, NOT a clean compositor/speed/FPS PASS.
+RTC actual GET_TIME rc0/publish gap1 ok1; visibletime unverified. powerd actual
+native fresh sampleIDs1..5,89%/4332mV andpercentpost/state rc0; no batteryviewgetter
+or visiblepercentage proof. Brightness transport/slider andAKSlogger unobserved.
+Exact results/recipe/hash/limits: research/ios26-opt-20261102/combined_p32/.
+Default all_decode failed missing oldsnapshot decode_dcs.py; strict livebyte,
+manual and reset decoding PASS independently, originalfailedoutput retained.
+
+GPT r5 feb2b799 source77pins+CPU8d311304 andphone BUILD-ONLY accepted; actual
+buildrefused PRE-WRITE: canonical --phone-root onlyadmits1125x2511, proposal
+1125x2436. Noimage/newkernel/devicecreated. Failurelog/admission preserved own
+gpt_a725_build/. No silent substitution/bypass. Owners asked explicit r5a delta
+forqualified1125x2511, SAMEK30db/U0ce5/a000/A725/LU0/transport/300; physicalHOLD.
+CPUhealth463ffa checkerP1/P2 parent-owned/unfixed, nohealthboot. GPU01eae6c8 CPU
+conditionaldecision received; nativeplacement/attendedstop gates remain.
+
+Rootindex HOLD: coordinator solewriter. Manualdecoder3P2 parentrepairs passed
+42tests+freshreview NO_FINDINGS; solewriter commit5abe9b6a77518351a8a1af2a61db3b817fac6efd, exact3files.
+Reader reviewed ECM-PIDfallback plusparent STATUS-reopen deadline fix applied;
+24root testsPASS, freshreview active, notrootcommitted. Noautomaticinputretry.
+Buttonsreview delegate was automaticallyflagged/failed; doNOT reroute/revive it;
+newbuttonsdelivery NOT in p32. FiveSol laneconstraint maintained at milestones.
+
 
 ## Dualboot same-build factory reference verified, 2026-11-02 12:46 CET — no phone change
 
@@ -278,88 +349,73 @@ Next: preserve/capture current boot, inspect exact receipts, freeze/link one p31
 from reviewed sources. Brightness late-SError and battery allocation P2 repairs
 remain parent-owned/unintegrated; RTC runtime reviewed, stale token pin P3.
 
-## Shared QEMU handoffs completed, 2026-11-02 — p31r1 and Apps r6
+## Shared QEMU handoffs and Pixel queue, 2026-11-02 — actual GPU evidence, GPT next
 
-DIRECT user architecture decision: "Keep the Pixel self-contained." Native
-on-device apps/authentication/SEP compatibility and online Apple-service goals
-remain; no Mac-backed validation/tethered service bridge. OpenBubbles stays
-research evidence, not adopted. Models/research activation are not Apple
-manufacturing identity. Host build/QEMU/debug tools remain development tools.
+User says progress/testing is too slow. Coordination now prioritizes the first
+admitted physical artifact over documentation, with parallel host preparation:
+GPU diagnostic -> strict GPT when admitted -> CPU health after checker repair.
+No need to wait all3. Sole phone/USB/build owner remains unchanged.
 
-115426 artwork/container run COMPLETE at intended900 (XNU900.9/payload927.6,
-PSCI-SW/40C/89/4332/0CPM), all1450057livebytes match0/0lost;1288tail absent live.
-Human Battery icon visible; HKART install2/recovered0/refused0, HKCONTAINER0
-despite correct env. Causal/hook/retry acceptance remains held.
+Exact one-A725 GPU01eae6c8 ACTUALLY RAN134301 after native staticee6df1aa/CPU
+conditional51434041 and attended phone P1 admission. Fresh mirror14733B/dump
+f3e271ae, nonce70e/MPIDR200/MIDR410fd871/REVIDR1/SGI1of1. SEND0(1187ms)/START0,
+strict HEALTH FAIL connfw0/FWCCB1-0/return0. NEW pending112B DEBUG_DUMP2abc006a
+plus27zerowords, stable controls; SYS pow1/fwfaults0/hwr1/COMPupdated0, no ACK.
+STOP1s/intentionalpanic/XNU2.8s/payload29.4s/40C/89%4332/0CPM, nowfastboot.
+Frozen492B profile has NO USBcon: zero reader bytes are expected, current RAM
+mirror used. Generic decoded-shim OWN_DEADLINE is stale residue, NOT300s proof.
+Native existing FW/VM/UC boundaries steered to this actual packet as priority;
+no unchanged retry or import-review dependency for the frozen diagnostic.
 
-CURRENT phone reservation RUNNING121918-phone-p31r1-live-diag-r1, image
-3f7b1b4097507896137a83653fe5528fb63ddf51aaa3ae149dc6aef8695e5774,
-K9d60ca02/Ue07b62fc/sourcee67445e6, same five-A725/window882/cap16/guard70/
-overlay42bb3b73, deadline300/976B. Input1+presentation1+boundedAKS1 only;
-status before one attended input attempt, no ambiguous retry/second USB owner.
-No CPUhealth/high/floors/GPU/Trusty/AoC/persist/ECM/RTC addition. Initial p31
-get_user_regs C++ link failure preserved; C declaration1179 gives DISTINCT
-p31r1,180series/288checks/zero undefined/ten final text proofs.0847 excluded.
-Physical results pending; preserve current reservation/capture.
+GPT corrected r5a e9ec048c actualimage21b3de7e42706fb1f69015faa4ed7892fa5673fdeb95ebaf8c97ded443a3286b
+BUILT/check/binderPASS, binding6c720be0/contextbbdf79b9/nonce6acda2c6f42050ad.
+CPU exact actual-contextffb52c45 +dualboot feature4995696e accepted. Same original
+K30db/U0ce5/a000/oneA725/canvas2511/LU0/fourtransportgates/528B/300s. Phone exact
+context/perrun+frozen strict consumer next, no physical slot invented here.
+Originalr5 canvas2436 refused before output; explicit r5a actual production
+prewriteed7f9326 and immutable33e6b2d5 closed only that delta. Old21cba/profile34a/
+host04ba remain held; exact new consumer bindingdd9eb3ec, no read expansion.
+CPUhealth463ffa original bytes agree, checker embeddedimageP1/compilednonceP2
+repair PHONE-owned and pending. Keep77toolpins unchanged through GPTbinding/run,
+then explicitly rebind tool changes; CPU makes no overlapping edit. CPU84/high/
+A520bit9clear/probe1 R1R2 holds unchanged, no thermal/high promotion.
 
-Apps registration-r4 captured full planned900.4016465s, exit0/root unchanged.
-All837227consolebytes match final mirror/no lost tail; persona abort0/panic0,
-Photos+Settings home frame observed. Registrar exec but HKAPPS/readback0, no
-registration/launch acceptance. Receipt receipts/registration-r4-result.json in
-research/ios26-apps-r1. Apps explicitly released; coordination relayed to native.
+P32 combined UI132258 COMPLETE; human Home+Settings work.879706 live bytes match
+currentdump0loss/0mismatch,709tailonlydump; expected300/XNU300.6/payload327.3/41C.
+RTC GET_TIME/calendar gap1ok1; powerd5fresh89%/4332samples/notificationrc0. Eight
+BBsignalexits +all9PRESENTqueued0 unresolved. No viewgetter/brightness/AKSlog
+execution, cleancompositor or speed/FPS claim. Existing phone lanes investigate.
 
-Native's ONE reserved five-OWN-source reference run then ended in7.963927916s,
-runnerexit0/console155033B SHA8979ad56…; post-batch init-exit panic preserved.
-CPIO2a1654e5…/76498796B/all60 input hashes unchanged; mode0644, hash-pinned.
-Five pipeline/cache calls returned0; extraction/semantic analysis still pending,
-not native engine/firmware-health proof. Native released; coordination forwarded
-to Apps. registration-r5 COMPLETE900.6059s/exit0/input19680946 unchanged.
-Live892546B match final mirror0 mismatch;1331B finaltail separately parsed,
-merged893877B. Final Cmain/framework_load/framework_loaded/manifest_read positive;
-earlier C-entry-only barrier superseded. No workspace/readback/launch requests,
-not an established workspace/registration API failure. Source98b4530 commits
-C-only logger/startup phases. Next narrow POSIX/header/NSData/plist probe is now
-FROZEN source da2c1a3e/candidate d90a58d61f60e3260f76499960949ed59e4b65acc4e9358dd3356368fa3072ed,
-only registrar changes; same49apps/55seed/676jobs. Exact guest-command-r6 and
-package-r4 bind ONE successful normal shared-lock claim: r6 ACTIVE,
-runner28155/QEMU28409, XNU/launchd progress; no registrar/probe/registration/launch
-acceptance yet. Host1200/guest1800 unchanged, guest/lock intact until planned
-terminal capture/release. Current phone budget stays300; no phone action.
-Self-contained rule retained; public NAC stub is not an
-implemented validation path. No peer MCM/AKS/service change.
+QEMU Connectivity420 terminal/released, inputs unchanged;808417live+3130tail,
+0loss/mismatch.26constructors/150matchedPID-IDpairs,100copy+25update=-25300,
+25add=-25291. V1 image0-main assumption invalidates header/slide proof; preferred
+TEXT0x100000000 is4GiB. V2actual-MH_EXECUTE/TEXT/UUID source committed0546abe,
+built/notrun, no nativeHCI/radio/BT acceptance or extra guest authorized.
+Apps r8 ONE claim nowRUNNING runner43665/QEMU43767, rootaff3ebbe/source48bb18c/
+registrar93db246a, samep29/Standard/diagnostics/host1200guest1800. Selected3first,
+requestonceimmediatelyafterverifiedreadback, all51retained. EarlyCalculator
+Info-read/parse/enumeration-enter observed; no readback/request/exec acceptance.
+Preserve planned fullcapture.20GiB stillcannotfit8GiB, self-contained Pixel;
+no Macbridge/fakeidentity/SEP/Apple-service success inferred.
 
-CPIO mode0644/hash-pinned input is explicit; prior unsupported read-only-mode
-assumption corrected, full checks completed. Failure/commit-window receipts stay
-under ignored orchestration evidence. Only own shared-NOTES hunks are staged;
-foreign working/staged changes are preserved and no lock removed.
+SINGLE root Git writer is coordination; all6owners ACKed and propagated. Source,
+tests/builds/private nested Git/captures continue. Exact scope/hash/ownNOTES
+requests are committed only after review release, with actual resulting scope
+and peer-section equality checked. Mixed6b's5paths preserved, staging process
+UNATTRIBUTED/no history rewrite. Commits5abe9b6 live diagnostics,48bb18c exercise,
+1143893+0aa796a CPU context/canvas,0546abe executableidentity,b06804f defaultOFF
+Android preparation,b9cb6de r8admission. Reader USB/ECM source remains held for
+its existing final review; source changes are not device acceptance.
 
-The completed15min artwork run used qualified FC_DEADLINE900 by omitting the
-option; both earlier explicit900/1800 proposals were refused before image/boot.
-No limits/guard/context bypass. OFF/FAST captured but FAST initial BB NSURLnil
-abort confounds speed comparison; no speed/FPS promotion.
+Verified DP11 factory package graph supplies native named resources and recovery
+reference, not current boot trust/rollback/backup/alias/key ownership. Eight
+user-requested dualboot lanes collected; defaultOFF hostcontract has no runtime
+dispatch. No rawcopy+40GiB reserve fit/independentdestination/deployment/switching.
+New firmware packet and strict complete GPT outrank further reference inventories.
 
-Native p30 independent source/link/image PASS still CPU/Trusty/full-layout HOLD:
-0x882000000 versus prior0xa00000000; same image d8925f4f, no substitutions.
-UC-r3/AIR-r4 own ONE kernel/userspace composition; UM7036548 versus donor6967606
-compatibility remains unresolved. CPU source/host handoff300191/fa5a08f complete,
-goal BLOCKED at84 pending accepted runtime/context/artifact/capture unblock;
-no helper/review/retry or ACTLR write. Exact r0p1 TRM still leaves firmware write
-permission/persistence unknown; ignored CAS draft WITHDRAWN/unexecuted.
-GPT profile34a126b2 and host04ba2870 remain HELD.
-
-Recovery HOST41828ff/45fbd6e: indexbbb52dc5/all20 receipts independently checked.
-Saved Binit/tinyvendor payloads fail; scratch Magisk stockCPIO status still leaves
-BOTH A/B payloads failing/backupSHA1 mismatch. Other signed archives have an
-untrusted different key/Linux7.3-next kernel. No restored set accepted.
-User-authorized exact Google DP11.261002.005 OFFLINE archive now has COMPLETE
-receipt11447024427B/SHA9ac046a4 matched; component/AVB/trust analysis pending.
-One owner/artifact reused for boot inventory and possible native GPU version
-provenance (inference), no duplicate download/collector or factory script.
-Refreshed hostfree170087436288B is below raw127716556800+40GiB reserve;
-older one-copy-fit snapshot superseded, owner notified. No backup/write/restore.
-
-Queue/release/verification receipts under research/ios26-orchestration-20261102/.
-No guest, build, phone/USB operation or runtime promotion by orchestration.
-
+Policy/rollingqueue: docs/COORDINATION.md. Exact evidence/commit/delivery receipts:
+research/ios26-orchestration-20261102/. No device, USB, guest, fullbuild or runtime
+promotion by orchestration; existing owners execute admitted tests.
 
 ## Reuse attribution reconciled, 2026-11-02 — F2FS alias check
 
@@ -747,6 +803,24 @@ complete backups/isolated allocation and native chooser/Android return still
 unfinished. Keep goal active and all existing storage/boot holds intact.
 
 ## CPU acceptance checkpoint, 2026-11-02 — GPT r5a canvas accepted, health checker held
+
+LATEST ACTUAL EVIDENCE: GPU attempt20261102-134301 COMPLETE/captured; exact01eae6
+ran oneA725 affinity200/MIDR410fd871/REVIDR1, nonce70e0dd927e56e34a,
+68completeABI2 stamps/ELdrop and fresh XNU logical0/SGI1 PASS. GPU HEALTH5 FAIL:
+SEND0/START0 then no execution within1s, purposefulpanic/XNU2.8s, no retry.
+Rawf3e271ae...; strict own receipt r3/gpu-a725-physical/context-observation.json
+SHA0edb118beb599c2b3a440b8c2e884f86ae7082712c1b92948e3eb175a79e25b8.
+Fresh mirror14733B; no liveUSB bytes. Generic decoded-shim OWN_DEADLINE is stale
+raw residue, not a300s success. No sustained clock/thermal/A520 acceptance.
+Parent BUILT GPT r5a21b3de7e42706fb1f69015faa4ed7892fa5673fdeb95ebaf8c97ded443a3286b;
+sameK/U/a000/oneA725/2511/528B, fresh6acda2c6f42050ad. CPU ACTUAL hostcontext
+ACCEPT record r3/gpt-r5a-actual/cpu-owner-context-acceptance.json
+SHAffb52c45d1ebe7ead597105c283347977d708cd9d1a9813ee9f58a2379a0324d,
+binding6c720be0/contextbbdf79b9; Androidkernel/_end envelope/wholepayload/ALL
+initializedELF LOAD/compiledidentities +existing preflight77pins/ARM64text PASS.
+Sent phone+dualboot; physical CPU/IRQ/cache/LU0/GPT still unproved. Next physical
+candidate stays phone-owned; no documentation wait. Rootwriter correction
+0aa796a444c5c7d94a4369d113cbec705df8f051 follows11438939, no history rewrite.
 
 User explicitly resumed CPU engineering/resource search after fa5a08f's blocked
 snapshot. CPU objective unfinished, score84; actual source/image progress below.
@@ -1746,3 +1820,16 @@ Implementation agent preserved ios26-metaldrv-r1/gpushell partial work and added
 ### 2026-11-02 09:28 gpumem implementation recovery (host only)
 
 Recovered 1200 commit `6fe8468`/patch `691b4cada5266c52bbc39baeeec3b7418cb9402627c3a09cd7f9a8ac3895cbe5`; interrupted 1201 saved intact in `research/ios26-gpumem-r1/notes/recovery-20261102`. New bounded 1201 patch `198106d89a1e893a0ef8f447e0da1a079d283d3dbbc4f335fcbf895e635f9a10`: owned aligned surface import, retained object/id table/wiring/use count, explicit cache sync with errors, real external GPU fence required; caller/physical/flip memory refused. Both compile to ARM64 with BLAZER enabled and expected nm symbols. Policy/walker/hgltrack logic tests pass ASan+UBSan; cache instructions observed in object. hgltrack dylib and overlay rebuild exact original hashes. p3 guest has no UART log, no new guest result. No USB, boot, guest launch, full link or commit by this agent (parent owns those). Handoff `research/ios26-fleet/handoffs/gpumem.md` contains hashes, commands, pass/fail, integration gaps. Next physical test is parent-built bench-p27-track-r1 hgltrack stability; later linked 1200 with hk_surf=1 after image whitelist. No claim of hardware import/cache/fence correctness from host tests.
+
+## GitHub visibility, 2026-11-02 13:35 CET
+
+User explicitly requested making this repository public. Origin resolves to
+https://github.com/TheAndersMadsen/ios-on-pixel-10. Authenticated GitHub CLI
+reported PRIVATE and ADMIN before the change. The exact command
+`gh repo edit TheAndersMadsen/ios-on-pixel-10 --visibility public --accept-visibility-change-consequences`
+exited 0; a separate `gh repo view` at 12:35:20 UTC verified PUBLIC.
+
+No build, boot attempt, device action, source change, index write, commit or push
+was performed. Visibility task complete. This appended NOTES section alone is
+released to the sole coordination writer for a documentation commit; peer hunks
+remain with their owners.
