@@ -1,3 +1,67 @@
+## Dual-boot readback implementation, 2026-11-02 10:44 CET (host only)
+
+Original native read-only USB/UFS discovery service and strict host GPT verifier
+implemented in `dualboot/` + `tools/dualboot.py`. Independent worker, runtime
+exact-1 gate, attached physical LUN only, validated exact READ10 receipts; no
+write/reset/slot path. Source staging/validation tools, tests and acceptance in
+`docs/DUALBOOT.md`; all context-bearing patches/captures stay ignored in
+`research/ios26-dualboot-r2/`. Full handoff and exact phone-owner argv:
+`research/ios26-dualboot-r2/{HANDOFF.md,phone-test.json}`.
+
+**PASS (host):** ASan/UBSan C state machine + actual XNU adapter on real N882 ABI;
+13 Python suites including actual C-to-host-to-snapshot; existing USB model20cases
++25seeds, USB tool22tests, image-tool78tests. Final stage-r3 emits BOTH real ARM64
+BLAZER=1 objects and expected implementation symbols. Private patch
+`14eba083d3cab4670d21ade61eb2ac95ca3a778d7d540db63f073746bfef6fcd`
+applies to p29 source `237e3889640333558525c8082593e68cc5401405`; proper private
+BSD header export included. Release source/artifacts unchanged.
+
+**Full candidate link PASS, 0 undefined, all266 original symbol/string/disassembly
+checks PASS.** Baseline relink equals p29 byte-for-byte except16-byte LC_UUID;
+every release object hash unchanged before/after, only USB/UFS objects replaced.
+Initial link-r1 baseline mismatch was corrected by archive placement, then sole
+UUID difference explicitly verified in r2/r3. Final candidate kernel
+`30db07c53a167af55df5de265e17fb3d9551c14e8eacb63cbc02a277a2dce14e`,
+unstripped `0ce50d8bbc92bb7b998c636406b7f97d3aab5fe7809dc1bd23b72e2dfeb99cf5`.
+Image `research/images/dualboot-gpt-readback-r1/boot.img`
+`21cba4e8bc71f0217432e043bffba0d3b5b8c5dcc1ede73fa523e782d97cc8d0`
+build+check PASS; cpus1/deadline300,507-byte line, no persist/GPU/Trusty/clock
+additions. No boot result implied by image-tool's structural "bootable" label.
+
+**No new device attempt or USB command by this parent.** Sequential read-only
+capture slot requested from the existing phone owner via internal steering and
+shared BOARD; delivery confirmed, scheduling/physical acceptance not confirmed.
+Do not independently boot. First capture binds nonce0x4f7ef40d422dc249 and LU0
+READ CAPACITY31147008blocks, verifies both GPT copies/CRCs/geometry twice and
+re-verifies saved bytes offline. It is metadata only, NOT a full partition
+backup, Android integrity or isolated-root proof. EP0 throughput/full backups,
+Android F2FS reservation, dedicated allocation/migration/rollback and native
+chooser/Android handoff remain unfinished. Goal stays active. No destructive
+approval requested before a concrete verified storage plan exists.
+
+## Reuse audit launched, 2026-11-02 (24 research agents)
+
+User requests a large fleet to find existing resources/code that remove manual
+porting work. Started **24 native GPT-6.1-Sol research agents** in this thread;
+all 24 reported running at the launch inventory. Scope/roster and topic reports:
+`docs/reuse/2026-11-02/`. Each compares actual current release source to pinned
+primary upstream code, checks file-level licensing and returns concrete adapter
+and validation tasks. Parent will verify, synthesize and commit the audit.
+
+Research only: no implementation change, kernel build, device command, boot,
+firmware send/download, radio association, partition/root/slot write or flash by
+this fleet. Existing phone/native-Metal/dualboot parents keep ownership. The
+newer physical health STOP in the phone owner's handoff below remains binding;
+firmware SEND/command consumption is not proven GPU execution. Prior blocked
+AoC work and failed Claude Mesa task are not restarted. Native non-Mesa GPU
+production policy preserved; other stacks are inspected as references only.
+
+Early findings: many supposedly pending patches already exist in p29. Matching
+6.12 vendor source includes individually MIT-licensed panel and dual-MIT GPU
+interfaces; old6.6 and newest6.18 must not be substituted indiscriminately.
+GitHub unauthenticated API rate limits affected discovery; pinned raw source,
+GitLab and local snapshots remain usable. Findings are not speedup claims.
+
 ## Phone owner result, 2026-11-02 10:33 CET — health test STOP, six optimization agents active
 
 Physical health attempt `20261102-102719-native-metal-health-p29-r1` COMPLETE/captured, session48156 exited0 (runner success, **GPU test FAIL**). Supplied imageSHA `2df3ec84f3894ea36ac200cf350a46eb43e51d6e4dc9b4c34f2f4dad222b8bf7`, p29. Rawkernel.logSHA `a402278beac84b5b617a1c5b22608296331fb6c44d998a260fdcb79e15b935f6`. Fresh current mirror decoded to attempt/decoded.txt. Exact records: SEND result0/202ms; shareddata mainheap+0x22d000; SMCSTART0; started1/ts0xb8d; **connfw0/os1, KCCBw1/r1, FWCCBw1/r0**, sysdata0/0, compBVNC0/0. No returnslot1. STOP:noKCCBexecution1s, purposeful panicblazer_gpu_tipc.c670. XNU2.0s/payload28.1s, softwarePSCIreset, postreset38C SOC89 VCELL4332,0CPMerrors/thermalbreadcrumb. Phone backinfastboot. No unmodified retry/progression; native-Metal parent received exact failure via steer. Queued FWCCB diagnostic needs decoding; no render/nativeMetal claim. MCU startup and command consumption are physically observed, full firmware/host execution acceptance remains failed.

@@ -61,6 +61,8 @@ PHONE_ALLOWED = {# handoffs/wifi.md
                  'hk_env': r'hk_env=[A-Za-z0-9._-]+(\+[A-Za-z0-9._-]+)*:[A-Za-z_][A-Za-z0-9_]*=[^\s;,:]*(;[A-Za-z_][A-Za-z0-9_]*=[^\s;,:]*)*(,[A-Za-z0-9._-]+(\+[A-Za-z0-9._-]+)*:[A-Za-z_][A-Za-z0-9_]*=[^\s;,:]*(;[A-Za-z_][A-Za-z0-9_]*=[^\s;,:]*)*)*'}
 # handoffs/persist.md. Not 2: that mode needs blazer_ufs_test=1, which this line doesn't have. The kernel bounds the period.
 PHONE_ALLOWED.update({'blazer_persist': r'blazer_persist=[13]', 'blazer_persist_period': r'blazer_persist_period=[1-9][0-9]{1,3}', 'blazer_persist_selftest': r'blazer_persist_selftest=1', 'blazer_persist_fresh': r'blazer_persist_fresh=1'})
+# docs/DUALBOOT.md: read-only native metadata capture; no host reset/persist mode.
+PHONE_ALLOWED.update({'blazer_usb_readback': r'blazer_usb_readback=1', 'blazer_usbcon_ch9': r'blazer_usbcon_ch9=1'})
 PHONE_ALLOWED.update({'blazer_battery_chg': r'blazer_battery_chg=1', 'blazer_aoc': r'blazer_aoc=1'})  # handoffs/battery.md: the charger's frames, off unless asked; parent, aoc
 PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
 # validation_disables: kconfig.md, osfmk/kern/debug.c. atm_diagnostic_config: mine.md, osfmk/atm/atm.c:60. hk_fb_*: render's names.
@@ -81,6 +83,9 @@ def phone_extra(text):
     if len(set(names)) != len(names): die(f'repeated token in --phone-args: {text}')
     for t, n in zip(toks, names):
         if t not in PHONE_EXACT and not (n in PHONE_ALLOWED and re.fullmatch(PHONE_ALLOWED[n], t)): die(f'--phone-args: {t} is not on the list')
+    if 'blazer_usb_readback=1' in toks:
+        if 'blazer_usbcon=1' not in toks: die('readback requires blazer_usbcon=1')
+        if any(n.startswith('blazer_persist') for n in names): die('readback capture cannot enable persistence writes')
     return toks
 PHONE_KERNEL_NEEDS = (b'ramfs', b'hk_fb_scanout', b'var.skel')
 SECOND_ARGS = 'hk_fb_scanout=1 sweetfb_noconsole=1 hk_fb_probe=1'  # parent, STATUS 2026-11-01
