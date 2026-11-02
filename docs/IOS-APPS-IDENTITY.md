@@ -4,6 +4,8 @@
 port, with device identity and Apple services. This milestone establishes the
 missing app content and concrete upstream implementations. It does not
 establish phone app launches, Apple account login or SEP-backed security.
+The user requires a **self-contained Pixel**: no Mac-backed validation or
+tethered Apple-service bridge. Mac build/test tools remain development tools.
 
 ## What is actually missing
 
@@ -83,6 +85,15 @@ Settings. rustpush has a separate licence and an OpenBubbles-specific exception;
 the app's Apache licence does not cover the library automatically. No source,
 hardware credentials or account data were imported into this port.
 
+The pinned public `open-absinthe` dependency is
+[OpenAbsinthe-Stub 1f8dc73](https://github.com/OpenBubbles/OpenAbsinthe-Stub/tree/1f8dc73a311e7b4d94a868972a6816c8a2c14e44).
+Its [README](https://github.com/OpenBubbles/OpenAbsinthe-Stub/blob/1f8dc73a311e7b4d94a868972a6816c8a2c14e44/README.md)
+identifies it as a nonfunctional mock. In the
+[actual public code](https://github.com/OpenBubbles/OpenAbsinthe-Stub/blob/1f8dc73a311e7b4d94a868972a6816c8a2c14e44/src/nac.rs),
+`ValidationCtx::new`, `key_establishment` and `sign` are unimplemented. This
+dependency does not provide reusable on-device authentication cryptography.
+The working Mac-backed route is excluded by the user's runtime constraint.
+
 ### Anisette and pypush: separate, narrower prerequisites
 
 [Dadoum's Anisette server](https://github.com/Dadoum/anisette-v3-server/tree/684895737aaf1a1c4586fcd5b67509ffd500a36c)
@@ -113,7 +124,9 @@ Phase receipts precede framework loading, workspace connection, enumeration and
 URL registration, so an unfinished synchronous API call remains identifiable.
 Attempt counts limit retries; they do not cancel or time out Apple's APIs.
 The logger explicitly opens the guest console, with a C entry marker before
-Objective-C initialization. Host fixtures write only to stderr and cannot
+main's first Objective-C operation. Startup phase formatting uses only C;
+normal receipts also avoid NSJSONSerialization. A separate marker follows
+autorelease-pool entry. Host fixtures write only to stderr and cannot
 contact the host workspace.
 
 Optional `exercise` mode registers the same manifest, then requests only its

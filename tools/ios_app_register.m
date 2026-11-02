@@ -62,22 +62,69 @@ static void entryMarker(void) {
 }
 #endif
 
-static void receipt(NSDictionary *record) {
-    NSData *data = [NSJSONSerialization dataWithJSONObject:record options:NSJSONWritingSortedKeys error:NULL];
-    if (data) {
-        char line[2048];
-        if (data.length > sizeof(line) - 9) return;
-        memcpy(line, "HKAPPS: ", 8);
-        memcpy(line + 8, data.bytes, data.length);
-        line[8 + data.length] = '\n';
-        consoleBytes(line, 9 + data.length);
+struct JSONLine { char bytes[4096]; size_t used; int overflow; };
+static void token(struct JSONLine *line, const char *text, size_t length) {
+    if (line->overflow || length > sizeof(line->bytes) - line->used) {
+        line->overflow = 1; return;
     }
+    memcpy(line->bytes + line->used, text, length); line->used += length;
+}
+static void stringValue(struct JSONLine *line, const char *text) {
+    if (!text) { token(line, "null", 4); return; }
+    token(line, "\"", 1);
+    for (const unsigned char *p = (const unsigned char *)text; *p && !line->overflow; p++) {
+        if (*p == '"' || *p == '\\') {
+            char escaped[2] = {'\\', (char)*p}; token(line, escaped, 2);
+        } else if (*p < 0x20) {
+            char escaped[7]; (void)snprintf(escaped, sizeof(escaped), "\\u%04x", *p);
+            token(line, escaped, 6);
+        } else token(line, (const char *)p, 1);
+    }
+    token(line, "\"", 1);
+}
+static void numberValue(struct JSONLine *line, unsigned long long value) {
+    char text[32]; int n = snprintf(text, sizeof(text), "%llu", value);
+    if (n > 0 && (size_t)n < sizeof(text)) token(line, text, (size_t)n);
+}
+static void finishLine(struct JSONLine *line) {
+    token(line, "}\n", 2);
+    if (line->overflow) {
+        const char failure[] = "HKAPPS: {\"event\":\"error\",\"reason\":\"receipt_too_large\"}\n";
+        consoleBytes(failure, sizeof(failure) - 1);
+    } else consoleBytes(line->bytes, line->used);
+}
+static void receipt(NSDictionary *record) {
+    // Logging must not require NSJSONSerialization's initialization or services.
+    struct JSONLine line = {0}; token(&line, "HKAPPS: {", 9); int separator = 0;
+    for (NSString *key in record) {
+        if (separator++) token(&line, ",", 1);
+        stringValue(&line, key.UTF8String); token(&line, ":", 1);
+        id value = record[key];
+        if (value == (__bridge id)kCFBooleanTrue) token(&line, "true", 4);
+        else if (value == (__bridge id)kCFBooleanFalse) token(&line, "false", 5);
+        else if ([value isKindOfClass:NSString.class]) stringValue(&line, [value UTF8String]);
+        else if ([value isKindOfClass:NSNumber.class]) numberValue(&line, [value unsignedLongLongValue]);
+        else token(&line, "null", 4);
+    }
+    finishLine(&line);
 }
 
-static void progress(NSString *phase, NSString *identifier) {
-    receipt(@{@"event": @"phase", @"phase": phase, @"pid": @(getpid()),
-              @"bundle_id": identifier ?: (id)NSNull.null});
+static void progress(const char *phase, NSString *identifier) {
+    // The nil-identifier startup stages use only C, including before the first
+    // framework load. A logging framework cannot hide the API's entry receipt.
+    struct JSONLine line = {0}; token(&line, "HKAPPS: {\"event\":\"phase\",\"phase\":", 33);
+    stringValue(&line, phase); token(&line, ",\"pid\":", 7); numberValue(&line, (unsigned)getpid());
+    token(&line, ",\"bundle_id\":", 13); stringValue(&line, identifier ? identifier.UTF8String : NULL);
+    finishLine(&line);
 }
+
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+void hkStockAppReceiptFixture(void) {
+    receipt(@{@"event": @"escape_fixture", @"text": @"quote\" slash\\ newline\n control\001 æ",
+              @"positive": @YES, @"negative": @NO, @"integer": @51});
+    receipt(@{@"event": @"overflow_fixture", @"text": [@"\001" stringByPaddingToLength:4096 withString:@"\001" startingAtIndex:0]});
+}
+#endif
 
 BOOL hkStockAppEntryValid(id entry) {
     if (![entry isKindOfClass:NSDictionary.class]) return NO;
@@ -109,7 +156,7 @@ BOOL hkStockAppIsListed(id workspace, NSString *identifier, NSString *path) {
 }
 
 int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attempts) {
-    progress(@"manifest_read", nil);
+    progress("manifest_read", nil);
     id manifest = readPlist(manifestPath);
     if (![manifest isKindOfClass:NSDictionary.class]
         || ![manifest[@"schema"] isEqual:@"hackios-stock-apps-v1"]
@@ -142,7 +189,7 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
         }
     }
     BOOL registering = ![action isEqual:@"query"];
-    progress(@"workspace_connect", nil);
+    progress("workspace_connect", nil);
 #if defined(HK_STOCK_APPS_HOST_FIXTURE)
     Class cls = Nil; // A fixture CLI must never contact the Mac's workspace.
 #else
@@ -172,10 +219,10 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                        || ![NSFileManager.defaultManager isExecutableFileAtPath:[path stringByAppendingPathComponent:exe]]) {
                 reason = @"invalid_executable_or_path";
             } else {
-                progress(@"registration_readback", identifier);
+                progress("registration_readback", identifier);
                 verified = hkStockAppIsListed(workspace, identifier, path);
                 if (!verified && registering) {
-                    progress(@"register_url", identifier);
+                    progress("register_url", identifier);
                     accepted = [workspace registerApplication:[NSURL fileURLWithPath:path isDirectory:YES]];
                     // Allow an asynchronous registration to appear; re-enumerate each time.
                     for (unsigned poll = 0; poll < 10 && !verified; poll++) {
@@ -205,7 +252,7 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                           @"reason": @"registration_not_verified", @"launch_verified": @NO});
                 continue;
             }
-            progress(@"launch_request", identifier);
+            progress("launch_request", identifier);
             // This selector's return type differs in historical headers. Its
             // return value is deliberately unused. Only actual exec/UI evidence
             // from the guest can establish a launch and surviving foreground UI.
@@ -222,6 +269,7 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
 int main(int argc, const char *argv[]) {
     entryMarker();
     @autoreleasepool { @try {
+        progress("autorelease_pool_entered", nil);
         if ((argc != 3 && argc != 4) || (strcmp(argv[1], "register") && strcmp(argv[1], "query") && strcmp(argv[1], "exercise"))) {
             fprintf(stderr, "usage: hk_app_register query|register|exercise MANIFEST.plist [ATTEMPTS 1..12]\n"); return 2;
         }
@@ -231,11 +279,11 @@ int main(int argc, const char *argv[]) {
         if (strcmp(argv[1], "query") == 0 && attempts != 1) return 2;
         // Test host supplies a fixture workspace, never a host application registrar.
 #if !defined(HK_STOCK_APPS_HOST_FIXTURE)
-        progress(@"framework_load", nil);
+        progress("framework_load", nil);
         if (!dlopen("/System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices", RTLD_NOW)) {
             receipt(@{@"event": @"error", @"reason": @"framework_unavailable"}); return 3;
         }
-        progress(@"framework_loaded", nil);
+        progress("framework_loaded", nil);
 #endif
         return hkRegisterStockApps(@(argv[1]), @(argv[2]), (unsigned)attempts);
     } @catch (NSException *exception) {

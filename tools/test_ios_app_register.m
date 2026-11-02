@@ -4,6 +4,9 @@
 #include <stdio.h>
 extern BOOL hkStockAppIsListed(id, NSString *, NSString *);
 extern BOOL hkStockAppEntryValid(id);
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+extern void hkStockAppReceiptFixture(void);
+#endif
 
 @interface AppRecord : NSObject
 @property NSString *applicationIdentifier;
@@ -21,6 +24,9 @@ extern BOOL hkStockAppEntryValid(id);
 
 int main(void) {
     @autoreleasepool {
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+        hkStockAppReceiptFixture();
+#endif
         NSString *identifier = @"example.clock", *path = @"/Applications/Clock.app";
         AppRecord *record = [AppRecord new];
         record.applicationIdentifier = identifier;
