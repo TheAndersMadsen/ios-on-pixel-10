@@ -155,6 +155,40 @@ static struct tgl_el2_tables el2t __attribute__((aligned(4096)));
 #include "tgl_dcs.h"
 #include "guard.h"
 #endif
+#if TGL_CHOOSER_KEYS
+#include "probe.h"
+/* Volume pads on pinctrl@5280000 (A0 FDT gpio-line-names: 51 VOL_DN_L, 52 VOL_UP_L, active low).
+ * keys-probe-r1 (physical 20261102-004645) read this block's RXDATA with no CPM request first. Reads only. */
+#define KEY_PAD_PA(n) (UINT64_C(0x05280000) + (uint64_t)(n) * 0x1000u)
+#define KEY_RXDATA 0x10u
+static int keys_ok;
+static unsigned chooser_keys(void)
+{
+	uint32_t dn = 0, up = 0;
+	if (!keys_ok) return 0;
+	if (!probe_read32((uintptr_t)(KEY_PAD_PA(51) + KEY_RXDATA), &dn) ||
+	    !probe_read32((uintptr_t)(KEY_PAD_PA(52) + KEY_RXDATA), &up) || dn == 0xffffffffu || up == 0xffffffffu) {
+		keys_ok = 0;
+		return 0;
+	}
+	return ((dn & 1u) ? 0u : TGL_KEY_DOWN) | ((up & 1u) ? 0u : TGL_KEY_UP);
+}
+/* At rest both pads read high; anything else and the menu runs on its countdown alone. */
+static const char *chooser_keys_start(uint64_t *arg)
+{
+	uint32_t dn = 0, up = 0;
+	uint64_t daif, isr;
+	__asm__ volatile("mrs %0, daif; msr daifset, #0xf; isb" : "=r"(daif) :: "memory");
+	int r1 = probe_read32((uintptr_t)(KEY_PAD_PA(51) + KEY_RXDATA), &dn);
+	int r2 = r1 && probe_read32((uintptr_t)(KEY_PAD_PA(52) + KEY_RXDATA), &up);
+	__asm__ volatile("dsb sy; isb; mrs %0, isr_el1" : "=r"(isr) :: "memory");
+	*arg = (uint64_t)dn << 32 | up;
+	if (isr & 0x100) return "chooser: key pad read left an SError pending";
+	keys_ok = r1 && r2 && dn != 0xffffffffu && up != 0xffffffffu && (dn & 1u) && (up & 1u);
+	(void)daif;
+	return 0;
+}
+#endif
 
 extern char _head[], _end[];
 
@@ -351,8 +385,18 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	con_str("IOS", "no iOS root yet: Android only");
 	con_hex("LINUX", base);
 #endif
+#if TGL_CHOOSER_KEYS
+	{
+		uint64_t karg = 0;
+		const char *kw = chooser_keys_start(&karg);
+		tgl_stamp(TGL_STAGE_CHOOSER_KEYS, kw || !keys_ok ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, karg);
+		if (kw) return kw;
+		if (keys_ok) keys = chooser_keys;
+	}
+#endif
 	struct tgl_chooser_menu s;
 	uint64_t start = now_ms(), last_pat = start, last_line = start;
+	unsigned shown_sel = 0;
 	tgl_chooser_menu_init(&s, start, 0);
 	tgl_stamp(TGL_STAGE_CHOOSER_MENU, TGL_STAMP_F_ENTER, TGL_CHOOSER_TIMEOUT_MS);
 	unsigned r, held = 0;
@@ -366,7 +410,8 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 		r = tgl_chooser_menu_step(&s, t, k);
 		if (r) break;
 		if (t - last_pat >= 1000) { if (pat) pat(); last_pat = t; }
-		if (t - last_line >= 1000) {
+		if (t - last_line >= 1000 || s.sel != shown_sel) {
+			shown_sel = s.sel;
 #if TGL_CHOOSER_UI
 			view.sel = s.sel;
 			view.seconds = (unsigned)((s.deadline_ms - t + 999) / 1000);

@@ -6,7 +6,7 @@
 DUMP is a ramdump of the ramoops region (fastboot capture or QEMU pmemsave)."""
 import argparse, struct, sys
 NAMES = {0xc0: 'enter', 0xc1: 'segment', 0xc2: 'place', 0xc3: 'menu', 0xc4: 'key', 0xc5: 'pick', 0xc6: 'lz4',
-         0xc7: 'verify', 0xc8: 'jump', 0xc9: 'csum', 0xca: 'el2-map', 0xcb: 'ui', 0xcc: 'display', 0x01: 'entry', 0x02: 'cpu-state',
+         0xc7: 'verify', 0xc8: 'jump', 0xc9: 'csum', 0xca: 'el2-map', 0xcb: 'ui', 0xcc: 'display', 0xcd: 'keys', 0x01: 'entry', 0x02: 'cpu-state',
          0x03: 'wdt-survey', 0x04: 'fdt-parse'}
 FLAGS = {1: 'ENTER', 2: 'DONE', 4: 'TIMEOUT', 8: 'FAULT', 16: 'REFUSED'}
 STAMP_PA = 0x95430000
@@ -33,6 +33,7 @@ def explain(r):
     if nm == 'csum': return f'{a >> 32} ms'
     if nm == 'el2-map': return f'wb={a >> 32} nc={(a >> 16) & 0xffff} refused={a & 0xffff}'
     if nm == 'ui': return f'full draw {a >> 32} ms, cached={a & 1}'
+    if nm == 'keys': return f'pad51(vol-dn)={a >> 32:#x} pad52(vol-up)={a & 0xffffffff:#x} (bit0=1 idle)'
     if nm == 'display': return f'{a >> 32} ms, serror={(a >> 16) & 1}, dcs code={a & 0xffff}' + (' (present)' if (a >> 40) & 1 else '')
     if nm == 'pick': return f'after {a >> 8} ms, result={(a >> 4) & 15} why={a & 15}'
     if nm == 'jump': return f'base={a & ((1 << 63) - 1):#x} cached={a >> 63}'

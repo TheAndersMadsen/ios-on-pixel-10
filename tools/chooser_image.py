@@ -102,7 +102,7 @@ def build(a):
     t = IT.scope(a.name)
     if a.display and not a.ui: IT.die('--display shows the menu: it needs --ui')
     cflags = CHOOSER_FLAGS + (' -DTGL_CHOOSER_MMU=1' if a.mmu else '') + (' -DTGL_CHOOSER_UI=1' if a.ui else '') + \
-        (' -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3' if a.display else '')
+        (' -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3' if a.display else '') + (' -DTGL_CHOOSER_KEYS=1' if a.keys else '')
     src = CHOOSER_SRC + (' el2_mmu.c' if a.mmu else '') + (' menu_ui.c' if a.ui else '') + (' tgl_dcs.c' if a.display else '')
     env = {**IT.os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(IT.LLVM), 'HOSTCC': '/usr/bin/cc', 'TGL_UFS_HANDOFF': '0',
            'EXTRA_CFLAGS': cflags, 'TGL_EXTRA_SRC': src}
@@ -173,8 +173,8 @@ def build(a):
                stock=dict(boot_sha256=a.stock_kernel_sha, lz4_sha256=hashlib.sha256(st['kernel']).hexdigest(), lz4_bytes=len(st['kernel']),
                           image_sha256=hashlib.sha256(img).hexdigest(), image_len=len(img), image_size=ih['image_size'],
                           flags=hex(ih['flags']), csum64=hex(csum64(st['kernel'])), cmdline=st['cmdline'], os_version_raw=st['os_version_raw']),
-               header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui), display=bool(a.display),
-               stamp_nonce=(t / 'out/stamp-nonce.txt').read_text().strip(), keys='off (no pad read in v1)',
+               header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui), display=bool(a.display), keys_read=bool(a.keys),
+               stamp_nonce=(t / 'out/stamp-nonce.txt').read_text().strip(), keys='pads 51/52 RXDATA (fault-gated reads)' if a.keys else 'off',
                tests=[l for l in tests.splitlines() if 'host test' in l or 'placement' in l],
                avb=v.strip().splitlines()[-1], shim_copy=IT.tree(IT.SHIM),
                tools={n: IT.sha(X / n) for n in ('chooser_image.py', 'image_tool.py')})
@@ -213,6 +213,7 @@ if __name__ == '__main__':
     i.add_argument('--stock-kernel-sha', required=True); i.add_argument('--ios-root', default='ios_system')
     i.add_argument('--avb', choices=('stock', 'test'), default='stock', help='stock: transplant the stock boot vbmeta (KeyMint sees a normal boot); test: project test-key footer (r1)')
     i.add_argument('--mmu', action='store_true', help='EL2 cached identity map for checksum, menu and decode (TGL_CHOOSER_MMU)')
+    i.add_argument('--keys', action='store_true', help='read volume pads 51 (down) and 52 (up) for the menu (TGL_CHOOSER_KEYS)')
     i.add_argument('--display', action='store_true', help='show the menu on the panel via the display-frame-r1d ladder, full-panel layer (TGL_CHOOSER_DISPLAY)')
     i.add_argument('--ui', action='store_true', help='startup menu renderer into the console buffer (TGL_CHOOSER_UI)')
     i.add_argument('--fdt', help='A0 /sys/firmware/fdt dump: placement host test on real data')
