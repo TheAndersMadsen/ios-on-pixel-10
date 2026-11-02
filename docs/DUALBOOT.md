@@ -149,6 +149,28 @@ from a verified recovery set. A saved vendor boot image uses algorithm `NONE`;
 the upstream helper reports success for unsigned metadata too, so signature
 presence and top-level key/chain trust must be checked separately.
 
+The inspected older slot-b files also fail to supply a verified recovery set.
+Their saved `init_boot` and one saved `vendor_boot` fail payload hashes; the
+separate boot backup passes its embedded signature and payload checks. Its
+rollback index is lower than the saved slot-a metadata. Current device rollback
+state and root trust remain unproved. An archived `init_boot` readback matches
+the same failing bytes.
+
+Two other archived readbacks pass embedded signature and payload verification,
+but use a different signing key from the examined slot-a images. The archived
+boot contains a gzip kernel named `boot-v6-walla.Image` that reports
+`7.3.0-next-20261022`. These files do not establish a matching stock Android
+recovery set. Keep content identity, provenance and root trust explicit even
+when the upstream verifier exits successfully.
+
+Both saved init ramdisks contain Magisk backup entries. A host-only experiment
+used [pinned upstream Magisk](https://github.com/topjohnwu/Magisk/tree/33bfff7ce750c27f157ddb4580e36bf842d6d95b)
+to restore and repack scratch copies. Its CPIO test returned stock status, and
+the original signed metadata remained byte-identical, but AOSP payload checks
+still failed for both results. Neither result is an accepted restore image.
+Preserve the originals and obtain an independently verified matching component;
+successful ramdisk restoration alone does not establish a valid stock image.
+
 Run owned synthetic and malformed-image tests with
 `python3 -I tools/test_android_bootset.py`; the vendored tool makes these checks
 independent of local research artifacts or network access.
