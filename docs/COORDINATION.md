@@ -47,8 +47,9 @@ existing pinned source inventories.
 | Item | Observed readiness / reservation | Evidence to collect together |
 | --- | --- | --- |
 | Sampler OFF | Attempt `20261102-111800-sampler-off-p29-r1` captured at expected deadline, unchanged p29, image `ee70fb73…`, raw `6ecc43d9…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
-| Sampler FAST | Phone owner reports running; attempt directory `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`; no verdict yet | Same kernel, unstripped kernel, script/config, clocks, diagnostic set and starting-state record; fresh fast-path coverage and visible correctness |
+| Sampler FAST | Attempt `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`; script reported complete and user reports phone in fastboot; final capture/verdict pending | Same kernel, unstripped kernel, script/config, clocks, diagnostic set and starting-state record; fresh fast-path coverage and visible correctness |
 | UI observations | Next slot accepted in principle; isolated artwork image `f89f74c6…` is available; a composition still needs validation | At most one behavior change (for example artwork), plus compatible passive MCM/Spotlight/battery observations, existing live profiler and ordinary CPU health |
+| New CPU health baseline | `7424c92` acceptance handoff, p30 present; proposed image NOT BUILT, literal-admission/common-config review pending; no slot request | New verification/floor/required-sensor/health gates need functional acceptance before sharing an unchanged configuration in later UI timing arms |
 | GPU timeout diagnostic | p30 build exists; diagnostic image is BUILD ONLY pending CPU/Trusty context and exact artifact acceptance | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset |
 | GPT readback r2 | Host PMBR correction `f329418`, reviewed hash and frozen profile; no reservation here | Both GPT copies, CRC/geometry/agreement, saved-byte offline verification and bounded failure evidence; separate storage capture |
 | Thermal R1/R2 | Existing lowered-trip stages; not part of UI or sampler timing | Actual sensor downvote, floor release and the stage's own STOP criteria |
@@ -81,6 +82,22 @@ passive probes can capture container API result/error/PID, bounded Spotlight
 call/result/stack evidence, battery registry/powerd/getter observations and
 ordinary CPU/thermal health in those same phases. Each probe needs its own
 positive execution receipt. An absent failure is inconclusive.
+
+Existing ordinary CPU/thermal logs may share a UI run. The new CPU health gates
+in `research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md` change fail-stop and
+floor-release policy; they are not passive probes. Their proposed p30 baseline
+line is 1,000 bytes, or 1,020 with optional WFI counters. Establish the reviewed
+common functional configuration before later UI comparisons; do not add these
+gates to the frozen sampler pair. Current p30 is probe0/high0 and cannot run the
+isolated lowered-trip R1/R2 stages, which require a separate probe1 kernel.
+
+Spotlight's earlier userland interposition candidate is withdrawn. Its real
+kernel AKS trace needs its final patch/token review and a new linked kernel.
+Do not use an old overlay as a substitute. For a future reviewed composition,
+the proposed health line plus `blazer_aks_trace=1` is 1,019 bytes; adding optional
+WFI is 1,039 and exceeds the 1,023-byte limit. This is budget arithmetic, not
+image admission; omit optional WFI if needed and verify the actual final line.
+Ready artwork/container work need not wait for unfinished optional tracing.
 
 Compose overlays through the actual release consumer. Extend the sole selected
 hk_env rule in place, preserve the hgltrack chain and unrelated records, check
@@ -128,6 +145,12 @@ are not touch-to-glass measurements.
   manifest. Apps owner requested its own stop and is preparing apps-full-r2
   with the canonical current-r3 var.skel/prefs instead of the old light clone's
   baseline. This is not evidence of a new physical-root persona regression.
+  Corrected apps-full-r2 is now guest r4 ACTIVE under the shared lock: root
+  `bc9f588340425202c686074202c4d57e2b935d628c47cdf7095deeaa5b0ddd70`,
+  source `64ffd35`. Owner reports all 55 canonical seed files/targets match,
+  persona/Medina and 676 baseline jobs are retained, actual TSV consumer and
+  all 49 signatures pass. Registration readback/launch remain pending; the
+  corrected baseline is not physical deployment acceptance.
   Do not remove seed data or widen physical partition bounds to bypass this.
 - **Native Metal:** `9db93cb` and the ignored
   `research/ios26-metal-native-20261102/integration/CONTRACT.md` freeze the

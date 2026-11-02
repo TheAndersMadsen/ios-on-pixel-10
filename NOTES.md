@@ -1,3 +1,36 @@
+## Coordination update, 2026-11-02 — CPU health baseline and corrected apps guest
+
+Consumed CPU checkpoint **7424c92** and apps source **64ffd35**, extending
+coordination commits99c9613/dc7e6f3. Independently checked CPU-NEXT/next-action
+and text-receipt hashes, exact p30 kernel/U hashes and proposed line lengths.
+Ordinary health image remains NOT BUILT, no slot requested; four literal tokens
+need parent admission/common-config review. New verify/floors/required/health
+gates change fail-stop policy, so establish a common functional baseline before
+later UI timing arms. Reserved990B sampler pair stays unchanged; R1/R2 require
+separate probe1/high0 kernel, current p30 probe0 cannot run them. High HOLD.
+
+Future budget only: health1000B +kernel AKS trace=1019B; optional WFI would make
+1039B, over1023. Omit optional observer if that reviewed composition is chosen;
+no token bypass or new image built here. Old Spotlight userland candidate is
+WITHDRAWN; actual AKS kernel trace needs final source/token review and new link.
+Ready artwork/container work need not wait for optional tracing. Phone owner
+received one targeted synthesis; existing GPU/GPT CPU-context holds unchanged.
+
+FAST20261102-112806 script reported complete; user says phone is in fastboot.
+Final capture/verdict not yet received here, no speed/visual acceptance claimed.
+Apps corrected20GiB root SHA
+bc9f588340425202c686074202c4d57e2b935d628c47cdf7095deeaa5b0ddd70:
+owner reports canonical55files/targets/persona/Medina/676job baseline and actual
+TSV consumer/signature/fs checks PASS. registration-r4 ACTIVE under shared lock,
+same p29/hgltrack/fullRAMDisk; registration/readback/launch still unaccepted.
+No physical deployment assumption; current8GiB allocation remains insufficient.
+
+Shared policy updated in docs/COORDINATION.md. Exact readiness/delivery receipt:
+research/ios26-orchestration-20261102/cpu7424-appsr4.json. No new agent, build,
+boot, guest, USB/device action or source-policy admission by coordination.
+Meaningful docs/receipt checks run before commit; other owners' edits preserved.
+
+
 ## Phone owner checkpoint, 2026-11-02 11:33 CET — sampler FAST, p30 built but CPU hold
 
 SamplerOFF20261102-111800 COMPLETE/captured, rawkernelSHA6ecc43d91a88562ffe17b9dddc70b6bbdc8b058a1958a6a4f23fec7cdc557d64.
