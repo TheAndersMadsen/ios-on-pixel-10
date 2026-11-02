@@ -1,3 +1,65 @@
+## Native Metal firmware test preparation, 2026-11-02 10:20 CET
+
+Concrete progress, HOST ONLY: built/check-verified two isolated p29 RAM images:
+`native-metal-send-p29-r1` SHA256 `6e34330fa3b2e1e94d44a2b7f45ec00db1aab9e9f31bbc7ed96be905704ae261`;
+conditional `native-metal-health-p29-r1` SHA256 `2df3ec84f3894ea36ac200cf350a46eb43e51d6e4dc9b4c34f2f4dad222b8bf7`.
+Both in `research/ios26-bootchain-r1/run/`, cpus1, deadline300,448-byte cmdline,
+no competing Trusty/persist arg. Image-tool check, shim route87/speed55/stage9,
+route20/20 and speed21/21 mutants, seven replays and brightness1007 PASS.
+Reused existing p29 `5aad8978…` / unstripped `cc979153…`; no new full kernel link.
+Verified complete signed GPU firmware byte-identical in each kernel, correct
+length prefix, and real start/health symbols in __TEXT_EXEC,__text.
+
+Parent reran current release's actual firmware C/header/transport in isolated
+`research/ios26-metal-native-20261102/integration/p29-host`: ASan/UBSan **85 checks,
+zero failures,51/51 mutants detected**, exit0. Harness path relocation only;
+source identity and full receipts saved. These are modeled host backend tests,
+NOT firmware/Metal execution on the phone. A premature image check before the
+health build finished found no manifest; rerun after successful completion PASS.
+
+SEND-only test slot requested from existing phone coordinator after its current
+capture; message delivery recorded, **scheduling not confirmed and no new
+physical attempt by this goal parent**. Health image is conditional only: fresh
+SEND len8/cmd1/result0+rung2PASS first; any refusal stops progression. No new
+USB/device operation, guest, firmware send, root/partition/slot write or flash.
+Exact commands/hashes/source proofs and acceptance:
+`research/ios26-metal-native-20261102/integration/HANDOFF.md` + firmware-tests.json.
+
+Ten implementation delegates remain assigned; no terminal event consumed or
+task polling. Firmware/queue steered toward real shared allocator/KCCB/persistent
+startup composition. Still missing: integrated GPU VM/contexts/completion,
+complete own DXT compute shader and native Metal dispatch/readback. Starting
+goal commits `b887615`, `9c8affe`; original scope and ten-agent target unchanged.
+Next: consume implementation milestones, integrate/test actual adapters and
+obtain the scheduled firmware capture. Native Metal remains unproved.
+
+## Dual-boot goal started, 2026-11-02 10:20 CET
+
+User explicitly asks to finish proper iOS 26 + Android dual boot, using
+`oosexgang/hakios-uefi`, and to proceed with our recommendation. Active goal in
+this thread. `docs/DUALBOOT.md` defines acceptance and implementation order.
+Reviewed the completed prior dualboot feature: only a chooser policy, no menu,
+Android dispatcher or isolated persistent storage. Upstream pinned UEFI
+`687fa6c6a5a70f43184de92980e0a76eea5f2c4b` targets Mu-Silicium/Qualcomm;
+Pixel ABL's Android-v4 envelope does not supply EFI Boot Services.
+
+**Observed:** saved stock fstab lists userdata_exp.ai as Android F2FS exp_alias;
+its alias-file/reservation state remains UNKNOWN. Current root r3 occupies it;
+earlier approved writes spent their authorization, no original alias backup.
+Do not boot Android or call this isolated storage. Existing fullcheck validates
+the iOS bytes, not Android integrity. p29 supplies native exact whole-LUN reads
+and physically verified USB console; implement read-only GPT/backup transport
+against those APIs next, with bounded receipts and host verification.
+
+**No new device attempt, USB command, Android boot, slot/force-fastboot change,
+root/partition write or flash in this milestone.** The other parent owns phone
+attempts and release integration; leave its active p29/profile work alone.
+Next: implement/test readback in own tracked sources + ignored r2 integration
+fixture; gate-on ARM64 objects and symbol checks, then request a concrete
+read-only capture through the phone owner. Storage migration approval comes only
+after a verified layout/backup/rollback exists. Android integrity, persistent
+chooser and full dual boot remain unfinished.
+
 ## Physical milestone, 2026-11-02 10:04 CET — combined p29 + live iOS console
 
 **Actually tested on Pixel:** `20261102-095609-phone-p29-live-r1`, image `c203c70e6faccaeb57a62fc3225696eb8d66fc5bf22bc8b85e318e66b8072eba`; kernel p29 `5aad89780e798d730aa00372dd17568917cc81d97fc231df0fcf1a9fda80fca8`, unstripped `cc97915354f63c1253bd84295dd5ba004b864bb336a82dd2bcffbf3eb57631cc`. Parent combined33 source commits since p28 (37 since p27), resolved prerequisites + four additive governor conflicts,172-file series/combined proof PASS, full ARM64 link0undefined,266 existing checklist checks PASS, physical touch bus trace unchanged. Combined patch `research/ios26-release-r1/combined/ios26-p29-all-in-one.patch` SHA `257d218bf950edcd3737eb84dda320a0d451045fa318f080ad6370f0df1f6a47`. Integration journals `resume-20261102/p29-{integration,dependencies}.json`; selected kernel paths added105 globals, including real IOSurface GPU imports and native BT bridge. Source-only planners and missing adapters are NOT functional hardware. Later feature returns still await integration.
