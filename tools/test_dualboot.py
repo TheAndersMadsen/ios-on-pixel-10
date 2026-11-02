@@ -40,6 +40,10 @@ def disk_image(blocks=512):
     return disk
 
 
+PLANNED_LBAS = sorted([0, 1, 511] + list(range(2, 6)) + list(range(507, 511)))
+PLANNED_READS = len(PLANNED_LBAS)
+
+
 class MemoryReader:
     def __init__(self, disk):
         self.disk = disk
@@ -147,8 +151,11 @@ class GptTests(unittest.TestCase):
             out = Path(tmp)/'failed'
             with self.assertRaises(d.Refused): d.capture_gpt(source, out)
             failure = json.loads((out/'failure.json').read_text())
-            self.assertEqual(source.calls, 1)
-            self.assertEqual(len(failure['observations']), 1)
+            # Raw capture before parsing: the fixed plan (PMBR, both headers, both
+            # declared 4-block arrays) is read exactly once; no retry, no second pass.
+            self.assertEqual(source.calls, PLANNED_READS)
+            self.assertEqual(len(failure['observations']), PLANNED_READS)
+            self.assertEqual(sorted(o['lba'] for o in failure['observations']), PLANNED_LBAS)
             self.assertEqual((out/failure['observations'][0]['file']).read_bytes(), disk[:d.BLOCK])
             self.assertFalse((out/'capture.json').exists())
             with self.assertRaises(OSError): d.SnapshotReader(out)
@@ -197,6 +204,98 @@ class GptTests(unittest.TestCase):
         self.assertEqual(result['live_alias_state'], 'unknown')
         self.assertIn(dict(role='exp_alias', name='userdata_exp.ai'), result['data_mounts'][0]['devices'])
         with self.assertRaises(d.Refused): d.fstab_owners(b'# no ownership evidence\n')
+
+
+class CountedReader(MemoryReader):
+    def __init__(self, disk):
+        super().__init__(disk); self.lbas = []
+    def read(self, lba, count=1):
+        self.lbas.extend(range(lba, lba+count))
+        return super().read(lba, count)
+
+
+def pack_backup_padding(disk, start=92, source=None):
+    """r5a shape: CRC-valid backup header followed by entry bytes in its reserved padding."""
+    base = 511*d.BLOCK
+    array = bytes(disk[507*d.BLOCK:511*d.BLOCK]) if source is None else source
+    disk[base+start:base+d.BLOCK] = array[:d.BLOCK-start]
+
+
+class AcquisitionTests(unittest.TestCase):
+    def capture_failure(self, disk):
+        source = CountedReader(disk)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)/'capture'
+            with self.assertRaises(d.Refused) as caught: d.capture_gpt(source, out)
+            self.assertFalse((out/'capture.json').exists())
+            failure = json.loads((out/'failure.json').read_text())
+            for o in failure['observations']:
+                self.assertEqual(d.sha((out/o['file']).read_bytes()), o['sha256'])
+                self.assertEqual((out/o['file']).read_bytes(), bytes(disk[o['lba']*d.BLOCK:(o['lba']+1)*d.BLOCK]))
+            self.assertEqual(len(source.lbas), len(set(source.lbas)), 'no block read twice after a failure')
+            return str(caught.exception), failure, source
+
+    def test_valid_complete_gpt_reads_plan_then_confirms_once(self):
+        source = CountedReader(disk_image())
+        with tempfile.TemporaryDirectory() as tmp:
+            report = d.capture_gpt(source, Path(tmp)/'capture')
+        self.assertTrue(report['gpt_copies_match'])
+        self.assertEqual(sorted(source.lbas[:PLANNED_READS]), PLANNED_LBAS)
+        self.assertEqual(sorted(source.lbas[PLANNED_READS:]), PLANNED_LBAS)
+        self.assertEqual(len(source.lbas), 2*PLANNED_READS)
+        self.assertEqual([n.get('declared_array_lba') for n in report['acquisition']], [2, 507])
+
+    def test_r5a_packed_backup_padding_still_refused_with_complete_arrays(self):
+        disk = disk_image(); pack_backup_padding(disk)
+        error, failure, source = self.capture_failure(disk)
+        self.assertEqual(error, 'nonzero GPT reserved block padding')
+        self.assertEqual(sorted(source.lbas), PLANNED_LBAS)
+        diag = {x['header_lba']: x for x in failure['diagnostics']}
+        self.assertEqual(diag[1]['padding_nonzero_bytes'], 0)
+        self.assertGreater(diag[511]['padding_nonzero_bytes'], 0)
+        self.assertTrue(diag[511]['padding_equals_array_prefix_of_header_1'])
+        self.assertTrue(diag[511]['padding_equals_array_prefix_of_header_511'])
+        self.assertEqual(diag[511]['acceptance'], 'NONE: diagnostic only')
+
+    def test_stale_offset_or_foreign_padding_is_distinguished_and_refused(self):
+        foreign = bytearray(disk_image()[507*d.BLOCK:511*d.BLOCK]); foreign[40] ^= 1
+        for start, source in ((96, None), (92, bytes(foreign))):
+            with self.subTest(start=start):
+                disk = disk_image(); pack_backup_padding(disk, start, source)
+                error, failure, _ = self.capture_failure(disk)
+                self.assertEqual(error, 'nonzero GPT reserved block padding')
+                diag = {x['header_lba']: x for x in failure['diagnostics']}
+                self.assertFalse(diag[511]['padding_equals_array_prefix_of_header_1'])
+
+    def test_bad_array_crc_and_mismatched_copies(self):
+        disk = disk_image(); disk[507*d.BLOCK+60] ^= 1
+        self.assertEqual(self.capture_failure(disk)[0], 'GPT array CRC mismatch')
+        disk = disk_image(); struct.pack_into('<Q', disk, 507*d.BLOCK+128+40, 398)
+        array = bytes(disk[507*d.BLOCK:511*d.BLOCK])
+        struct.pack_into('<I', disk, 511*d.BLOCK+88, zlib.crc32(array)); fix_header(disk, 511)
+        self.assertIn(self.capture_failure(disk)[0], ('GPT copies disagree', 'GPT entry copies differ'))
+
+    def test_unusable_header_location_is_not_read(self):
+        cases = (lambda x: x.__setitem__(511*d.BLOCK+20, x[511*d.BLOCK+20] ^ 1),           # header CRC
+                 lambda x: (struct.pack_into('<Q', x, 511*d.BLOCK+72, 509), fix_header(x, 511)),  # overlaps N-1
+                 lambda x: (struct.pack_into('<Q', x, 511*d.BLOCK+72, 1), fix_header(x, 511)),    # overlaps LBA1
+                 lambda x: (struct.pack_into('<I', x, 511*d.BLOCK+80, 9000), fix_header(x, 511)))  # >1 MiB
+        for i, mutate in enumerate(cases):
+            with self.subTest(case=i):
+                disk = disk_image(); mutate(disk)
+                _, failure, source = self.capture_failure(disk)
+                self.assertTrue(set(source.lbas) <= set(PLANNED_LBAS))
+                self.assertTrue(all(0 <= l < 512 for l in source.lbas))
+                self.assertIn('not acquired', failure['acquisition'][1]['declared_array'])
+
+    def test_truncated_block_and_unacquired_reads(self):
+        class Short(MemoryReader):
+            def read(self, lba, count=1): return super().read(lba, count)[:-1] if lba == 511 else super().read(lba, count)
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(d.Refused): d.capture_gpt(Short(disk_image()), Path(tmp)/'c')
+        acquired = d.AcquiredReader(512, {0: b'\0'*d.BLOCK})
+        with self.assertRaises(d.Refused): acquired.read(1)
+        self.assertIsNone(d.declared_array(b'\0'*91, 512))
 
 
 class ProtocolTests(unittest.TestCase):

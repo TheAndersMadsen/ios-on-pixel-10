@@ -333,13 +333,93 @@ class RecordingReader:
         return bytes(data)
 
 
+def declared_array(data, blocks):
+    """Acquisition-only array location from a CRC-valid header; never acceptance.
+
+    Reserved padding, reciprocal geometry and every other strict rule are left to
+    parse_header on the acquired bytes. The range never touches LBA 0, 1 or N-1.
+    """
+    if len(data) != BLOCK:
+        return None
+    (signature, revision, size, crc, _, _, _, _, _, _, array_lba, count, entry_size, _) = GPT.unpack_from(data)
+    if signature != b'EFI PART' or revision != 0x10000 or not GPT.size <= size <= BLOCK:
+        return None
+    check = bytearray(data[:size]); check[16:20] = b'\0' * 4
+    if zlib.crc32(check) != crc or not (0 < count <= 4096 and 128 <= entry_size <= 4096):
+        return None
+    byte_count = count * entry_size
+    if byte_count > 1024 * 1024:
+        return None
+    array_blocks = (byte_count + BLOCK - 1) // BLOCK
+    if not (2 <= array_lba and array_lba + array_blocks <= blocks - 1):
+        return None
+    return array_lba, array_blocks
+
+
+class AcquiredReader:
+    """Serves only blocks already saved by RecordingReader; never reads or synthesizes."""
+    def __init__(self, total_blocks, blocks):
+        self.total_blocks, self.blocks = total_blocks, blocks
+
+    def read(self, lba, count=1):
+        require(all(b in self.blocks for b in range(lba, lba+count)), 'GPT block was not acquired; never synthesize')
+        return b''.join(self.blocks[b] for b in range(lba, lba+count))
+
+
+def acquire_gpt(recording):
+    """Read the fixed metadata plan once, saving raw bytes before any parsing."""
+    n = recording.total_blocks
+    blocks, notes = {}, []
+    for lba in (0, 1, n-1):
+        blocks[lba] = recording.read(lba)
+    for at in (1, n-1):
+        location = declared_array(blocks[at], n)
+        if location is None:
+            notes.append(dict(header_lba=at, declared_array='not acquired: header unusable for location'))
+            continue
+        first, count = location
+        notes.append(dict(header_lba=at, declared_array_lba=first, declared_array_blocks=count))
+        for lba in range(first, first+count):
+            if lba not in blocks:
+                blocks[lba] = recording.read(lba)
+    return AcquiredReader(n, blocks), notes
+
+
+def padding_diagnostics(acquired, notes):
+    """Observation only: compare nonzero header padding with acquired declared arrays."""
+    result = []
+    for note in notes:
+        at = note['header_lba']
+        header = acquired.blocks.get(at)
+        if header is None or 'declared_array_lba' not in note:
+            continue
+        size = struct.unpack_from('<I', header, 12)[0]
+        if not GPT.size <= size <= BLOCK:
+            continue
+        padding = header[size:]
+        item = dict(header_lba=at, header_bytes=size, padding_nonzero_bytes=sum(1 for b in padding if b),
+                    padding_sha256=sha(padding), acceptance='NONE: diagnostic only')
+        if any(padding):
+            for other in notes:
+                if 'declared_array_lba' not in other:
+                    continue
+                array = acquired.read(other['declared_array_lba'], other['declared_array_blocks'])
+                item[f"padding_equals_array_prefix_of_header_{other['header_lba']}"] = array[:len(padding)] == padding
+        result.append(item)
+    return result
+
+
 def capture_gpt(reader, out, fstab=None, reviewed_pmbr_sha256=None):
     out = Path(out)
     out.mkdir(mode=0o700, parents=True, exist_ok=False)
     recording = RecordingReader(reader, out)
     identity = lambda: dict(zip(('nonce', 'entry', 'lun'), reader.identity)) if isinstance(reader, UsbReader) and reader.identity else None
+    acquired, notes = None, []
     try:
-        report, segments = inspect_gpt(recording, reviewed_pmbr_sha256)
+        # Raw capture before parsing: every planned metadata block is saved once,
+        # then the unchanged strict verifier runs on the saved bytes only.
+        acquired, notes = acquire_gpt(recording)
+        report, segments = inspect_gpt(acquired, reviewed_pmbr_sha256)
         # Re-read every metadata block: refuse a table changing during capture.
         for _, lba, data in segments:
             require(recording.read(lba, len(data)//BLOCK) == data, 'GPT changed during capture')
@@ -348,6 +428,8 @@ def capture_gpt(reader, out, fstab=None, reviewed_pmbr_sha256=None):
     except (ValueError, OSError, KeyError, TypeError) as exc:
         failure = dict(schema=1, ok=False, purpose='failed/incomplete GPT capture evidence only',
                        error=str(exc), observations=recording.observations, boot_identity=identity(),
+                       acquisition=notes,
+                       diagnostics=padding_diagnostics(acquired, notes) if acquired is not None else [],
                        block_bytes=BLOCK, total_blocks=reader.total_blocks,
                        gpt_copies_match=False, full_data_backup=False, storage_isolation_proven=False,
                        android_integrity_proven=False)
@@ -355,6 +437,7 @@ def capture_gpt(reader, out, fstab=None, reviewed_pmbr_sha256=None):
         raise
     report['purpose'] = 'GPT metadata only; not a partition/data backup or migration approval'
     report['schema'] = 1
+    report['acquisition'] = notes
     report['segments'] = []
     report['observations'] = recording.observations
     if isinstance(reader, UsbReader):
