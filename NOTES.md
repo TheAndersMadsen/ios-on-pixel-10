@@ -1,3 +1,44 @@
+## CPU completion milestone, 2026-11-02 (host only)
+
+User goal: take CPU's84% feature score to100%. Counted gaps are sustained
+higher clocks and both A520s under XNU; X4 remains excluded by the existing
+status model. Goal ACTIVE, score unchanged84. No new agents/delegates started.
+Source/test/docs commit **a338f4a** adds a read-only cpu0 firmware audit,
+strict dedicated image profile and nonce-bound verifier; acceptance docs/CPU.md.
+Reuse3139238/d18fbb4 and four requested reports read; no vendor source import,
+new frequency, duplicate governor/thermal implementation or allowlist expansion.
+
+**HOST PASS:** actual audit+fastcore C ASan/UBSan incl actual Cstamp->verifier,
+7 methods; image-tool78 and decoder14; complete CI PASS (existing capture skip1).
+Enabled ARM64 ELF objects have named T symbols and ACTLR MRS, no audit MSR/SMC
+or ABS64. Audit-disabled loader/fastcore objects byte-identical13a77d8 baseline.
+Initial comparator's differing C basename caused FILE-symbol-only mismatch;
+corrected fixture, code unchanged. No XNU source change/full kernel link here.
+Full shim0undefined, route87/speed55/stage9,20/20+21/21+14/14 mutants,
+7/7 capture replays and brightness1007 PASS. Source/object receipts:
+research/ios26-cpu-complete-r1/{arm64.json,sources.json,HANDOFF.md}.
+
+**Built/check-verified, NOT BOOTED:** research/images/cpu0-audit-p29-r1/boot.img
+SHA256226eba4f07398ebdacbe378e7d8ddc06b6b596598e248a4f4eb587d59af03dab.
+Unchanged p29 kernel5aad8978…/unstrippedcc979153…; exact hashes+argv arrays in
+research/ios26-cpu-complete-r1/phone-test.json.588B command line, bootcpu0x200,
+5A725s at baseline533, deadline300, thermal2/panic70, SMP report/self-test,
+USBconsole/ch9; no touch/overlay/governor/persist/Trusty/GPU additions. cpu0
+register audit continues the established A725 handoff, no CPU_OFF/A520 startup
+or workaround write. The new verifier matches the ACTUAL p29 five-e6-DONE/raw
+MPIDR/EL_DROP/headerreason5 protocol; a synthetic HANDOFF-DONE slot is not real.
+Its PASS is only cpu0 bits9/38 prerequisite; A520 support stays unaccepted.
+
+**No new physical attempt, USB/device command, emulator boot, firmware send,
+root/partition/slot write or flash.** Sequential audit slot requested from
+existing phone owner; message delivered, scheduling/capture NOT confirmed.
+Owner alone boots/usesUSB. Trap, missing bit, refusal or unexpected reset STOPs
+this A520 stage; no blind retry/speculative workaround write. Higher-clock
+0773 remains with cpu_fast/phone owner, no duplicate import. Next: owner reviews
+and captures this immutable audit, then independent cpu1/workaround/topology/
+coherency/sustained acceptance; separate actual thermal downvote/floor-release
+and higher-clock acceptance still required before CPU can reach100%.
+
 ## CoreImage exact-cache audit and QEMU comparison, 2026-11-02 (in progress)
 
 This thread owns only `research/ios26-inferno-coreimage-r1/` and
