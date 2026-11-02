@@ -349,7 +349,7 @@ Next: preserve/capture current boot, inspect exact receipts, freeze/link one p31
 from reviewed sources. Brightness late-SError and battery allocation P2 repairs
 remain parent-owned/unintegrated; RTC runtime reviewed, stale token pin P3.
 
-## Shared QEMU handoffs and Pixel queue, 2026-11-02 — actual GPU evidence, GPT next
+## Shared QEMU handoffs and Pixel queue, 2026-11-02 — GPU and GPT physically captured
 
 User says progress/testing is too slow. Coordination now prioritizes the first
 admitted physical artifact over documentation, with parallel host preparation:
@@ -370,8 +370,12 @@ no unchanged retry or import-review dependency for the frozen diagnostic.
 GPT corrected r5a e9ec048c actualimage21b3de7e42706fb1f69015faa4ed7892fa5673fdeb95ebaf8c97ded443a3286b
 BUILT/check/binderPASS, binding6c720be0/contextbbdf79b9/nonce6acda2c6f42050ad.
 CPU exact actual-contextffb52c45 +dualboot feature4995696e accepted. Same original
-K30db/U0ce5/a000/oneA725/canvas2511/LU0/fourtransportgates/528B/300s. Phone exact
-context/perrun+frozen strict consumer next, no physical slot invented here.
+K30db/U0ce5/a000/oneA725/canvas2511/LU0/fourtransportgates/528B/300s. Phone admitted and physically ran135301; boot/capture exited0/parked, fresh
+nonce/current410430B mirror. Frozen capture consumer EXIT2: nonzero GPT reserved
+block padding. No complete both-copy acceptance; existing dualboot parent now
+diagnoses retained offset/headerCRC/logicalblock/transport bytes offline. No
+unchanged retry, silent padding relaxation or scope expansion. CPUchecker next
+when repaired; storage diagnosis need not occupy the phone.
 Originalr5 canvas2436 refused before output; explicit r5a actual production
 prewriteed7f9326 and immutable33e6b2d5 closed only that delta. Old21cba/profile34a/
 host04ba remain held; exact new consumer bindingdd9eb3ec, no read expansion.

@@ -14,7 +14,7 @@ next reset. Host preparation continues while the phone is occupied.
 | Test | Current concrete state | Next action and useful evidence |
 | --- | --- | --- |
 | GPU one-A725 diagnostic | Exact image01eae6c8 PHYSICALLY COMPLETE, attempt134301. Native static gateee6df1aa and CPU conditional decision51434041 closed before boot | New-context SEND0/START0; strict HEALTH FAIL, connfw0/FWCCB1-0/return0. Captured112-byte pending DEBUG_DUMP type2abc006a plus27 zero words, SYS pow1/fwfaults0/hwr1/COMPupdated0, no ACK/consume. Existing FW/VM/UC owners investigate this actual evidence before another test |
-| Strict read-only GPT r5a | Actual image21b3de7e42706fb1f69015faa4ed7892fa5673fdeb95ebaf8c97ded443a3286b BUILT/check/binder PASS; binding6c720be0/contextbbdf79b9. CPU actual-contextffb52c45 and dualboot feature4995696e accepted | Phone exact-context/per-run checks then next sequential300s slot. Capture both GPT copies, CRC/geometry/agreement and frozen consumer's bounded provenance; no read-scope expansion. Same K30db/U0ce50/a000/one-A725/canvas2511/LU0/four transport gates/528B |
+| Strict read-only GPT r5a | Physical attempt135301 COMPLETE/parked, exact21b3de7e image. Boot/capture exit0 with matching nonce/current410430B mirror; frozen capture consumer exit2: nonzero GPT reserved block padding | Existing dualboot parent diagnoses retained blocks: exact offset, header-size/CRC/logical-block and transport provenance. Complete two-copy GPT acceptance remains open. No policy relaxation, blind reread or scope expansion; CPU checker repair proceeds meanwhile |
 | CPU common-health baseline | Existing image463ffa61 bytes agree; checker embedded-image P1 and compiled-nonce P2 repair remains PHONE-owned, not booted | Finish narrow repair and affected refusal controls, then separate functional300s baseline. CPU makes no overlapping image_tool edit. Preserve current GPT source pins through its binding/run before explicit tool rebinding |
 | Combined UI p32 | Attempt132258 COMPLETE/captured; user confirms Home and Settings work. Native RTC publication and five fresh powerd samples observed | Existing phone lanes resolve eight backboardd signal exits and nine PRESENT snapshots with queued0. No brightness transport/AKS-log execution/view-getter proof or clean-compositor/speed promotion; no unchanged retry |
 | Isolated thermal R1/R2 | Separate probe1/high0 kernel and actual stage criteria still required | Fresh sensor downvote, all-five AMU and DSU/LPCM floor release evidence. Common-health probe0 is not this test; higher clocks/A520 remain held |
@@ -166,7 +166,7 @@ that package key, not current bootloader trust/rollback/personal recoverability.
 Modified savedA/B and scratch repacks remain rejected/intact. Reuse the existing
 vendor/vendor_dlkm files for named requests, no second collector/download or
 compatibility inference. Default-off Android preparation has no runtime producer
-or dispatcher. Strict GPT precedes backups/isolation and actual OS switching.
+or dispatcher. Strict GPT acceptance precedes backups/isolation and actual OS switching.
 
 A raw copy plus40GiB reserve still does not fit the latest host capacity snapshot;
 refresh before staging. Independent destination/key recovery remain unqualified.
