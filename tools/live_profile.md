@@ -16,6 +16,31 @@ python3 -I tools/live_profile.py \
   --summary --json research/ios26-opt-20261102/live_analysis/receipts/p29-profile.json
 ```
 
+For an uncontrolled manual workload, opt in explicitly with `--manual` and the
+actual complete image manifest. It must contain **exactly no `hk_ui` arguments**;
+even bare, empty, invalid or duplicate arguments are refused. `--script` is
+forbidden in manual mode. The default still requires exactly one complete,
+valid `hk_ui` in a supplied manifest. If both `--script` and `--manifest` are
+supplied in scripted mode, they must agree; an explicit script cannot override
+the actual manifest.
+
+```sh
+python3 -I tools/live_profile.py \
+  --raw research/ios26-opt-20261102/parent/art-container-15m-r1.raw \
+  --manifest research/ios26-bootchain-r1/run/phone-p29-art-container-15m-r1/manifest.json \
+  --manual \
+  --verify-dump research/laguna-usb-fix/attempts/20261102-115426-phone-p29-art-container-15m-r1/ramdump/kernel.log \
+  --summary --json LOCAL-manual-report.json
+```
+
+The report labels `workload.mode=manual`, `control=uncontrolled` and
+`script.state=not_applicable`; it invents no replay, expected events, issue
+phases, idle windows or screen transitions. Runtime `HK UI`/`HK UITRACE` evidence,
+including malformed replay lines, conflicts with manual mode (exit 1). Byte
+holes, partial lines, epoch/byte verification, presentation-evidence checks and
+PC-label validation use the same paths as scripted decoding. Manual diagnostics
+support no causal speed, FPS or touch-to-glass claim.
+
 While the phone owner runs the existing console reader with a fresh output path,
 a second host terminal may tail its files. This decoder has no device ownership:
 
@@ -24,6 +49,10 @@ python3 -I tools/live_profile.py --raw CAPTURE.raw --follow --events \
   --manifest IMAGE/manifest.json --json LOCAL-report.json
 ```
 
+Append `--manual` for a manifest with no replay. This is a read-only host tail,
+not an input injector or another USB reader. Run it only against the phone
+owner's selected capture; it does not authorize a new boot or input command.
+
 NDJSON records are flushed when a complete diagnostic line arrives. `--follow`
 waits for the files to appear, consumes only newline-committed `.times` records,
 and stops when usbcon writes the final `.json`, or on Ctrl-C. The final report
@@ -31,6 +60,13 @@ records interrupted status. File replacement, shrinking, changed committed
 prefix, overlapping offsets and host-clock rollback fail instead of merging
 boots. Do not reuse an old capture path for a new boot. `--verify-dump` is a
 post-capture check; it needs the final status's nonce/entry tick/frequency.
+`source.capture_state` distinguishes `final_summary`,
+`provisional_no_final_summary`, `interrupted_provisional` and a dump's
+`current_header_reconstruction`. A journal without its final `.json` remains
+provisional even if an offline invocation exits 0; a final summary can still
+contain gaps. A reconstructed dump is not necessarily a completed boot.
+`source.manifest_sha256` pins the manifest bytes, without claiming a manifest
+path or image `epoch=` proves the raw stream's kernel identity.
 
 For a dump without a live capture:
 
@@ -105,6 +141,42 @@ working phone. Inspect `script.state`, phases, gaps and warnings. Exit 1 means
 the observed trace conflicts with expectations/completion; exit 2 means input,
 epoch, format or integrity failure. No GPU/UI/performance fix is implied.
 
+`HKAKSTRACE` v1 uses the same analyzer, raw journal, epoch, offsets, receipt times
+and canonical-dump reconstruction. A parsed `ready` line only proves trace
+initialization (`aks.state=ready_only`). A parsed selector record is separate
+execution evidence (`execution_observed`), even if its ready line was not
+captured. An intact fixed header followed by a damaged/short frame suffix is
+`record_integrity=prefix_only`; a capture with only these is
+`execution_prefix_observed`. Its requested/reported sizes, writes, DER header
+bytes and PC/LR remain observations. **No frame addresses** are retained unless
+the entire suffix matches the declared count, avoiding false addresses from cut
+hex values. The exact damaged suffix and original line remain in the report
+with a warning. Complete and partial record counts stay separate. Unknown
+versions and damaged fixed headers remain verbatim in `aks.unknown_records`,
+never counted as execution. Extra trailing fields remain in the unparsed suffix.
+Unterminated lines stay partial and lines cut by holes are discarded.
+
+The existing source filters Spotlight selector17: first8 calls then powers of2,
+up to65536 calls and300s after its first sampled stamp. The final sampled call
+number and record count are not total boot calls. Duplicate calls or ready
+lines fail; concurrent print/call order can differ. Missing observations do not
+prove no execution, success or idle.
+
+Each observation retains `in_scalars/in_struct`, requested
+`out_req_scalars/out_req_struct`, reported `out_actual_scalars/out_actual_struct`,
+input/output type, handle presence/value, `emitted`, `wrote`, `tag`, `short_len`,
+`ret`, saved user state, PC, LR and up to8 frame addresses. The writeBytes return
+can be short even when the existing handler reports success and the full output
+size. The decoder preserves those differences. The tag/short length are only
+two header bytes from the source buffer; there is no captured/validated DER
+payload or genuine SEP/authentication result. Unknown tag/return values remain
+values, not invented function or error names.
+
+`t_ms` truncates the absolute kernel clock to a millisecond interval; host
+receipt time remains separate. AKS v1 prints no ASLR slide or main image base,
+so its PC/LR/frames stay unresolved. The decoder never borrows another record's
+slide. Existing HOG cache bounds and instruction-byte label checks still apply.
+
 Validation:
 
 `HK PRESENT` v1 is an optional default-off kernel observation stream. The
@@ -172,8 +244,28 @@ remains separate and coordinator-owned.
 python3 -I -W error::ResourceWarning tools/test_live_profile.py
 ```
 
+To run all Python decoder checks without rebuilding the unchanged C replay
+oracle, select the Python test classes explicitly:
+
+```sh
+python3 -I -W error::ResourceWarning tools/test_live_profile.py \
+  CaptureTests JournalTests SymbolTests PresentationTests ManualTests AKSTraceTests
+```
+
 The tests run the real p29 captures through raw/follow/canonical-dump paths,
 verify byte/epoch identity, compare the actual C replay implementation with both
 manifest schedules, and exercise truncation, sparse holes, wraps, interleaving,
 clock/sequence rollback and rejected symbol bytes. Private-source tests skip
 when the relevant local artifacts are absent; they are not fixture copies.
+
+Manual admission requires the build manifest's name, exact UTF-8 command-line
+length, image/Mach-O/payload/ADT hashes and nonzero stamp nonce. A known capture
+nonce mismatch is refused; streams lacking final status remain explicitly
+`pending_unverified`. A matching stamp nonce binds this assertion only and does
+not independently prove the whole image or kernel identity.
+
+AKS dispatch preserves headers before considering interleaved TOP/presentation
+suffixes. A retained frame list must satisfy the emitted writer's address range
+0x100000000..0x7fffffffff, exact declared count and whole suffix syntax. In-range,
+count-preserving text corruption remains undetectable; this is no complete-stack
+or authentication claim.

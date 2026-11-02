@@ -4,6 +4,7 @@
     python3 -I tools/live_profile.py --raw X.raw --manifest IMAGE/manifest.json --json report.json
     python3 -I tools/live_profile.py --raw X.raw --follow --events --json report.json
     python3 -I tools/live_profile.py --dump ATTEMPT/ramdump/kernel.log --json report.json
+    python3 -I tools/live_profile.py --raw X.raw --manifest IMAGE/manifest.json --manual --summary
 
 --raw uses usbcon.py's .times as a committed byte-range journal (including holes).
 --follow tails that journal; it never opens USB. --dump reconstructs only the
@@ -47,6 +48,16 @@ SPAWN = re.compile(r'Successfully spawned ([^\s\[]+)\[(\d+)\]')
 EXIT = re.compile(r'\((?:[^\s()]*/)?([^/\s()]+) \[(\d+)\]\).*exited due to (.+)$')
 UI_START = re.compile(r'HK UI: (\d+) tokens, start in (\d+) s$')
 PERF = re.compile(r'(?:blazer-perf|HK VM): t=(\d+)\b')
+AKS_READY = 'HKAKSTRACE: ready v=1 selector17 Spotlight only max65536 first8+powers2 budget300s observation-only'
+AKS = re.compile(
+    r'HKAKSTRACE: t_ms=(?P<t_ms>\d+) call=(?P<call>\d+) pid=(?P<pid>\d+) tid=(?P<tid>\d+) '
+    r'sel=(?P<sel>\d+) handle_present=(?P<handle_present>\d+) handle=(?P<handle>\d+) '
+    r'in=(?P<in_scalars>\d+)/(?P<in_struct>\d+) in_type=(?P<in_type>inband|descriptor) '
+    r'out_req=(?P<out_req_scalars>\d+)/(?P<out_req_struct>\d+) '
+    r'out_actual=(?P<out_actual_scalars>\d+)/(?P<out_actual_struct>\d+) out_type=(?P<out_type>inband|descriptor) '
+    r'emitted=(?P<emitted>\d+) wrote=(?P<wrote>\d+) tag=(?P<tag>0x[0-9a-f]+) '
+    r'short_len=(?P<short_len>\d+) ret=(?P<ret>0x[0-9a-f]+) user_state=(?P<user_state>\d+) '
+    r'pc=(?P<pc>0x[0-9a-f]+) lr=(?P<lr>0x[0-9a-f]+) frames=(?P<frames_count>\d+)(?= |$)')
 
 
 def digest(path):
@@ -389,13 +400,17 @@ class Symbols:
 
 
 class Analyzer:
-    def __init__(self, symbols=None, schedule=None, emit=None):
+    def __init__(self, symbols=None, schedule=None, emit=None, manual=False):
+        if manual and schedule is not None:
+            raise ValueError('manual workload cannot have a scripted schedule')
         self.symbols, self.schedule, self.emit = symbols, schedule, emit
+        self.manual, self.manual_replay_offsets = manual, []
         self.records, self.gaps, self.warnings = [], [], []
         self.pending, self.pending_off, self.end, self.discard = b'', 0, 0, False
         self.period, self.tops, self.tokens, self.done = None, [], [], None
         self.ui_start, self.last_anchor_low, self.epoch_starts = None, None, 0
         self.present_seqs, self.present_config = set(), None
+        self.aks_calls, self.aks_ready = set(), None
 
     def feed(self, off, data, host=None):
         if off < self.end:
@@ -422,8 +437,56 @@ class Analyzer:
 
     def line(self, text, off, end, host):
         r = dict(offset=off, end_offset=end, host_received_s=host)
-        match = TOP.search(text)
-        if match:
+        if self.manual and re.search(r'\bHK (?:UI:|UITRACE\b)', text):
+            self.manual_replay_offsets.append(off)
+        if text.endswith(AKS_READY):
+            if self.aks_ready is not None:
+                raise ValueError('second AKS ready: refusing duplicated/foreign epoch')
+            r.update(kind='aks_ready', version=1, selector=17, process_filter='Spotlight',
+                     max_calls=65536, first_calls=8, budget_s=300, detail=text)
+            self.aks_ready = r
+        elif (match := AKS.search(text)):
+            fields = match.groupdict()
+            suffix = text[match.end():]
+            frames_complete = bool(re.fullmatch(r'(?: 0x[0-9a-f]+)*', suffix))
+            frames_complete = frames_complete and len(suffix.split()) == int(fields['frames_count'])
+            frames_complete = frames_complete and all(0x100000000 <= int(v, 16) <= 0x7fffffffff for v in suffix.split())
+            # Require the whole suffix, declared count and actual writer's
+            # address range. In-range count-preserving corruption remains
+            # undetectable in this text format; this is no stack completeness proof.
+            frames = suffix.split() if frames_complete else []
+            for key in fields.keys() - {'in_type', 'out_type', 'tag', 'ret', 'pc', 'lr'}:
+                fields[key] = int(fields[key])
+            call = fields['call']
+            if (not 1 <= call <= 65536 or (call > 8 and call & (call - 1))
+                    or fields['sel'] != 17 or fields['t_ms'] == 0
+                    or fields['frames_count'] > 8
+                    or fields['handle_present'] not in (0, 1) or fields['user_state'] not in (0, 1)
+                    or fields['short_len'] > 255 or int(fields['tag'], 16) > 255):
+                raise ValueError('invalid bounded AKS observation')
+            if (not fields['user_state'] and (int(fields['pc'], 16) or int(fields['lr'], 16) or fields['frames_count'])
+                    or not fields['handle_present'] and fields['handle']):
+                raise ValueError('AKS unavailable state/handle has nonzero observations')
+            if call in self.aks_calls:
+                raise ValueError('duplicate AKS call in this epoch')
+            self.aks_calls.add(call)
+            # v1 prints no ASLR slide or main base. Never borrow another PID's
+            # HOG slide, guess a cache address, or attach a disassembly label.
+            stack = [dict(address=addr, status='unresolved',
+                          reason='AKS v1 has no slide or main image base')
+                     for addr in [fields['pc'], fields['lr'], *frames]]
+            r.update(kind='aks_observation', **fields, frames=frames, stack=stack, detail=text,
+                     frames_complete=frames_complete, unparsed_suffix=suffix if not frames_complete else None,
+                     record_integrity='complete' if frames_complete else 'prefix_only',
+                     kernel_s=[fields['t_ms'] / 1000, (fields['t_ms'] + 1) / 1000])
+            if not frames_complete:
+                self.warnings.append(dict(offset=off, reason='AKS fixed header retained; incomplete/interleaved frame suffix is unparsed', detail=text))
+        elif 'HKAKSTRACE:' in text:
+            # Keep new versions/fields and damaged/interleaved lines verbatim;
+            # an unknown line is not a ready or selector-execution receipt.
+            r.update(kind='aks_unknown', detail=text)
+            self.warnings.append(dict(offset=off, reason='unknown/malformed/interleaved AKS trace retained', detail=text))
+        elif (match := TOP.search(text)):
             t, frames, cpu = map(int, match.group(1, 2, 3))
             if self.tops and t <= self.tops[-1]['kernel_s'][0]:
                 raise ValueError('TOP clock moved backwards/repeated: refusing duplicated or foreign-epoch bytes')
@@ -563,6 +626,9 @@ class Analyzer:
             elif upper is not None:
                 r.setdefault('adjacent_kernel_stamps_s', [None, None])[1] = upper
         errors = []
+        if self.manual_replay_offsets:
+            errors.append('manual workload conflicts with observed HK UI/UITRACE records at offsets=' +
+                          str(self.manual_replay_offsets))
         if self.schedule:
             expected = self.schedule['executions']
             for token in self.tokens:
@@ -640,20 +706,42 @@ class Analyzer:
                        errors=errors, max_token_late_us=max((r['late_us'] for r in self.tokens), default=None),
                        max_token_call_us=max((r['end_us'] - r['begin_us'] for r in self.tokens), default=None),
                        callback_times_s=[self.tokens[0]['callback_us'] / 1e6, self.tokens[-1]['callback_us'] / 1e6] if self.tokens else None)
+        if self.manual:
+            summary['state'] = 'conflict' if errors else 'not_applicable'
         if self.schedule:
             summary['expected'] = {k: v for k, v in self.schedule.items() if k != 'executions'}
-        return dict(schema=1, script=summary, gaps=self.gaps, trailing_partial_bytes=len(self.pending),
+        aks_observations = [r for r in records if r['kind'] == 'aks_observation']
+        aks_complete = sum(r['frames_complete'] for r in aks_observations)
+        return dict(schema=1, script=summary,
+                    workload=dict(mode='manual' if self.manual else 'scripted' if self.schedule else 'unknown',
+                                  control='uncontrolled' if self.manual else 'replay_issue_schedule_only' if self.schedule else 'unknown',
+                                  causal_speed_claim='unavailable', fps='unavailable', touch_to_glass='unavailable'),
+                    gaps=self.gaps, trailing_partial_bytes=len(self.pending),
                     warnings=self.warnings, top_period_s=self.period, windows=windows, records=records,
                     phases=phases, crash_report_lines=dict(crash_lines),
                     crash_affected_pids={n: sorted(p) for n, p in crash_pids.items()}, task_pids={n: sorted(p) for n, p in pids.items()},
                     termination=[r for r in records if r['kind'] == 'end_marker'],
-                    hogs=hogs, presentation=dict(config=self.present_config,
+                    hogs=hogs, aks=dict(ready=self.aks_ready,
+                        state='execution_observed' if aks_complete else 'execution_prefix_observed' if aks_observations
+                              else 'ready_only' if self.aks_ready else 'unobserved',
+                        execution_record_count=len(aks_observations),
+                        complete_record_count=aks_complete, partial_record_count=len(aks_observations) - aks_complete,
+                        last_sampled_call=max(self.aks_calls, default=None), observations=aks_observations,
+                        unknown_records=[r for r in records if r['kind'] == 'aks_unknown']),
+                    presentation=dict(config=self.present_config,
                         counters=[r for r in records if r['kind'] == 'present_counters'],
                         observations=[r for r in records if r['kind'] == 'present_event'],
                         glass_timing='unavailable', input_causality='unavailable'), limitations=[
                         'HK PRESENT counts row-helper returns, submitted aggregates and existing DPU poll Layer0 evidence separately; none is glass/FPS.',
                         'Presentation stamps are CPU observation times; fetch status freshness and independent Layer1 completion are not established.',
                         'Sampled presentation records can be capped/reordered; counter snapshots are cumulative and bounded, not final boot totals.',
+                        'Manual workloads are uncontrolled; no causal speed, FPS or touch-to-glass claim is available.',
+                        'AKS ready proves trace initialization only; execution needs a parsed selector observation.',
+                        'AKS samples only Spotlight selector17, first8 then powers2, at most65536 calls/300s; absence is not no execution or idle.',
+                        'AKS request, reported output size, emitted size and writeBytes return are separate observations; ret=0 does not prove a full write or valid DER.',
+                        'AKS tag/short_len are only two source-buffer header bytes, not a captured or validated DER payload; no SEP/authentication success is inferred.',
+                        'AKS t_ms is a truncated absolute kernel stamp; saved PC/LR/frames have no printed ASLR base and remain unresolved.',
+                        'AKS prefix_only records retain an intact fixed header, but no frame addresses from an incomplete/interleaved suffix; raw suffix text remains available.',
                         'UITRACE and presentation share a kernel clock, but temporal proximity does not prove input caused a particular aggregate.',
                         'Trace times cover callback/injection-call work, not delivery, response, scanout or glass.',
                         'HK HOG is selected TH_RUN threads at their last kernel entry, not a statistical CPU profile.',
@@ -666,16 +754,61 @@ class Analyzer:
                         'No-issue/wait/post-script windows do not prove device idle or physical input absence.'])
 
 
-def load_schedule(manifest, script):
-    if script:
-        return script_schedule(script), 'explicit --script'
+def manual_manifest_identity(document):
+    if (not isinstance(document.get('name'), str) or not document['name']
+            or type(document.get('cmdline_bytes')) is not int
+            or document['cmdline_bytes'] != len(document['cmdline'].encode('utf-8'))):
+        raise ValueError('manual mode requires a complete image manifest with name and exact cmdline_bytes')
+    for field in ('image', 'mach', 'payload', 'adt'):
+        if not isinstance(document.get(field), str) or not re.fullmatch(r'[0-9a-f]{64}', document[field]):
+            raise ValueError('manual mode requires real image manifest artifact hashes')
+    identity = document.get('ids')
+    nonce = identity.get('stamp_nonce') if isinstance(identity, dict) else None
+    if not isinstance(nonce, str) or not re.fullmatch(r'0x[0-9a-f]{16}', nonce) or not int(nonce, 16):
+        raise ValueError('manual mode requires a nonzero manifest ids.stamp_nonce')
+    return int(nonce, 16)
+
+
+def bind_manual_manifest(source, expected_nonce):
+    epoch = source.get('epoch', {})
+    observed = epoch.get('nonce')
+    binding = dict(status='pending_unverified', expected_stamp_nonce=hex(expected_nonce),
+                   scope='stamp nonce only; not full kernel or image identity')
+    if observed is not None:
+        try:
+            actual = int(observed, 0) if isinstance(observed, str) else int(observed)
+        except (ValueError, TypeError):
+            raise ValueError('invalid observed capture stamp nonce') from None
+        if actual != expected_nonce:
+            raise ValueError('manual manifest/capture stamp nonce mismatch')
+        binding.update(status='matched_stamp_nonce', observed_stamp_nonce=hex(actual))
+    source['manifest_binding'] = binding
+
+
+def load_schedule(manifest, script, manual=False):
+    if manual and (not manifest or script is not None):
+        raise ValueError('--manual requires --manifest and forbids --script')
+    explicit = script_schedule(script) if script is not None else None
     if manifest:
-        cmdline = json.loads(Path(manifest).read_text())['cmdline']
-        values = re.findall(r'(?:^|\s)hk_ui=(\S+)', cmdline)
-        if len(values) != 1:
+        document = json.loads(Path(manifest).read_text())
+        if not isinstance(document, dict) or not isinstance(document.get('cmdline'), str):
+            raise ValueError('manifest cmdline must be a string')
+        cmdline = document['cmdline']
+        # Count even bare/empty hk_ui arguments: they cannot authorize a manual
+        # workload or hide a duplicate alongside a valid scripted argument.
+        values = [v for v in cmdline.split() if v.split('=', 1)[0] == 'hk_ui']
+        if manual:
+            if values:
+                raise ValueError('--manual requires exactly no hk_ui arguments in the manifest')
+            manual_manifest_identity(document)
+            return None, str(manifest)
+        if len(values) != 1 or not values[0].startswith('hk_ui='):
             raise ValueError('manifest must have exactly one complete hk_ui argument')
-        return script_schedule(values[0]), str(manifest)
-    return None, None
+        schedule = script_schedule(values[0])
+        if explicit and explicit != schedule:
+            raise ValueError('--script disagrees with the manifest hk_ui argument')
+        return schedule, str(manifest)
+    return explicit, 'explicit --script' if explicit else None
 
 
 def verify_capture(journal, dump, expected):
@@ -708,12 +841,16 @@ def text_report(report):
     source, script = report['source'], report['script']
     lines = [f"source {source['path']} ({source['mode']})", f"sha256 {source['raw_sha256']}",
              f"boot epoch {source.get('epoch', 'unknown; no status/header available')}"]
+    lines.append('capture state ' + source['capture_state'])
+    if report['workload']['mode'] == 'manual':
+        lines.append('workload MANUAL, uncontrolled: no causal speed, FPS or touch-to-glass claim')
     if 'verified_dump' in source:
         verified = source['verified_dump']
         lines.append(f"same-epoch dump verification: {verified['compared_bytes']} live bytes equal; {verified['not_read_before_reset']} trailing dump bytes not read live")
         for end in verified['termination']:
             lines.append('verified dump ending: ' + end['termination'])
     lines.append(f"trace {script['state']}: {script['tokens_observed']} token executions observed")
+    lines.extend('trace error: ' + error for error in script['errors'])
     if script['done']:
         done = script['done']
         lines.append(f"done events={done['events']} tokens={done['tokens']} max_late_us={done['max_late_us']} max_call_us={done['max_call_us']} drift_us={done['drift_us']}")
@@ -726,12 +863,17 @@ def text_report(report):
         lines.append(f"PRESENT cumulative snapshot seq={c['seq']} us={c['us']}: copy_ops={c['copy_ops']} copy_bytes={c['copy_bytes']} submitted={c['submitted']} fetch_layer0={c['fetch_done']} unproved={c['uncertain']} event_drops={c['event_drops']}; glass/input causality unavailable")
     elif presentation['observations']:
         lines.append('PRESENT sampled observations only; no counter snapshot; glass/input causality unavailable')
+    aks = report['aks']
+    lines.append(f"AKS {aks['state']}: ready={aks['ready'] is not None} execution_records={aks['execution_record_count']} complete={aks['complete_record_count']} prefix_only={aks['partial_record_count']} last_sampled_call={aks['last_sampled_call']} unknown_records={len(aks['unknown_records'])}; sampled observations, not total calls")
+    for r in aks['observations']:
+        lines.append(f"  t_ms={r['t_ms']} call={r['call']} pid={r['pid']} tid={r['tid']} sel={r['sel']} handle_present={r['handle_present']} handle={r['handle']} in={r['in_scalars']}/{r['in_struct']}({r['in_type']}) out_req={r['out_req_scalars']}/{r['out_req_struct']} out_reported={r['out_actual_scalars']}/{r['out_actual_struct']}({r['out_type']}) emitted={r['emitted']} wrote={r['wrote']} tag={r['tag']} short_len={r['short_len']} ret={r['ret']} user_state={r['user_state']} pc={r['pc']} lr={r['lr']} frames_declared={r['frames_count']} frames_complete={r['frames_complete']} frames_retained={','.join(r['frames']) or '-'} integrity={r['record_integrity']}; ASLR unresolved, DER not validated")
     lines.append('TOP windows: kernel absolute seconds; frames+ counts attempted layers/admitted flips, not completed frames or FPS')
     for w in report['windows']:
         start, end = w['start_s'], w['kernel_s']
         bb = ','.join(f"{t['pid']}:{t['cpu_ms']}" for t in w['tasks'] if t['name'] == 'backboardd') or '-'
         lines.append(f"  {start} -> {end} frames={w['frames_delta']} cpu_ms={w['cpu_ms']} backboardd_pid:ms={bb} coverage={w['coverage']} tasks_complete={w['task_list_complete']}")
-    lines.append('Issue phases (callback times; no proportional CPU allocation)')
+    lines.append('Manual workload: no scripted issue phases' if report['workload']['mode'] == 'manual'
+                 else 'Issue phases (callback times; no proportional CPU allocation)')
     for p in report['phases']:
         lines.append(f"  {p['name']} {p['issue_span_s']} {p['tokens_observed']}/{p['tokens_expected']} {p['state']}")
     pcs = collections.Counter((h['name'], h['stack'][0].get('unslid', h['pc']), h['stack'][0].get('symbol', h['stack'][0].get('image', 'unresolved'))) for h in report['hogs'])
@@ -754,6 +896,7 @@ def main(argv=None):
     parser.add_argument('--verify-dump', help='verify raw ranges AND epoch against captured kernel.log (requires final .json)')
     parser.add_argument('--manifest', help='complete image manifest, preferred to truncated boot log')
     parser.add_argument('--script', help='explicit complete hk_ui=... for expected execution checks')
+    parser.add_argument('--manual', action='store_true', help='explicit uncontrolled workload; requires a manifest with exactly no hk_ui; forbids --script')
     parser.add_argument('--cache', help='explicit current dyld_shared_cache_arm64e')
     parser.add_argument('--quartzcore', help='local QuartzCore.s with demangled function labels')
     parser.add_argument('--no-symbols', action='store_true')
@@ -768,7 +911,7 @@ def main(argv=None):
         parser.error('--events and --summary are separate output formats')
     symbols = None
     try:
-        schedule, schedule_source = load_schedule(args.manifest, args.script)
+        schedule, schedule_source = load_schedule(args.manifest, args.script, args.manual)
         repo = repo_path()
         cache = Path(args.cache) if args.cache else repo / 'research/ios26-debug-r1/mnt/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64e'
         dis = Path(args.quartzcore) if args.quartzcore else repo / 'research/ios26-root-r1/apple/dis/QuartzCore.s'
@@ -780,8 +923,11 @@ def main(argv=None):
                 raise ValueError('--json output must not overwrite an input/capture sidecar')
         if not args.no_symbols and (cache.is_file() or args.cache):
             symbols = Symbols(cache, dis if dis.is_file() or args.quartzcore else None)
-        analyzer = Analyzer(symbols, schedule, lambda r: print(json.dumps(r), flush=True) if args.events else None)
+        analyzer = Analyzer(symbols, schedule, lambda r: print(json.dumps(r), flush=True) if args.events else None,
+                            manual=args.manual)
         source = dict(path=args.raw or args.dump, mode='raw_journal' if args.raw else 'canonical_dump', schedule_source=schedule_source)
+        if args.manifest:
+            source['manifest_sha256'] = digest(args.manifest)
         if args.raw:
             journal = Journal(args.raw, args.times)
             summary_path = Path(args.raw + '.json')
@@ -800,6 +946,7 @@ def main(argv=None):
             source.update(reads=journal.reads, bytes=journal.bytes, final_offset=journal.end,
                           times_sha256=digest(journal.path), raw_sha256=digest(journal.raw), interrupted=interrupted,
                           unjournaled_file_tail_bytes=max(0, journal.raw.stat().st_size - journal.end))
+            source['capture_state'] = 'interrupted_provisional' if interrupted else 'provisional_no_final_summary'
             if summary_path.exists():
                 capture = json.loads(summary_path.read_text())
                 if (capture['bytes'] != journal.bytes or capture['final_offset'] != journal.end or capture['reads'] != journal.reads
@@ -807,6 +954,7 @@ def main(argv=None):
                         or capture.get('lost_bytes', 0) != sum(g['bytes'] for g in analyzer.gaps)):
                     raise ValueError('capture summary/journal disagree: truncated or replaced capture')
                 source['capture'] = capture
+                source['capture_state'] = 'final_summary'
                 status = capture.get('last_status', {})
                 if all(k in status for k in ('nonce', 'entry_t', 'hz')):
                     source['epoch'] = {k: status[k] for k in ('nonce', 'entry_t', 'hz')}
@@ -818,9 +966,11 @@ def main(argv=None):
                 raise ValueError('--verify-dump requires the finished capture summary .json')
         else:
             segments, info = decode_dump(args.dump)
-            source.update(info, raw_sha256=digest(args.dump))
+            source.update(info, raw_sha256=digest(args.dump), capture_state='current_header_reconstruction')
             for off, payload in segments:
                 analyzer.feed(off, payload)
+        if args.manual:
+            bind_manual_manifest(source, manual_manifest_identity(json.loads(Path(args.manifest).read_text())))
         report = analyzer.report()
         report['source'] = source
         report['symbols'] = dict(cache=str(cache) if symbols else None,
