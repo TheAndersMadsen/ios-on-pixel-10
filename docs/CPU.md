@@ -34,15 +34,25 @@ reviewed proposal: one running ADT reg0x200,492-byte line and the same window882
 CPU host artifact checks pass, including reconstruction of the pinned payload.
 The CPU source/guard/IRQ design conditionally accepts that exact bounded
 one-A725 experiment. Powered parked cpu0, the existing barriers and single-core
-transport guards remain required. Native's existing reservation/placement
-check and the phone owner's attended P1/300-second admission remain. Live
+transport guards remain required. Native's exact reservation/placement check
+is now accepted: no named fixed overlaps, and linked live-resident/shim-stack
+exclusions precede copies. No further CPU/static review is required. The phone
+owner's attended P1/300-second admission remains. Live
 CPU/Trusty/IRQ/cache/full-map and firmware acceptance are unobserved; this is
 not a slot. The original cpu0 image's hold is unchanged.
 The exact GPT r5 proposal SHA256
 `feb2b799e9a5afdfb083a118e5b2e8b217b4b437299d02ef922286114dc4fa35`
-has CPU **build-only composition acceptance**: all77 source pins checked,
-same readback K30db07c5/U0ce50d8b, a000/4GiB window,528-byte line and one
-running logical0/reg0x200. It remains unbuilt at this checkpoint. Actual new
+received CPU composition acceptance, but the actual builder then refused its
+1125x2436 canvas before image creation. That check had only exercised the
+line/ADT in memory. CPU **build-only acceptance** now covers the explicit r5a
+name and1125x2511 canvas correction: all77 pins unchanged, same readback K30db07c5/
+U0ce50d8b, a000/4GiB window,528-byte line and one running logical0/reg0x200.
+The actual build admission path reaches the first output mkdir; the host check
+stopped there without creating output. Fixed-seed ADT changes only canvas-height.
+Existing dualboot bound that exact proposal/binder delta as
+`e9ec048cd01143f7e30a6af44e016db0008e10e53c9689dc5f40d046fd77fae6`;
+CPU exact build-only acceptance is closed, with no new review round.
+It remains unbuilt at this checkpoint. Actual new
 image/shim/nonces/LU0/transport/own-U binding and exact-context admission are
 separate; no GPU acceptance transfers to GPT. The old21cba/profile34a stays held.
 One current source/artifact/acceptance/shareability handoff is retained in

@@ -653,7 +653,7 @@ No new core implementation claim for this one-off audit. Full GPT capture,
 complete backups/isolated allocation and native chooser/Android return still
 unfinished. Keep goal active and all existing storage/boot holds intact.
 
-## CPU acceptance checkpoint, 2026-11-02 — GPT build-only accepted, health checker held
+## CPU acceptance checkpoint, 2026-11-02 — GPT r5a canvas accepted, health checker held
 
 User explicitly resumed CPU engineering/resource search after fa5a08f's blocked
 snapshot. CPU objective unfinished, score84; actual source/image progress below.
@@ -700,7 +700,9 @@ and tests: research/ios26-cpu-complete-r3/phone-test.json +native/negative recei
 Phone-owner common-config/artifact admission still required. Current p32 combined
 UI attempt20261102-132258 uses distinct Kc3a9a937/U1c4d5ad3/imaged0a898fe,
 same five-A725/cap16B40/guard2fast1/70/deadline300; CPUhealth OFF/no promotion.
-No alteration of its active capture/queue or automatic CPU slot.
+Owner now reports p32 COMPLETE:879706livebytes/0loss/0mismatch,709tailonlydump,
+expecteddeadline/41C/0CPM; humanHome+Settings works,8BBsignalexits/PRESENT0
+unresolved. No graphics/speed or CPUhealth acceptance follows; no automatic slot.
 
 This is a functional baseline with new fail-stop/release gates, not passive UI
 logging or a timing A/B. Required PASS: fresh all-five identity/AMU/transaction
@@ -756,14 +758,30 @@ gpu-a725-context-binding.json. CPU source/guard/IRQ design conditionally ACCEPTS
 the exact bounded experiment, no remaining CPU source patch; decision r3/
 gpu-a725-cpu-context-decision.json SHA5143404165bd16cb06bc455d411e9a83e71e5a2b3b17d495ad2859039fb75c36.
 Powered parked CPU0/GICR frame0 assumption, one-core transport and barriers kept.
-Native's existing reservation/placement check and phone per-run P1/short300/
-attended stop (nonreturnSMC can defeat deadline) remain; runtime CPU/Trusty/IRQ/
-FF-A/cache/full-layout unaccepted. No new review/helper/recipe/slot requested.
-GPT r5 EXACT proposal feb2b799e9a5afdfb083a118e5b2e8b217b4b437299d02ef922286114dc4fa35
-now CPU ACCEPT_EXACT_PROPOSAL_BUILD_ONLY, independently77pins/K/U/frozenhost+
-profile rehashed and528B/one runninglogical0reg200/originala0004GiB ADT checked.
-Decision r3/gpt-r5-composition-decision.json SHA8d3113042dc91c08424a59b609a3660d546161f7c1a237f06ab025f9d66514f8.
-Sent phone+dualboot; no image built here. Fresh image/shim/nonce/placement/LU0/
+Native existing reservation/placement gate now CLOSED: REVIEWee6df1aa80acc74b32f8fa24da97ea8d6d2441b393ac32b4405808fe8cfb834f,
+37fixed reservations each savedFDT/0named overlaps/12actual extents; linked EARLY
+strict fixed/live-resident/parked-shim+bothstack exclusions precede copies.
+Old report-only prose incomplete;6dynamicpools/full-live/Trusty/IRQ/cache remain
+experimental. CPU consumed/closed r3/gpu-a725-static-gate-closed.json16c830dd...,
+NO further CPU/native static/source/image review gate. Phone per-run P1/short300/
+attended stop (nonreturnSMC can defeat deadline) remains; fresh runtime required.
+No new review/helper/recipe/slot requested; don't wait all3 or correction commit.
+GPT r5 proposalfeb2b799... was ACTUALLY BUILD-REFUSED before output: canvas2436
+violates root --phone-root2511 guard. Original in-memory CPU check missed that
+guard; failed parent log/admission and original8d311304 decision retained.
+CPU now ACCEPTS only explicit separately named dualboot-gpt-a725-proposal-r5a,
+canvas1125x2511 delta; all77pins/K/U/a0004GiB/oneA725/528B/gates unchanged.
+ACTUAL builder pre-write path: old2436REFUSED, new2511reaches firstmkdir/STOP
+without output/compiler/image. Receipt r3/gpt-r5a-real-prewrite-admission.json
+SHAed7f9326deba4ede9e51254758902d782dd4af192c4ae89faeb1902f0cafc37a.
+Fixed-seed ADT delta ONLYdisp0/canvas-height. Explicit BUILD-ONLY decision r3/
+gpt-r5a-canvas-decision.json SHA4f5a74d52f49e079c78e9d3f110605cf8f239e44b1d3d4f2849b82348078c5c1
+sent phone+dualboot. Existing context-r5a proposal now BOUND EXACT
+e9ec048cd01143f7e30a6af44e016db0008e10e53c9689dc5f40d046fd77fae6;
+CPU final ACCEPT_EXACT_R5A_PROPOSAL_BUILD_ONLY r3/
+gpt-r5a-exact-proposal-acceptance.json SHA33e6b2d5d9d7dab37437dfdeb7dbc8226f9f81d17e3386d5465c4c5bf22cacf3.
+No further CPU proposal review before parent build; don't wait doc correction.
+No image built here. Fresh image/shim/nonce/placement/LU0/
 READ10/transport/ownU binder and exact-context/P1 stop admission remain separate.
 Phone's checker repair changes77-file tool pin: explicit refresh before build,
 never silent drift/GPU acceptance transfer. Old21cba/profile34a unchanged/HELD.
@@ -774,6 +792,8 @@ root/slots/firmware/backups unchanged. docs/status.json evidence text refreshed;
 no invented score promotion before corresponding physical captures pass.
 ROOT index/commits HELD, no in-flight CPU commit or staged paths at ACK; no
 children. Completed docs/own-NOTES changes route to sole coordinator Git writer.
+Sole writer committed first scoped request11438939b7d972a812132cb0646233da3e31f134;
+narrow r5a correction follows without rewriting history or delaying host prep.
 
 ## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
 
