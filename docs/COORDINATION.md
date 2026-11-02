@@ -132,9 +132,11 @@ Both explicit release handoffs completed, without interruption or polling:
    `d90a58d61f60e3260f76499960949ed59e4b65acc4e9358dd3356368fa3072ed`
    are now ready; only registrar changes from the prior image. Exact
    guest-command-r6/package-r4 receipts retain all49 apps/55 seed files/676 jobs.
-   ONE normal shared-lock admission is planned for r6, host budget1,200 seconds
-   and existing guest deadline1,800; no physical phone budget changes. Claim/
-   runtime result remains unreported. No other reservation is held here.
+   ONE normal shared-lock admission succeeded: r6 ACTIVE, runner28155/QEMU28409,
+   XNU entered and launchd progressing; registrar/probe/registration/launch
+   acceptance is not yet observed. Planned host budget1,200 seconds and existing
+   guest deadline1,800 stay unchanged. Preserve guest/lock until terminal capture
+   and the owner's explicit cleanup/release event; no physical phone action.
    Registration plus conditional representative launches remain its acceptance
    goal. Existing reservations retain priority under the shared lock.
 
