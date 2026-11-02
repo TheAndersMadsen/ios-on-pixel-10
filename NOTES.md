@@ -1,3 +1,66 @@
+## Saved Android AVB recovery gap, 2026-11-02 11:22 CET (host only)
+
+Android structural inventory committed **7e43b70**;8owned-fixture/AOSP testsPASS,
+vendored unmodified Apache unpacker+licence/provenance; readback16tests nowinCI.
+PMBR host fix **f329418** ready, delivered for coordinator review/later slot.
+No new phone attempt/USB use here; coordinator still owns current physical work.
+
+**New observed recovery blocker in SAVED FILES:** bounded buffer audit with
+pinned MIT AOSP avbtool761178607206f4cb2af79ed9eec52d8cbd814adb
+(SHAe5a664a38db623da00f080219bc0ee60a640a9dc4a872803616fae4938ac749b,
+same version as existing builder tool) validates boot_a RSA4096 signature+payload;
+init_boot_a RSA4096 METADATA signature valid but PAYLOAD HASH FAIL.
+Its signed hash descriptor image_size2998272 exceeds footer original_size2838528
+and includes metadata/padding. Cause UNKNOWN. Independent AOSP verify_image on
+separate mode0400 copies confirms boot exit0, init_boot exit1/digest mismatch,
+vendor_boot exit0 with algorithmNONE (unsigned, NOT signature-valid proof).
+All originals/copies hashes unchanged before/after. No top-level trusted-key or
+chain verification available. Saved-file result does NOT establish live Android
+integrity or authorize Android boot/reset/recovery writes.
+
+Exclude saved init_boot_a from any VERIFIED restore set; get matching fresh
+copies and trusted AVB graph. Phone owner received exact evidence via steering.
+Full source/metadata receipts (no raw IDs in git): r3/inspect_saved_avb.py,
+stock-a-avb-footer-evidence.json, avb-cli-oracle/{results.json,*.stdout,*.stderr}.
+No new core implementation claim for this one-off audit. Full GPT capture,
+complete backups/isolated allocation and native chooser/Android return still
+unfinished. Keep goal active and all existing storage/boot holds intact.
+
+## CPU clock-table validation, 2026-11-02 — audit boot in progress
+
+CPU goal ACTIVE, score84 unchanged. Committed **bd7326c** adds original host
+`tools/cpu_dvfs_check.py` +7 regression methods and extends docs/CPU.md. Reuses
+existing clk-probe decoder pinnedSHAa3baf953…; no second wire decoder/governor.
+Actual saved nonce/epoch/sealed clock capture validates18 domain/rung rows
+against BOTH exact p29 source and reviewed0773 source0d1c4acf… . Explicit
+firmware IDs34/35 are separated from MMIO vote domains1/2; duplicate IDs/names/
+levels, unsupported/override-only OPP, missing rows, wrong units and altered
+existing domain ceilings refused. New tests PASS; four mutated copies of the
+ACTUAL saved record (nonce/truncation/torn/no-end) fail CLI as required.
+Original capture unchanged. No additional device operation or source admission.
+
+Independent unmodified GPL donor lookup functions from exact6.12@5940a317
+compile/run ASan/UBSan:103 actual assertions PASS incl unit width/round-trip.
+Copied donor text+notices stay IGNORED in research/ios26-cpu-complete-r1/dvfs/;
+no GPL implementation imported into tracked/XNU source. Full CI PASS including
+new7 (and other owners' new dualboot suites); CPU CI invocation landed with
+parent7e43b70 while preserving its separately staged files. Receipts: own
+dvfs/{p29,0773,vendor-oracle,real-input-negative,capture-source}.json.
+These are table correctness checks, NOT physical speed or higher-cap permission.
+
+Phone owner confirms mode1 audit **started**, attempt
+`20261102-110932-cpu0-audit-p29-r1`, unchanged image226eba4f…/p29/Ucc979153… .
+Observed actual bootios PID96987 + run-attempt97010 alive at3m22; capture absent
+at this checkpoint, not a failure. Sole phone owner retains USB; this CPU goal
+issued no device command. Keep no-OFF/reentry/high-clock scope. Await its fresh
+capture, independently run strict audit + SMP/reset/thermal acceptance, and
+only then select the next A520 step; no blind retry or fabricated completion.
+
+Parent integrated floor0772=f9f6ec67/series1172 and0773=b03d04d1/1173;
+current governor hash matches independently reviewed0d1c4acf… . Diagnostic
+compile0 and high0 unchanged; parent reports full link still pending. Existing
+p29/audit images immutable, CPU audit kept separate from future stepdown tests.
+
 ## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
 
 Committed source/audit/reproduction: **55d423d**, `docs/INFERNO.md` and

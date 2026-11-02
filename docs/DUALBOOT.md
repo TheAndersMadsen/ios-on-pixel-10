@@ -131,6 +131,15 @@ AVB-chain verification, independently trusted stock keys, current slot identity,
 Android integrity and physical dispatch. None of those follows from a filename
 or successful unpack. No boot/slot change is performed by this tool.
 
+A separate saved-file check with pinned AOSP AVB tooling also found that
+`recovery-current-a/init_boot_a.img` fails its embedded payload hash although its
+metadata signature verifies. A second AOSP `verify_image` run on a read-only copy
+confirms the digest mismatch. This is evidence about the saved file, not proof
+of the phone's current Android state or the cause of the mismatch. Exclude it
+from a verified recovery set. A saved vendor boot image uses algorithm `NONE`;
+the upstream helper reports success for unsigned metadata too, so signature
+presence and top-level key/chain trust must be checked separately.
+
 Run owned synthetic and malformed-image tests with
 `python3 -I tools/test_android_bootset.py`; the vendored tool makes these checks
 independent of local research artifacts or network access.
