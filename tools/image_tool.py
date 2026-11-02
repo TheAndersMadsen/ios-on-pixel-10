@@ -23,15 +23,16 @@ PARTITION = 67108864; FOOTER_ROOM = 1 << 20
 PHYS, SIZE = 0xa00000000, 0x100000000; FB = 0xf0000000
 # Boot arguments. tegu's userland set from scripts/build-boot-image.sh; ours from ui-integrate-r1. blazer_* names are provisional until kernel-blazer.
 USER = 'unentitled_ios_sim_launch=1 ignition_level=1 launchd_unsecure_cache=1 sweetarm64e=1 launchd_disable_all_timeouts=1 autounlock=0 sweetfb_noconsole=1 kern.jetsam_critical_threshold=1'
-UFS = 'lagunapanicdump=2 blazer_psci_reset=1 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=userdata_exp.ai blazer_ufs_lun=0 blazer_ufs_deadline=1500'
+UFS = 'lagunapanicdump=2 blazer_psci_reset=1 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_ufs_deadline=1500'
 SHIM_FLAGS = '-DTGL_UFS_POWER_MODE=1 -DTGL_UFS_PHY_CHECK=1 -DTGL_ALL_STAGES=1 -DTGL_UFS_PWM_FALLBACK=1 -DTGL_UFS_WDT_GUARD=1'
 DPU_FLAGS = '-DTGL_ALL_DCS=1 -DTGL_FRAME_RUNG=3 -DTGL_DCS_HANDOFF=1 -DTGL_DCS_BRIGHT=1'
 # Tensor G4 addresses tegu's start.s and early marks write with the MMU off. Writing them here hits unknown RAM on this phone.
-PHONE_ROOT_SHA = '205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7'  # ios26-phone-r3, must be staged in userdata_exp.ai
+PHONE_ROOT_SHA = '205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7'  # ios26-phone-r3, must be staged in ios_system (GOAL.md A7)
+# userdata_exp.ai is a member of Android's /data since 2026-11-02: no recipe may name it as the iOS root.
 # One by one, with source: PHONE-ROOT.md. Debug-off settings are out: a phone boot that needs one adds it, a one-boot change.
 QEMU_RUN_DIRS = ('ios26-qemu-r1', 'ios26-blazer-r1', 'ios26-native-r1', 'ios26-overlay-r1')  # folders holding runs/<name>
 PHONE_ROUTES = {'ufsroot': 'rd=ufsroot0', 'md0-mountroot': 'rd=md0 blazer_ufs_mountroot=1'}  # handoffs/kernel-ios26.md decides; md0-mountroot needs blazer's c2
-PHONE_ARGS = ('debug=0x8 serial=3 cpus=1 ROUTE msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=userdata_exp.ai blazer_ufs_lun=0 blazer_deadline=1800 '
+PHONE_ARGS = ('debug=0x8 serial=3 cpus=1 ROUTE msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=1800 '
               'launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 '
               'interrupt-masked-debug-mode=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 hk_fb_probe=1 sweetfb_noconsole=1 sweetfb_hz=60')  # masked-mode off: parent's decision 23:36, PHONE-ROOT.md
 TOUCH_ARG = 'blazer_touch=1'
@@ -232,12 +233,12 @@ def check_kernel(path, want_sha, test):
 def cmdline(a, epoch):
     if getattr(a, 'soak', None) is not None:  # read-only, never a phone-run kernel. 0: what the shim's rewrite leaves when UFS isn't live
         if a.soak == 0: return 'debug=0x8 serial=3 cpus=1 rd=md0 msgbuf=1048576 blazer_deadline=300 blazer_panic=1'
-        return ('debug=0x8 serial=3 cpus=1 rd=md0 blazer_ufs_mountroot=1 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=userdata_exp.ai '
+        return ('debug=0x8 serial=3 cpus=1 rd=md0 blazer_ufs_mountroot=1 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system '
                 f'blazer_ufs_lun=0 blazer_ufs_test=1 blazer_ufs_fullcheck={a.soak} blazer_deadline=1500 blazer_panic=1')
     if a.phone_root:  # read-only HFSX root on UFS, RAM /private/var from varfs: PHONE-ROOT.md
         return PHONE_ARGS.replace('ROUTE', PHONE_ROUTES[a.phone_route]) + (' ' + TOUCH_ARG if getattr(a, 'touch', False) else '') + ''.join(' ' + t for t in phone_extra(getattr(a, 'phone_args', None), cpu_health=getattr(a, 'cpu_health', False)))
-    if a.first_boot:  # blazer's contract, verbatim. userdata_exp.ai on LUN 0: physical, 20261101-201914-ufs-root-r2
-        return 'debug=0x8 serial=3 cpus=1 rd=md0 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=userdata_exp.ai blazer_ufs_lun=0 blazer_ufs_test=1 ' + (f"blazer_ufs_deadline=1200 blazer_ufs_fullcheck={2 if getattr(a, 'persist_table', None) else 1}" + (f" blazer_persist={a.persist}" if getattr(a, 'persist', None) else '') if getattr(a, 'fullcheck', None) else 'blazer_ufs_deadline=300') + ' unentitled_ios_sim_launch=1' + (' ' + SECOND_ARGS if a.second_boot else '')
+    if a.first_boot:  # blazer's contract; the root was userdata_exp.ai on LUN 0 in 20261101-201914-ufs-root-r2, now ios_system
+        return 'debug=0x8 serial=3 cpus=1 rd=md0 msgbuf=1048576 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_ufs_test=1 ' + (f"blazer_ufs_deadline=1200 blazer_ufs_fullcheck={2 if getattr(a, 'persist_table', None) else 1}" + (f" blazer_persist={a.persist}" if getattr(a, 'persist', None) else '') if getattr(a, 'fullcheck', None) else 'blazer_ufs_deadline=300') + ' unentitled_ios_sim_launch=1' + (' ' + SECOND_ARGS if a.second_boot else '')
     root = 'rd=ufsroot0 rootfstype=hfs' if a.route == 'ufs' else 'rd=md0 blazer_ufs_mountroot=1'
     c = f'debug=0x8 serial=3 cpus={a.cpus} keepsyms=1 -noprogress {root} {USER} {UFS} epoch={epoch}'
     if a.args: c += ' ' + a.args
@@ -381,6 +382,7 @@ def build(a):
         if (p_mode or p_table) and b'blazer_persist' not in Path(a.kernel).read_bytes(): die('kernel has no blazer_persist')
         if p_expect and (p_mode or p_table): die('--expect-test-block is for a kernel with no mask, after the test')
     epoch = int(time.time()); c = cmdline(a, epoch)
+    if 'userdata_exp.ai' in c: die('command line names userdata_exp.ai, a member of Android /data: bind ios_system (GOAL.md A7)')
     if a.bootcpu:  # the same line plus the token. --first-boot and --second-boot lines also get the reset path and the per-core report
         if a.bootcpu not in BOOTCPUS or not 1 <= a.cpus <= 5: die(f'--bootcpu: one of {BOOTCPUS}, at cpus 1 to 5')
         if b'blazer_bootcpu' not in Path(a.kernel).read_bytes(): die('kernel has no blazer_bootcpu gate')

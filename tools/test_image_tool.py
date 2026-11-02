@@ -454,7 +454,7 @@ class CpuHealthProfile(unittest.TestCase):
     def test_exact_common_configuration_and_default_refusal(self):
         a = self.ns(); self.assertTrue(T.cpu_health_profile(a))
         self.assertEqual(a.phone_args, T.CPU_HEALTH_ARGS)
-        self.assertEqual(len(T.cpu_health_line().encode()), 1000)
+        self.assertEqual(len(T.cpu_health_line().encode()), 995)  # 1000 before the root moved from userdata_exp.ai to ios_system (GOAL.md A7)
         with self.assertRaises(SystemExit): T.phone_extra(T.CPU_HEALTH_ARGS)
         for t in ('blazer_gov_verify=1', 'blazer_gov_health=1', 'blazer_gov_probe=1', 'blazer_gov_hi=0'):
             with self.assertRaises(SystemExit): T.phone_extra(t)
@@ -493,7 +493,7 @@ class CpuHealthProfile(unittest.TestCase):
         blob += b'\0'*(-len(blob)%8); p = Path(tmp)/'adt'; p.write_bytes(blob)
         raw, _ = mkpayload.build(k, p, T.cpu_health_line(), None, None, False, ov)
         m = dict(mach=T.sha(k), bootcpu='0x200', cpus=5, phone_root=True, route='ufs',
-            cmdline=T.cpu_health_line(), cmdline_bytes=1000, adt_facts=T.adt_facts(blob),
+            cmdline=T.cpu_health_line(), cmdline_bytes=len(T.cpu_health_line().encode()), adt_facts=T.adt_facts(blob),
             window_base='0x882000000', var_overlay=dict(path=str(ov),sha256=T.sha(ov)),
             cpu_health=dict(version=1,cap=16,required_mask=262,high_clock=False,
                 stepdown_probe=False,physical_acceptance=False,kernel_path=str(k)))
