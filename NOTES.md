@@ -1,5 +1,14 @@
 ## Native Metal diagnostic qualified, 2026-11-02 11:21 CET — build only
 
+Checkpoint committed **9db93cb**. Subsequent orchestration steer delivered to
+all ten EXISTING owners, with one source/ABI/ownership contract at
+research/ios26-metal-native-20261102/integration/CONTRACT.md. UC-r2 owns the next
+runnable combined native-adapter/provider host path; peers resolve exact shared
+ABI/lock/ref mismatches there. Sent concise blockers/minimal candidate to the
+repo orchestration coordinator; exact11 delivery receipts in
+integration/orchestration-deliveries.json. This coordination started no new
+delegate/review/implementation and changed no device ownership or physical gate.
+
 Independent parent review selected firmware's standalone pending-FWCCB
 diagnostic, not the queue alternative or lifecycle/combined patches. Exact
 source/gate/tool patch SHAs: fee036ca368ac3e0fc23144c57deb2aeca07b7e29f628fd306e3ba376550a8a2,
