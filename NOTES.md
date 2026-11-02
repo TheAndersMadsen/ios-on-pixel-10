@@ -21,7 +21,9 @@ recoverable. QEMU and host tools support development; they are not phone results
   A1 backup: `research/android-backup-20261102/`.
 - **No iOS root is deployed.** `userdata_exp.ai` is a member of Android's multi-device
   F2FS `/data`; every XNU recipe now binds `blazer_ufs_root=ios_system` and
-  `tools/image_tool.py` refuses `userdata_exp.ai` (b1d2971).
+  `tools/image_tool.py` refuses `userdata_exp.ai` and `blazer_persist` (b1d2971, ff9261d).
+  XNU dd000c8 (release tree) writes persistence only to the GPT-resolved `ios_data`
+  (type GUID, no overlap, above userdata, sealed guard); host and ARM64 object only.
 - **Storage (r8, 2026-11-02):** A0 captured the full LUN0 GPT read-only: both copies CRC-valid,
   phone `sgdisk --verify` clean, 0 free LBAs. Strict `dualboot.py` still refuses it because
   the backup header block repeats the entry array after byte 92 (observed on real bytes, kept

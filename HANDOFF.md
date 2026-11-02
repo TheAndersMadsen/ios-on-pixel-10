@@ -9,9 +9,9 @@ it is not a second project journal.
    (force-fastboot off, reboot, recovery "Try again", never factory reset), then the return check.
 2. With the owner present: boot chooser-v1-r3 (stock vbmeta transplanted) once; the
    discriminator is vold mounting /data and `Kernel code` at 0xc9c00000 in `/proc/iomem`.
-3. Host: an EL2 cached identity map for the chooser's lz4 decode (122 s now), then the visible
-   startup menu (renderer plus scanout path) and the volume-key pad read; then the in-kernel
-   `ios_*` write allowlist for A7. GOAL.md still governs runs.
+3. Host: r4 (cached decode) and r6 (menu renderer) are built and QEMU-tested; next are the visible
+   menu (r6 plus the `tgl_dcs_run` full-screen layer, `research/ios26-dualboot-r8/menu-ui/SCANOUT-PATH.md`),
+   the volume-key pad read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).
 
 ## Latest completed maintenance
 
