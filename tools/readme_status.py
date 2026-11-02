@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the README's status block and animated SVGs from docs/status.json.
 
-Usage: python3 -I tools/readme_status.py        rewrite docs/assets/*.svg and README.md's block
+Usage: python3 -I tools/readme_status.py        rewrite docs/assets/*.svg and README.md's blocks
        python3 -I tools/readme_status.py --check exit 1 if they are out of date
 
 Percent = mean of each feature's score (status.json "scores"). Features marked "out"
@@ -14,6 +14,9 @@ from html import escape
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BEGIN, END = '<!-- status:begin -->', '<!-- status:end -->'
+ROADMAP_BEGIN, ROADMAP_END = '<!-- roadmap:begin -->', '<!-- roadmap:end -->'
+NAV = (('Progress', 'progress'), ('Quick start', 'quick-start'), ('Roadmap', 'roadmap'), ('How it boots', 'how-it-boots'),
+       ('Docs', 'documentation'), ('Contributing', 'contributing'), ('Licensing', 'licensing'), ('Credits', 'credits'))
 ICON = {'works': '✅', 'partial': '🟡', 'built': '🔧', 'active': '⏳', 'open': '❌', 'out': '🚫'}
 WORD = {'works': 'Works on the phone', 'partial': 'Partly working', 'built': 'Built, not run',
         'active': 'In progress', 'open': 'Not started', 'out': 'Likely out of reach'}
@@ -103,12 +106,46 @@ def stats_svg(stats):
     return '\n'.join(out)
 
 
+def badge(label, value, colour):
+    """A flat static badge. Local files, so a private repo's README asks no outside service for an image."""
+    lw, vw = 6 * len(label) + 12, 6 * len(value) + 12
+    w = lw + vw
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="20" role="img" aria-label="{escape(label)}: {escape(value)}">'
+            f'<clipPath id="r"><rect width="{w}" height="20" rx="4"/></clipPath><g clip-path="url(#r)"><rect width="{lw}" height="20" fill="#1c1c1e"/>'
+            f'<rect x="{lw}" width="{vw}" height="20" fill="{colour}"/></g>'
+            f'<g fill="#fff" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="10" text-anchor="middle">'
+            f'<text x="{lw / 2}" y="14">{escape(label)}</text><text x="{lw + vw / 2}" y="14">{escape(value)}</text></g></svg>\n')
+
+
+def badges(pct):
+    """Name, label, value, colour. Progress comes from status.json; the rest are plain facts about the repo."""
+    return (('progress', 'progress', f'{pct}% estimate', '#5e5ce6'), ('stage', 'stage', 'experimental', '#b25000'),
+            ('target', 'target', 'Pixel 10 Pro', '#48484a'), ('software', 'running', 'XNU 12377, iOS 26', '#48484a'),
+            ('boot', 'boot', 'RAM only', '#48484a'), ('repo', 'repo', 'private', '#48484a'), ('licence', 'licence', 'none granted', '#a4262c'))
+
+
+def roadmap(data):
+    lines = [ROADMAP_BEGIN, '']
+    for stage in data['roadmap']:
+        lines += [f'**{stage["stage"]}**', ''] + [f'- {item}' for item in stage['items']] + ['']
+    out = [f[0] for b in data['blocks'] for f in b['features'] if f[1] == 'out']
+    lines += ['**Likely out of reach**', '', '- ' + ', '.join(out), '', ROADMAP_END]
+    return '\n'.join(lines)
+
+
+def splice(readme, begin, end, block):
+    head, rest = readme.split(begin, 1)
+    return head + block + rest.split(end, 1)[1]
+
+
 def markdown(data, pct, rows, feats):
     lines = [BEGIN, '', '<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: ' + f'{pct}% of reachable hardware" width="100%"></p>', '',
              '<h2 align="center">A phone that was never meant to do this.</h2>',
              '<p align="center">Apple\'s open-source kernel. iOS 26\'s own userland. Google\'s Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>', '',
+             '<p align="center">' + ' '.join(f'<img src="docs/assets/badge-{n}.svg" alt="{l}: {v}">' for n, l, v, _ in badges(pct)) + '</p>',
+             '<p align="center">' + ' · '.join(f'<a href="#{a}">{t}</a>' for t, a in NAV) + '</p>', '',
              '<p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>', '',
-             '<h2 align="center">Every block. Tracked.</h2>',
+             '<a id="progress"></a>', '<h2 align="center">Every block. Tracked.</h2>',
              f'<p align="center"><b>{pct}%</b> across {sum(1 for f in feats if f[1] != "out")} reachable features. Updated {data["updated"]}.</p>', '',
              '<p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>', '',
              '| | Status | Features | Counts as |', '| --- | --- | ---: | ---: |']
@@ -138,13 +175,12 @@ def main():
     pct = percent(feats, scores)
     rows = [(b['name'], percent(b['features'], scores), len(b['features'])) for b in data['blocks']]
     files = {'docs/assets/hero.svg': hero(pct, data), 'docs/assets/blocks.svg': blocks_svg(rows), 'docs/assets/stats.svg': stats_svg(data['stats'])}
+    files.update({f'docs/assets/badge-{n}.svg': badge(l, v, c) for n, l, v, c in badges(pct)})
     readme = (ROOT / 'README.md').read_text()
     block = markdown(data, pct, rows, feats)
-    if BEGIN in readme:
-        head, rest = readme.split(BEGIN, 1)
-        new = head + block + rest.split(END, 1)[1]
-    else:
-        new = block + '\n\n---\n\n' + readme
+    new = splice(readme, BEGIN, END, block) if BEGIN in readme else block + '\n\n---\n\n' + readme
+    if ROADMAP_BEGIN in new:
+        new = splice(new, ROADMAP_BEGIN, ROADMAP_END, roadmap(data))
     files['README.md'] = new
     if '--check' in sys.argv:
         stale = [p for p, text in files.items() if not (ROOT / p).exists() or (ROOT / p).read_text() != text]

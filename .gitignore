@@ -7,3 +7,13 @@ research/
 shim/out/
 xnu/out/
 __pycache__/
+host-tests.log
+# never commit these, wherever they land; .github/scripts/check_tracked.py enforces it in CI
+*.img
+*.bin
+*.dtb
+*.dtbo
+*.ipsw
+*.hfs
+*.apfs
+*.pem

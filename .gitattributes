@@ -1,0 +1,17 @@
+* text=auto eol=lf
+
+# Applied byte for byte.
+*.patch -text linguist-generated
+
+# Shown as generated in diffs and left out of language statistics.
+docs/assets/*.svg linguist-generated
+shim/font.h linguist-generated
+shim/frame_tables.h linguist-generated
+shim/dcs_tables.h linguist-generated
+
+# Never tracked here; binary if one ever arrives, so it can't be normalised.
+*.img binary
+*.bin binary
+*.dtb binary
+*.png binary
+*.gif binary

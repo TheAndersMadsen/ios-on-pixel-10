@@ -1,0 +1,26 @@
+name: Feature
+description: A hardware block or tool to work on.
+title: "[feature] "
+labels: [enhancement]
+body:
+  - type: input
+    id: row
+    attributes:
+      label: Status row
+      description: The block and feature in docs/status.json, if there is one.
+  - type: textarea
+    id: what
+    attributes:
+      label: What and why
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: What's known
+      description: Sources read, and whether each fact was measured, read from source or guessed.
+  - type: textarea
+    id: risk
+    attributes:
+      label: First step and risk to the phone
+      description: The smallest first test. Does it touch storage, power, firmware or voltages? Does it need the owner's approval?

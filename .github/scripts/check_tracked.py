@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Refuse files this repository must never hold: images, dumps, firmware, Apple files, keys, and device identifiers.
+
+Usage: check_tracked.py            check every file in the index (a pre-commit hook sees what would be committed)
+       check_tracked.py --history  also check the name of every file in any commit, since a removed dump stays in history
+
+A hit on a real need is fixed by changing this file in a reviewed commit. It's a net, not an audit: docs/LICENSING.md
+lists what still needs a person's eyes.
+"""
+import re
+import subprocess
+import sys
+
+BAD_NAME = re.compile(r'''(?ix)
+    (^|/)(research|backup|dtb|recovery|ramdump)/          # local-only folders
+  | \.(img|simg|bin|dtb|dtbo|hfs|apfs|ipsw|dmg|ipa|ovl|dump|dmp|core|signed|hcd|wmfw|pem|key|p12|mobileprovision)$
+  | (^|/)(kernel|abl|abl_last|bootreason|last_kmsg|pstore)\.log(\.txt)?$
+  | (^|/)(fw_bcmdhd|bcmdhd|rgx\.fw|aoc\.|kepler\.|seurat\.|cs35l|cs40l|synaptics\.img)   # firmware by name
+  | (^|/)(kernelcache|dyld_shared_cache|sep-firmware|DeviceTree\.|iBoot|LLB)              # Apple's files by name
+''')
+# 15 digits alone is an IMEI's shape. Neighbouring word characters or a dot mean a longer number, hash or decimal.
+IMEI = re.compile(rb'(?<![0-9A-Za-z_.])[0-9]{15}(?![0-9A-Za-z_])')
+SERIAL = re.compile(rb'(?i)(androidboot\.serialno|ro\.serialno|serialno|imei|meid)["\']?\s*[=:]\s*["\']?[0-9A-Za-z]{6,}')
+MAX_BYTES = 8 * 1024 * 1024
+
+
+def git(*args):
+    return subprocess.run(['git', *args], check=True, capture_output=True).stdout
+
+
+def check_content(name, data):
+    """Problems in one file's bytes."""
+    found = []
+    if len(data) > MAX_BYTES:
+        found.append(f'{len(data)} bytes, over the {MAX_BYTES} limit')
+    if b'\0' in data:
+        found.append('binary: this repository tracks only text')
+        return found
+    for pattern, what in ((IMEI, '15-digit number, IMEI-style'), (SERIAL, 'looks like a device identifier')):
+        for match in pattern.finditer(data):
+            line = data.count(b'\n', 0, match.start()) + 1
+            found.append(f'line {line}: {what}')  # the value itself stays out of the log
+    return found
+
+
+def main():
+    problems = []
+    names = git('ls-files', '-z').decode().split('\0')[:-1]
+    for name in names:
+        if BAD_NAME.search(name):
+            problems.append(f'{name}: name is on the never-commit list')
+        for problem in check_content(name, git('show', f':{name}')):
+            problems.append(f'{name}: {problem}')
+    if '--history' in sys.argv:
+        for name in sorted(set(git('log', '--all', '--format=', '--name-only', '-z').decode().split('\0'))):
+            if name and name not in names and BAD_NAME.search(name):
+                problems.append(f'{name}: in history, on the never-commit list')
+    print('\n'.join(problems) if problems else f'clean: {len(names)} files')
+    return 1 if problems else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

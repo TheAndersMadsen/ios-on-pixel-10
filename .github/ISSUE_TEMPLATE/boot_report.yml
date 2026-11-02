@@ -1,0 +1,61 @@
+name: Boot report
+description: The result of one boot on the phone, or a QEMU run.
+title: "[boot] <attempt name>: <how it ended>"
+labels: [boot-report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Paste no dumps, whole logs, serial numbers, IMEIs, MAC addresses, Apple files or firmware. Quote only the named lines needed.
+  - type: input
+    id: attempt
+    attributes:
+      label: Attempt name
+      description: The folder under research/laguna-usb-fix/attempts, or the QEMU run's name.
+      placeholder: 20261102-025131-phone-all-r1
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it ran
+      options: [Phone, QEMU]
+    validations:
+      required: true
+  - type: input
+    id: image
+    attributes:
+      label: Image and kernel
+      description: Image SHA-256 from meta.txt, and the kernel's name (pN).
+    validations:
+      required: true
+  - type: textarea
+    id: line
+    attributes:
+      label: Boot line
+      description: The options given to the image tool, such as --phone-args. Leave out anything that identifies the device.
+  - type: textarea
+    id: result
+    attributes:
+      label: Result
+      description: The verdict from tools/boot-summary.py, how the boot ended, and the named lines that prove it.
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Kind of evidence
+      description: Keep what was observed apart from what was inferred.
+      options: [Observed in a capture, "Seen on the phone by the owner", Inferred, Mixed (say which in Result)]
+    validations:
+      required: true
+  - type: input
+    id: limits
+    attributes:
+      label: Length and peak temperature
+      description: "Is this a short test or a full run? Example: 8.5 min, peak 37 C."
+  - type: textarea
+    id: next
+    attributes:
+      label: What it changes
+      description: Status rows in docs/status.json, and the next step.

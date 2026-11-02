@@ -1,0 +1,39 @@
+name: Bug
+description: A tool, test, build step or document that's wrong. For a boot's result, use Boot report.
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Paste no dumps, serial numbers, IMEIs, Apple files or firmware.
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands. Say whether the research/ inputs were present.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      render: text
+  - type: checkboxes
+    id: device
+    attributes:
+      label: Device
+      options:
+        - label: This involved a phone. I've said which commands reached it.
