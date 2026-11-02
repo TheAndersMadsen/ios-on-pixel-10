@@ -182,7 +182,9 @@ BOOL hkStockAppEntryValid(id entry) {
 BOOL hkStockAppIsListed(id workspace, NSString *identifier, NSString *path) {
     // A proxy created by applicationProxyForIdentifier: can outlive its record.
     // Enumerating again verifies the actual current path and excludes placeholders.
+    progress("all_applications_enter", identifier);
     id applications = [workspace allApplications];
+    progress("all_applications_return", identifier);
     if (![applications isKindOfClass:NSArray.class]) return NO;
     for (id app in applications) {
         if (![app respondsToSelector:@selector(applicationIdentifier)]
@@ -195,6 +197,50 @@ BOOL hkStockAppIsListed(id workspace, NSString *identifier, NSString *path) {
     }
     return NO;
 }
+
+static NSArray *exerciseEntries(NSArray *apps, NSArray *smokeIDs) {
+    // The caller validated distinct IDs and their membership in the manifest.
+    // Keep every entry, scheduling the explicitly selected UI checks first.
+    NSMutableArray *ordered = [NSMutableArray arrayWithCapacity:apps.count];
+    NSSet *selected = [NSSet setWithArray:smokeIDs];
+    for (NSString *identifier in smokeIDs) {
+        for (NSDictionary *entry in apps) {
+            if ([entry[@"bundle_id"] isEqual:identifier]) { [ordered addObject:entry]; break; }
+        }
+    }
+    for (NSDictionary *entry in apps) {
+        if (![selected containsObject:entry[@"bundle_id"]]) [ordered addObject:entry];
+    }
+    return ordered;
+}
+
+static void exerciseVerified(id workspace, NSString *identifier, NSSet *selected,
+                             NSMutableSet *requested, BOOL verified) {
+    if (!verified || ![selected containsObject:identifier] || [requested containsObject:identifier]
+        || ![workspace respondsToSelector:@selector(openApplicationWithBundleID:)]) return;
+    progress("launch_request", identifier);
+    // A returned request is not actual exec, foreground UI or Apple-service success.
+    [workspace openApplicationWithBundleID:identifier];
+    [requested addObject:identifier];
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+    const unsigned settleSeconds = 0; // Fake workspace only; never host apps.
+#else
+    const unsigned settleSeconds = 20;
+#endif
+    receipt(@{@"event": @"launch_request_returned", @"bundle_id": identifier,
+              @"launch_verified": @NO, @"settle_seconds": @(settleSeconds)});
+    if (settleSeconds) sleep(settleSeconds);
+}
+
+#if defined(HK_STOCK_APPS_HOST_FIXTURE)
+NSArray *hkStockAppOrderFixture(NSArray *apps, NSArray *smokeIDs) {
+    return exerciseEntries(apps, smokeIDs);
+}
+void hkStockAppExerciseFixture(id workspace, NSString *identifier, NSSet *selected,
+                              NSMutableSet *requested, BOOL verified) {
+    exerciseVerified(workspace, identifier, selected, requested, verified);
+}
+#endif
 
 int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attempts) {
     progress("manifest_read", nil);
@@ -241,9 +287,11 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
         || (registering && ![workspace respondsToSelector:@selector(registerApplication:)])) {
         receipt(@{@"event": @"error", @"reason": @"workspace_unavailable"}); return 3;
     }
-    NSMutableSet *complete = [NSMutableSet set];
+    NSArray *scheduledApps = exercising ? exerciseEntries(apps, smokeIDs) : apps;
+    NSSet *selected = exercising ? [NSSet setWithArray:smokeIDs] : [NSSet set];
+    NSMutableSet *complete = [NSMutableSet set], *requested = [NSMutableSet set];
     for (unsigned attempt = 1; attempt <= attempts; attempt++) {
-        for (NSDictionary *entry in apps) {
+        for (NSDictionary *entry in scheduledApps) {
             NSString *identifier = entry[@"bundle_id"], *path = entry[@"path"];
             if ([complete containsObject:identifier]) continue;
             id info = readPlist([path stringByAppendingPathComponent:@"Info.plist"]);
@@ -264,7 +312,10 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                 verified = hkStockAppIsListed(workspace, identifier, path);
                 if (!verified && registering) {
                     progress("register_url", identifier);
-                    accepted = [workspace registerApplication:[NSURL fileURLWithPath:path isDirectory:YES]];
+                    NSURL *bundleURL = [NSURL fileURLWithPath:path isDirectory:YES];
+                    progress("register_url_call_enter", identifier);
+                    accepted = [workspace registerApplication:bundleURL];
+                    progress(accepted ? "register_url_call_return_accepted" : "register_url_call_return_refused", identifier);
                     // Allow an asynchronous registration to appear; re-enumerate each time.
                     for (unsigned poll = 0; poll < 10 && !verified; poll++) {
                         usleep(100000); verified = hkStockAppIsListed(workspace, identifier, path);
@@ -276,6 +327,7 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                       @"path": path, @"attempt": @(attempt), @"api_accepted": @(accepted),
                       @"registration_verified": @(verified), @"reason": reason,
                       @"launch_verified": @NO});
+            if (exercising) exerciseVerified(workspace, identifier, selected, requested, verified);
         }
         if (complete.count == apps.count || !registering) break;
         if (attempt < attempts) sleep(5);
@@ -288,19 +340,10 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
             receipt(@{@"event": @"error", @"reason": @"launch_selector_unavailable"}); return 3;
         }
         for (NSString *identifier in smokeIDs) {
-            if (![complete containsObject:identifier]) {
+            if (![requested containsObject:identifier]) {
                 receipt(@{@"event": @"launch_skipped", @"bundle_id": identifier,
                           @"reason": @"registration_not_verified", @"launch_verified": @NO});
-                continue;
             }
-            progress("launch_request", identifier);
-            // This selector's return type differs in historical headers. Its
-            // return value is deliberately unused. Only actual exec/UI evidence
-            // from the guest can establish a launch and surviving foreground UI.
-            [workspace openApplicationWithBundleID:identifier];
-            receipt(@{@"event": @"launch_request_returned", @"bundle_id": identifier,
-                      @"launch_verified": @NO, @"settle_seconds": @20});
-            sleep(20);
         }
     }
     return complete.count == apps.count ? 0 : 1;

@@ -122,6 +122,10 @@ overrides signer identities, alters a UDID or treats API acceptance as a launch.
 It is default-off at compilation (`HK_STOCK_APPS_BUILD=1` enables it).
 Phase receipts precede framework loading, workspace connection, enumeration and
 URL registration, so an unfinished synchronous API call remains identifiable.
+Fresh enumeration has `all_applications_enter`/`all_applications_return` markers.
+`register_url` precedes URL construction; `register_url_call_enter` follows it,
+and the return marker records the original accepted/refused result. These finer
+markers are host-built follow-up diagnostics; the frozen r7 guest predates them.
 Attempt counts limit retries; they do not cancel or time out Apple's APIs.
 The logger explicitly opens the guest console, with a C entry marker before
 main's first Objective-C operation. Startup phase formatting uses only C;
@@ -132,11 +136,13 @@ The metadata-read probe records POSIX open/read errors, size and binary-plist
 header status, then the original NSData read and plist-parser entry/return.
 It does not print file contents or substitute a different read/parser result.
 
-Optional `exercise` mode registers the same manifest, then requests only its
-explicit `smoke_bundle_ids` (at most eight distinct selected identifiers).
+Optional `exercise` mode schedules its explicit `smoke_bundle_ids` first (at
+most eight distinct selected identifiers), retaining every manifest entry. It
+requests each selected app once as soon as its fresh registration readback
+succeeds, then continues registering the remaining apps.
 Generate those with `--manifest ... --smoke BUNDLE_ID` on the inventory tool.
 Each requested app must first pass registration readback. The registrar waits
-20 seconds between requests for the existing guest capture to observe UI.
+20 seconds after each request for the existing guest capture to observe UI.
 The selector's return value is unused; requests remain labelled
 `launch_verified=false`. Actual exec records, foreground frames and interaction
 are still needed. Registration-only mode never opens apps.
