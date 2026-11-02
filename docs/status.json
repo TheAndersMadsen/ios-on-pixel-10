@@ -122,8 +122,8 @@
         ],
         [
           "RAM",
-          "partial",
-          "6.95 GiB seen by XNU in one iOS run; 12.92 GiB is the target"
+          "works",
+          "12.92 GiB under iOS for 15 min; memory test passed"
         ],
         [
           "The rest of the 16 GiB",
@@ -208,7 +208,7 @@
         [
           "Writing (persistent /var)",
           "partial",
-          "First kernel write verified; root checksum intact. /var save not built on the phone"
+          "Saves and restore across reset verified; root unchanged; real-setting test pending"
         ],
         [
           "Maximum speed",
@@ -248,12 +248,12 @@
         [
           "Wi-Fi",
           "partial",
-          "Radio up; passive scan heard 21 networks on 3 bands; no join yet"
+          "Radio up, join code ready; passive scan heard 25 networks; no join yet"
         ],
         [
           "Bluetooth",
-          "active",
-          "QEMU test queued, needs Wi-Fi firmware running first"
+          "partial",
+          "Firmware running; passive scan heard 51 addresses at 4 Mbaud; not connected to iOS yet"
         ],
         [
           "Cellular",
@@ -348,7 +348,7 @@
         [
           "Temperature and thermal guard",
           "works",
-          "Guard's panic path tested; chip zones only, no skin temperature or power reading"
+          "Live temperatures; guard panic verified at a test limit"
         ],
         [
           "Battery gauge",
