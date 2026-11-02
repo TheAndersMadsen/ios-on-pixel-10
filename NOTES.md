@@ -67,8 +67,13 @@ CPIO2a1654e5…/76498796B/all60 input hashes unchanged; mode0644, hash-pinned.
 Five pipeline/cache calls returned0; extraction/semantic analysis still pending,
 not native engine/firmware-health proof. Native released; coordination forwarded
 to Apps. registration-r5 ACTIVE once, runner1718/candidate19680946…/b840825,
-51 readbacks plus conditional Calculator/Clock/Notes requests. Actual exec/
-foreground frames still required, none accepted. No other guest queued here.
+expected51 readbacks plus conditional Calculator/Clock/Notes requests. Exact
+HKAPPS main_entry_c PID25 now observed, but no first ObjC/framework/API phase.
+Barrier is after C entry and before phase emission: workspace/registration API
+failure NOT established. Owner prepares own C-only startup/after-autorelease
+markers and removes optional NSJSONSerialization from logging on host; current
+r5 stays unchanged/full900. Actual readback/exec/foreground frames still required,
+none accepted. No next image selected before capture; no peer MCM/AKS change.
 
 Correction to e082d35 handoff: an extra assumed read-only-mode assertion failed
 after CPIO size/hash passed; I committed before resolving it. Actual mode0644

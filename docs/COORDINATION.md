@@ -120,6 +120,12 @@ Both explicit release handoffs completed, without interruption or polling:
    It adds explicit console/C-entry/API phases, 51 registration readbacks and
    conditional Calculator/Clock/Notes requests. Actual guest exec/foreground
    frames are still required; no registration or launch PASS is implied.
+   Changed r5 evidence: exact `HKAPPS main_entry_c` PID25 is positive, while
+   first Objective-C/framework/API phase markers are absent. The barrier is
+   after C entry and before first phase emission; a workspace or registration
+   failure is not established. Apps owner prepares C-only startup phases and
+   removes the optional NSJSONSerialization logging dependency on host. Frozen
+   r5 continues its planned 900 seconds; no next image is selected before capture.
 
 Apps and native Metal send release events directly to each other and the
 coordination thread using mode auto. A refused claim gets one blocker report;
