@@ -532,89 +532,89 @@ login/activation/SEP success. Next: publish frozen Standard-only candidate/argv,
 normal shared-lock admission under existing reservations; preserve final captures
 and identify actual blocking API if reached. Full goal remains unmet.
 
-## Native Metal diagnostic qualified, 2026-11-02 11:21 CET — build only
+## Native Metal source integration, 2026-11-02 — host milestone, physical STOP
 
-Checkpoint committed **9db93cb**. Subsequent orchestration steer delivered to
-all ten EXISTING owners, with one source/ABI/ownership contract at
-research/ios26-metal-native-20261102/integration/CONTRACT.md. UC-r2 owns the next
-runnable combined native-adapter/provider host path; peers resolve exact shared
-ABI/lock/ref mismatches there. Sent concise blockers/minimal candidate to the
-repo orchestration coordinator; exact11 delivery receipts in
-integration/orchestration-deliveries.json. This coordination started no new
-delegate/review/implementation and changed no device ownership or physical gate.
+Original goal ACTIVE/incomplete. Previous parent checkpoints9db93cb/57b7436/
+5b6da97 preserved. Actual portable source now imported at native/metal/{isa,
+streams}:56 UTF-8 source/build/test/notice files, all35 C/header files byte-exact
+from frozen original milestone. Scoped MIT licences and ancestry/dependency
+manifests retained; no binaries, Apple/vendor source products, firmware, caches
+or device data imported. External AIR frontend remains selected LGPL3+ and
+separately linked, not relicensed by this source import. Source promotion
+commit/result recorded in integration/source-import-parent-r1/commit-receipt.json.
 
-Independent parent review selected firmware's standalone pending-FWCCB
-diagnostic, not the queue alternative or lifecycle/combined patches. Exact
-source/gate/tool patch SHAs: fee036ca368ac3e0fc23144c57deb2aeca07b7e29f628fd306e3ba376550a8a2,
-afb560a7f96281d79c8ce61ce1edd33b9b0768825c0a9eb8f4dc9b3f821ce07c,
-0bb6deef70de4ad4b189f2cad7f7f8926480d420716ca07e466c96289f8f1372.
-Current release HEAD b03d04d1e8111d8bfae34379c1565ed370105524; tipc7efcfe4d…
-unchanged. Sparse apply+byte comparison PASS. Parent isolated actual health/
-hook/core ASan/UBSan PASS; three compiled behavioral mutations rejected;
-fresh vendor header measurement byte-identical; canonical profile + four
-drift controls PASS; two enabled ARM64 objects/named text symbols and two
-gate-off controls PASS; actual image-token positive/negative controls PASS.
-Exact commands, source/object/profile hashes, receipts and request:
-research/ios26-metal-native-20261102/integration/diagnostic-review-r1/
-{HANDOFF.md,REVIEW.json,receipts/,coordination.json}.
+Parent actual-root validation PASS:12/12 CTest ASan/UBSan source cases, strict
+iOS ARM64 SDK library/consumer links,12 real implementation objects with44
+named executable text symbols. Default gates OFF. Exact commands/objects:
+integration/source-import-parent-r1/{host-commands,ios-commands,parent-symbols}.json.
+Root baseline is ISA revision4. Completed source-import-r2 runtime candidate
+requires coherent ISA-r5 revision5/raw64 migration; source-import-r3 owns that
+next delta. No mixed raw ABI, success provider, marker or capability imported.
 
-Reader captures actual pending READ slot, max4 whole112-byte entries before
-timeout/failed return, all28 raw words/type/flags/race + SYS/COMP metadata.
-No ack/consume, invented return bit, extra kick, power/clock/SMC/firmware change.
-Correct compatibility offsets show old labelled BVNC words were layout/padding.
-Runtime requires rung5+diag1; original timeout/result unchanged. Host diagnostic
-qualification is NOT physical health or execution acceptance. HEALTH5 remains
-FAIL at attempt20261102-102719-native-metal-health-p29-r1, no unchanged retry.
+ONE reserved offline five-OWN-source reference batch completed AFTER explicit
+Apps release; normal shared lock claimed once, no disk/NIC. CPIO2a1654e5...,
+runnerexit0/7.963927916s, all60 input hashes unchanged. Final155033B console
+SHA8979ad56b4a34f217fa43d2872e46e41f2458b55f73acb127cc986948ec386e8.
+All five pipeline/cache APIs returned0; strict full-cache/source correlation
+saved in integration/own-source-compile-r1/reference.json. HM-END/powerdown
+followed by init-exit panic retained; not normal runtime/native acceptance.
+No QEMU process and lock released; Apps+orchestration received release events.
+Apps owns next guest; no further native slot. Artifact mode0644, hash-pinned,
+not mode-readonly. No shader submit/engine result is established by this run.
 
-Phone/release owner built p30 ONCE from af08a9f5. Independent parent artifact
-review now PASS: exact candidate source bytes; K9bbc5703…/U5dc553c6…/image
-d8925f4f… hashes; seven real final executable-section symbols; zero undefined;
-both344068-byte signed firmware copies148aacc5… verified using Mach-O symbol/
-section+length/pad header; image_tool check and exact471-byte args. Full evidence:
-integration/diagnostic-review-r1/{p30-parent-review.json,receipts/p30-final.nm}.
-The image is HELD, not scheduled: cpus1/no-bootcpu selects A520cpu0 with physical
-ACTLR[9]CLEAR, and independent manifest/ADT address derivation confirms new
-RAM0x882000000 versus old health0xa00000000. Existing phone CPU-context reviewer
-owns combined CPU/Trusty/layout reconciliation. No automatic core/base change,
-rebuild, health retry or lifecycle6/7. Exclusive phone queue preserved; this
-goal parent ran no device command, full release build/link or phone image build.
+cache-r1/ISA-r5 resolved the second END as a DISTINCT coefficient-update entry,
+not tail padding: main0 and coeff40/44, source-bound normal-library facts.
+UM26.1@7036548 versus donor5940a317/26.1@6967606 remains an ABI boundary.
+Queue-r4 implements only60 known/60 unknown bytes; production still refuses.
+Parent routed ONLY three named GPU component identities to existing dualboot
+factory owner; no second download/inventory or firmware extraction requested.
+Existing upstream collector's8-head/24-file refresh is frozen unchanged evidence.
 
-27 bounded milestones now in terminal history. Ten current Sol owners have
-successful launch/steer receipts: firmware-r3 IRQ/drain; vm-r3 actual platform
-lease/bases; isa-r4 native stage/raw decoding; streams-r4 recording-only reference;
-AIR-r4 ONE userspace assembly; UC-r3 ONE combined kernel/provider path;
-queue-r3 exact-body reference; surfaces-r4 concrete XNU exclusion review;
-validation-r5 FW/VM/queue contract review; Metal-r4 passive stock-loader ABI
-probe. These continue the requested ten-owner pool, not a second helper fleet.
-Exact IDs/links/history: fleet.json,FLEET.md; briefs: successor-wave4/5/6 files.
-Each writes only its own new ignored directory; prior milestones frozen. All ten
-received docs/COORDINATION.md99c96136 and CPU/Trusty/RAM/QEMU readiness rules;
-delivery receipts: integration/readiness-boundary-deliveries.json. No delegate
-polling. Child-reported test totals remain distinct from parent acceptance.
+Concrete review results now available from resumed original tasks. Both surface
+corrections already exist in frozen UC-r3: partial CPU_HANDBACK failed abort and
+sticky UNKNOWN checks before/after import prepare. Parent applied the remaining
+F1 coherent-status race fix to its OWN sparse UC-r3 candidate: all three callers
+use admission from the SAME hmfw_xnu_status snapshot. Fresh3 enabled ARM64
+objects import status, not separate admit;8 pinned actual-source ASan/UBSan
+baseline/fix reproducers reexecuted PASS. Initial ignored-cwd patch application
+was skipped and caught by nm; explicit repo-relative --directory corrected it,
+no initial PASS claimed. Source/patch/command receipts:
+integration/review-fixes-parent-r1/{REVIEW,commands-final}.json. UC-r5 composes
+this exact parent correction with unapproved measured profile-v2 candidate;
+canonical v1 is unchanged pending explicit parent acceptance.
 
-Parent prepared five hash-bound OWN SPIR-V references and rebuilt actual NDK
-ARM64 vk2/main. Sixty harness/lib/kernel inputs pinned; immutable76,498,796B
-CPIO SHA2a1654e53d9d22405bf44161896f223fde60064b527b13d9cb72f25a4301214f.
-Initial shared-lock claim REFUSED; no guest launched. Orchestration queued this
-ONE300s/no-disk/no-NIC batch after current Apps registration-r4 capture/release.
-Await its ONE explicit event, then claim lock normally; if refused report once
-and await owner event. After final capture/cleanup/release notify Apps+orchestration
-once. No status/lock polling or interruption. Source/commands/receipts:
-integration/own-source-compile-r1/. Reference output is not native execution.
-Local stock UM libraries report26.1@7036548 versus donor6967606: no private
-compute-body/CSW compatibility is inferred from size/byte agreement.
+Physical HEALTH5 remains FAIL at20261102-102719-native-metal-health-p29-r1:
+START0/started1/FW0, KCCB1/1 consumed, FWCCB1/0 pending, no execution return.
+No unchanged retry/lifecycle6/7. Standalone diagnostic fee036ca.../gateafb560a7.../
+image-token0bb6deef... captures max4 READ slots/all28 words without ACK/consume.
+P30 K9bbc5703.../U5dc553c6... final7 TEXT symbols/zero undefined/exact344068B
+signed firmware148aacc5... independently verified. Old CPU0 image d8925f4f...
+HELD: A520 ACTLR[9]CLEAR and RAM882 versus prior-health a000.
 
-Existing upstream collector refreshed eight exact GitHub heads: unchanged;
-all24 text source/licence files rehashed PASS. Additional reuse audit retained
-and conveyed to current successors. Firmware canonical measured profile
-68f5ba78e85ec7750668de3a4ed1cebe5ba0b4a7a84017e39dda2cc486ef967c
-and queue agreement header must be reconciled/adopted across real adapters;
-no fourth constant set. Runtime ABI, complete USC/FP/launch rules, real MMU/
-context/cache/UPL handback and authentic engine completion remain unproved.
-Next parent work: run the queued OWN reference only on Apps' release event,
-resolve findings in UC-r3/AIR-r4 composed paths, and await existing CPU/Trusty/
-layout reconciliation before considering a changed phone diagnostic candidate.
-Native Metal/original goal remain ACTIVE, not complete.
+Phone owner explicitly built a SEPARATE reviewed one-A725 proposal retaining
+RAM0x882000000: image01eae6c83e7e0c3f3adedf3816672fa6e8152b7746e2cf11349eebbb6919135f,
+sameK/U/sourceaf08a9f5. Parent exact image/topology/492B/placement/fastcore ARM64
+symbols/zero-undefined PASS. One running ADT logical0/reg200, cpus1/bootcpu200,
+nonce70e0dd927e56e34a. Review: integration/diagnostic-review-r1/a725-parent-review.json.
+Artifact/source-supported bounded proposal accepted CONDITIONALLY; still needs
+CPU-owner Trusty/IRQ/guard/full-layout and phone attended P1/300s stop/capture
+acceptance before sole-owner slot. Physical NOT RUN. No slot/device/release
+build or automatic core/base substitution by this parent.
+
+Ten current Sol owners retained through terminal-event successors; exact paths,
+IDs/launch receipts/history in fleet.json/FLEET.md. Current work promotes the
+actual source targets and composes one kernel/provider path. AIR-r6 corrected
+lost FP attrs in SAME pinned selected-LGPL parser and was consumed by Metal-r6;
+child source tests/symbols are reported, parent adoption remains pending.
+FP63/coverage32/native-policy refusal and ISA15/31 obligations remain. Complete
+retirement/fetch/FP/launch/build, live route/bases, authentic completion/cache/
+UPL handback and physical native compute/render remain unresolved.
+
+Next parent work: review/promote coherent revision5+runtime migration, faithful
+frontend/provider and frozen render/image imports; accept composed profile-v2
+and corrected admission only with exact source/dependency checks. Await CPU/
+phone context acceptance before any changed diagnostic physical slot. No native
+execution, rendering, acceleration or performance claim. Goal stays ACTIVE.
 
 ## Saved Android AVB recovery gap, 2026-11-02 11:22 CET (host only)
 

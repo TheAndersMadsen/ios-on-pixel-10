@@ -1,0 +1,140 @@
+{
+  "spdx_license": "MIT",
+  "copyright": "Copyright (c) 2026 hackios contributors",
+  "schema": 1,
+  "root_variable": "HACKIOS_ROOT",
+  "files": [
+    {
+      "path": "research/ios26-metaldrv-r1/abi/hmgpu_uc.h",
+      "sha256": "83e6707ba203cdd4e49c8a447eaec2cf9d37ce30f220ed0e554d7e1e95e8ebd7",
+      "bytes": 8242,
+      "role": "HMGU wire v1; unchanged external owner"
+    },
+    {
+      "path": "research/ios26-gpucc-r1/include/hmusc.h",
+      "sha256": "d1fd05ad659c5b3194ff474450ea38510f5f4668d97ff60b22315c8265861b83",
+      "bytes": 9984,
+      "role": "HMUSC1; unchanged external owner"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/firmware/profile/lga26.1-abi41-v1.json",
+      "sha256": "68f5ba78e85ec7750668de3a4ed1cebe5ba0b4a7a84017e39dda2cc486ef967c",
+      "bytes": 24940,
+      "role": "Canonical measured source profile; no observed compatibility assertion"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/queue/include/hmg_profile_agreement.h",
+      "sha256": "59fe4bb579a866858947a07ed8ff4f1107f32a5568b28cfc6b1be0461f990db3",
+      "bytes": 1413,
+      "role": "Canonical queue measured agreement; not regenerated"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/queue/include/hmg_queue.h",
+      "sha256": "6afd99619a17bad9d21b181d8bb233806dbf2305d27a8db93b8c1ab15bcd6e08",
+      "bytes": 6676,
+      "role": "Original queue internal callback API"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/queue/include/hmg_queue_layout.h",
+      "sha256": "50199882d1569761e090e3a302c61279bc5c1591c69b0f6d686f28e6d81be079",
+      "bytes": 2016,
+      "role": "Original measured layout; external Dual MIT/GPLv2 definition evidence; MIT selected by queue owner"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/composition/include/hm_air.h",
+      "sha256": "134c6e460d651b5858657398d66dfd0384e559cd57a1010abaabe67d4d4fd474",
+      "bytes": 3121,
+      "role": "Sole existing compute frontend C API"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/composition/include/hmn.h",
+      "sha256": "6e2380ecbd1a60fab46334f86257d6ad203f7d0eaf46077b6eb0c192aaa0f8e5",
+      "bytes": 6835,
+      "role": "Reference Metal core API; external integration test only"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/composition/include/hmn_streams.h",
+      "sha256": "1dd0df0586c9b600b90fa58f066faa8a4e4bbc7f71cf3b0223ac69f661b28839",
+      "bytes": 1072,
+      "role": "Reference Metal/streams API; external integration test only"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/composition/src/hmn.c",
+      "sha256": "7ff5c6d1e797a3a41bb6458a48b74123ce37ff46120d493f6cfd7880ff3537f9",
+      "bytes": 30898,
+      "role": "Frozen AIR-r4 reference Metal core; external integration test only"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/composition/src/hmn_streams.c",
+      "sha256": "3300c68a632c0e1ef67b0c18fdec79141c842a3af52793df4a935a79e331b943",
+      "bytes": 14342,
+      "role": "Frozen AIR-r4 reference adapter; external integration test only"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/build/host/HMAIRFrontend.dylib",
+      "sha256": "c5d3520048c2f0e069944a636085b2f72477a1ad5be1a5f58b8de138dea513d1",
+      "bytes": 1489824,
+      "role": "Existing AIR-r4 selected LGPL frontend; host dynamic link only; not imported"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/build/ios/HMAIRFrontend.dylib",
+      "sha256": "bb29d5464e4a064ccc7ee7f820fa34785bcd6deaaa4c7d8f12cb5fd783882082",
+      "bytes": 1494504,
+      "role": "Existing AIR-r4 selected LGPL frontend; ARM64 dynamic link only; not imported"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/dependencies/metal2vulkan-air-pinned-source.tar.gz",
+      "sha256": "daeb85fbd7b3452e9039ad1e284783048e71d5d16bec811937284343d3bff23e",
+      "bytes": 799730,
+      "role": "Existing replaceable frontend exact corresponding source; NOT copied"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/dependencies/metal2vulkan/source-lock.json",
+      "sha256": "e10dcefc47c4c1d364711f0934c88bd1bf5aaf8fa6e79da5f1aa541090d05839",
+      "bytes": 33702,
+      "role": "Existing LGPL frontend source lock; NOT copied"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/PROVENANCE.md",
+      "sha256": "593c1411e98cb803e0917ed117ce1c630dd482e71342e6783d8ea311e7a17879",
+      "bytes": 3987,
+      "role": "Frontend licence and replacement/relink boundary"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/licenses/metal2vulkan/LICENSE",
+      "sha256": "672ded943eeab6d5fdb81c68fd3cf4e2a10fc324dc52c23feb8dded444b9207b",
+      "bytes": 1114,
+      "role": "Upstream dual choice; LGPL-3.0-or-later selected externally"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/licenses/metal2vulkan/LICENSE-LGPL-3.0",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "bytes": 7652,
+      "role": "Exact selected LGPL text; retained in AIR-r4"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r4/licenses/metal2vulkan/LICENSE-GPL-3.0",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "role": "Exact referenced GPL text; retained in AIR-r4"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r2/tests/prepare.py",
+      "sha256": "754fb76522c9b7bf027b71fb8e9afc455e4934207ab4749be719378cad6d334d",
+      "bytes": 5202,
+      "role": "Original MIT textual fixture generator; not run or imported"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "sha256": "32748cfb102687031b352a4359d88aba8740ac5248d3d3247721d2d88df2b37a",
+      "bytes": 1304,
+      "role": "MIT fixture source notice"
+    },
+    {
+      "path": "research/ios26-metal-native-20261102/streams-r3/composition/metal/include/hmn_streams.h",
+      "sha256": "1dd0df0586c9b600b90fa58f066faa8a4e4bbc7f71cf3b0223ac69f661b28839",
+      "bytes": 1072,
+      "role": "Frozen origin of AIR-r4 reference API"
+    }
+  ]
+}

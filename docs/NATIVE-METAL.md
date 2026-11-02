@@ -40,6 +40,38 @@ must reconcile CPU/Trusty/memory layout before any changed diagnostic slot.
 See [coordination policy](COORDINATION.md) and newest NOTES; no automatic core
 or RAM-base substitution is accepted.
 
+A separate, explicitly reviewed one-A725 image now passes exact artifact
+checks: `01eae6c83e7e0c3f3adedf3816672fa6e8152b7746e2cf11349eebbb6919135f`.
+It retains the p30 kernel, firmware and RAM base, with one running ADT CPU at
+reg0x200 and the exact 492-byte command line. This is conditional acceptance
+of the bounded diagnostic proposal. CPU/Trusty/IRQ/full-layout and attended
+recovery acceptance remain with the CPU and phone owners; it has not run.
+
+## Portable source checkpoint
+
+The original portable implementation is now under [native/metal/isa](../native/metal/isa/README.md)
+and `native/metal/streams`. This 56-file source import preserves all 35 C/header
+files byte-for-byte, scoped MIT notices and exact external dependencies. Its
+default feature gates are off. Parent verification passed 12 host ASan/UBSan
+tests, strict iOS ARM64 links and 44 named executable symbols across 12
+implementation objects. This baseline is ISA revision4; revision5 and the
+runtime import require a coherent, separately reviewed migration.
+
+The reserved offline reference batch has completed and released its QEMU lock.
+All five owned sources produced compiler/cache results; all 60 host input
+hashes remained unchanged. The second shader END is a separate coefficient
+entry, not padding. These results establish compiler reference facts only.
+Current ISA obligations remain nonzero, and the preserved AIR parser loses
+some FP attributes; its requirements query cannot authorize native code.
+No native execution, firmware health or render admission follows.
+
+The composed kernel review found a firmware-status snapshot race. The parent
+candidate uses the admission result from the same status snapshot in all
+three affected callers. Fresh enabled ARM64 objects and focused baseline/fix
+reproducers pass. Both surface handback corrections are already present in
+the frozen UC-r3 composition. Exact source, build and review receipts remain
+under `integration/review-fixes-parent-r1/` in the ignored research namespace.
+
 Current source reuse decisions and refresh instructions are in
 [NATIVE-METAL-UPSTREAM.md](NATIVE-METAL-UPSTREAM.md), alongside the broader
 [reuse audit](REUSE.md). Adopt exact compatible code with its notices and

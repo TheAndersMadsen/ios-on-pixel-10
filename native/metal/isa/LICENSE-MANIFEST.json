@@ -1,0 +1,366 @@
+{
+  "schema": 1,
+  "spdx_license": "MIT",
+  "copyright": "Copyright (c) 2026 hackios contributors",
+  "scope": "This import only; no grant over the repository or external dependencies",
+  "notices": [
+    {
+      "origin": "research/ios26-metal-native-20261102/isa-r2/LICENSE",
+      "sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "payload": "native/metal/isa/LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    },
+    {
+      "origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "payload": "native/metal/isa/LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    },
+    {
+      "origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "payload": "native/metal/isa/LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    },
+    {
+      "origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "sha256": "32748cfb102687031b352a4359d88aba8740ac5248d3d3247721d2d88df2b37a",
+      "payload": "native/metal/isa/licenses/air-r2.LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    },
+    {
+      "origin": "research/ios26-metal-native-20261102/streams/LICENSE",
+      "sha256": "6cb4accbd9f0f8ae37c6cea6505cc996f0b440287abd8ff22d58bf8ebd3cb42f",
+      "payload": "native/metal/streams/LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    },
+    {
+      "origin": "research/ios26-metal-native-20261102/streams-r2/LICENSE",
+      "sha256": "6cb4accbd9f0f8ae37c6cea6505cc996f0b440287abd8ff22d58bf8ebd3cb42f",
+      "payload": "native/metal/streams/LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    },
+    {
+      "origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "payload": "native/metal/streams/licenses/streams-r3.LICENSE",
+      "spdx": "MIT",
+      "notice": "Exact full original text, including any scoped exclusions or protocol-definition attribution."
+    }
+  ],
+  "files": [
+    {
+      "path": "native/metal/isa/CMakeLists.txt",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/EXTERNAL-DEPENDENCIES.json",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/LICENSE",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/PROVENANCE.md",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/README.md",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_air.h",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_alloc.h",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_alu.h",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_memory.h",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_program.h",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/licenses/air-r2.LICENSE",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/notes/CONSTRAINTS.md",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/notes/SEMANTICS.md",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_air.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_alloc.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_alu.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_link.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_memory.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_program.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_raw.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/chain.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/add.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/alias_order.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/constant.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/mul.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/single_add.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/sub.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/licenses/air-r2.LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/multi.ll",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_air.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_air_link.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_air_memory.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_memory.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_native.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_plan.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_program.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/tests/test_shared_air.c",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/LICENSE",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/README.md",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/include/hm_shared.h",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/include/hm_shared_bridge.h",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/include/hm_shared_queue.h",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/include/hm_streams.h",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/licenses/streams-r3.LICENSE",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared_bridge.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared_decode.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared_queue.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/src/hm_streams.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/tests/model.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/tests/model.h",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/tests/test_bridge.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/tests/test_lifetime.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/licenses/streams-r3.LICENSE"
+    },
+    {
+      "path": "native/metal/streams/tests/test_shared.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    },
+    {
+      "path": "native/metal/streams/tests/test_streams.c",
+      "spdx": "MIT",
+      "notice": "native/metal/streams/LICENSE"
+    }
+  ],
+  "metadata_files": [
+    {
+      "path": "native/metal/isa/LICENSE-MANIFEST.json",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    },
+    {
+      "path": "native/metal/isa/SOURCE-INVENTORY.json",
+      "spdx": "MIT",
+      "notice": "native/metal/isa/LICENSE"
+    }
+  ],
+  "external_frontend": {
+    "imported": false,
+    "assembly": "Existing AIR-r4; dynamic HMAIRFrontend.dylib",
+    "upstream": "steelbrain/metal2vulkan",
+    "revision": "219f01365dc4c8eb346816c405b5b17403793764",
+    "offered": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+    "selected": "LGPL-3.0-or-later",
+    "source_archive_sha256": "daeb85fbd7b3452e9039ad1e284783048e71d5d16bec811937284343d3bff23e",
+    "source_lock_sha256": "e10dcefc47c4c1d364711f0934c88bd1bf5aaf8fa6e79da5f1aa541090d05839",
+    "preserve": "Keep AIR-r4 notices/corresponding source/locked crates and replacement/relinking materials; not relicensed or redistributed here."
+  },
+  "external_ABI": {
+    "imported": false,
+    "new_wire_headers": false,
+    "licensing": "No new grant over unchanged canonical external headers; parent separately reviews any promotion."
+  },
+  "excluded": [
+    "Apple source/SDK files/compiler products",
+    "proprietary binary/helper/cache/firmware/shader templates",
+    "device data/dumps/identifiers",
+    "unlicensed tegu context",
+    "Rust parser/Metal assembly/source archives",
+    "generated objects/dylibs/executables/bitcode",
+    "vendor disassembly and oracle helpers"
+  ]
+}

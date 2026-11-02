@@ -1,0 +1,566 @@
+{
+  "schema": 1,
+  "spdx_license": "MIT",
+  "copyright": "Copyright (c) 2026 hackios contributors",
+  "scope": "native/metal/{isa,streams}; source only; ISA-r4 frozen",
+  "metadata_exclusions": [
+    "native/metal/isa/LICENSE-MANIFEST.json",
+    "native/metal/isa/SOURCE-INVENTORY.json"
+  ],
+  "exclusion_reason": "Avoid self-referential hashes; both manifests are hashed in the external artifact receipt.",
+  "files": [
+    {
+      "path": "native/metal/isa/CMakeLists.txt",
+      "origin": "Original source-import-r1 integration text; 2026 hackios contributors",
+      "origin_sha256": null,
+      "sha256": "98d64bd86912232dd388e8d81d53e858e8be32e7d4605d815495a90405e96c68",
+      "bytes": 8377,
+      "license": "MIT",
+      "license_origin": "native/metal/isa/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/EXTERNAL-DEPENDENCIES.json",
+      "origin": "Original source-import-r1 integration text; 2026 hackios contributors",
+      "origin_sha256": null,
+      "sha256": "3a3f18a3e0781bce3625d98b5cec30f24c633c4a5a4d1c3c305f7e89d52957c6",
+      "bytes": 6255,
+      "license": "MIT",
+      "license_origin": "native/metal/isa/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/LICENSE",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "origin_sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "bytes": 1077,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/PROVENANCE.md",
+      "origin": "Original source-import-r1 integration text; 2026 hackios contributors",
+      "origin_sha256": null,
+      "sha256": "86503a477b24a214120aa6a904473a476c4a44bb5897e3a1fc48da7e80d9d66f",
+      "bytes": 2971,
+      "license": "MIT",
+      "license_origin": "native/metal/isa/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/README.md",
+      "origin": "Original source-import-r1 integration text; 2026 hackios contributors",
+      "origin_sha256": null,
+      "sha256": "f0e943533e89684f01954af5c5be9c1d7eb3b1f166d13380621d66b49dc2000b",
+      "bytes": 6495,
+      "license": "MIT",
+      "license_origin": "native/metal/isa/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_air.h",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/include/hm_isa_air.h",
+      "origin_sha256": "b409eff986a06454f83b88b2e0018218cb010ce40bd20f279200b88f433e03ed",
+      "sha256": "b409eff986a06454f83b88b2e0018218cb010ce40bd20f279200b88f433e03ed",
+      "bytes": 2098,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_alloc.h",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/include/hm_isa_alloc.h",
+      "origin_sha256": "2994dc81570e87e27c26e1b7ff1c7cf2fd2b3d96000b0554761a6886eb192c06",
+      "sha256": "2994dc81570e87e27c26e1b7ff1c7cf2fd2b3d96000b0554761a6886eb192c06",
+      "bytes": 1467,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_alu.h",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/include/hm_isa_alu.h",
+      "origin_sha256": "f2d625be007124df4e083867e81f2e870a5a0bbf7f1ecf08c9696dc1fddf2ff5",
+      "sha256": "f2d625be007124df4e083867e81f2e870a5a0bbf7f1ecf08c9696dc1fddf2ff5",
+      "bytes": 1667,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_memory.h",
+      "origin": "research/ios26-metal-native-20261102/isa-r2/include/hm_isa_memory.h",
+      "origin_sha256": "cff1ac5c893b68d22833147f1b5a231eae86fa9bd736f1b2bb02308003821b55",
+      "sha256": "cff1ac5c893b68d22833147f1b5a231eae86fa9bd736f1b2bb02308003821b55",
+      "bytes": 3947,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/include/hm_isa_program.h",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/include/hm_isa_program.h",
+      "origin_sha256": "4184a87f945154732ea2975e290c38338ff0a9d2d4e97996fa98e0566205e50b",
+      "sha256": "4184a87f945154732ea2975e290c38338ff0a9d2d4e97996fa98e0566205e50b",
+      "bytes": 4292,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/licenses/air-r2.LICENSE",
+      "origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "origin_sha256": "32748cfb102687031b352a4359d88aba8740ac5248d3d3247721d2d88df2b37a",
+      "sha256": "32748cfb102687031b352a4359d88aba8740ac5248d3d3247721d2d88df2b37a",
+      "bytes": 1304,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/notes/CONSTRAINTS.md",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/notes/CONSTRAINTS.md",
+      "origin_sha256": "094964a532687dac59c064f31558e5fbc90f8592a750587688b7b65dcc13e374",
+      "sha256": "094964a532687dac59c064f31558e5fbc90f8592a750587688b7b65dcc13e374",
+      "bytes": 10522,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/notes/SEMANTICS.md",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/notes/SEMANTICS.md",
+      "origin_sha256": "a39b8b754454abe6dc30fe0a18ac8aa7d50743ba35e235d8b9eb4552c997e3aa",
+      "sha256": "a39b8b754454abe6dc30fe0a18ac8aa7d50743ba35e235d8b9eb4552c997e3aa",
+      "bytes": 9954,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_air.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/src/hm_isa_air.c",
+      "origin_sha256": "2e4fa86dacfb3f4b3e25221d7d26ec2f960709b7f57acb06ad9a5dfa5f9b2f13",
+      "sha256": "2e4fa86dacfb3f4b3e25221d7d26ec2f960709b7f57acb06ad9a5dfa5f9b2f13",
+      "bytes": 7308,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_alloc.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/src/hm_isa_alloc.c",
+      "origin_sha256": "76307da18ee2c4893bdc15de72edc81de126c0f0af7074c5f3a032153a8b399d",
+      "sha256": "76307da18ee2c4893bdc15de72edc81de126c0f0af7074c5f3a032153a8b399d",
+      "bytes": 4358,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_alu.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/src/hm_isa_alu.c",
+      "origin_sha256": "743e2fa672dfc3da21b3b5ff24736b132b8d355357a430d3c3218e849a1f3234",
+      "sha256": "743e2fa672dfc3da21b3b5ff24736b132b8d355357a430d3c3218e849a1f3234",
+      "bytes": 9530,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_link.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/src/hm_isa_link.c",
+      "origin_sha256": "62d766e3b98581e70936321a4656293e7877efc9454a6da41dfd03b7e6fe3932",
+      "sha256": "62d766e3b98581e70936321a4656293e7877efc9454a6da41dfd03b7e6fe3932",
+      "bytes": 4054,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_memory.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r2/src/hm_isa_memory.c",
+      "origin_sha256": "520c64e2fdbef1bee89b02d9f06336dc62df23dcc8a17de27c6726b2224bbc1d",
+      "sha256": "520c64e2fdbef1bee89b02d9f06336dc62df23dcc8a17de27c6726b2224bbc1d",
+      "bytes": 11336,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_program.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/src/hm_isa_program.c",
+      "origin_sha256": "10b4c0c428a7d8bfe6760a1292858bc7d1789af54b35216ededfc47111dce9bd",
+      "sha256": "10b4c0c428a7d8bfe6760a1292858bc7d1789af54b35216ededfc47111dce9bd",
+      "bytes": 7945,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/src/hm_isa_raw.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/src/hm_isa_raw.c",
+      "origin_sha256": "f081d40770fa4e3b2b59e895d72287c477ba0d4bce7b406c48e176de1a132c1f",
+      "sha256": "f081d40770fa4e3b2b59e895d72287c477ba0d4bce7b406c48e176de1a132c1f",
+      "bytes": 6586,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/chain.ll",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/tests/chain.ll",
+      "origin_sha256": "d2da607e2f26fa4b1ae36c81da36a773cca3cd73921ccf190522dc8cb81f9ebb",
+      "sha256": "d2da607e2f26fa4b1ae36c81da36a773cca3cd73921ccf190522dc8cb81f9ebb",
+      "bytes": 1202,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/add.ll",
+      "origin": "research/ios26-metal-native-20261102/air-r2/receipts/fixtures/add.ll",
+      "origin_sha256": "2f8054d1629af20a3584793c1acfab7af103f94dc734c2d29bf30454b07a2366",
+      "sha256": "6d04f5b6dd32f2b0ffc03d075f305a5d7c4dc05c2175f471e4bcc0b66edc1f3f",
+      "bytes": 1046,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": [
+        "Prepend explicit SPDX MIT/copyright/original-generator comments."
+      ]
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/alias_order.ll",
+      "origin": "research/ios26-metal-native-20261102/air-r2/receipts/fixtures/alias_order.ll",
+      "origin_sha256": "287292947de867c5f771c8376ce03d65b9d5e25d6ff9d103868da70e0f90719a",
+      "sha256": "19e182d55bd80230248375e1fd0a116d280d1844979f6d70983d6da495352458",
+      "bytes": 1046,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": [
+        "Prepend explicit SPDX MIT/copyright/original-generator comments."
+      ]
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/constant.ll",
+      "origin": "research/ios26-metal-native-20261102/air-r2/receipts/fixtures/constant.ll",
+      "origin_sha256": "9d524328bd37e8dd7f191e301b8033862659d575a87f74ffa1b2cc7c54ca9152",
+      "sha256": "2444a60016e0eb8c4b12fe71d4309e72c9af548d149b3e824131df24e788ebc5",
+      "bytes": 1062,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": [
+        "Prepend explicit SPDX MIT/copyright/original-generator comments."
+      ]
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/mul.ll",
+      "origin": "research/ios26-metal-native-20261102/air-r2/receipts/fixtures/mul.ll",
+      "origin_sha256": "ea66b274e0c502198f332f40c0225820f8cbb4475388d35b28b1dc8ffa08f11a",
+      "sha256": "670649db889116d57a1fa900d3dac3deb9405786dc913e46d0ed0cf454b7e33d",
+      "bytes": 1046,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": [
+        "Prepend explicit SPDX MIT/copyright/original-generator comments."
+      ]
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/single_add.ll",
+      "origin": "research/ios26-metal-native-20261102/air-r2/receipts/fixtures/add.ll",
+      "origin_sha256": "2f8054d1629af20a3584793c1acfab7af103f94dc734c2d29bf30454b07a2366",
+      "sha256": "4a6dd4f36d8e1170c9ff803611af4676a29048bd4234053e1548681a732433ff",
+      "bytes": 1066,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": [
+        "Prepend explicit SPDX MIT/copyright/original-generator comments.",
+        "Rename @test to @air_single_add; all other original IR bytes preserved."
+      ]
+    },
+    {
+      "path": "native/metal/isa/tests/fixtures/sub.ll",
+      "origin": "research/ios26-metal-native-20261102/air-r2/receipts/fixtures/sub.ll",
+      "origin_sha256": "a17dde4542a200f7b4916f9f32d18abd9bc6a93840be03e26fffbe478059ca74",
+      "sha256": "3339079cff839f810378367ac7cde9ebab1b9a73ff7a2e709bde4cdb78c01204",
+      "bytes": 1046,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/air-r2/LICENSE",
+      "changes": [
+        "Prepend explicit SPDX MIT/copyright/original-generator comments."
+      ]
+    },
+    {
+      "path": "native/metal/isa/tests/multi.ll",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/tests/multi.ll",
+      "origin_sha256": "5fe094ed3e883de19dde54ffb79e868af22f757c207df1f2a537cb5d5f31d47e",
+      "sha256": "5fe094ed3e883de19dde54ffb79e868af22f757c207df1f2a537cb5d5f31d47e",
+      "bytes": 1733,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_air.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/tests/test_air.c",
+      "origin_sha256": "a1f08077ab4b57d7b5ef97c45fa621a13aae7a794cf0efb74d5fec886faa7868",
+      "sha256": "a1f08077ab4b57d7b5ef97c45fa621a13aae7a794cf0efb74d5fec886faa7868",
+      "bytes": 4882,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_air_link.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/tests/test_air_link.c",
+      "origin_sha256": "03a5e185b6f9b49e24cb8ee479dc98a7a4b3d8b547fe416e5348949c29677530",
+      "sha256": "03a5e185b6f9b49e24cb8ee479dc98a7a4b3d8b547fe416e5348949c29677530",
+      "bytes": 4318,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_air_memory.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r2/tests/test_air_memory.c",
+      "origin_sha256": "71edc90813780f5b36193185ab7d7d826f26265a6073f06df8bffda5aae6e709",
+      "sha256": "71edc90813780f5b36193185ab7d7d826f26265a6073f06df8bffda5aae6e709",
+      "bytes": 4412,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_memory.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r2/tests/test_memory.c",
+      "origin_sha256": "5e2f835e7526d19f99acdcbc8f7d44ba8978cc64d016ad55c9e58a2dcdb9b8ce",
+      "sha256": "5e2f835e7526d19f99acdcbc8f7d44ba8978cc64d016ad55c9e58a2dcdb9b8ce",
+      "bytes": 7416,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_native.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/tests/test_native.c",
+      "origin_sha256": "9999d16d3d41578a8ad048e9c5479dcbffbfecdd7ff141bc4e81feedabf0f486",
+      "sha256": "9999d16d3d41578a8ad048e9c5479dcbffbfecdd7ff141bc4e81feedabf0f486",
+      "bytes": 5206,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_plan.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/tests/test_plan.c",
+      "origin_sha256": "e3bcfd6f2a83804a079f40bac5b487e0728557fa780cfccaa0fb02ee7a732906",
+      "sha256": "e3bcfd6f2a83804a079f40bac5b487e0728557fa780cfccaa0fb02ee7a732906",
+      "bytes": 3688,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_program.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r4/tests/test_program.c",
+      "origin_sha256": "c2adabcd7b03f2e5d08a5471d1b3757abe85f1f5fa73a28441ba83216c7959d5",
+      "sha256": "c2adabcd7b03f2e5d08a5471d1b3757abe85f1f5fa73a28441ba83216c7959d5",
+      "bytes": 9511,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r4/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/isa/tests/test_shared_air.c",
+      "origin": "research/ios26-metal-native-20261102/isa-r3/tests/test_shared_air.c",
+      "origin_sha256": "50693ec1a11f30770f04a84634715b04aa2316bd4ac0656b895f9e31fae6b3c6",
+      "sha256": "50693ec1a11f30770f04a84634715b04aa2316bd4ac0656b895f9e31fae6b3c6",
+      "bytes": 4556,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/isa-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/LICENSE",
+      "origin": "research/ios26-metal-native-20261102/streams/LICENSE",
+      "origin_sha256": "6cb4accbd9f0f8ae37c6cea6505cc996f0b440287abd8ff22d58bf8ebd3cb42f",
+      "sha256": "6cb4accbd9f0f8ae37c6cea6505cc996f0b440287abd8ff22d58bf8ebd3cb42f",
+      "bytes": 1532,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/README.md",
+      "origin": "Original source-import-r1 integration text; 2026 hackios contributors",
+      "origin_sha256": null,
+      "sha256": "9bcacd4830edf0b3fc6188a57fa1cf1fa4b0e2d134b63dd99761a9d5c2420ee0",
+      "bytes": 1491,
+      "license": "MIT",
+      "license_origin": "native/metal/isa/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/include/hm_shared.h",
+      "origin": "research/ios26-metal-native-20261102/streams-r2/include/hm_shared.h",
+      "origin_sha256": "ee41832549db4e7dfe9733d8b79bee71e8a61cf84e637f9a7a68b50a9a013254",
+      "sha256": "ee41832549db4e7dfe9733d8b79bee71e8a61cf84e637f9a7a68b50a9a013254",
+      "bytes": 4022,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/include/hm_shared_bridge.h",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/include/hm_shared_bridge.h",
+      "origin_sha256": "686fd79e9ee9852b1879c1a422a0337abff0d165b190e6a4e2cfa3f650a9b3d8",
+      "sha256": "686fd79e9ee9852b1879c1a422a0337abff0d165b190e6a4e2cfa3f650a9b3d8",
+      "bytes": 2595,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/include/hm_shared_queue.h",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/include/hm_shared_queue.h",
+      "origin_sha256": "10756f90f3f8a2d3bc0e420946977add598b7e0f4aae80d0d63d9c4f563e52fa",
+      "sha256": "10756f90f3f8a2d3bc0e420946977add598b7e0f4aae80d0d63d9c4f563e52fa",
+      "bytes": 1541,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/include/hm_streams.h",
+      "origin": "research/ios26-metal-native-20261102/streams/include/hm_streams.h",
+      "origin_sha256": "8c02d064ba8fec0013e780bac3db5d9122282b2dea4109fe27e7a24ab7399d4c",
+      "sha256": "8c02d064ba8fec0013e780bac3db5d9122282b2dea4109fe27e7a24ab7399d4c",
+      "bytes": 8199,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/licenses/streams-r3.LICENSE",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "origin_sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "sha256": "4e5a76c05f4f9d64d1f80c645e65c9967a17f31b763884ab6ac802d55f9fdf17",
+      "bytes": 1077,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r2/src/hm_shared.c",
+      "origin_sha256": "17309e666f6f59d82d92a2a250903169f1e8b5f73903ce0f32f49fba9b100b34",
+      "sha256": "17309e666f6f59d82d92a2a250903169f1e8b5f73903ce0f32f49fba9b100b34",
+      "bytes": 8558,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared_bridge.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/src/hm_shared_bridge.c",
+      "origin_sha256": "ec5ee9067b845b903a0f9fa8ae72d7d86080e3af761e63736e51d813269d81f6",
+      "sha256": "ec5ee9067b845b903a0f9fa8ae72d7d86080e3af761e63736e51d813269d81f6",
+      "bytes": 4120,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared_decode.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r2/src/hm_shared_decode.c",
+      "origin_sha256": "acc913636e7590ff8e03b20a49c68b2867bd291c2bdae37a7ef6dcaa9e26d311",
+      "sha256": "acc913636e7590ff8e03b20a49c68b2867bd291c2bdae37a7ef6dcaa9e26d311",
+      "bytes": 7323,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/src/hm_shared_queue.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/src/hm_shared_queue.c",
+      "origin_sha256": "dfbe47c1b6a26ed28984381efeed5bef5ad6699b3ea7961fa0a2cdbc52b16ae4",
+      "sha256": "dfbe47c1b6a26ed28984381efeed5bef5ad6699b3ea7961fa0a2cdbc52b16ae4",
+      "bytes": 1995,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/src/hm_streams.c",
+      "origin": "research/ios26-metal-native-20261102/streams/src/hm_streams.c",
+      "origin_sha256": "485d3796e3957d1ccbff72f2d26827e532261265c44782ee97948fbb11c321a2",
+      "sha256": "485d3796e3957d1ccbff72f2d26827e532261265c44782ee97948fbb11c321a2",
+      "bytes": 27980,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/tests/model.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/tests/model.c",
+      "origin_sha256": "8c453126ef5816cdccf7fea915caabc9e29381b7a9359e966f345e156d3fc9e3",
+      "sha256": "8c453126ef5816cdccf7fea915caabc9e29381b7a9359e966f345e156d3fc9e3",
+      "bytes": 17706,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/tests/model.h",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/tests/model.h",
+      "origin_sha256": "f0fa1881c58723167b9caade0966bfe27ce7969a4c0c452b436866ea947c4c1c",
+      "sha256": "f0fa1881c58723167b9caade0966bfe27ce7969a4c0c452b436866ea947c4c1c",
+      "bytes": 1393,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/tests/test_bridge.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/tests/test_bridge.c",
+      "origin_sha256": "316efa56c3a56baf300d1f7ca89abc359d02b67ab529aceae72a1e109a04e11b",
+      "sha256": "316efa56c3a56baf300d1f7ca89abc359d02b67ab529aceae72a1e109a04e11b",
+      "bytes": 14527,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/tests/test_lifetime.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r3/tests/test_lifetime.c",
+      "origin_sha256": "4a6ec347d14d3bb373dd779f4aa906ed7162ae9a067724d1ab9fb56163395fc6",
+      "sha256": "4a6ec347d14d3bb373dd779f4aa906ed7162ae9a067724d1ab9fb56163395fc6",
+      "bytes": 5054,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r3/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/tests/test_shared.c",
+      "origin": "research/ios26-metal-native-20261102/streams-r2/tests/test_shared.c",
+      "origin_sha256": "f62de42bed636ca9d4d35f170daedb795818b33e50ce1cc2d0f5855aea0f8187",
+      "sha256": "f62de42bed636ca9d4d35f170daedb795818b33e50ce1cc2d0f5855aea0f8187",
+      "bytes": 11646,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams-r2/LICENSE",
+      "changes": []
+    },
+    {
+      "path": "native/metal/streams/tests/test_streams.c",
+      "origin": "research/ios26-metal-native-20261102/streams/tests/test_streams.c",
+      "origin_sha256": "95eb4338830b8d1caf6580e335463710482581b1f42c3f0e2ac3374c1e4b6a46",
+      "sha256": "95eb4338830b8d1caf6580e335463710482581b1f42c3f0e2ac3374c1e4b6a46",
+      "bytes": 17637,
+      "license": "MIT",
+      "license_origin": "research/ios26-metal-native-20261102/streams/LICENSE",
+      "changes": []
+    }
+  ]
+}
