@@ -1,3 +1,33 @@
+## Reuse findings communicated, 2026-11-02 — 21 active owners updated
+
+At the user's explicit request, read the live T3 project inventory and recent
+context for related coordinators/subagents, then delivered **22 tailored
+steering messages to 21 distinct active recipients: 5 coordinators and 16
+subagents**. All other live threads in the closing inventory have successful
+receipts. Exact text, thread links and message IDs:
+`docs/reuse/2026-11-02/communications.{md,json}`. Audit remains commit3139238.
+
+Updates covered current native Metal firmware/UC/VM/queue/ISA/AIR/streams/
+frontend/surfaces/validation; phone/release, CPU, dualboot and Inferno parents;
+settings assets, container/services, governor, interactive USB, USB networking,
+profiler and the existing sampler reviewer. Messages preserve their actual
+current assignments, newer source evidence, file licences and physical gates.
+No duplicate collector, renderer, allocator, profiler or bootloader requested.
+Peripheral findings went to the coordinator for future allocation.
+
+One profiler finished between inventory and steering; the tool returned
+`thread_not_sendable` (no running turn). Its full update was relayed to the
+phone parent without restarting it. Two newly active owners were read and
+updated in the closing inventory. Historical completed agents remain idle.
+Delivery is confirmed; the phone parent's10:57checkpoint explicitly acknowledges
+receipt. Other owners' adoption is not established by transport receipts.
+
+Verification: 22 successful message IDs/run IDs and21 distinct thread links;
+JSON/count/content/link/whitespace checks PASS. No new delegate, review task,
+restart, cancellation, device operation or runtime implementation by this
+communication step. Preserve the phone owner's current running attempt and
+capture exclusivity in its latest checkpoint below; no new boot authority.
+
 ## CPU completion milestone, 2026-11-02 (host only)
 
 User goal: take CPU's84% feature score to100%. Counted gaps are sustained

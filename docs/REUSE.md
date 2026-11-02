@@ -9,6 +9,8 @@ Start with the table below. Each linked report names exact files, symbols,
 commits, licences, existing counterparts, missing dependencies and a first test.
 [Next tasks](reuse/2026-11-02/next-tasks.json) are also machine-readable;
 [fleet.json](reuse/2026-11-02/fleet.json) records the 24 completed assignments.
+The [communication record](reuse/2026-11-02/communications.md) shows targeted
+delivery to the active implementation coordinators and subagents.
 
 ## Highest-value opportunities
 
