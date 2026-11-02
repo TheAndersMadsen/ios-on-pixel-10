@@ -41,6 +41,11 @@ static void receipt(NSDictionary *record) {
     }
 }
 
+static void progress(NSString *phase, NSString *identifier) {
+    receipt(@{@"event": @"phase", @"phase": phase, @"pid": @(getpid()),
+              @"bundle_id": identifier ?: (id)NSNull.null});
+}
+
 BOOL hkStockAppEntryValid(id entry) {
     if (![entry isKindOfClass:NSDictionary.class]) return NO;
     NSString *identifier = entry[@"bundle_id"], *path = entry[@"path"];
@@ -71,6 +76,7 @@ BOOL hkStockAppIsListed(id workspace, NSString *identifier, NSString *path) {
 }
 
 int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attempts) {
+    progress(@"manifest_read", nil);
     id manifest = readPlist(manifestPath);
     if (![manifest isKindOfClass:NSDictionary.class]
         || ![manifest[@"schema"] isEqual:@"hackios-stock-apps-v1"]
@@ -88,6 +94,7 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
         [identifiers addObject:entry[@"bundle_id"]]; [paths addObject:entry[@"path"]];
     }
     BOOL registering = [action isEqual:@"register"];
+    progress(@"workspace_connect", nil);
     Class cls = NSClassFromString(@"LSApplicationWorkspace");
     id workspace = [cls respondsToSelector:@selector(defaultWorkspace)] ? [cls defaultWorkspace] : nil;
     if (![workspace respondsToSelector:@selector(allApplications)]
@@ -113,8 +120,10 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                        || ![NSFileManager.defaultManager isExecutableFileAtPath:[path stringByAppendingPathComponent:exe]]) {
                 reason = @"invalid_executable_or_path";
             } else {
+                progress(@"registration_readback", identifier);
                 verified = hkStockAppIsListed(workspace, identifier, path);
                 if (!verified && registering) {
+                    progress(@"register_url", identifier);
                     accepted = [workspace registerApplication:[NSURL fileURLWithPath:path isDirectory:YES]];
                     // Allow an asynchronous registration to appear; re-enumerate each time.
                     for (unsigned poll = 0; poll < 10 && !verified; poll++) {
@@ -149,9 +158,11 @@ int main(int argc, const char *argv[]) {
         if (strcmp(argv[1], "query") == 0 && attempts != 1) return 2;
         // Test host supplies a fixture workspace, never a host application registrar.
 #if !defined(HK_STOCK_APPS_HOST_FIXTURE)
+        progress(@"framework_load", nil);
         if (!dlopen("/System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices", RTLD_NOW)) {
             receipt(@{@"event": @"error", @"reason": @"framework_unavailable"}); return 3;
         }
+        progress(@"framework_loaded", nil);
 #endif
         return hkRegisterStockApps(@(argv[1]), @(argv[2]), (unsigned)attempts);
     } @catch (NSException *exception) {

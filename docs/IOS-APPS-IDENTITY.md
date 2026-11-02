@@ -109,6 +109,9 @@ manifest and verifies each identifier at its actual installed path using fresh
 enumeration. Placeholders, wrong paths and missing executables fail. It never
 overrides signer identities, alters a UDID or treats API acceptance as a launch.
 It is default-off at compilation (`HK_STOCK_APPS_BUILD=1` enables it).
+Phase receipts precede framework loading, workspace connection, enumeration and
+URL registration, so an unfinished synchronous API call remains identifiable.
+Attempt counts limit retries; they do not cancel or time out Apple's APIs.
 
 The private `research/ios26-apps-r1/` candidate uses an APFS clone of the existing
 20 GiB light root. All 49 app bundles are relocated into `/Applications`; all
@@ -118,6 +121,21 @@ unchanged. A first-boot job calls the registrar with the explicit 51-app manifes
 current root allocation and is for guest tests only. Package verification and
 guest results must be recorded in that directory's handoff, never inferred from
 this document. Legacy resource envelopes need validation after relocation.
+
+Guest integration must retain the **current r3** `/var` seed and preferences,
+including `persona.kb` and `CAEnableMedina=false`, plus its launchd baseline.
+The old light root predates those requirements. Its first full-RAMDisk guest
+demonstrated a missing-persona startup abort, not lost persona support on the
+physical r3. The corrected candidate copies all 55 r3 seed files byte-for-byte,
+preserves its 676 launchd jobs, and adds only the own registrar job. Its 245 seed
+entries are parsed and source paths checked with the actual p29 consumer.
+
+Use the whole-RAMDisk backend for this 20 GiB guest. The fake UFS test path
+deliberately retains the physical 8 GiB view; a real seed file at offset
+17,532,928,000 was refused with EINVAL. An actual-reader host reproduction
+confirmed that bound. Neither seed deletion nor a widened physical partition
+view is an appropriate correction. All 49 restored bundles have since passed
+deep resource/signature verification in the private clones.
 
 Next acceptance is sequential: valid code/resource signatures and PAC rewriting
 on the candidate, fresh guest LaunchServices read-back, then an actual launch
