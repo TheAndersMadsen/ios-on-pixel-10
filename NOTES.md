@@ -1,3 +1,43 @@
+## Dualboot CPU-context hold and frozen host profile, 2026-11-02 11:42 CET
+
+Docs/recovery milestone **af2fcaf**, consumes shared policy **99c96136**.
+Goal ACTIVE, full dualboot unfinished. GPT retry **HELD** pending existing CPU
+and phone-owner context review: immutable readback image uses cpus=1/no bootcpu;
+actual cpu0 audit20261102-110932 has ACTLR bit9 clear/bit38 set, prerequisiteFAIL.
+Earlier exact LU0/LBA0 read20261102-105345 remains observed; full GPT unproven.
+No new kernel/image, bootcpu substitution, USB/boot/Android/storage/slot action.
+CPU/phone/orchestration notified via auto; exclusive phone queue preserved.
+
+ONE profile research/ios26-dualboot-r2/phone-test-r2.json now HELD, SHA256
+34a126b25e6ef5cbffde58a0fcd29d2c888ff9818c703b6828b91ec14358495c.
+Capture+offline verify pin frozen-phone-r2/dualboot.py, exact **f329418**,
+SHA04ba287061e5a16f62149e2d7bda3a9cd371abbeef6e67ba5ea2991da8d376e8.
+Whole-block reviewed PMBR hash/failure retention/both-copy strict GPT unchanged.
+Image21cba4e8.../kernel30db07c5.../own unstripped0ce50d8b... rehashed unchanged;
+exact64-hex hashes/build+boot argv/gate-ON ARM64 text-symbol receipts in r2.
+Frozen source equality, actual CLI parsing, private modes and argv bindingPASS.
+No unchanged-suite rerun or new ARM64 compile claim for this docs/profile change.
+Prior35x128 GPT geometry implies14 planned metadata reads; max1030 valid-profile
+reads/hard cap1100. This omits some reserved padding and is not a raw backup.
+
+Offline recovery/isolation plan finished in r3/planning/README.md + capacity.json:
+reported normal LUNs total127,716,556,800B (118.9453125GiB), host~171.2GiB free.
+One raw copy fits with40GiB work reserve; two do not, no independent destination
+validated. Native service exports attachedLU0 only; no bulk backup throughput
+qualified. Secure/RPMB/key state excluded. 20GiB apps root exceeds8GiB phone alias.
+No safe carving/resize/decryption or file-restore plan accepted. Saved init_boot
+payloadFAIL/missing vendor_kernel_boot+DTBO+trusted AVB graph remain blockers.
+
+Smallest later metadata proposal starts with owner-selected root-vbmeta first4KiB
+AFTER GPT/context acceptance, then separately reviewed exact bounded extents.
+Current host CLI is GPT-only; no extra read scope/consumer authorized or built.
+Fresh f2fs pin d34dcc88 source receipts correct audit attribution: explicit alias
+refusal in fsck/main.c is **do_defrag**, not do_resize; resize.c/mount.c contain
+no alias-named handling. This establishes NO safe resize; migration still holds.
+Source hashes/line receipts, profile checks and delivery receipts stay ignored.
+Next: CPU/phone-owner context acceptance; later complete strict GPT; then complete
+recoverable backups and isolated allocation before any destructive approval.
+
 ## Coordination update, 2026-11-02 — CPU health baseline and corrected apps guest
 
 Consumed CPU checkpoint **7424c92** and apps source **64ffd35**, extending
