@@ -1,28 +1,96 @@
-# hackios
+<!-- status:begin -->
 
-**Apple's XNU kernel and iOS 26 userland on the Google Pixel 10 Pro: the target of this branch.** iOS 26 has not booted on this phone. The hardware route below was proven on the earlier iOS 16 line, frozen on branch `ios16`.
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 36% of reachable hardware" width="100%"></p>
 
-This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5). The target is XNU 12377 and iOS 26. On iOS 16 (`xnu-8796.121.2`), the furthest native boot mounted the full iOS root from UFS and ran SpringBoard, with iOS's frames only in RAM. Bring-up detail is in [BLAZER.md](BLAZER.md).
+<h2 align="center">A phone that was never meant to do this.</h2>
+<p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
 
-> Experimental bring-up, not a usable phone OS. Boots are temporary RAM boots; the boot tool leaves `force-fastboot` on. Apple's security model is mostly switched off.
+<p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
-## What works (proven with iOS 16; not yet with iOS 26)
+<h2 align="center">Every block. Tracked.</h2>
+<p align="center"><b>36%</b> across 46 reachable features. Updated 2026-11-02.</p>
 
-| Area | State |
-| --- | --- |
-| Boot | Stock Google bootloader → `fastboot boot` of our shim → XNU. Nothing is flashed to the boot partitions |
-| Logs | Shim stamps and XNU message buffer are read back over USB from the fastboot park |
-| Root | HFS+ compact root delivered in the boot image mounts |
-| Root | Full APFS root mounts read-only from UFS, with 16 KiB pages and 4 GiB of RAM |
-| Userland | `launchd`, backboardd and SpringBoard run; backboardd draws frames to RAM. Once so far |
-| Display | The shim's DPU code sends pixels from RAM to the panel. iOS's own frames haven't reached it |
+<p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
-## What does not work (yet)
+| | Status | Features | Counts as |
+| --- | --- | ---: | ---: |
+| ✅ | Works on the phone | 6 | 100% |
+| 🟡 | Partly working | 9 | 60% |
+| 🔧 | Built, not run | 8 | 35% |
+| ⏳ | In progress | 11 | 20% |
+| ❌ | Not started | 12 | 0% |
+| 🚫 | Likely out of reach | 6 | not counted |
 
-- **No native display, touch or stable userland.**
-- **No automatic recovery** has been qualified.
+<details><summary><b>See every feature</b></summary>
 
-Separate results, not native: the iOS 16.5 home screen with touch ran in a pKVM VM on this phone (2026-10-25), and QEMU has rendered the lock and home screens.
+| Block | Feature | Status |
+| --- | --- | --- |
+| **CPU** | 5 A725 cores | 🟡 Up under XNU and iOS, no full run yet |
+|  | CPU clock control | 🟡 Up to 1536 MHz in a short test; not yet under iOS |
+|  | Higher clocks, up to the 3052 MHz top | ⏳ Short tests being built, limited by heat |
+|  | 2 A520 cores | 🟡 cpu0 parked in the shim; cpu1 unused |
+|  | X4 core | 🚫 For now: its errata aren't fixed |
+|  | Idle sleep | ✅ By code reading: cores already idle in WFI |
+| **Memory** | Memory and shared cluster clocks | 🟡 Up to 2.25x in a short test; first iOS run in progress |
+|  | RAM | 🟡 4 GiB works, 6 GiB passed its short test; 12.92 GiB is the target |
+|  | The rest of the 16 GiB | ❌ Not assigned |
+| **Display** | Full 1280x2856 picture | ✅ Scaled from 1125x2511 |
+|  | 120 Hz | 🟡 Panel runs at 120, iOS draws about 20–31 fps |
+|  | 60 Hz mode and frame sync | 🔧 Next test |
+|  | Variable refresh down to low rates | ❌ Automatic idle rate isn't built |
+|  | Brightness | 🟡 Capped at about 140 nits; no user control yet |
+|  | HDR, peak brightness, colour calibration | ❌ Not assigned |
+|  | Always-on display, self-refresh | ❌ Not assigned |
+| **Graphics** | GPU power-on and ID | 🔧 Next test |
+|  | GPU firmware through Trusty | 🔧 Ping and load tests built |
+|  | Metal drawing | ⏳ Months away; everything is CPU-drawn now |
+|  | Video encode and decode | ❌ Not assigned |
+| **Storage** | Reading | ✅ Multi-block reads, 0 errors |
+|  | Writing (persistent /var) | 🔧 First write awaits approval |
+|  | Maximum speed | ⏳ Patches being measured |
+| **Input** | Touch | ✅ Works; feel unconfirmed |
+|  | Volume keys | 🟡 Read in a probe |
+|  | Power key | ⏳ Retry needs someone at the phone |
+|  | Tap to wake, palm rejection | ❌ Not assigned |
+| **Connectivity** | Wi-Fi | 🟡 Firmware runs; no network yet (stage 3 in progress) |
+|  | Bluetooth | ⏳ QEMU test queued, needs Wi-Fi firmware running first |
+|  | Cellular | ⏳ Modem identified; first check built |
+|  | SIM, eSIM | ⏳ Part of cellular |
+|  | GPS | ❌ Not assigned |
+|  | NFC | ❌ Reading tags possible at most; Apple Pay is out of reach |
+|  | UWB | ❌ Not assigned; presence unconfirmed |
+| **USB** | Fastboot and logs | ✅ |
+|  | Live console | 🔧 Next tests |
+|  | Link to the Mac | ⏳ mux-1 test in QEMU |
+|  | Network over USB | ❌ Not assigned |
+|  | USB host, video out | 🚫 No host stack in open XNU |
+| **Audio** | Speakers, microphones | ⏳ QEMU test queued; depends on always-on chip |
+|  | Haptics | 🔧 Read-only stage ready |
+| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Depend on always-on chip |
+|  | Always-on chip | ⏳ First test built |
+| **Power** | Temperature and thermal guard | ✅ |
+|  | Battery gauge | 🔧 Probe ready |
+|  | Charging control | ❌ Left at the bootloader's settings |
+|  | Wireless charging | ❌ Not assigned |
+|  | Real date and time | 🔧 Ready to test |
+| **Cameras** | Cameras, flash | 🚫 Likely months: sensor details aren't public |
+| **Security** | Fingerprint, Face ID | 🚫 Tied to Apple's security chip |
+|  | Secure enclave | 🚫 Stand-ins only, so the passcode doesn't encrypt anything |
+| **Apple services** | Activation, iMessage, App Store purchases | 🚫 Need a real iPhone's identity |
+
+</details>
+
+<sub>Percentages are a progress estimate from the table above, not a benchmark. Measured figures come from single test boots of one phone, and their notes say which were short tests or estimates. Rebuild with `python3 -I tools/readme_status.py` after editing `docs/status.json`.</sub>
+
+> **What this is.** An experimental research bring-up on the owner's own phone, not a usable phone OS and not a product. Nothing here is for sale. It isn't affiliated with or endorsed by Apple or Google. No Apple software or firmware is distributed here. Apple's security model is largely switched off, so the phone isn't safe for real data.
+
+<!-- status:end -->
+
+---
+
+## The details
+
+This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5), running XNU 12377 and the iOS 26 userland. Boots are temporary RAM boots through `fastboot boot`; the boot tool leaves `force-fastboot` on. The root image is on `userdata_exp.ai`.
 
 ## How it boots
 

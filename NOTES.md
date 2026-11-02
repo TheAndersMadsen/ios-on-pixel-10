@@ -1,3 +1,10 @@
+## Handoff, 2026-11-02 03:05 (parent): read `research/ios26-fleet/STATUS.md` first
+
+Physical tonight, each under `research/laguna-usb-fix/attempts/`: p11 fullcheck on cpu0 and cpu2; `vote-write-r2` reaches 1536 MHz; `floor-probe-r1` FLOORS_CLEAN, 2.02x and 2.25x; `smp-check-r1` 5/5 A725s; `phone-fast-r2` 5 cores under iOS for 368 s until a long press; `t2-p14-r1` guard panics as designed; `wifi-stage2-r1` firmware up, IPC 9; `ram-short-r1` passes. `phone-all-r1`, p15, was running at this note, no result yet.
+Kernels: `research/ios26-release-r1/artifacts`, newest p16 `ca79e2a8…`; p17 queue holds hwtune and ufsmax. Next boots: GPU `gpu-stage1-r1`, `gpu-tipc-r1`; keys-probe-r2 needs the owner at the phone.
+Open owner decisions: GPU firmware in local images; 42 vs 150 GiB GPU disk limit; stock-compiled shader bytes; private backup of the kernel series; transmission from the modem.
+`README.md` status comes from `docs/status.json`: edit it, run `python3 -I tools/readme_status.py`.
+
 # iOS 26 on blazer (Pixel 10 Pro, Tensor G5) - working notes
 
 ## Pixel 10 Pro port handoff (2026-11-01, current)

@@ -1,0 +1,94 @@
+{
+  "updated": "2026-11-02",
+  "scores": {"works": 100, "partial": 60, "built": 35, "active": 20, "open": 0, "out": null},
+  "stats": [
+    {"value": "5/5", "label": "fast cores up", "note": "A725, under XNU and iOS"},
+    {"value": "1536", "unit": "MHz", "label": "CPU clock reached", "note": "up from 533, short test"},
+    {"value": "2.25", "unit": "x", "label": "faster memory access", "note": "short test"},
+    {"value": "31", "unit": "fps", "label": "peak, drawn on the CPU", "note": "was 1.6 s a frame"},
+    {"value": "4.3", "unit": "min", "label": "to home screen", "note": "from 11, estimated from logs"},
+    {"value": "36", "unit": "°C", "label": "under light load", "note": "5 cores, about 6 min"}
+  ],
+  "blocks": [
+    {"name": "CPU", "features": [
+      ["5 A725 cores", "partial", "Up under XNU and iOS, no full run yet"],
+      ["CPU clock control", "partial", "Up to 1536 MHz in a short test; not yet under iOS"],
+      ["Higher clocks, up to the 3052 MHz top", "active", "Short tests being built, limited by heat"],
+      ["2 A520 cores", "partial", "cpu0 parked in the shim; cpu1 unused"],
+      ["X4 core", "out", "For now: its errata aren't fixed"],
+      ["Idle sleep", "works", "By code reading: cores already idle in WFI"]
+    ]},
+    {"name": "Memory", "features": [
+      ["Memory and shared cluster clocks", "partial", "Up to 2.25x in a short test; first iOS run in progress"],
+      ["RAM", "partial", "4 GiB works, 6 GiB passed its short test; 12.92 GiB is the target"],
+      ["The rest of the 16 GiB", "open", "Not assigned"]
+    ]},
+    {"name": "Display", "features": [
+      ["Full 1280x2856 picture", "works", "Scaled from 1125x2511"],
+      ["120 Hz", "partial", "Panel runs at 120, iOS draws about 20–31 fps"],
+      ["60 Hz mode and frame sync", "built", "Next test"],
+      ["Variable refresh down to low rates", "open", "Automatic idle rate isn't built"],
+      ["Brightness", "partial", "Capped at about 140 nits; no user control yet"],
+      ["HDR, peak brightness, colour calibration", "open", "Not assigned"],
+      ["Always-on display, self-refresh", "open", "Not assigned"]
+    ]},
+    {"name": "Graphics", "features": [
+      ["GPU power-on and ID", "built", "Next test"],
+      ["GPU firmware through Trusty", "built", "Ping and load tests built"],
+      ["Metal drawing", "active", "Months away; everything is CPU-drawn now"],
+      ["Video encode and decode", "open", "Not assigned"]
+    ]},
+    {"name": "Storage", "features": [
+      ["Reading", "works", "Multi-block reads, 0 errors"],
+      ["Writing (persistent /var)", "built", "First write awaits approval"],
+      ["Maximum speed", "active", "Patches being measured"]
+    ]},
+    {"name": "Input", "features": [
+      ["Touch", "works", "Works; feel unconfirmed"],
+      ["Volume keys", "partial", "Read in a probe"],
+      ["Power key", "active", "Retry needs someone at the phone"],
+      ["Tap to wake, palm rejection", "open", "Not assigned"]
+    ]},
+    {"name": "Connectivity", "features": [
+      ["Wi-Fi", "partial", "Firmware runs; no network yet (stage 3 in progress)"],
+      ["Bluetooth", "active", "QEMU test queued, needs Wi-Fi firmware running first"],
+      ["Cellular", "active", "Modem identified; first check built"],
+      ["SIM, eSIM", "active", "Part of cellular"],
+      ["GPS", "open", "Not assigned"],
+      ["NFC", "open", "Reading tags possible at most; Apple Pay is out of reach"],
+      ["UWB", "open", "Not assigned; presence unconfirmed"]
+    ]},
+    {"name": "USB", "features": [
+      ["Fastboot and logs", "works", ""],
+      ["Live console", "built", "Next tests"],
+      ["Link to the Mac", "active", "mux-1 test in QEMU"],
+      ["Network over USB", "open", "Not assigned"],
+      ["USB host, video out", "out", "No host stack in open XNU"]
+    ]},
+    {"name": "Audio", "features": [
+      ["Speakers, microphones", "active", "QEMU test queued; depends on always-on chip"],
+      ["Haptics", "built", "Read-only stage ready"]
+    ]},
+    {"name": "Sensors", "features": [
+      ["Accelerometer, gyro, proximity, light, barometer", "active", "Depend on always-on chip"],
+      ["Always-on chip", "active", "First test built"]
+    ]},
+    {"name": "Power", "features": [
+      ["Temperature and thermal guard", "works", ""],
+      ["Battery gauge", "built", "Probe ready"],
+      ["Charging control", "open", "Left at the bootloader's settings"],
+      ["Wireless charging", "open", "Not assigned"],
+      ["Real date and time", "built", "Ready to test"]
+    ]},
+    {"name": "Cameras", "features": [
+      ["Cameras, flash", "out", "Likely months: sensor details aren't public"]
+    ]},
+    {"name": "Security", "features": [
+      ["Fingerprint, Face ID", "out", "Tied to Apple's security chip"],
+      ["Secure enclave", "out", "Stand-ins only, so the passcode doesn't encrypt anything"]
+    ]},
+    {"name": "Apple services", "features": [
+      ["Activation, iMessage, App Store purchases", "out", "Need a real iPhone's identity"]
+    ]}
+  ]
+}
