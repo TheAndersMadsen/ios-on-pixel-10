@@ -3,7 +3,64 @@
 Source assessment, 2026-11-02. Inferno offers useful iOS software-rendering
 references and a possible independent Apple-device test guest. The closest
 immediate match is its filesystem patcher's handling of QuartzCore surfaces.
-This assessment adds no runtime implementation or build/boot result.
+The initial assessment added no runtime result. The exact-build follow-up below
+records a bounded QEMU CoreImage experiment.
+
+## Exact CoreImage follow-up, 2026-11-02
+
+Audited the actual host r3 root, iOS 26.6.2 / 23G90, SHA256
+`205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7`.
+Its CoreImage image UUID is `6f5abd16-0e3c-3fc3-bcc7-ccefeafbca00`, matching the
+stock SystemOS cache. All twelve functions targeted by Inferno's CoreImage
+fallbacks match stock after our existing PAC transformations; none of the
+requested return stubs was present. This is a binary comparison, not inference
+from root recipes. Exact function addresses, spans and hashes are retained in
+`research/ios26-inferno-coreimage-r1/audit/exact-r2.json`.
+
+Selected only `_isWidget` at `0x19e041778`. In this build,
+`-[CIContext initWithOptions:]` uses its result to select
+`internalSWContextWithOptions:` directly. An independent branch selects that
+same path for `software_renderer.intValue == 2`; the exported
+`kCIContextUseSoftwareRenderer` points to that key. The probe uses value 2 as
+a positive control, rather than assuming the usual Boolean option reaches it.
+
+The experimental clone replaces this function's first eight bytes with
+`mov w0, #1; ret` and changes one 32-byte signed-page hash. The complete image,
+with those two ranges restored for hashing, equals the source SHA256; the source
+was independently rehashed unchanged. An existing independent verifier checked
+all 5,318 pages of the modified cache member, with zero invalid hashes. The
+other eleven audited targets remain unchanged. Candidate image SHA256:
+`6ba62469f05e553c21c965e092b356e7f2509406064d24299a0b0f9193915a8f`.
+
+The p29 QEMU comparison uses the unchanged existing harness and identical
+SpringBoard diagnostic library/overlay. In the final control probe, default,
+GPU-request and Boolean software-request context creation returned nil. The
+numeric-2 reference created a software context and correctly rendered every
+pixel of a 4x4 red image and its cyan color inversion, including guard checks.
+In the changed guest, all four cases created software contexts and passed those
+same pixel/guard checks. Temporary constructor observers were restored.
+Final runs: `control-r3` (235.242 host seconds) and `widget-r3` (244.994 host
+seconds), both exited 0 with unchanged input images and no recorded console
+loss. These durations are test windows, not a performance comparison.
+`receipts/result.json` records the passing strict verifier; eight altered
+failure receipts were rejected by its log checks.
+
+Earlier runs remain in the receipts: `control-r1` rejected an observer type
+check; r2 created contexts with the change but failed bitmap-backed pixel
+checks. The revised constant-color input has an independent passing control.
+The bitmap failure's cause is unisolated; it is not established as an IOSurface,
+asset-catalog or codec defect. No missing-icon, frame-rate or phone improvement
+is claimed, and the queued Settings/home script was not exercised by this
+bounded comparison. The phone root and all physical gates remain untouched.
+
+Original audit/clone/probe/strict-verifier source and reproduction details:
+[tools/coreimage](../tools/coreimage/README.md). The Inferno patcher is
+AGPL-3.0-or-later; no patcher implementation was imported. This follows the
+reuse audit's [assets](reuse/2026-11-02/assets-compositor.md),
+[Darwin services](reuse/2026-11-02/darwin-services.md) and
+[CPU rendering](reuse/2026-11-02/cpu-rendering.md) ownership boundaries:
+the Battery glyph, container-ready, cloudd and sampler candidates remain
+separate, and the physical surface-tracking fix stays single-applied.
 
 ## Current sources
 
