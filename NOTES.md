@@ -1,3 +1,50 @@
+## Reuse audit completed, 2026-11-02 — 24 specialists, 16 concrete follow-ups
+
+Committed **3139238** (`Audit reusable code and tooling across 24 bring-up
+ domains`): `docs/REUSE.md`, 24 topic reports, completed native-agent roster,
+11 parent-verified source-file receipts and 16 proposed integration tasks.
+All 24 inherited GPT-6.1-Sol assignments returned; no continuing fleet promised.
+Documentation index links the audit. This is completed research, not runtime
+implementation or hardware acceptance.
+
+**Best reusable source:** MIT-side Pixel Volcanic MMU/context/cleanup code;
+MIT matching panel/revision/command helpers; MIT ipsw CAR manifests; licensed
+HakiOS WLAN discovery/station glue. Newly recovered from the correct GitLab
+6.12 tree: BSD-option Wave6 register header and Samsung U100 GPL transport,
+plus Apache AOSP UCI schemas/tests. These close earlier missing-source leads.
+Standalone metal2vulkan-air is a real frontend boundary but copyleft/Rust costs
+and existing MIT scalar AIR overlap make host evaluation the first task.
+No inspected project supplies a complete DXT71 compiler/native Metal stack.
+
+**Avoid duplicated labour:** actual p29 already contains many patches older
+handoffs call pending. Keep current sampler/VM/queue/overlay owners; finish
+adapter wiring and composed acceptance instead of new driver stacks. Existing
+RTC0657, wake/palm1270, MotionProbe and completed bt-3 capture are actionable
+local backlog. Exact paths/pins/licences/prerequisites/first tests are in the
+reports and `docs/reuse/2026-11-02/next-tasks.json`. Extend the native-Metal
+parent's concurrent source collector rather than creating another one.
+
+**Verification:** parent fetched11 pinned public text files; panel/MMU bytes
+match local donors. Source markers/hash metadata PASS; corrected Wi-Fi report's
+release SHA to independently verified237e3889640333558525c8082593e68cc5401405.
+All28 audit artifacts passed local-link/content/JSON/whitespace checks; staged
+scanner and pre-commit check PASS (`clean:188files`). No kernel compile/link or
+runtime test performed for this audit; no FPS/boot-time improvement claimed.
+GitHub unauthenticated API limits and unavailable Tegu URLs are explicit limits.
+
+**No new device attempt ID:** no USB command, boot, firmware action/download,
+radio operation, root/partition/slot write or flash by this fleet. Other parents'
+implementation changes remain theirs. Physical evidence used includes captured
+health attempt20261102-102719-native-metal-health-p29-r1 FAIL; SEND/KCCB
+consumption is not shader execution. Follow the phone owner's newest handoff
+for any subsequent attempts. Prior blocked AoC and failed Claude Mesa tasks were
+not restarted. Native non-Mesa production policy and storage constraints hold.
+
+Next implementation order: extend source/feature receipts; finish measured
+sampler/assets/container paths; reconcile GPU ABI and existing callbacks; add
+small WLAN/ECM adapters; consume Wave6/U100 host decoders. These16 follow-ups
+remain **proposed**, not built, integrated, scheduled or physically verified.
+
 ## Dual-boot checkpoint commit, 2026-11-02 10:47 CET
 
 Implementation committed as **13a77d8** (`Add native read-only UFS capture for
