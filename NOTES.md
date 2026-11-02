@@ -384,6 +384,8 @@ runner, governor, test matrix, release/image/tool-admission or device action.
 One exact handoff: research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md plus
 next-action.json, physical-audit.json, physical-summary.json, p30-text-symbols.txt.
 It binds actual hashes/argv/gates, positive/FAIL/STOP, shareability and rollback.
+Latest context-update.json consumes the EXISTING phone-owner context review;
+no new review/worker, source implementation or scheduling request.
 
 **PHYSICAL:** phone-owner attempt20261102-110932-cpu0-audit-p29-r1 COMPLETE.
 Raw677292244c24d02b4b5dd5177e58317054f62031fc25e15b7bf46c50df457e8f;
@@ -418,6 +420,10 @@ lowered-trip R1/R2 stages stay isolated, require separate probe1/high0 kernel;
 current p30 cannot run them. Need real two-poll/direct per-domain downvotes,
 fresh all-five AMU, actual DSU/LPCM floor releases and advancing independent
 thermal guard; no forced heat/load, generic-line PASS or cap13/high promotion.
+OFF and FAST are now captured; FAST's initial BaseBoard NSURL-nil abort absent
+in OFF confounds timing, no speed/FPS/visual promotion. Next ready test remains
+phone-owner p29 artwork+passiveMCM/samplerOFF, no CPU-health/AKS/newkernel addition.
+CPU common-baseline proposal stays unbuilt/pending admission, same argv retained.
 
 **Cross-goal HOLD:** actual manifests+ADTs confirm GPU p30 diag d8925f4f… and
 GPT image21cba4e8… eachcpus1/reg0/no bootcpu => unfixed cpu0 A520. GPU stays
@@ -425,13 +431,29 @@ BUILD ONLY, GPT owner explicitly HELD frozen profile SHA34a126b2…/host04ba2870
 prior evidence preserved, no new argv/image or automatic A725 substitution.
 CPU/phone/feature owners must review context/Trusty or nonce/LU0/transport/ownU.
 Both are in the SAME CPU handoff, and phone/coordinator received changed blocker.
+Consumed gpu_cpu_context_review/REVIEW.md SHA952cb01d… plus native parent's
+SOURCE/LINK/IMAGE PASS receipt. Original GPU DRAM882000000/size100000000 differs
+from original p29 GPU healtha00000000/same size. CPU/Trusty/full-layout HOLD
+persists; no automatic window/core change or new A520 workaround. Existing
+review owns reconciliation; its conditional one-A725 BUILD ONLY proposal is
+not an image/slot/context acceptance. Both manifests' exact image/kernel/U,
+nonces/ADT/placement and frozen GPT34a126b2/host04ba2870 are bound in context-update.
+Ordinary five-A725 UI has used window882; that does not certify GPU FF-A/Trusty.
 
 Primary review: exact A520 SDENissue12 section4.3.16 + TF-A62844b5… prescribes
-bit9; A520TRM102517_0004_07 A.1.7 permits EL2 reads while EL3 can trap writes.
-This r0p4 reference does not prove actual r0p1 firmware write permission/reset.
-HOST ONLY review, no speculative MSR/EL3/firmware change or second workaround
-implementation. Goal still needs both A520s working and sustained higher-clock
-physical acceptance; no score update or completion claim.
+bit9. Exact r0p1 TRM102517_0001_04 now retrieved/hash-bound: A.1.7 pp183–185
+permits EL2 reads while EL3 can trap writes; A.1.23 pp226–228 ACTLREN bit0/reset0,
+ACTLR_EL3 inaccessible at EL2. Actual post-firmware write permission and reset
+persistence remain UNKNOWN; no safe live write path established. PDF SHA69b35057…,
+text3dd7f76f…/official metadata in ignored privilege/, completed original review
+5088002c… . Unvalidated ignored CAS-probe draft WITHDRAWN, never compiled,
+submitted for integration, built or booted; six production files equal recorded
+baseline. No new workaround, MSR/EL3/firmware change, device or build action.
+Current CPU-NEXT SHAaec7faca… /next-action851fdbe2… /context-updateb1710b26… .
+Only metadata/hash/whitespace checks for this docs milestone; prior host/ARM64
+receipts retained, no unchanged-suite rerun or new compile/physical PASS.
+Goal still needs both A520s working and sustained higher-clock physical
+acceptance; no score update or completion claim.
 
 ## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
 

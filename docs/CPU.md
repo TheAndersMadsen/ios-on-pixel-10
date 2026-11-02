@@ -23,9 +23,20 @@ This also affects prepared single-core recipes that use `cpus=1` without
 `blazer_bootcpu`: they enter XNU on cpu0 A520. The p30 GPU diagnostic and old
 GPT-readback image are held for explicit CPU/phone/feature-owner context
 review. No automatic substitution of an A725 follows from this observation.
+The existing phone-owner context review also found a GPU memory-layout change:
+p30 image `d8925f4f…` uses RAM base `0x882000000`, while the earlier p29 GPU
+health image used `0xa00000000`. Source/link/image checks pass, but CPU, Trusty
+and full placement acceptance remain separate. That review owns reconciliation;
+neither a core nor a RAM-window change is automatic. The GPT profile stays frozen
+and held, including its own source, image, nonce, LU0 transport and `--mach`.
 One current source/artifact/acceptance/shareability handoff is retained in
 `research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md`; it keeps ordinary UI
 health observations separate from the existing lowered-trip R1/R2 tests.
+The completed sampler OFF/FAST comparison is confounded by FAST's initial
+BaseBoard NSURL-nil abort and establishes no speed improvement. The next phone
+test remains the owner's p29 artwork/passive-MCM run with sampler OFF. The new
+CPU-health common baseline is pending admission; isolated thermal R1/R2 and
+higher clocks retain their existing gates.
 
 `shim/tgl_cpu_audit.c` supplies a read-only, default-off precursor. It checks
 cpu0's identity, EL2, and disabled MMU/data/instruction caches, records REVIDR,
@@ -36,8 +47,8 @@ bits. An ENTER before the implementation-register read identifies a trap or
 unfinished read without presenting it as a result.
 
 Register and bit meanings are independently checked against Arm's BSD-licensed
-[Trusted Firmware-A A520 source](https://github.com/TrustedFirmware-A/trusted-firmware-a/blob/master/lib/cpus/aarch64/cortex_a520.S)
-and [register definitions](https://github.com/TrustedFirmware-A/trusted-firmware-a/blob/master/include/lib/cpus/aarch64/cortex_a520.h),
+[Trusted Firmware-A A520 source](https://gbmc.googlesource.com/trusted-firmware-a/+/62844b5a4a706dab67b68b9588dd44605597aa17/lib/cpus/aarch64/cortex_a520.S)
+and [register definitions](https://gbmc.googlesource.com/trusted-firmware-a/+/62844b5a4a706dab67b68b9588dd44605597aa17/include/lib/cpus/aarch64/cortex_a520.h),
 accessed 2026-11-02: bit9 is the CAS/CASP workaround for 3685825; bit38 is the
 powerdown workaround for 2630792. This audit neither writes those bits nor
 establishes that every applicable A520 erratum is handled. The cpu1 firmware
@@ -45,11 +56,16 @@ power-transition prerequisite, per-core checks, and mixed-core execution remain
 separate work.
 
 The successful EL2 read does not prove write permission. Arm's
-[A520 TRM](https://developer.arm.com/documentation/102517/latest),
-102517_0004_07_en A.1.7, describes a separate EL3 permission check for the write.
-That r0p4 reference does not establish the actual r0p1 firmware permission or
-reset behavior. The documented bit9 workaround remains a host-only source
-review; no live register or firmware change is authorized by this audit.
+[exact r0p1 A520 TRM](https://developer.arm.com/documentation/102517/0001),
+102517_0001_04_en A.1.7, pages183–185, permits the EL2 read but can trap an EL2
+write to EL3. A.1.23, pages226–228, defines ACTLR_EL3.ACTLREN bit0 with reset
+value0 and makes ACTLR_EL3 inaccessible from EL2. Firmware may change that
+reset value before the shim runs; its actual permission and reset persistence
+remain unknown. The pinned PDF SHA256 is
+`69b35057028bc4f04e1acf552ec2959a1705625a31f715272d94a9583db06981`;
+source metadata and extracted-text receipts remain in ignored research.
+The source review establishes no safe write path. No write probe or new A520
+workaround is admitted, and this audit authorizes no register/firmware change.
 
 Two gates are required: compile `TGL_CPU_AUDIT=1` with `TGL_FASTCORE=1`, and
 runtime exact `blazer_cpu0_audit=1`. Missing/0 leaves the audit off; malformed,
