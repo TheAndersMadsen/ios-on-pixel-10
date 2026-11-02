@@ -12,6 +12,21 @@ and power evidence remain useful validation, not a measured power-saving claim.
 
 ## First A520 prerequisite: cpu0 firmware audit
 
+Physical attempt `20261102-110932-cpu0-audit-p29-r1` completed and captured.
+The audit read succeeded, but the prerequisite **failed**: cpu0 MIDR410fd801,
+REVIDR3, CPUACTLR0x4000000000 has bit38 set and bit9 clear. The five A725s
+passed their SMP tests and the run reached its intended deadline. A520
+bring-up is stopped; no unchanged retry, CPU1/OFF/re-entry or register write.
+The CPU score remains84.
+
+This also affects prepared single-core recipes that use `cpus=1` without
+`blazer_bootcpu`: they enter XNU on cpu0 A520. The p30 GPU diagnostic and old
+GPT-readback image are held for explicit CPU/phone/feature-owner context
+review. No automatic substitution of an A725 follows from this observation.
+One current source/artifact/acceptance/shareability handoff is retained in
+`research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md`; it keeps ordinary UI
+health observations separate from the existing lowered-trip R1/R2 tests.
+
 `shim/tgl_cpu_audit.c` supplies a read-only, default-off precursor. It checks
 cpu0's identity, EL2, and disabled MMU/data/instruction caches, records REVIDR,
 and reads CPUACTLR (`S3_0_C15_C1_0`). It then continues the existing fastcore
@@ -28,6 +43,13 @@ powerdown workaround for 2630792. This audit neither writes those bits nor
 establishes that every applicable A520 erratum is handled. The cpu1 firmware
 power-transition prerequisite, per-core checks, and mixed-core execution remain
 separate work.
+
+The successful EL2 read does not prove write permission. Arm's
+[A520 TRM](https://developer.arm.com/documentation/102517/latest),
+102517_0004_07_en A.1.7, describes a separate EL3 permission check for the write.
+That r0p4 reference does not establish the actual r0p1 firmware permission or
+reset behavior. The documented bit9 workaround remains a host-only source
+review; no live register or firmware change is authorized by this audit.
 
 Two gates are required: compile `TGL_CPU_AUDIT=1` with `TGL_FASTCORE=1`, and
 runtime exact `blazer_cpu0_audit=1`. Missing/0 leaves the audit off; malformed,

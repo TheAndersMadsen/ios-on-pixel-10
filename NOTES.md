@@ -228,40 +228,61 @@ No new core implementation claim for this one-off audit. Full GPT capture,
 complete backups/isolated allocation and native chooser/Android return still
 unfinished. Keep goal active and all existing storage/boot holds intact.
 
-## CPU clock-table validation, 2026-11-02 — audit boot in progress
+## CPU acceptance checkpoint, 2026-11-02 — physical audit FAIL, one next-action handoff
 
-CPU goal ACTIVE, score84 unchanged. Committed **bd7326c** adds original host
-`tools/cpu_dvfs_check.py` +7 regression methods and extends docs/CPU.md. Reuses
-existing clk-probe decoder pinnedSHAa3baf953…; no second wire decoder/governor.
-Actual saved nonce/epoch/sealed clock capture validates18 domain/rung rows
-against BOTH exact p29 source and reviewed0773 source0d1c4acf… . Explicit
-firmware IDs34/35 are separated from MMIO vote domains1/2; duplicate IDs/names/
-levels, unsupported/override-only OPP, missing rows, wrong units and altered
-existing domain ceilings refused. New tests PASS; four mutated copies of the
-ACTUAL saved record (nonce/truncation/torn/no-end) fail CLI as required.
-Original capture unchanged. No additional device operation or source admission.
+CPU goal ACTIVE, score84 unchanged. Policy99c96136 consumed; no new workers,
+runner, governor, test matrix, release/image/tool-admission or device action.
+One exact handoff: research/ios26-cpu-complete-r1/acceptance/CPU-NEXT.md plus
+next-action.json, physical-audit.json, physical-summary.json, p30-text-symbols.txt.
+It binds actual hashes/argv/gates, positive/FAIL/STOP, shareability and rollback.
 
-Independent unmodified GPL donor lookup functions from exact6.12@5940a317
-compile/run ASan/UBSan:103 actual assertions PASS incl unit width/round-trip.
-Copied donor text+notices stay IGNORED in research/ios26-cpu-complete-r1/dvfs/;
-no GPL implementation imported into tracked/XNU source. Full CI PASS including
-new7 (and other owners' new dualboot suites); CPU CI invocation landed with
-parent7e43b70 while preserving its separately staged files. Receipts: own
-dvfs/{p29,0773,vendor-oracle,real-input-negative,capture-source}.json.
-These are table correctness checks, NOT physical speed or higher-cap permission.
+**PHYSICAL:** phone-owner attempt20261102-110932-cpu0-audit-p29-r1 COMPLETE.
+Raw677292244c24d02b4b5dd5177e58317054f62031fc25e15b7bf46c50df457e8f;
+our fresh strict verdict exactly equals parent's saved verdict: complete nonce-
+bound cpu0 audit MIDR410fd801/REVIDR3/EL2/MCIoff, ACTLR0x4000000000 bit38set,
+bit9CLEAR => prerequisite FAIL/STOP; A520 support NOT accepted. Actual five
+A725s/SMP0errors, intended deadline300. Parent reports XNU302.2s,PSCI-SW,
+postreset39C/SOC89/4332mV,0CPMerrors. Live2140336bytes/0lost;2096830 overlap
+matches0mismatch,43506 live-only afterRAMwrap,293 finaltailnotlive. No A520
+retry/OFF/re-entry/cpu1/register write. Read-only image226eba4f… unchanged.
 
-Phone owner confirms mode1 audit **started**, attempt
-`20261102-110932-cpu0-audit-p29-r1`, unchanged image226eba4f…/p29/Ucc979153… .
-Observed actual bootios PID96987 + run-attempt97010 alive at3m22; capture absent
-at this checkpoint, not a failure. Sole phone owner retains USB; this CPU goal
-issued no device command. Keep no-OFF/reentry/high-clock scope. Await its fresh
-capture, independently run strict audit + SMP/reset/thermal acceptance, and
-only then select the next A520 step; no blind retry or fabricated completion.
+**HOST completed:** bd7326c original DVFS identity/explicit-level/unit validator
++7methods,18 real saved domain/rung rows each p29/original0773 PASS;4 mutated
+real-record CLI failures rejected; unchanged GPL lookup oracle103 ASan/UBSan
+assertions PASS. Existing decoder pinneda3baf953…, vendor6.12@5940a317; copied
+GPL text/notices remain ignored. Full CI PASS; CPU invocation landed in7e43b70.
+Own dvfs/*.json receipts. Tables/link/symbols never raise operating-point gates.
 
-Parent integrated floor0772=f9f6ec67/series1172 and0773=b03d04d1/1173;
-current governor hash matches independently reviewed0d1c4acf… . Diagnostic
-compile0 and high0 unchanged; parent reports full link still pending. Existing
-p29/audit images immutable, CPU audit kept separate from future stepdown tests.
+Parent floor0772=f9f6ec67/1172 +0773=b03d04d1/1173. Actual current governor
+0d1c4acf… equals original reviewed joint709/3840 sanitizer/text-symbol source.
+p30 kernel9bbc5703…/matching U5dc553c6… rehashed,8 real executable-text entries
+checked; probe0/high0, compiled probe refusal present/R2 verification absent.
+Ordinary-health image NOT BUILT; exact proposed argv uses actual p30 artifacts
+and existing peer plan. Parent admission/composition review still needed.
+
+Share existing ordinary cap16 clock/status/thermal/profiler with reviewed UI
+common config. New health/floors/required/verify alter fail-stop policy, so first
+establish a common functional baseline; not passive logging or a speed A/B.
+1000B health line; optional existing WFI observer1020B if separately reviewed,
+held common in timing arms. Never alter reserved990B OFF/FAST pair. Existing
+lowered-trip R1/R2 stages stay isolated, require separate probe1/high0 kernel;
+current p30 cannot run them. Need real two-poll/direct per-domain downvotes,
+fresh all-five AMU, actual DSU/LPCM floor releases and advancing independent
+thermal guard; no forced heat/load, generic-line PASS or cap13/high promotion.
+
+**Cross-goal HOLD:** actual manifests+ADTs confirm GPU p30 diag d8925f4f… and
+GPT image21cba4e8… eachcpus1/reg0/no bootcpu => unfixed cpu0 A520. GPU stays
+BUILD ONLY, GPT owner explicitly HELD frozen profile SHA34a126b2…/host04ba2870…;
+prior evidence preserved, no new argv/image or automatic A725 substitution.
+CPU/phone/feature owners must review context/Trusty or nonce/LU0/transport/ownU.
+Both are in the SAME CPU handoff, and phone/coordinator received changed blocker.
+
+Primary review: exact A520 SDENissue12 section4.3.16 + TF-A62844b5… prescribes
+bit9; A520TRM102517_0004_07 A.1.7 permits EL2 reads while EL3 can trap writes.
+This r0p4 reference does not prove actual r0p1 firmware write permission/reset.
+HOST ONLY review, no speculative MSR/EL3/firmware change or second workaround
+implementation. Goal still needs both A520s working and sustained higher-clock
+physical acceptance; no score update or completion claim.
 
 ## CoreImage fallback verified in QEMU, 2026-11-02 (host only)
 
