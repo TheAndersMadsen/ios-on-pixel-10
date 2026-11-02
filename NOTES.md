@@ -14,25 +14,31 @@ recoverable. QEMU and host tools support development; they are not phone results
   display/touch, UFS reads, RTC publication and native battery samples have
   physical evidence. Backboardd respawns and queued presentations mean the UI is
   interactive but unstable; there is no clean-compositor, FPS or speed acceptance.
-- **Android:** restored on slot b. The Mac-backup restore, module-enabled reboot
-  and BASIC/DEVICE/STRONG integrity checks completed. Exceptions are listed in
-  `research/factory-alias-restore-r1/HANDOFF.md`.
-- **No iOS root is deployed.** `userdata_exp.ai` is now a member of Android's
-  multi-device F2FS `/data`. Old root, alias, capacity, write-approval and
-  dual-boot instructions are historical.
-- **Storage (2026-11-02):** strict GPT is still not accepted. The r5a backup-header
-  padding matches the factory FBPT LUN0 entries (31/31), so it is most likely
-  device-written media content. The capture tool now saves the full metadata plan
-  raw before the unchanged strict parse. FBPT and Android observations indicate
-  no unallocated LUN0 space: isolated iOS storage requires an attended Android
-  shrink/migration. No physical GPT candidate is admissible, because every readback
-  recipe binds `userdata_exp.ai`. See `research/ios26-dualboot-r7/STORAGE-DECISION.json`.
+- **Android:** restored on slot b (exceptions: `research/factory-alias-restore-r1/HANDOFF.md`).
+  **Since 21:11 on 2026-11-02 the phone is parked in fastboot with force-fastboot ON and a
+  recovery request in misc** after chooser t1; the owner returns it per
+  `research/ios26-dualboot-r8/NEEDS-OWNER.md` section 0 ("Try again", never factory reset).
+  A1 backup: `research/android-backup-20261102/`.
+- **No iOS root is deployed.** `userdata_exp.ai` is a member of Android's multi-device
+  F2FS `/data`; every XNU recipe now binds `blazer_ufs_root=ios_system` and
+  `tools/image_tool.py` refuses `userdata_exp.ai` (b1d2971).
+- **Storage (r8, 2026-11-02):** A0 captured the full LUN0 GPT read-only: both copies CRC-valid,
+  phone `sgdisk --verify` clean, 0 free LBAs. Strict `dualboot.py` still refuses it because
+  the backup header block repeats the entry array after byte 92 (observed on real bytes, kept
+  as a FAIL). `tools/gpt_plan.py` emits the attended shrink plan (userdata keeps its first LBA;
+  `ios_system`/`ios_data` appended; options 69/24+8 and 61/24+16 GiB; sgdisk-verified on a 4K
+  loop). Nothing written. Receipts: `research/ios26-dualboot-r8/`.
+- **Chooser (r8):** `shim/chooser.c` (gate `TGL_CHOOSER=1`) chain-loads the stock Android
+  kernel. Physical t1: EL2 entry with MMU off, placement 0xc9c00000, stock 6.12.81 boots with
+  ABL's Magisk init_boot ramdisk, but vold gets KeyMint -33 on the /data key (test-key boot
+  footer) and Android requests recovery. Candidate chooser-v1-r3 transplants the stock boot
+  vbmeta; not yet booted. lz4 decode with caches off takes 122 s. No visible menu yet.
 - **Apps (QEMU, 2026-11-02):** LaunchServices refuses every container-requiring
   restored app. App-Placeholder (H1) and MCM-container (H2) causes were tested and
   rejected; see `docs/IOS-APPS-IDENTITY.md`. The lane is stopped until lsd's
   refusal reason is observable.
-- **Not complete:** native Metal, stable compositing, strict GPT, higher-clock/
-  A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
+- **Not complete:** native Metal, stable compositing, strict GPT, a working Android chain
+  and visible menu, higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.
 - The README's 47% is a weighted planning checklist, not release readiness.
 

@@ -5,18 +5,13 @@ it is not a second project journal.
 
 ## Next actions
 
-0. Unattended dual-boot runs follow `GOAL.md` (section 0 holds the `/goal` prompt;
-   receipts go to `research/ios26-dualboot-r8/`). It supersedes the storage and
-   chooser prose below and in `docs/DUALBOOT.md`.
-1. Continue host-only p32 compositor, Volcanic GPU and saved-GPT diagnosis.
-2. Apps: make lsd's os_log refusal reason visible in QEMU before trying another
-   registration variant (H1 placeholders and H2 MCM are rejected). Pacstrip every registrar.
-3. Storage is blocked at owner decisions (`research/ios26-dualboot-r7/STORAGE-DECISION.json`):
-   approve a readback bind that exposes no Android partition before one complete
-   read-only GPT capture; decide the media-padding policy; and qualify a backup
-   destination before any attended Android `/data` shrink. No unallocated region exists.
-4. Run new phone candidates only through the phone owner after fresh review and
-   explicit approval. Do not reuse old aliases, images, approvals or boot queues.
+1. **Owner:** return the phone per `research/ios26-dualboot-r8/NEEDS-OWNER.md` section 0
+   (force-fastboot off, reboot, recovery "Try again", never factory reset), then the return check.
+2. With the owner present: boot chooser-v1-r3 (stock vbmeta transplanted) once; the
+   discriminator is vold mounting /data and `Kernel code` at 0xc9c00000 in `/proc/iomem`.
+3. Host: an EL2 cached identity map for the chooser's lz4 decode (122 s now), then the visible
+   startup menu (renderer plus scanout path) and the volume-key pad read; then the in-kernel
+   `ios_*` write allowlist for A7. GOAL.md still governs runs.
 
 ## Latest completed maintenance
 
