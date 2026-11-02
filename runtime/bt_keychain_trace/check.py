@@ -70,7 +70,9 @@ def main():
     original = source.read_text()
     mutations = dict(status=original.replace('return status;', 'return 0;'),
                      bound=original.replace('#define HKBTKC_LIMIT 64u', '#define HKBTKC_LIMIT 65u'),
-                     opt_in=original.replace('strcmp(enabled, "1") != 0', 'strcmp(enabled, "1") == 0'))
+                     opt_in=original.replace('strcmp(enabled, "1") != 0', 'strcmp(enabled, "1") == 0'),
+                     image0=original.replace('i < count; i++', 'i < (count ? 1u : 0u); i++'),
+                     command_extent=original.replace('if (at != end || uuid_seen', 'if (0 || uuid_seen'))
     for label, changed in mutations.items():
         assert changed != original
         mutant = out / ('mutant-' + label + '.c')
@@ -97,6 +99,12 @@ def main():
             assert expected <= text and len(interpose) == 1
             assert interpose[0]['bytes'] == 64 and interpose[0]['flags'] & 255 == 13
             assert all(' U _SecItem' + name in nm for name in ('CopyMatching', 'Add', 'Update', 'Delete'))
+            assert all(' U ' + name in nm for name in
+                       ('__dyld_image_count', '__dyld_get_image_header', '__dyld_get_image_vmaddr_slide'))
+            all_nm = run(['xcrun', 'llvm-nm', obj], 'all-nm-' + str(gate))
+            assert any(row.split()[-2:] in (['t', '_hkbtkc_init'], ['T', '_hkbtkc_init'])
+                       for row in all_nm.splitlines())
+            run(['xcrun', 'llvm-objdump', '-dr', obj], 'disassembly-' + str(gate))
         else:
             assert not text and sec.get(('__TEXT', '__text'), {}).get('bytes', 0) == 0
         objects[str(gate)] = dict(sha256=sha(obj), text=sorted(text), sections={str(k): v for k,v in sec.items()})
@@ -142,6 +150,7 @@ def main():
                   dylib_sha256=sha(dylib), dylib_bytes=dylib.stat().st_size,
                   pacstrip_sha256=sha(a.pacstrip), pac_instructions_remaining=remaining,
                   host_asan_ubsan=True, host_tsan=True, mutations_rejected=list(mutations),
+                  main_selection='bounded ARM64 MH_EXECUTE + UUID + TEXT/slide consistency; image0 not assumed',
                   commands=commands, signature_verified=True,
                   runtime_loaded=False, real_security_api_execution=False, native_bluetooth=False,
                   guest_or_device_operation=False, root_or_firmware_write=False)

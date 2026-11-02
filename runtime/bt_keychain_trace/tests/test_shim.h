@@ -16,6 +16,7 @@ OSStatus SecItemUpdate(CFDictionaryRef, CFDictionaryRef);
 OSStatus SecItemDelete(CFDictionaryRef);
 const void *_dyld_get_image_header(unsigned int);
 intptr_t _dyld_get_image_vmaddr_slide(unsigned int);
+unsigned int _dyld_image_count(void);
 const char *hkbtkc_test_getenv(const char *);
 const char *hkbtkc_test_getprogname(void);
 int hkbtkc_test_open(const char *, int, ...);

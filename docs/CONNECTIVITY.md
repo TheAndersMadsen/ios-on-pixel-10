@@ -15,9 +15,13 @@ see [COORDINATION.md](COORDINATION.md) and the newest [NOTES.md](../NOTES.md).
 | Cellular | S5400 identity from saved stock evidence; XNU read of nine modem pads | Verified CP power/platform ownership, PCIe0/DMA/MSI/boot, RFS/GEMS, SIM and data service, then native CommCenter integration |
 
 Wi-Fi's current Apple80211 adapter is GET-only; every SET is explicitly
-unsupported. Scan selector 11 is identified in 23G90, but the complete result
-layout, iterator/lifetime and event contract are not proved. Do not substitute
-an older macOS/iOS layout or advertise native scan/join support.
+unsupported. Static analysis of the actual 23G90 IO80211 consumer now establishes
+5,528-byte scan requests, 2,272-byte results, a 2,048-byte IE buffer, UUID offsets
+and the completion event envelope. The private reproducible receipt is
+`research/ios26-connectivity-r1/wifi-abi-r1/contract.json`: 36 instruction checks,
+five independent segment comparisons and five rejected old-layout mutations.
+Kernel cursor ownership, cancellation/lifetime and live producer/event delivery
+are still unproved. These ABI facts do not establish native scan/join support.
 
 Consume these existing deliveries once, through their release owner:
 
@@ -60,10 +64,31 @@ then repair the specific observed prerequisite while retaining real keychain
 and daemon semantics.
 
 The original [Security status observer](../runtime/bt_keychain_trace/README.md)
-now has host forwarding/concurrency/sanitizer checks, enabled/disabled ARM64e
-objects and a signed iOS26 diagnostic dylib. A concrete existing-p29 guest can
-collect the missing statuses without a new kernel link. Native loading,
-interposition and the actual failure status still require the proposed run.
+has now run in the sole 420.009-second p29 guest. Its 26 constructors and 150
+matched PID/ID pairs establish actual native interposition: 100 lookups and
+25 updates return -25300, and 25 adds return -25291. Delete was not observed.
+The original 808,417 console bytes match the final mirror; the separate final
+tail is 3,130 bytes, with no capture loss. Full input hashes are unchanged.
+The private final receipt is
+`research/ios26-connectivity-r1/keychain-guest-r3/result.json`.
+
+The final guest-r3 plan is frozen at overlay `6377a3f1`, observer `288cab36`
+and harness `73ad58b1`, used the single reserved `--wait 0` admission after Apps
+r7's terminal release. It completed, cleaned up and released the lock; Apps and
+the coordinator received the terminal event. No second claim/run is authorized.
+The guest's synthetic nub does not prove chip attachment or native Bluetooth.
+The optional kernel exit observer remains unlinked and disabled. Source provenance is
+`3119ece` plus the two preparation/documentation hunks preserved in `6b3ddce`;
+the staging process is not independently attributed. Root Git now has a durable
+single writer: the orchestration thread stages and commits requested owned scope.
+
+V1 assumed dyld image zero was the main executable. Its reported header equals
+its slide and is incompatible with bluetoothd's preferred TEXT `0x100000000`
+(4 GiB), so that identity claim is rejected. The v2 constructor instead verifies
+a unique ARM64 executable, UUID and TEXT/slide relation, and reports unknown
+explicitly. Actual-source sanitizer, five mutation and enabled/disabled ARM64e
+checks pass; v2 has not run in a guest or on the phone. No guessed slide, specific
+root-key cause or security-state change follows from the v1 statuses alone.
 
 ## Reuse sources selected for this hardware
 

@@ -46,51 +46,70 @@ for CPU/phone context; no new image/kernel/argv or XNU-gate build claim. Next:
 accepted CPU context + strict GPT, recoverable current backups/alias ownership,
 isolated allocation, actual chooser/Android handoff and repeated OS switching.
 
-## Connectivity goal, 2026-11-02 — native daemon diagnostic prepared
+## Connectivity goal, 2026-11-02 — terminal native status capture, constructor repaired
 
-Goal ACTIVE/incomplete. Own source/docs **59a25b0**, **3119ece**; full handoff in ignored
-research/ios26-connectivity-r1/HANDOFF.md; acceptance docs/CONNECTIVITY.md.
-No new delegate, guest/phone attempt, USB/radio/firmware/root/slot/storage action.
-Phone/release owner2ff85bbd retains exclusivity; self-contained runtime required.
+Goal ACTIVE/incomplete. Own source/docs59a25b0,3119ece; preserved6b3ddce prep
+anchor/count guard and queued->proposed wording unchanged. Staging process is
+NOT independently attributed. Root Git has ONE writer: orchestration64220e88;
+Connectivity performs no index/staging/commit/reset/lock-deletion operations.
+Exact tested owned source/docs/this section are submitted for its scoped commit.
+Full private handoff: research/ios26-connectivity-r1/HANDOFF.md. Phone/release
+owner2ff85bbd exclusive; self-contained Pixel required. No new delegate/phone/
+USB/radio/firmware/Android-slot/GPT action or connectivity acceptance here.
 
-Exact old bt-3 kernel84385359/Ucb809077 disassembly PROVES misplaced noreturn
-on returning hk_exit_trace: filter/copy/limit tests removed, infinite frame loop,
-exit1 continuation absent. NEVER rerun old bt-3. Reused worker's bounded extract,
-independently rehashed1,357,901,361B console5b82abb6/exitreceipt/binary; capture
-lost1,034,263,045B. Daemon normal exit/absence of HCI cannot be concluded.
-One call-site-consistent candidate slide248c000 points to LE root-key/keychain
-startup failure, but runtime main header/status absent: INFERENCE, not cause.
+NEVER rerun oldbt-3 kernel84385359/Ucb809077: misplaced noreturn on returning
+hk_exit_trace removes filter/copy/limits/exit1 continuation and loops forever.
+Old1,357,901,361B console5b82abb6 lost1,034,263,045B. Candidate248c000 remains
+INFERENCE, not runtime header/cause. Original bounded replacement59a25b0 default
+OFF/32records/12frames has ASan/UBSan+TSan, real ARM64 observer/kern_exit/gate0
+and noreturn-mutant proof; patch437dc391 on e67445e6 stays UNLINKED/OFF.
 
-Original runtime/exit_trace replacement default-OFF/32records/12addresses uses
-real XNU backtrace_user and records mainheader/sharedslide-known/end/error.
-ASan/UBSan+TSan actual-source tests PASS; enabled ARM64 observer+actual kern_exit
-and BLAZER0 controls PASS; TEXT/relocations prove normal exit continuation;
-noreturn mutant rejected. r1/r2 header and r3 checker failures retained, finalr4
-patch437dc391cfbfd23357da213e143707f59cb6d6107c7a98c6b05bde248cd6a63e on
-e67445e6. NO full link/image/guest/runtime acceptance; owner received delivery.
+Apps r7 terminal event received; ONE normal --wait0 claim succeeded. Frozen
+keychain-guest-r3/bt-keychain-r1 completed420.00895604200196s, harness19448exit0.
+K5aad8978/root205cb0e2/overlay6377a3f1/dylib288cab36/harness73ad58b1 rehashed
+BEFORE+AFTER unchanged. Original808417B console899134c1 matches final mirror
+0mismatch/0lost; separate3130B finaltail, total811547. Ramoops4MiBb44f5b92,
+regs7b77f410. Result8de6a3228dd2b3d9fd74b88a127b1626c587423262f373946fc89d7e4f8087f0;
+execution33b70c21 pins every input/frame/capture. All own backing/rawframe/QMP
+resources removed; normal process/lock descriptor closed, post-terminal pgrep
+noQEMU. Mode:auto terminal RELEASE/YIELD sent Apps+coordinator. NO second claim,
+retry/reservation or new guest requested. Saved original frozen package intact.
 
-Consumed Wi-Fi discovery42f5d719 +BT lifecyclef4776885 handoffs, not duplicated;
-BT review stays with phone owner. Complete23G90 scan/result/events still absent.
-Recovered14 exact GPL S5400 source references193074B at5940a317; verified Google
-tag peeleda64b2a31 and matching wire header except include path. No vendor code
-import/phone identity proof. Primary refs/hashes stay in resources/manifest.json.
-Built original runtime/bt_keychain_trace: default-OFF, exact bluetoothd opt-in,
-forwards actual four Security APIs/arguments/results/errno; logs only PID/ID,
-operation/status/caller and actual mainheader/slide,64calls per process. No key
-or query payload dump/fake success. ASan/UBSan+TSan,3mutants,ARM64e ON4TEXT/OFF
-empty,signature/PAC checks PASS. Final keychain-check-r5 dylib288cab36831e883d
-27cc05ba291a80ab53e2afe2b4a2bef1d9ce40656e364414; real iOS loader/API NOT RUN.
-Private guest-r3 overlay6377a3f136c597c62b7c8e35960cad4338f48224caa6ed298195a602d03f42ac,
-samep29/root205cb0e2/hgl61c38161; soleenv extended/42other records exact;
-actual XNU overlay/exec consumer PASS. Synthetic BT nub guest-only; no fakeHCI,
-BlueTool swap/old exittrace/radio. Exact420s/--wait0 argv in plan.json; shared
-coordinator received candidate, release/admission NOT CONFIRMED; no slot polling.
-Minor preparation guard/docs landed in peer6b3ddce during HEAD race; retry found
-no pending own source changes. All earlier failed checker/prep attempts retained.
-Next: existing guest-release event, one immediate claim; actual load/API return
-capture, then repair proven prerequisite. No native connectivity acceptance yet.
-Cellular CP-off/platform/PCIe0/DMA/boot and native service integration unresolved.
+Actual v1 native interposition:26constructors,150matched PID+ID entry/returns,
+100copy+25update=-25300,25add=-25291;0unmatched, all recordedloss0. Delete NOT
+observed. securityd64 visibly spawned/running; OSStatus alone proves no deeper
+prerequisite/cause. No key/query/data dump, fake success or credential change.
+CRITICAL v1 image0-as-main assumption REJECTED under library injection. Reported
+header==slide is incompatible with btd preferredTEXT0x100000000=4GiB; no guessed
+replacement slide/mainidentity accepted. Synthetic nub is diagnostic ONLY, no
+HCI/chip/radio/nativeBT/Settings/pairing/profile acceptance.
 
+Constructorv2 selects unique loaded ARM64 MH_EXECUTE, UUID, bounded load commands
+and TEXT/slide agreement; explicitunknown for malformed/ambiguous/changing
+images. Same Security forwarding/errno/64call budget retained. Actual source
+624feadf/test31e7fd62 pass ASan/UBSan+TSan, ordering/malformed/overflow/unknown
+fixtures,5mutants (incl image0/extent), ARM64e ON4TEXT+dyldimports/ctorbody and OFF
+empty, finalsignature/PAC. Private keychain-main-r1/checked-r1 receipt pins signed
+dylibf909df5d65670d85a6f03c4c93663ea31bdefc1e26e692933823390a36fdf629.
+V2 NOT guest/phone-run; no new overlay/kernel build or execution authorized here.
+Actual v2 parser also accepts retained btd header/UUIDda7adf00 and rejects the
+real observer MH_DYLIB under ASan/UBSan; real-header-receipt.json pins both inputs.
+
+Consumed Wi-Fi discovery42f5d719 +BT lifecyclef4776885 lanes; no duplicate adapter/
+bridge. Actual23G90 IO80211 UUIDef679793 now directly proves scanrequest5528,
+result2272,IE2048,UUID offsets and eventApple1/IEEE80211class6/subclass1/code10:
+wifi-abi-r1/contract.json,36instruction checks/5exactsegments/5old-layout mutants.
+Analysis carrier29c114fb keeps VM/bytes; Ghidra import unavailable, LLVM/realcache
+exports used. Pinned GPL5940a317 BSS declarations compile; v114size164, IEoffset
+116/length120, noise80/SNR124. No implementation import, native producer/event/
+cursor/cancel/lifetime/Settings/association/packets acceptance.14GPL S5400 refs
+193074B plus Googlea64b2a31 header corroboration remain reference-only.
+
+Next: preserve correct main/UUID identity before attributing the real Security
+failure; repair only observed native prerequisites. Keep future guest admission
+coordinated and phone tests with owner. Wi-Fi needs owned scan snapshots/events
+on existing transport; cellular CP state/platform/PCIe0/DMA/boot and native service
+integration unresolved. Goal remains active until native physical acceptance.
 
 ## Dualboot saved recovery checked, 2026-11-02 12:16 CET — exact factory download authorized
 

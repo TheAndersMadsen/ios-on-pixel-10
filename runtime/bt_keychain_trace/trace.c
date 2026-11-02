@@ -23,6 +23,110 @@
 static unsigned int hkbtkc_active, hkbtkc_records, hkbtkc_lost;
 static int hkbtkc_fd = -1;
 
+struct hkbtkc_main {
+	uintptr_t header;
+	intptr_t slide;
+	unsigned int known, index;
+	char uuid[33];
+};
+
+static uint32_t
+hkbtkc_u32(const unsigned char *p)
+{
+	uint32_t value;
+	memcpy(&value, p, sizeof(value));
+	return value;
+}
+
+static uint64_t
+hkbtkc_u64(const unsigned char *p)
+{
+	uint64_t value;
+	memcpy(&value, p, sizeof(value));
+	return value;
+}
+
+/* dyld inserts opt-in dylibs before the executable. Index zero is therefore
+ * not a main-image contract. Inspect the loaded ARM64 MH_EXECUTE header and
+ * require its UUID and file-backed __TEXT address to agree with dyld's slide.
+ * Mach-O field offsets below are wire-format facts, not copied loader code.
+ */
+static int
+hkbtkc_main_image(const unsigned char *p, intptr_t slide, struct hkbtkc_main *out)
+{
+	if (!p || hkbtkc_u32(p) != 0xfeedfacfu ||
+	    hkbtkc_u32(p + 4) != 0x0100000cu || hkbtkc_u32(p + 12) != 2u) return 0;
+	uint32_t commands = hkbtkc_u32(p + 16), bytes = hkbtkc_u32(p + 20);
+	if (!commands || commands > 4096u || bytes > 131072u || commands > bytes / 8u) return 0;
+	uint32_t at = 32, end = 32 + bytes;
+	unsigned int uuid_seen = 0, text_seen = 0;
+	uint64_t preferred = 0;
+	unsigned char uuid[16] = {0};
+	for (uint32_t n = 0; n < commands; n++) {
+		if (end - at < 8) return 0;
+		uint32_t cmd = hkbtkc_u32(p + at), size = hkbtkc_u32(p + at + 4);
+		if (size < 8 || (size & 7u) || size > end - at) return 0;
+		if (cmd == 0x1bu) {
+			if (size != 24 || uuid_seen++) return 0;
+			memcpy(uuid, p + at + 8, sizeof(uuid));
+		} else if (cmd == 0x19u) {
+			if (size < 72) return 0;
+			uint32_t sections = hkbtkc_u32(p + at + 64);
+			if (sections > (size - 72) / 80u) return 0;
+			static const char text_name[16] = "__TEXT";
+			if (!memcmp(p + at + 8, text_name, sizeof(text_name))) {
+				if (text_seen++ || hkbtkc_u64(p + at + 40) != 0 ||
+				    hkbtkc_u64(p + at + 48) < end ||
+				    hkbtkc_u64(p + at + 32) < hkbtkc_u64(p + at + 48)) return 0;
+				preferred = hkbtkc_u64(p + at + 24);
+			}
+		}
+		at += size;
+	}
+	if (at != end || uuid_seen != 1 || text_seen != 1) return 0;
+	uintptr_t header = (uintptr_t)p;
+	/* Do not form an overflowing preferred+slide or negate INTPTR_MIN. */
+	if (slide >= 0) {
+		if (preferred > UINTPTR_MAX - (uintptr_t)slide || preferred + (uintptr_t)slide != header) return 0;
+	} else {
+		uintptr_t magnitude = (uintptr_t)(-(slide + 1)) + 1u;
+		if (preferred < magnitude || preferred - magnitude != header) return 0;
+	}
+	static const char hex[] = "0123456789abcdef";
+	unsigned int nonzero = 0;
+	for (unsigned int i = 0; i < sizeof(uuid); i++) {
+		nonzero |= uuid[i];
+		out->uuid[2 * i] = hex[uuid[i] >> 4];
+		out->uuid[2 * i + 1] = hex[uuid[i] & 15u];
+	}
+	if (!nonzero) return 0;
+	out->uuid[32] = 0;
+	out->header = header;
+	out->slide = slide;
+	out->known = 1;
+	return 1;
+}
+
+static struct hkbtkc_main
+hkbtkc_find_main(void)
+{
+	struct hkbtkc_main result = {0};
+	unsigned int count = _dyld_image_count();
+	if (count > 4096u) return result;
+	for (unsigned int i = 0; i < count; i++) {
+		const unsigned char *header = (const unsigned char *)_dyld_get_image_header(i);
+		if (!header || hkbtkc_u32(header + 12) != 2u) continue;
+		intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+		if ((const void *)header != (const void *)_dyld_get_image_header(i)) return (struct hkbtkc_main){0};
+		struct hkbtkc_main candidate = {0};
+		if (!hkbtkc_main_image(header, slide, &candidate)) return (struct hkbtkc_main){0};
+		if (result.known) return (struct hkbtkc_main){0}; /* ambiguous executable */
+		candidate.index = i;
+		result = candidate;
+	}
+	return result;
+}
+
 static void
 hkbtkc_emit(const char *format, ...)
 {
@@ -143,9 +247,11 @@ hkbtkc_init(void)
 	hkbtkc_fd = open("/dev/console", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
 	int console_errno = hkbtkc_fd < 0 ? errno : 0;
 	if (hkbtkc_fd < 0) hkbtkc_fd = STDERR_FILENO;
-	hkbtkc_emit("HKBTKC: v1 start pid %d main 0x%llx slide 0x%llx console_errno %d\n",
-	    getpid(), (unsigned long long)(uintptr_t)_dyld_get_image_header(0),
-	    (unsigned long long)_dyld_get_image_vmaddr_slide(0), console_errno);
+	struct hkbtkc_main main = hkbtkc_find_main();
+	hkbtkc_emit("HKBTKC: v2 start pid %d main 0x%llx slide 0x%llx known %u index %u console_errno %d\n",
+	    getpid(), (unsigned long long)main.header, (unsigned long long)main.slide,
+	    main.known, main.index, console_errno);
+	hkbtkc_emit("HKBTKC: v2 main_uuid pid %d uuid %s\n", getpid(), main.known ? main.uuid : "unknown");
 	__atomic_store_n(&hkbtkc_active, 1, __ATOMIC_RELEASE);
 	errno = saved_errno;
 }
