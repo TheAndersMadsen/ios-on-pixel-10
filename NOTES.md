@@ -1,3 +1,51 @@
+## Dualboot same-build factory reference verified, 2026-11-02 12:46 CET — no phone change
+
+Milestone **612be2b**. User explicitly accepted preview/SDK terms for the exact
+Google DP11.261002.005 host download. Sole11,447,024,427B archive stream AND
+independent disk readback match SHA256
+9ac046a4275f1a5032cb6e7768de349d8b01811c0de7b41fc259a178f5fde40c.
+No duplicate large archive: inner STORED ZIP inspected through read-only view.
+Only boot/metadata and authenticated graph dependencies extracted, CRC+SHA bound,
+mode0400. No factory script, boot, USB, radio/firmware/root/slot/GPT/restore action.
+
+Pinned AOSP mkbootimg d2bb0af5: all8 roles present;4 boot/vendor v4 extractions
+independently agree, including full fragments/bootconfig/signature/DTB extents.
+AVB76117860 buffers validate5 signed nodes/flags0 and actual parent-child keys.
+Unmodified verify_image with all4 explicit expected-chain keys and follow-chain
+exits0: **5 signatures,4 chain bindings,28 hashes,6 hashtrees**. All source image
+hashes/stats unchanged. Whole archive is an independent STOCK KEY REFERENCE,
+not current phone RootOfTrust/rollback/integrity or complete personal-data backup.
+Actual archived wrong-key control is rejected for the precise key mismatch.
+
+Factory boot462b2a66.../vendor_boot960a8c94... EXACTLY match savedA. Factory
+init_boot8b14a567... SHA1c4450076... EXACTLY matches Magisk's recorded ORIGINAL
+image, unlike scratch repacks. vendor_kernel_boot3102f1b3..., DTBOc3f5080a...,
+root vbmeta959e7b17... now available from matching build, not borrowed oldB.
+Original patched backups remain intact/rejected as verified stock restore files.
+Pinned Apache2 libufdt9b70f594 dump reports34 DTBO entries; no board/overlay
+selection accepted. Separate16K ramdisk matches named vendor fragment; no new
+boot recipe. No runtime Android dispatcher/chooser/switch/persistence acceptance.
+
+Own source/artifact/argv/provenance/positive+negative receipts and full64hexes:
+research/ios26-dualboot-r4/factory-google-dp11/HANDOFF.md + ARTIFACTS.json,
+SHA5602d21e13c15de69730ea223baaa90982cd3c036556b4db481a3b7ffda5423c
+(27 metadata receipts +38 checked image receipts). ACCEPTANCE.json states scope.
+Native owner can reuse read-only vendor/vendor_dlkm images for a NAMED request;
+same-build reference alone proves no UM/DDK/firmware compatibility. No new fleet.
+
+Factory AI alias sparse header expands8,000,000,000B; header ONLY inspected,
+not full sparse/ownership/alias/decryption/restore proof or free storage. At12:32
+CET free160384487424B versus raw+40GiB reserve170666229760B: **DOES NOT FIT**,
+short10281742336B. Old one-copy-capacity snapshot superseded; exact observation
+in capacity-after-inventory.json and r3/planning/capacity-after-factory.json.
+Working reserve preserved; refresh before any staging, independent destination
+unqualified. No cache/backup deletion.20GiB apps root still exceeds8GiB allocation.
+
+Goal ACTIVE/incomplete. ONE frozen GPT34a126b2/host04ba2870 unchanged and HELD
+for CPU/phone context; no new image/kernel/argv or XNU-gate build claim. Next:
+accepted CPU context + strict GPT, recoverable current backups/alias ownership,
+isolated allocation, actual chooser/Android handoff and repeated OS switching.
+
 ## Dualboot saved recovery checked, 2026-11-02 12:16 CET — exact factory download authorized
 
 Milestone **41828ff**, HOST ONLY. Five older saved B artifacts checked with pinned
