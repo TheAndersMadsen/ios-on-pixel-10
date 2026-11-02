@@ -183,8 +183,8 @@
         ],
         [
           "GPU firmware through Trusty",
-          "active",
-          "Trusty channel and log work; firmware send awaits approval"
+          "partial",
+          "Physical p29: signed image accepted and firmware started; health completion failed, pending firmware message"
         ],
         [
           "Metal drawing",

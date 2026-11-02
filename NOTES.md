@@ -1,3 +1,13 @@
+## Phone owner result, 2026-11-02 10:33 CET — health test STOP, six optimization agents active
+
+Physical health attempt `20261102-102719-native-metal-health-p29-r1` COMPLETE/captured, session48156 exited0 (runner success, **GPU test FAIL**). Supplied imageSHA `2df3ec84f3894ea36ac200cf350a46eb43e51d6e4dc9b4c34f2f4dad222b8bf7`, p29. Rawkernel.logSHA `a402278beac84b5b617a1c5b22608296331fb6c44d998a260fdcb79e15b935f6`. Fresh current mirror decoded to attempt/decoded.txt. Exact records: SEND result0/202ms; shareddata mainheap+0x22d000; SMCSTART0; started1/ts0xb8d; **connfw0/os1, KCCBw1/r1, FWCCBw1/r0**, sysdata0/0, compBVNC0/0. No returnslot1. STOP:noKCCBexecution1s, purposeful panicblazer_gpu_tipc.c670. XNU2.0s/payload28.1s, softwarePSCIreset, postreset38C SOC89 VCELL4332,0CPMerrors/thermalbreadcrumb. Phone backinfastboot. No unmodified retry/progression; native-Metal parent received exact failure via steer. Queued FWCCB diagnostic needs decoding; no render/nativeMetal claim. MCU startup and command consumption are physically observed, full firmware/host execution acceptance remains failed.
+
+Independent strict verifier on freshdecodedcapture FAIL as expected. Parent found it parsed FW connection but did not requireACTIVE2; added actual regression demonstrating falsePASS for0/1/3/99, then fixed predicate. Existing8unittestmethods nowPASS, including4badconnectioncases. Local patch/hash in `research/ios26-opt-20261102/parent/`; no kernel change. Other native-Metal namespace untouched. Source references GTA_FW_ACTIVE2/GTA_OS_READY1 in p29driver.
+
+Latestuser goal requires>=5activeSolagentsinTHISthread; prior feature fleet allfinished. At10:24 started6named runtime optimization tasks underios26-opt-20261102: sampler, settings_assets,cpu_fast,live_input,boot_services,live_analysis. `roster.json` records exact IDs/links/model. Parent alone ownsUSB/release/commits; separate native-Metal goal still owns its10hostdelegates and namespace. Keep no-less-than5 here at work boundaries/completionevents, replenish with useful implementation; don't restart blockedAoC task or oldClaude workers. No task may equate a host-only helper with a working hardwarefeature.
+
+Currentprogress: p29 nativeHome/Settings and verifiedliveUSB physicallywork. UI stillheavy lag/missinglogos perowner. Profile identified CPU CAimage_sampler variants; sixworkers are implementing wired fixes, parent will build/test actualcandidates. Fullgoal veryfast/perfectnativeiOS26 remainsunmet/active. Earlier host-only delivered labels and45%figure are not completionproof.
+
 ## Inferno source assessment, 2026-11-02 (host only)
 
 Committed assessment: `a127747`, `docs/INFERNO.md`. Reviewed the current official
@@ -20,6 +30,16 @@ is preserved. Public source copies/hash receipts: `research/ios26-inferno-r1/`
 (ignored). Next: inventory exact23G90 cache symbols/patch state, then one
 optional reversible compatibility change in our existing QEMU harness before
 returning a concrete candidate to the phone owner. Benefit remains untested.
+
+## Active optimization goal, 2026-11-02 10:25 CET (phone owner)
+
+Latest user goal: native iOS26 very fast/perfect, keep at least5 GPT-6.1Sol agents active in THIS thread. Inventory at10:21 found0 active children here (separate native-Metal parent has10). Started6 own Sol workers under `research/ios26-opt-20261102/`: sampler, settings_assets, cpu_fast, live_input, boot_services, live_analysis. Exact task IDs/links in `roster.json`. They are host-only, must wire runtime fixes and deliver actual diffs/test candidates, no isolated helper pretending hardware works. Parent checks inventory at work boundaries/replenishes on completion events; no polling delegates. Only parent usesUSB/release/boots/commits. Other parents' namespaces preserved. User's onlySol restriction persists.
+
+**Recovered SEND physical result:** attempt `20261102-101843-native-metal-send-p29-r1`, supplied image6e34330f…, matching p29. Exact `SEND_FIRMWARE_IMAGE len8 cmd0x1 result0 in185ms`, then `rung2PASS` purposeful panic atblazer_gpu_tipc.c665. Raw4MiB SHA `49bff66a19a3da5b1dc42508ee906917ade02385923ebf645413b00563ebaba4`. XNU1.0s/payload27.0s, PSCI-SW, postreset38C SOC89 VCELL4332,0CPMerrors/thermalbreadcrumb. Not GPU execution. Version warning24.2/26.1 + process_st_info278 is documented gpufw.md result0-with-warning GO case, also seen in stock10-22logs; source/stock caveat checked before progression. No change to TEE/authentication/firmware partitions.
+
+**Next device action:** separate native-metal-health-p29-r1 temporary RAM boot launched by phone owner after SEND capture, cpus1, tipc5, deadline300, no otherTrusty/persist tokens. ImageSHA `2df3ec84f3894ea36ac200cf350a46eb43e51d6e4dc9b4c34f2f4dad222b8bf7`, samekernel5aad8978…/unstrippedcc979153… . One bounded HEALTH command, no rendering. PASS needs fresh START0, started1, expectedconnection, returnslotexact1, KCCBw1/r1, emptyFWCCB, rung5PASS + purposefulend. Any refusal/timeout/unexpectedreset STOP/no retry and retaincapture. Runner session recorded below when tool returns. Do not independently boot; native-Metal parent notified via steer and BOARD.
+
+**Preserved physical evidence:** p29 liveconsole1,533,021bytes and profile967,660bytes each compare0mismatch againstRAM, only479panic-tail bytes not readlive. Profileattempt20261102-101134 completeddeadline300, XNU300.6s, postreset38C. QuartzCore.s resolves sampledPC184129b58/1841298f8 to ARGB8_Host CPU image_sampler variants. Cache.symbols absent: broad ipswa2s cannot currentlyresolve allPCs; don't fabricate names. Home/Settings user-confirmed, logosmissing and heavylag remain failures. Earlybackboarddnilpathintermittent. Need integrated optimization + repeated physical measurement, not morefinished-agent counts. Tracking commit6cbb07e has verifiedliveUSB and45% physical-status figure.
 
 ## Native Metal firmware test preparation, 2026-11-02 10:20 CET
 

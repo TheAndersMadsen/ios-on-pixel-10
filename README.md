@@ -1,27 +1,27 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 45% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 46% of reachable hardware" width="100%"></p>
 
 <h2 align="center">A phone that was never meant to do this.</h2>
 <p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 45% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 46% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>45%</b> across 47 reachable features. Updated 2026-11-02.</p>
+<p align="center"><b>46%</b> across 47 reachable features. Updated 2026-11-02.</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
 | | Status | Features | Counts as |
 | --- | --- | ---: | ---: |
 | ✅ | Works on the phone | 12 | 100% |
-| 🟡 | Partly working | 11 | 60% |
+| 🟡 | Partly working | 12 | 60% |
 | 🔧 | Built, not run | 2 | 35% |
-| ⏳ | In progress | 10 | 20% |
+| ⏳ | In progress | 9 | 20% |
 | ❌ | Not started | 12 | 0% |
 | 🚫 | Likely out of reach | 6 | not counted |
 
@@ -46,7 +46,7 @@
 |  | HDR, peak brightness, colour calibration | ❌ Not assigned |
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
-|  | GPU firmware through Trusty | ⏳ Trusty channel and log work; firmware send awaits approval |
+|  | GPU firmware through Trusty | 🟡 Physical p29: signed image accepted and firmware started; health completion failed, pending firmware message |
 |  | Metal drawing | ⏳ Native GPU rendering incomplete; physical p29 still draws on the CPU |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
