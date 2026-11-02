@@ -111,16 +111,20 @@ remain; no Mac-backed validation/tethered service bridge. OpenBubbles stays
 research evidence, not adopted. Models/research activation are not Apple
 manufacturing identity. Host build/QEMU/debug tools remain development tools.
 
-Physical current reservation RUNNING:
-20261102-115426-phone-p29-art-container-15m-r1, image
-5e9bd94a40d83de15c2fe1a6b9c775c6bf27b93257e98ee21d389326b3ae5083,
-same p29 K/U/overlay42bb3b73/default900/916B, samplerOFF. User confirms Battery
-icon visible in Settings. HKART installed in iconservicesagent/Preferences but
-no recovered-hit receipt: attribution limited. HKCONTAINER execution0; known
-initial BB NSURLnil abort respawned, UI interactive. Capture pending planned
-deadline around12:10; preserve slot, no interruption or retry-policy promotion.
-Parent source input1176/presentation1177 advanced, p31 not linked; AKS timestamp
-race repair remains before integration. Physical input/ECM still unaccepted.
+115426 artwork/container run COMPLETE at intended900 (XNU900.9/payload927.6,
+PSCI-SW/40C/89/4332/0CPM), all1450057livebytes match0/0lost;1288tail absent live.
+Human Battery icon visible; HKART install2/recovered0/refused0, HKCONTAINER0
+despite correct env. Causal/hook/retry acceptance remains held.
+
+CURRENT phone reservation RUNNING121918-phone-p31r1-live-diag-r1, image
+3f7b1b4097507896137a83653fe5528fb63ddf51aaa3ae149dc6aef8695e5774,
+K9d60ca02/Ue07b62fc/sourcee67445e6, same five-A725/window882/cap16/guard70/
+overlay42bb3b73, deadline300/976B. Input1+presentation1+boundedAKS1 only;
+status before one attended input attempt, no ambiguous retry/second USB owner.
+No CPUhealth/high/floors/GPU/Trusty/AoC/persist/ECM/RTC addition. Initial p31
+get_user_regs C++ link failure preserved; C declaration1179 gives DISTINCT
+p31r1,180series/288checks/zero undefined/ten final text proofs.0847 excluded.
+Physical results pending; preserve current reservation/capture.
 
 Apps registration-r4 captured full planned900.4016465s, exit0/root unchanged.
 All837227consolebytes match final mirror/no lost tail; persona abort0/panic0,
@@ -133,28 +137,25 @@ runnerexit0/console155033B SHA8979ad56…; post-batch init-exit panic preserved.
 CPIO2a1654e5…/76498796B/all60 input hashes unchanged; mode0644, hash-pinned.
 Five pipeline/cache calls returned0; extraction/semantic analysis still pending,
 not native engine/firmware-health proof. Native released; coordination forwarded
-to Apps. registration-r5 ACTIVE once, runner1718/candidate19680946…/b840825,
-expected51 readbacks plus conditional Calculator/Clock/Notes requests. Exact
-HKAPPS main_entry_c PID25 now observed, but no first ObjC/framework/API phase.
-Barrier is after C entry and before phase emission: workspace/registration API
-failure NOT established. Owner prepares own C-only startup/after-autorelease
-markers and removes optional NSJSONSerialization from logging on host; current
-r5 stays unchanged/full900. Actual readback/exec/foreground frames still required,
-none accepted. No next image selected before capture; no peer MCM/AKS change.
+to Apps. registration-r5 COMPLETE900.6059s/exit0/input19680946 unchanged.
+Live892546B match final mirror0 mismatch;1331B finaltail separately parsed,
+merged893877B. Final Cmain/framework_load/framework_loaded/manifest_read positive;
+earlier C-entry-only barrier superseded. No workspace/readback/launch requests,
+not an established workspace/registration API failure. Source98b4530 commits
+C-only logger/startup phases; next narrow POSIX/header/NSData/plist probes await
+concrete frozen image/argv. QEMU captured/released/no reservation held; no next
+guest requested here. Self-contained rule retained; public NAC stub is not an
+implemented validation path. No peer MCM/AKS/service change.
 
-Correction to e082d35 handoff: an extra assumed read-only-mode assertion failed
-after CPIO size/hash passed; I committed before resolving it. Actual mode0644
-is now explicit; hash-pinned contents stayed unchanged. Remaining docs/receipt
-checks completed separately, with failures stopping further commit steps.
-Apps' checked five-file commit b840825 released the Git window; no lock removed
-or foreign staged changes consumed. Own shared-NOTES section updated in place.
+CPIO mode0644/hash-pinned input is explicit; prior unsupported read-only-mode
+assumption corrected, full checks completed. Failure/commit-window receipts stay
+under ignored orchestration evidence. Only own shared-NOTES hunks are staged;
+foreign working/staged changes are preserved and no lock removed.
 
-Phone next p29 artwork+passiveMCM/samplerOFF composition42bb3b73…/453Benv remains
-the ready path. BOTH explicit900 and explicit1800 proposals were refused before
-image/boot. Correct new phone-p29-art-container-15m-r1 omits --phone-deadline,
-using existing qualified/tested FC_DEADLINE900 for this five-A725 shape:15min,
-not30. No limits/guard/context bypass, new CPUhealth/AKS/input/ECM addition.
-OFF/FAST captured but FAST initial BB NSURLnil abort confounds speed comparison.
+The completed15min artwork run used qualified FC_DEADLINE900 by omitting the
+option; both earlier explicit900/1800 proposals were refused before image/boot.
+No limits/guard/context bypass. OFF/FAST captured but FAST initial BB NSURLnil
+abort confounds speed comparison; no speed/FPS promotion.
 
 Native p30 independent source/link/image PASS still CPU/Trusty/full-layout HOLD:
 0x882000000 versus prior0xa00000000; same image d8925f4f, no substitutions.
@@ -164,6 +165,17 @@ goal BLOCKED at84 pending accepted runtime/context/artifact/capture unblock;
 no helper/review/retry or ACTLR write. Exact r0p1 TRM still leaves firmware write
 permission/persistence unknown; ignored CAS draft WITHDRAWN/unexecuted.
 GPT profile34a126b2 and host04ba2870 remain HELD.
+
+Recovery HOST41828ff/45fbd6e: indexbbb52dc5/all20 receipts independently checked.
+Saved Binit/tinyvendor payloads fail; scratch Magisk stockCPIO status still leaves
+BOTH A/B payloads failing/backupSHA1 mismatch. Other signed archives have an
+untrusted different key/Linux7.3-next kernel. No restored set accepted.
+User-authorized exact Google DP11.261002.005 OFFLINE archive now has COMPLETE
+receipt11447024427B/SHA9ac046a4 matched; component/AVB/trust analysis pending.
+One owner/artifact reused for boot inventory and possible native GPU version
+provenance (inference), no duplicate download/collector or factory script.
+Refreshed hostfree170087436288B is below raw127716556800+40GiB reserve;
+older one-copy-fit snapshot superseded, owner notified. No backup/write/restore.
 
 Queue/release/verification receipts under research/ios26-orchestration-20261102/.
 No guest, build, phone/USB operation or runtime promotion by orchestration.

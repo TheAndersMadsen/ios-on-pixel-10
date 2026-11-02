@@ -60,7 +60,8 @@ existing pinned source inventories.
 | --- | --- | --- |
 | Sampler OFF | Attempt `20261102-111800-sampler-off-p29-r1` captured at expected deadline, unchanged p29, image `ee70fb73…`, raw `6ecc43d9…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
 | Sampler FAST | Attempt `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`, COMPLETE/captured; script matches OFF, live 997,224 bytes all match RAM; known startup abort confounds timing | Actual fast-path coverage is 1,437,573,559 eligible pixels, identity branch zero; FAST does not compare pixels. Owner missed the visual window. No speed/FPS/visual promotion |
-| UI observations | RUNNING `20261102-115426-phone-p29-art-container-15m-r1`, image `5e9bd94a…`, unchanged p29, overlay `42bb3b73…`, qualified default900/916-byte line; capture pending around12:10 | User confirms Battery icon visible. HKART installed in iconservicesagent/Preferences but recovered-hit absent; attribution limited. HKCONTAINER execution0 and known initial BB nil abort persist. Sampler OFF; no AKS/new kernel/health/input/ECM additions |
+| UI observations | `20261102-115426-phone-p29-art-container-15m-r1` COMPLETE/captured at intended900; unchanged p29/image `5e9bd94a…`/overlay `42bb3b73…`; all 1,450,057 live bytes match, 1,288 final tail absent live | User confirms Battery icon visible. HKART install2/recovered0/refused0; attribution limited. HKCONTAINER execution0 despite correct environment, so hook/retry acceptance stays held |
+| p31r1 live diagnostics | RUNNING `20261102-121918-phone-p31r1-live-diag-r1`, image `3f7b1b40…`, source e67445e6, K9d60ca02/Ue07b62fc, five-A725 baseline/deadline300/976-byte line | Input1 plus passive presentation1/bounded AKS1; one attended input attempt after status check, no ambiguous retry or second USB reader. No CPUhealth/high/floors/GPU/Trusty/AoC/persist/ECM/RTC addition; source0847 excluded |
 | New CPU health baseline | `7424c92` acceptance handoff, p30 present; proposed image NOT BUILT, literal-admission/common-config review pending; no slot request | New verification/floor/required-sensor/health gates need functional acceptance before sharing an unchanged configuration in later UI timing arms |
 | GPU timeout diagnostic | Native parent independently verifies p30 SOURCE/LINK/IMAGE PASS; diagnostic stays BUILD ONLY for CPU/Trusty and RAM-layout context | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset after exact accepted context |
 | GPT readback r2 | Host PMBR correction `f329418`, reviewed hash and frozen profile; no reservation here | Both GPT copies, CRC/geometry/agreement, saved-byte offline verification and bounded failure evidence; separate storage capture |
@@ -91,11 +92,12 @@ Kernel SHA256:
 unstripped:
 `5dc553c614d2c9ee65fa21451aa72db550e696e2e3318cee5095a87b94aabeea`.
 It contains floor0772/0773 with probe off and standalone GPU diagnostic compiled
-on/runtime off. Original live input1410 was held; reviewed input fixes1176 and
-presentation1177 have now advanced parent source, but p31 is not linked and
-physical input/ECM remain unaccepted. AKS timestamp-race repair is still in the
-parent namespace before integration. Existing p29/p30 images stay identified
-by their exact hashes; never relabel p30.
+on/runtime off. The subsequent p31 link failure at C++ get_user_regs is retained;
+repaired C declaration1179 produces distinct p31r1/source e67445e6, 180-series
+proof/288 checks/zero undefined/ten final text proofs. It includes reviewed
+input1176/presentation1177/bounded AKS1178 and the timestamp-race repair. Its
+physical diagnostics are running, not accepted. Source0847 and ECM/RTC remain
+outside this frozen image; existing p29/p30 identities remain unchanged.
 
 ## Shared QEMU queue
 
@@ -114,18 +116,21 @@ Both explicit release handoffs completed, without interruption or polling:
    stayed unchanged. The CPIO is hash-pinned, mode0644, not mode-readonly:
    `2a1654e53d9d22405bf44161896f223fde60064b527b13d9cb72f25a4301214f`,
    76,498,796 bytes. Reference output is not native GPU/health acceptance.
-3. Release was relayed back to Apps. Registration-r5 now runs once via the shared
-   lock, runner1718, source b840825 and candidate
+3. Release was relayed back to Apps. Registration-r5 completed its full planned
+   900.6058925 seconds, exit0/root unchanged, source b840825 and candidate
    `196809464b5e8fe2fd46b4502a3665b7559285f6cabbf2a6c0cf118c6ce730cb`.
-   It adds explicit console/C-entry/API phases, 51 registration readbacks and
-   conditional Calculator/Clock/Notes requests. Actual guest exec/foreground
-   frames are still required; no registration or launch PASS is implied.
-   Changed r5 evidence: exact `HKAPPS main_entry_c` PID25 is positive, while
-   first Objective-C/framework/API phase markers are absent. The barrier is
-   after C entry and before first phase emission; a workspace or registration
-   failure is not established. Apps owner prepares C-only startup phases and
-   removes the optional NSJSONSerialization logging dependency on host. Frozen
-   r5 continues its planned 900 seconds; no next image is selected before capture.
+   Final evidence supersedes the earlier C-entry-only snapshot: C main,
+   framework_load/framework_loaded and manifest_read are positive. Workspace,
+   readbacks and launch requests were not reached; no API/launch PASS or cause
+   is established. Live892,546 bytes match the mirror; 1,331 final tail bytes
+   are retained separately and parsed (TOP900/TOTAL), merged final893,877 bytes.
+   Final capture/cleanup/lock release is complete, with no reservation held.
+4. Apps source98b4530 commits C-only startup/receipt formatting, removing the
+   NSJSON class import. Its next own image will add narrow POSIX/header and
+   NSData/plist enter/return probes around the observed manifest boundary.
+   Concrete frozen candidate/argv is pending; no new guest is requested here.
+   Registration plus conditional representative launches remain its acceptance
+   goal. Existing reservations retain priority under the shared lock.
 
 Apps and native Metal send release events directly to each other and the
 coordination thread using mode auto. A refused claim gets one blocker report;
@@ -244,6 +249,19 @@ are not touch-to-glass measurements.
   The reuse attribution is corrected: pinned f2fs-tools refuses aliases in
   `do_defrag`, not `do_resize`. This proves no safe resize or migration route;
   see [the corrected storage report](reuse/2026-11-02/storage-filesystems.md).
+  HOST milestones41828ff/45fbd6e also reject saved B init_boot and tiny vendor_boot
+  payloads. Scratch Magisk restore/repack can report stock CPIO while both A/B
+  payloads still fail and backup SHA1 differs; no restored artifact is accepted.
+  Other signed archives use a different untrusted key and a Linux7.3-next kernel,
+  not an established matching stock Android set. The user authorized the exact
+  Google blazer DP11.261002.005 archive for offline verification only; its
+  download receipt now reports the expected9ac046a4… hash and size matched.
+  Component/AVB/key reconciliation is still pending with the existing owner.
+  Reuse that one artifact/inventory; it may supply same-build provenance for the
+  native GPU UM/donor gap (inference). Archive verification grants no factory
+  script/flash/Android boot or expanded live reads. Refresh backup capacity:
+  the post-download snapshot no longer fits the planned raw copy plus reserve;
+  an independent destination remains unqualified.
 
 ## Efficient integration and handoff
 
