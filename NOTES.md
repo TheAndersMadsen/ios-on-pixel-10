@@ -534,7 +534,8 @@ and identify actual blocking API if reached. Full goal remains unmet.
 
 ## Native Metal source integration, 2026-11-02 — host milestone, physical STOP
 
-Original goal ACTIVE/incomplete. Previous parent checkpoints9db93cb/57b7436/
+Original goal ACTIVE/incomplete. Source promotion committed **6c2724f**.
+Previous parent checkpoints9db93cb/57b7436/
 5b6da97 preserved. Actual portable source now imported at native/metal/{isa,
 streams}:56 UTF-8 source/build/test/notice files, all35 C/header files byte-exact
 from frozen original milestone. Scoped MIT licences and ancestry/dependency
