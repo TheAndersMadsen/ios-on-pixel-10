@@ -32,6 +32,14 @@ This qualifies a new diagnostic artifact for build review; it establishes no
 firmware execution and schedules no boot. Lifecycle/queue diagnostics remain
 separate candidates.
 
+The resulting p30 source/link/image now passes independent artifact review,
+including final text symbols and exact embedded signed firmware. Its image is
+HELD: cpus1/no-bootcpu enters cpu0 A520 with ACTLR bit9 observed clear, and its
+RAM base differs from the prior health image. The existing CPU/phone reviewer
+must reconcile CPU/Trusty/memory layout before any changed diagnostic slot.
+See [coordination policy](COORDINATION.md) and newest NOTES; no automatic core
+or RAM-base substitution is accepted.
+
 Current source reuse decisions and refresh instructions are in
 [NATIVE-METAL-UPSTREAM.md](NATIVE-METAL-UPSTREAM.md), alongside the broader
 [reuse audit](REUSE.md). Adopt exact compatible code with its notices and

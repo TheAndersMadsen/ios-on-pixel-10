@@ -299,23 +299,43 @@ Runtime requires rung5+diag1; original timeout/result unchanged. Host diagnostic
 qualification is NOT physical health or execution acceptance. HEALTH5 remains
 FAIL at attempt20261102-102719-native-metal-health-p29-r1, no unchanged retry.
 
-Phone/release owner read request and acknowledged BUILD ONLY source review of
-these three patches, with new p30/interactive input subject to its own review.
-It will return source/kernel/unstripped/image hashes, enabled final symbols and
-exact embedded firmware proof before any new sequential health-slot request.
-No health boot scheduled; exclusive USB/current cpu0-audit then sampler queue
-preserved. This goal parent ran no device command, full build/link or image.
+Phone/release owner built p30 ONCE from af08a9f5. Independent parent artifact
+review now PASS: exact candidate source bytes; K9bbc5703…/U5dc553c6…/image
+d8925f4f… hashes; seven real final executable-section symbols; zero undefined;
+both344068-byte signed firmware copies148aacc5… verified using Mach-O symbol/
+section+length/pad header; image_tool check and exact471-byte args. Full evidence:
+integration/diagnostic-review-r1/{p30-parent-review.json,receipts/p30-final.nm}.
+The image is HELD, not scheduled: cpus1/no-bootcpu selects A520cpu0 with physical
+ACTLR[9]CLEAR, and independent manifest/ADT address derivation confirms new
+RAM0x882000000 versus old health0xa00000000. Existing phone CPU-context reviewer
+owns combined CPU/Trusty/layout reconciliation. No automatic core/base change,
+rebuild, health retry or lifecycle6/7. Exclusive phone queue preserved; this
+goal parent ran no device command, full release build/link or phone image build.
 
-All previous-wave owners returned;17 bounded milestones now in terminal history.
-Ten fresh Sol implementation owners launched/steered successfully: firmware-r2
-runtime profile; uc-r2 queue/failed-work wiring; vm-r2 FW context/MMUCACHE;
-queue-r2 native compute state/body; isa-r3 native C ALU/control/allocator;
-streams-r3 shared/frozen integration; metal-r3 readiness lease; surfaces-r3
-imported failed-data handback; air-r3 typed VS/FS; validation-r4 real IOKit BO
-acceptance app. Exact IDs/links/briefs in fleet.json,FLEET.md and
-successor-wave3-briefs.json. Each writes only its new ignored directory; old
-milestones frozen. Ten coordination deliveries recorded, no delegate polling.
-Other milestones' test totals remain child-reported pending parent integration.
+27 bounded milestones now in terminal history. Ten current Sol owners have
+successful launch/steer receipts: firmware-r3 IRQ/drain; vm-r3 actual platform
+lease/bases; isa-r4 native stage/raw decoding; streams-r4 recording-only reference;
+AIR-r4 ONE userspace assembly; UC-r3 ONE combined kernel/provider path;
+queue-r3 exact-body reference; surfaces-r4 concrete XNU exclusion review;
+validation-r5 FW/VM/queue contract review; Metal-r4 passive stock-loader ABI
+probe. These continue the requested ten-owner pool, not a second helper fleet.
+Exact IDs/links/history: fleet.json,FLEET.md; briefs: successor-wave4/5/6 files.
+Each writes only its own new ignored directory; prior milestones frozen. All ten
+received docs/COORDINATION.md99c96136 and CPU/Trusty/RAM/QEMU readiness rules;
+delivery receipts: integration/readiness-boundary-deliveries.json. No delegate
+polling. Child-reported test totals remain distinct from parent acceptance.
+
+Parent prepared five hash-bound OWN SPIR-V references and rebuilt actual NDK
+ARM64 vk2/main. Sixty harness/lib/kernel inputs pinned; immutable76,498,796B
+CPIO SHA2a1654e53d9d22405bf44161896f223fde60064b527b13d9cb72f25a4301214f.
+Initial shared-lock claim REFUSED; no guest launched. Orchestration queued this
+ONE300s/no-disk/no-NIC batch after current Apps registration-r4 capture/release.
+Await its ONE explicit event, then claim lock normally; if refused report once
+and await owner event. After final capture/cleanup/release notify Apps+orchestration
+once. No status/lock polling or interruption. Source/commands/receipts:
+integration/own-source-compile-r1/. Reference output is not native execution.
+Local stock UM libraries report26.1@7036548 versus donor6967606: no private
+compute-body/CSW compatibility is inferred from size/byte agreement.
 
 Existing upstream collector refreshed eight exact GitHub heads: unchanged;
 all24 text source/licence files rehashed PASS. Additional reuse audit retained
@@ -324,8 +344,9 @@ and conveyed to current successors. Firmware canonical measured profile
 and queue agreement header must be reconciled/adopted across real adapters;
 no fourth constant set. Runtime ABI, complete USC/FP/launch rules, real MMU/
 context/cache/UPL handback and authentic engine completion remain unproved.
-Next parent work: review returned implementations/owned offline compiler
-request and returned p30 artifacts; only then request a phone diagnostic slot.
+Next parent work: run the queued OWN reference only on Apps' release event,
+resolve findings in UC-r3/AIR-r4 composed paths, and await existing CPU/Trusty/
+layout reconciliation before considering a changed phone diagnostic candidate.
 Native Metal/original goal remain ACTIVE, not complete.
 
 ## Saved Android AVB recovery gap, 2026-11-02 11:22 CET (host only)
