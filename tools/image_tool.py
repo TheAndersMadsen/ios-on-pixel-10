@@ -491,6 +491,135 @@ def tree(d):
         if p.is_file() and 'out' not in p.relative_to(d).parts and '__pycache__' not in p.parts: h.update(p.relative_to(d).as_posix().encode() + b'\0' + p.read_bytes())
     return h.hexdigest()
 
+
+def _cpu_artifact_require(condition, reason):
+    if not condition: die('CPU health artifact: ' + reason)
+
+
+def _cpu_check_elf(data):
+    _cpu_artifact_require(data[:6] == b'\x7fELF\x02\x01' and struct.unpack_from('<H', data, 18)[0] == 183,
+            'shim is not AArch64 ELF64 LE')
+    shoff = struct.unpack_from('<Q', data, 40)[0]
+    entsize, number, namesidx = struct.unpack_from('<3H', data, 58)
+    _cpu_artifact_require(entsize == 64 and shoff+number*64 <= len(data), 'invalid ELF sections')
+    rows = [struct.unpack_from('<II4QII2Q', data, shoff+i*64) for i in range(number)]
+    names = data[rows[namesidx][4]:rows[namesidx][4]+rows[namesidx][5]]
+    sections, symbols = {}, {}
+    for r in rows:
+        end = names.find(b'\0', r[0])
+        name = names[r[0]:end].decode()
+        if r[1] != 8:
+            _cpu_artifact_require(r[4]+r[5] <= len(data), 'ELF section exceeds file')
+            sections[name] = dict(data=data[r[4]:r[4]+r[5]], address=r[3], flags=r[2])
+        if r[1] == 2:
+            strings = rows[r[6]]
+            strings = data[strings[4]:strings[4]+strings[5]]
+            for at in range(r[4], r[4]+r[5], 24):
+                ix, info, _, si, va, sz = struct.unpack_from('<IBBHQQ', data, at)
+                end = strings.find(b'\0', ix)
+                nm = strings[ix:end].decode()
+                if nm and si and si < number:
+                    sr = rows[si]
+                    start = sr[4]+va-sr[3]
+                    symbols[nm] = dict(address=va, size=sz, data=data[start:start+sz], info=info,
+                                       executable=bool(sr[2] & 4),first_instruction=data[start:start+4])
+    return sections, symbols
+
+
+def _cpu_check_elf_text(symbols,names):
+    for name in names:
+        _cpu_artifact_require(name in symbols, 'shim executable definition missing: '+name)
+        s = symbols[name]
+        # Hand-written assembly entries may be GLOBAL/NOTYPE with size zero.
+        # Section permissions and actual instruction bytes, not type/size alone,
+        # establish that they are executable definitions.
+        _cpu_artifact_require(s['info'] & 15 in (0,2) and s['executable'] and len(s['first_instruction']) == 4 and
+                any(s['first_instruction']), 'shim executable text absent: '+name)
+
+
+def _cpu_check_literal(code, wanted):
+    """Find one local MOVZ/MOVK literal sequence, allowing interleaved registers.
+
+    This identifies compiled literals only, not runtime register values/dataflow.
+    The pinned full executable and embedded section checks provide byte identity.
+    """
+    work = {}
+    for off in range(0, len(code)-3, 4):
+        ins = struct.unpack_from('<I', code, off)[0]
+        kind = ins & 0x7f800000
+        reg, shift = ins & 31, ((ins >> 21) & 3)*16
+        if kind == 0x52800000:  # MOVZ W/X
+            work[reg] = [((ins >> 5) & 0xffff) << shift, off, [off]]
+        elif kind == 0x72800000 and reg in work and off-work[reg][1] <= 64:
+            work[reg][0] = (work[reg][0] & ~(0xffff << shift)) | (((ins >> 5) & 0xffff) << shift)
+            work[reg][2].append(off)
+        else:
+            continue
+        if work[reg][0] == wanted:
+            return dict(value=hex(wanted), register=reg, instruction_offsets=work[reg][2])
+    die(f'CPU health artifact: compiled shim literal absent: {hex(wanted)}')
+
+
+def check_cpu_health_artifact(directory, manifest, payload):
+    """Bind the frozen profile to the loader-selected boot bytes and shim IDs.
+
+    ELF/literal checks reuse this project's MIT GPT-context preflight. Literal
+    presence is compiled identity evidence, not runtime control-flow proof.
+    """
+    if not manifest.get('cpu_health'): return
+    require = _cpu_artifact_require
+    raw = (directory/'boot.img').read_bytes()
+    elf_bytes = (directory/'shim.elf').read_bytes()
+    require(len(raw) >= 4096 and raw[:8] == b'ANDROID!', 'Android header missing')
+    require(struct.unpack_from('<I', raw, 40)[0] == 4 and
+            struct.unpack_from('<I', raw, 20)[0] == 1584, 'expected bounded Android v4 header')
+    kernel_bytes = struct.unpack_from('<I', raw, 8)[0]
+    require(64 <= kernel_bytes <= len(raw)-4096, 'kernel extent exceeds image')
+    kernel = raw[4096:4096+kernel_bytes]
+    require(kernel[56:60] == b'ARM\x64', 'ARM64 Image header missing')
+    require(len(elf_bytes) >= 64, 'truncated ELF header')
+    try:
+        sections, symbols = _cpu_check_elf(elf_bytes)
+        _cpu_check_elf_text(symbols, ('_head','tgl_stamp_boot_entry','shim_main'))
+        require('_end' in symbols and symbols['_head']['address'] == 0, 'shim end/head absent')
+        end = symbols['_end']['address']
+        require(64 <= end <= kernel_bytes-16, 'shim envelope outside kernel')
+        require(kernel[end:end+8] == b'TEGUPLD1', 'loader-selected envelope missing')
+        length = struct.unpack_from('<Q',kernel,end+8)[0]
+        require(length == len(payload) and end+16+length == kernel_bytes and
+                struct.unpack_from('<Q',kernel,16)[0] == kernel_bytes,
+                'ARM64 Image/envelope extent differs')
+        require(kernel[end+16:end+16+length] == payload, 'embedded payload differs from checked sidecar')
+        phoff = struct.unpack_from('<Q',elf_bytes,32)[0]
+        stride,count = struct.unpack_from('<HH',elf_bytes,54)
+        require(stride == 56 and 0 < count <= 64 and phoff+stride*count <= len(elf_bytes), 'invalid ELF load table')
+        loads = 0
+        for i in range(count):
+            kind,flags,offset,address,pa,size,memsize,align = struct.unpack_from('<II6Q',elf_bytes,phoff+i*stride)
+            if kind != 1: continue
+            require(size <= memsize and offset+size <= len(elf_bytes) and address+memsize <= end, 'ELF load outside shim')
+            actual = bytearray(kernel[address:address+size])
+            expected = elf_bytes[offset:offset+size]
+            if address <= 16 and address+size >= 24:
+                actual[16-address:24-address] = expected[16-address:24-address]
+            require(bytes(actual) == expected, 'embedded shim differs from initialized ELF load')
+            loads += 1
+        require(loads > 0, 'ELF has no loads')
+        ids = manifest.get('ids')
+        require(isinstance(ids,dict) and ids == json.loads((directory/'ufs-ids.json').read_text()), 'manifest/build identities disagree')
+        require(type(ids.get('handoff')) is int and ids['handoff'] == 1, 'wrong handoff identity')
+        require(isinstance(ids.get('stamp_nonce'),str) and re.fullmatch(r'0x[0-9a-f]{16}',ids['stamp_nonce']), 'invalid stamp nonce')
+        nonce,epoch = int(ids['stamp_nonce'],16),int(ids['epoch'],16)
+        require(0 < nonce < 2**64 and 0 < epoch < 2**64, 'nonce/epoch outside bounds')
+        record = bytes.fromhex(ids['record_nonce'])
+        require(len(record) == 16 and record == hashlib.sha256(ids['stamp_nonce'].encode()+b'record').digest()[:16], 'record identity derivation differs')
+        require('shim_main.all_nonce' in symbols and symbols['shim_main.all_nonce']['data'] == record, 'compiled record nonce differs')
+        _cpu_check_literal(symbols['tgl_stamp_boot_entry']['data'],nonce)
+        _cpu_check_literal(symbols['shim_main']['data'],epoch)
+    except (KeyError,ValueError,IndexError,struct.error,UnicodeError) as exc:
+        die('CPU health artifact: malformed ELF/identity: '+str(exc))
+
+
 def check(d):
     d = Path(d); m = json.loads((d/'manifest.json').read_text()); bad = [f for f, k in (('boot.img', 'image'), ('payload-usb.bin', 'payload'), ('laguna.adt', 'adt')) if sha(d/f) != m[k]]
     if bad: sys.exit(f'MISMATCH {bad}')
@@ -499,6 +628,7 @@ def check(d):
     elif contract_check(d/'payload-usb.bin') != m['plan']: sys.exit('plan differs')
     if 'cpus' in m: check_cpu_line((d/'laguna.adt').read_bytes(), m['cmdline'])
     check_cpu_health(m, (d/'laguna.adt').read_bytes(), (d/'payload-usb.bin').read_bytes())
+    check_cpu_health_artifact(d, m, (d/'payload-usb.bin').read_bytes())
     print('OK', m['name'], 'bootable' if m['bootable'] else 'NOT BOOTABLE', m['image'])
 
 if __name__ == '__main__':
