@@ -21,7 +21,7 @@ bash -n tools/bootios tools/build-next-boot.sh shim/build.sh
 # Tests of captures in this list skip when the capture is absent; CI's skipped count shows how many.
 echo '== tools tests that need no research/'
 cd tools
-for t in test_boot_summary test_decode_shim_stamps test_fullcheck test_phone_write test_usbcon_tool test_cpu_audit test_dualboot test_android_bootset; do
+for t in test_boot_summary test_decode_shim_stamps test_fullcheck test_phone_write test_usbcon_tool test_cpu_audit test_dualboot test_android_bootset test_ios_app_inventory; do
   echo "-- $t"
   python3 "$t.py" 2>&1 | tail -n 3
   test "${PIPESTATUS[0]}" -eq 0
