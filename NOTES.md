@@ -1,3 +1,13 @@
+## Active fleet handoff, 2026-11-02 09:22 CET (Codex)
+
+User renewed the goal: native iOS 26 on Pixel 10 Pro, optimized non-Mesa GPU and broad hardware completion. **11 Codex agents launched**, replacing usage-limited Claude work; roster with task IDs and links: `research/ios26-fleet/resume-20261102/fleet.json` (local, ignored). Owners: gpudrv, gpucc, metaldrv, gpumem, dpu, performance, wlbt, audio_sensors, power_input, peripherals, overlay_perf. All read and append BOARD.md; parent alone handles USB, phone boots, release integration and commits. Earlier native resume agents were interrupted; new owners recover their partial files.
+
+**Verified in this recovery:** old fleet failed on Claude usage; existing source/artifacts preserved. Last completed physical UI benchmark remains `20261102-084446-bench-g1-r1` (Settings launched; home transition abort). The queued `/tmp/fleet/bench3.sh` requests p26 + hgltrack + cap13 (1536 MHz), but **no completion result verified**. `20261102-091607-sensor-stream-r2` has no captured result verified yet. At 09:20 process inventory found no matching bootios/run-attempt/fleet shell; reconcile device and attempt state before another boot. Do not assume interrupted host jobs imply phone reset.
+
+**Immediate integration priorities:** verify compositor hgltrack and IOSurface 1200 fixes; finish/test UFS adaptive waiting and governor idle tick; measure a controlled speed benchmark. Depth recovery identified that allowing `blazer_ufs_step_us < N882_POLL_US` invalidates the poll bound: excluded pending correction. Higher clock limits must follow measured guard prerequisites; existing notes disagree in age, so read gov.md and exact captures before use. GPU firmware execution, DXT compiler and real Metal acceleration remain unproved.
+
+No new physical test, root write or flash performed by this recovery. Destructive steps still require explicit approval. Research, firmware, Apple artifacts and dumps stay out of git. Older handoffs below contain stale running-agent and boot-state claims; dated physical captures take precedence.
+
 ## Handoff, 2026-11-02 09:15 (parent): read `research/ios26-fleet/STATUS.md` first
 
 Tracked tree: status refreshed after `0e91414`; this note's commit is the newest on `origin/ios26`. `research/` stays git-ignored.
