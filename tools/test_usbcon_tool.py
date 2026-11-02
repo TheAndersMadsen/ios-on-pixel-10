@@ -166,6 +166,29 @@ class Tests(unittest.TestCase):
         console.run()
         self.assertEqual(path.read_bytes(), bytes(phone.stream))
 
+    def test_stale_enumeration_does_not_keep_a_dead_reader_alive(self):
+        phone = FakePhone(self.clock)
+        phone.emit(b'last complete line\n')
+        failed = [False]
+        original = phone.ctrl_transfer
+
+        def transfer(*args, **kw):
+            if self.clock.now >= 101:
+                failed[0] = True
+                raise FakeUSBError('reset handle is no longer usable', 19)
+            return original(*args, **kw)
+
+        phone.ctrl_transfer = transfer
+        console, _, _ = make(phone, self.clock, timeout=100, gone_exit=3)
+        original_open = console.backend.open
+        console.backend.open = lambda: None if failed[0] else original_open()
+        self.assertEqual(console.run(), 0)
+        self.assertTrue(phone.present)  # stale enumeration is not a working handle
+        self.assertEqual(console.summary['end'], 'console unavailable')
+        self.assertEqual(console.summary['disconnects'], 0)
+        self.assertEqual(console.summary['bytes'], len(phone.stream))
+        self.assertLess(self.clock.now, 105)
+
     def test_offset_over_64k_splits_across_value_and_index(self):
         phone = FakePhone(self.clock, ring=1 << 20)
         phone.emit(b'x' * 70000)

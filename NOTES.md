@@ -38,6 +38,33 @@ Next: finish/check exact archive, inventory matching boot/AVB dependencies;
 accepted CPU-context GPT, full backups, alias/decryption ownership, isolated
 capacity and Android handoff/repeated switches remain required for full dualboot.
 
+## Phone owner checkpoint, 2026-11-02 12:19 CET — captured UI, linked p31r1 ready
+
+115426 art-container15m COMPLETE: rawkernel21bd7da7545247a57f4681b164131a9b5c39a1425e447be57c0d977d303b50a5.
+1450057 live bytes compare0mismatch/0lost;1288finaltailnotlive. Deadline900,
+XNU900.9/payload927.6,PSCI-SW,40C/SOC89/4332,0CPM. Battery icon visible per user;
+HKART installed2/recovered0/refused0,HKCONTAINER0. Known BB startup abort respawned;
+no artwork causation/container/speed claim. Manual boot has no hk_ui; scripted
+profiler correctly refuses it, no fabricated workload. Result JSON in parent/.
+Reader had a stale enumerated handle, waited after reset; parent ended own PID
+68138 after capture. New reader bounds that reopen wait; actual loop23testsPASS.
+
+p31 failed full link on C++ get_user_regs; all failed logs/combined preserved.
+Parent1179 e67445e6 wraps C header before guards; actual ARM64 _get_user_regs
+reference then full p31r1 PASS,180series/0undefined/288checks. K9d60ca0268bd9d5a63751c3bc85621caefb138f5de8ed756d1a24beb467d1838,
+Ue07b62fc0c186fae80317036805975d1efa4b33e9cb399b51ac7aeddfde4858b.
+Ten final input/presentation/AKS TEXT_EXEC symbols verified, same signed firmware.
+Image phone-p31r1-live-diag-r1 3f7b1b4097507896137a83653fe5528fb63ddf51aaa3ae149dc6aef8695e5774
+build/AVB/payload/ADT/checkPASS,976B, fiveA725/bootcpu200/window882 retained,
+deadline300. Adds only input1/presentationtrace1/AKStrace1 on same p29 UI recipe;
+CPU health/floors/high/probe, GPU/Trusty/AoC/persist/ECM/RTC remain OFF.
+Source1176 input fixes now independent reviewPASS, physical still pending.
+Root tools/diagnostics/previous notes committed6800b91,234precommitclean.
+Next sole phone reservation: this bounded p31r1 live-debug boot after captured
+115426, status/receipt proof before one attended HOME/TAP, no ambiguous retry.
+P30/GPT CPU/Trusty/layout holds unchanged.0847 scanout lifetime just delivered,
+not integrated into frozen p31r1; new review before later zero-copy acceptance.
+
 ## Phone owner checkpoint, 2026-11-02 12:09 CET — Battery visible, 15-minute UI active
 
 RUNNING:20261102-115426-phone-p29-art-container-15m-r1, temporary image

@@ -498,6 +498,7 @@ class Console:
         start = self.clock()
         deadline = start + args.timeout
         device, gone_at, next_stats = None, None, start
+        gone_reason = 'device gone'
         result = 'timeout'
         try:
             while self.clock() < deadline:
@@ -507,7 +508,7 @@ class Console:
                     device = self.open_or_none()
                     if device is None:
                         if gone_at is not None and self.clock() - gone_at >= args.gone_exit:
-                            result = 'device gone'
+                            result = gone_reason
                             break
                         self.sleep(0.2)
                         continue
@@ -529,11 +530,17 @@ class Console:
                         self.control_reply('unknown', 'USB disconnected; no automatic retry', ambiguous=True)
                     backend.dispose(device)
                     device = None
+                    # Enumeration can briefly retain a dead handle after reset.
+                    # Bound reopening even when find() still reports that handle.
+                    gone_at = self.clock()
                     if not self.present():
-                        gone_at = self.clock()
+                        gone_reason = 'device gone'
                         self.summary['disconnects'] += 1
                         self.summary['gone_times'].append(round(self.elapsed(), 3))
                         self.note(f'device gone at t={self.elapsed():.1f}s; offset {self.offset}. Waiting {args.gone_exit:.0f} s for it to come back')
+                    else:
+                        gone_reason = 'console unavailable'
+                        self.note(f'console unavailable at t={self.elapsed():.1f}s; offset {self.offset}. Waiting {args.gone_exit:.0f} s to reopen')
                     self.sleep(0.2)
                     continue
                 if self.clock() >= next_stats:
