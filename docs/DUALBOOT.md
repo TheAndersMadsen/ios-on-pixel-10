@@ -98,6 +98,15 @@ matches p29 byte-for-byte except its 16-byte `LC_UUID`; only the USB console and
 UFS owner objects are replaced in the candidate. The release tree and artifacts
 are unchanged. A successful host build does not establish device operation.
 
+The later GPT attempt is **held for CPU and phone-owner context review**. The
+existing image uses `cpus=1` without `bootcpu`; the subsequent cpu0 A520 audit
+found a required workaround bit clear. The earlier LBA0 observation does not
+resolve that prerequisite. Preserve the immutable image and arguments. An A725
+context requires a separately identified, explicitly reviewed image, source,
+nonce, readback transport and matching unstripped kernel. The corrected host
+PMBR profile is frozen; this hold authorizes no retry or additional read scope.
+See [the shared coordination policy](COORDINATION.md).
+
 Complete GPT capture, Android integrity, independent iOS storage, chooser
 input/output, Android handoff, persistence and installed cold boot remain
 unverified. See the active entry in `NOTES.md` for exact validation and commits.
@@ -143,3 +152,28 @@ presence and top-level key/chain trust must be checked separately.
 Run owned synthetic and malformed-image tests with
 `python3 -I tools/test_android_bootset.py`; the vendored tool makes these checks
 independent of local research artifacts or network access.
+
+## Storage and recovery prerequisites
+
+The apps owner's 20 GiB root image exceeds the current 8 GiB alias. Host guest
+success cannot establish deployable phone capacity. A new allocation needs a
+verified GPT, Android alias ownership, room for persistent iOS data, complete
+backups and a reviewed migration/rollback sequence. No alias-aware resize or
+metadata-decryption path is qualified for this phone.
+
+Back up current raw bytes and independently verify readable user-file recovery.
+Android [metadata encryption protects its key with KeyMint and Verified Boot](https://source.android.com/docs/security/features/encryption/metadata);
+raw ciphertext alone does not demonstrate recoverability after a reset or key
+state change. The reported normal UFS LUNs also do not constitute an RPMB or
+secure-key backup. Keep original backups intact and use an independent storage
+destination; a host filesystem clone is not an independent copy.
+
+After GPT acceptance, the smallest proposed AVB discovery starts with the first
+block of the owner-selected slot's top-level `vbmeta`, if it is in the attached
+LUN. Its bounded authenticated/auxiliary extents and descriptors determine the
+next dependency request. [AVB describes chained keys and A/B naming](https://android.googlesource.com/platform/external/avb/+/761178607206f4cb2af79ed9eec52d8cbd814adb/README.md);
+an embedded valid signature still needs an independently trusted root key.
+Current host capture supports GPT only. Additional metadata reads need a
+separate reviewed host consumer and exact LBA list; no live scope expansion is
+implied. Full payload hashes, missing boot roles, slot/rollback state and Android
+integrity remain separate acceptance requirements.
