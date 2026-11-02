@@ -92,6 +92,10 @@ _Static_assert(TGL_DCS_BRIGHT_DBV >= 3726u && TGL_DCS_BRIGHT_DBV <= 4637u, "low,
 #define SMMU_GBPA_UPDATE (1u << 31)
 /* Rung 3 test buffers. A is the record's framebuffer. B has no reservation in the FDT (reuse-display-r1 item 4). A quarter-panel layer, because the shim paints Device memory at about 14 us per store. */
 #define FB_A UINT64_C(0xf0000000)
+#define MENU_FB UINT64_C(0xf0000000)   /* chooser menu: shim/menu_ui.c, 1280x2856 XRGB8888 */
+#define MENU_W 1280u
+#define MENU_H 2856u
+#define MENU_STRIDE (MENU_W * 4u)
 #define FB_B UINT64_C(0xf0e00000)
 #define LAYER_W 640u
 #define LAYER_H 1428u
@@ -823,6 +827,18 @@ static int fill(uint64_t pa, int white)
     note(DCS_N_FILL_MS, (uint32_t)((dcs_port_now_us() - t0) / 1000u));
     return 0;
 }
+#ifdef TGL_DCS_MENU
+/* ios26-dualboot-r8 chooser: the menu the shim already drew at MENU_FB, as one full-panel XR24 layer. No fill here. */
+static int stage_menu(void)
+{
+    int rc;
+    stage(DCS_S_F0_LAYER);
+    if ((rc = reg_switch(0))) return rc;
+    if ((rc = wr(FR_DPU + FR_SH_PANEL0_POST_PRO_TP_ENABLE, 0))) return rc;
+    if ((rc = frame_layer_config(0, 0, MENU_W, MENU_H))) return rc;
+    return frame_set_buffer(MENU_FB, MENU_STRIDE);
+}
+#endif
 __attribute__((unused)) static int stage_f0(void)
 {
     int rc;
@@ -839,7 +855,10 @@ static int kick(uint32_t colour)
 {
     uint32_t v = 0; int rc, hit;
     if ((rc = reg_switch(0))) return rc;
-#if TGL_FRAME_RUNG >= 3
+#if TGL_FRAME_RUNG >= 3 && defined(TGL_DCS_MENU)
+    (void)colour;
+    if ((rc = frame_set_buffer(MENU_FB, MENU_STRIDE))) return rc;
+#elif TGL_FRAME_RUNG >= 3
     if ((rc = frame_set_buffer(colour ? FB_A : FB_B, LAYER_STRIDE))) return rc;
 #else
     if ((rc = wr(FR_DPU + FR_SH_PANEL0_POST_PRO_TP_COLOR_RED, colour)) || (rc = wr(FR_DPU + FR_SH_PANEL0_POST_PRO_TP_COLOR_GREEN, colour)) || (rc = wr(FR_DPU + FR_SH_PANEL0_POST_PRO_TP_COLOR_BLUE, colour))) return rc;
@@ -943,6 +962,9 @@ int tgl_dcs_run(void)
     if ((rc = stage_s())) return rc;
     if ((rc = kick(0))) return rc;
     tgl_scanout_takeover_publish(HAKIOS_TK_REQUIRED, ref_hz, d.tx_mode == HDR_LP, (uint32_t)te_found, 1, VS_CHIP_ID_9400, handoff_rev);
+#elif defined(TGL_DCS_MENU) && TGL_FRAME_RUNG >= 3
+    /* chooser: one kick shows the menu; tgl_dcs_present() kicks again after each redraw. */
+    if ((rc = stage_s()) || (rc = stage_menu()) || (rc = kick(1))) return rc;
 #else
 #if TGL_FRAME_RUNG >= 3
     if ((rc = stage_s()) || (rc = stage_f0())) return rc;
@@ -952,6 +974,13 @@ int tgl_dcs_run(void)
 #endif
     return 0;
 }
+#if defined(TGL_DCS_MENU) && TGL_FRAME_RUNG >= 3
+int tgl_dcs_present(void)
+{
+    if (!d.started || d.stop) return DCS_C_REFUSED_PA;
+    return kick(1);
+}
+#endif
 void tgl_dcs_refuse(int s, int code, uint32_t detail) { d.stage = s; (void)stop_with(code, detail); }
 void tgl_dcs_finish(int code, uint64_t esr, uint64_t far, uint64_t wdt_stop)
 {

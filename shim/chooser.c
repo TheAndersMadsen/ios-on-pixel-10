@@ -151,6 +151,10 @@ static struct tgl_el2_tables el2t __attribute__((aligned(4096)));
 #if TGL_CHOOSER_UI
 #include "menu_ui.h"
 #endif
+#if TGL_CHOOSER_DISPLAY
+#include "tgl_dcs.h"
+#include "guard.h"
+#endif
 
 extern char _head[], _end[];
 
@@ -319,6 +323,26 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	tgl_menu_draw(fb, FB_W, &view);
 	tgl_stamp(TGL_STAGE_CHOOSER_UI, TGL_STAMP_F_DONE, (now_ms() - t0) << 32 | (uint32_t)cached);
 	if (pat) pat();
+#if TGL_CHOOSER_DISPLAY
+	/* Show it: the display-frame-r1d ladder, full-panel layer at the menu buffer (SCANOUT-PATH.md). A refusal
+	 * leaves the panel dark and the chain unchanged; a pending SError would reach Linux, so that resets. */
+	int shown = 0;
+	{
+		static const uint8_t dn[16] = TGL_UFS_RECORD_NONCE;
+		uint64_t isr;
+		t0 = now_ms();
+		__asm__ volatile("dsb sy" ::: "memory");
+		tgl_dcs_begin(TGL_STAMP_NONCE, dn, TGL_UFS_EPOCH);
+		unsigned drc = tgl_dcs_guarded();
+		tgl_dcs_finish((int)drc, tgl_guard_esr, tgl_guard_far, 0);
+		if (pat) pat();
+		__asm__ volatile("mrs %0, isr_el1" : "=r"(isr));
+		tgl_stamp(TGL_STAGE_CHOOSER_DISPLAY, drc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE,
+		    (now_ms() - t0) << 32 | (uint64_t)(isr & 0x100) << 8 | drc);
+		if (isr & 0x100) return "chooser: display left an SError pending";
+		shown = drc == 0;
+	}
+#endif
 #else
 	con_tick = pat;
 	con_init((uintptr_t)CHOOSER_FB);
@@ -347,6 +371,16 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 			view.sel = s.sel;
 			view.seconds = (unsigned)((s.deadline_ms - t + 999) / 1000);
 			tgl_menu_draw_band(fb, FB_W, &view);
+#if TGL_CHOOSER_DISPLAY
+			if (shown) {
+				__asm__ volatile("dsb sy" ::: "memory");
+				int prc = tgl_dcs_present();
+				if (prc) {
+					shown = 0;
+					tgl_stamp(TGL_STAGE_CHOOSER_DISPLAY, TGL_STAMP_F_REFUSED, (uint64_t)1 << 40 | (uint32_t)prc);
+				}
+			}
+#endif
 #else
 			con_dec(s.sel ? "iOS T-" : "ANDROID T-", (s.deadline_ms - t + 999) / 1000);
 #endif

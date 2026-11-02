@@ -28,6 +28,10 @@
 #define TGL_STAGE_CHOOSER_CSUM	0x00c9u	/* DONE arg = ms<<32 | csum lo */
 #define TGL_STAGE_CHOOSER_MMU	0x00cau	/* DONE/REFUSED arg = wb<<32 | nc<<16 | refused */
 #define TGL_STAGE_CHOOSER_UI	0x00cbu	/* DONE arg = render ms<<32 | cached */
+#define TGL_STAGE_CHOOSER_DISPLAY 0x00ccu	/* DONE/REFUSED arg = ms<<32 | serror<<16 | dcs code */
+#ifndef TGL_CHOOSER_DISPLAY
+#define TGL_CHOOSER_DISPLAY 0
+#endif
 #ifndef TGL_CHOOSER_MMU
 #define TGL_CHOOSER_MMU 0
 #endif

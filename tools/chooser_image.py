@@ -100,8 +100,10 @@ def build(a):
     out.mkdir(parents=True)
     log = (out / 'build.log').open('w')
     t = IT.scope(a.name)
-    cflags = CHOOSER_FLAGS + (' -DTGL_CHOOSER_MMU=1' if a.mmu else '') + (' -DTGL_CHOOSER_UI=1' if a.ui else '')
-    src = CHOOSER_SRC + (' el2_mmu.c' if a.mmu else '') + (' menu_ui.c' if a.ui else '')
+    if a.display and not a.ui: IT.die('--display shows the menu: it needs --ui')
+    cflags = CHOOSER_FLAGS + (' -DTGL_CHOOSER_MMU=1' if a.mmu else '') + (' -DTGL_CHOOSER_UI=1' if a.ui else '') + \
+        (' -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3' if a.display else '')
+    src = CHOOSER_SRC + (' el2_mmu.c' if a.mmu else '') + (' menu_ui.c' if a.ui else '') + (' tgl_dcs.c' if a.display else '')
     env = {**IT.os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(IT.LLVM), 'HOSTCC': '/usr/bin/cc', 'TGL_UFS_HANDOFF': '0',
            'EXTRA_CFLAGS': cflags, 'TGL_EXTRA_SRC': src}
     run(['bash', str(t / 'build.sh')], log, env=env)
@@ -157,20 +159,21 @@ def build(a):
     nm = lambda *x: subprocess.run([str(IT.LLVM / 'llvm-nm'), *x, str(out / 'shim.elf')], capture_output=True, text=True, check=True).stdout
     if nm('-u').split(): IT.die('undefined symbols in shim')
     syms = nm(); (out / 'arm64-symbols.txt').write_text(syms)
-    want = WANT_SYMS + (('tgl_el2_build', 'tgl_el2_mmu_on') if a.mmu else ()) + (('tgl_menu_draw', 'tgl_menu_draw_band') if a.ui else ())
+    want = WANT_SYMS + (('tgl_el2_build', 'tgl_el2_mmu_on') if a.mmu else ()) + (('tgl_menu_draw', 'tgl_menu_draw_band') if a.ui else ()) + \
+        (('tgl_dcs_guarded', 'tgl_dcs_present', 'tgl_dcs_run') if a.display else ())
     for s in want:
         if not re.search(rf'^[0-9a-fA-F]+ [Tt] {s}$', syms, re.M): IT.die(f'shim lacks text symbol {s}')
     for s, on in (('tgl_el2_mmu_on', a.mmu), ('tgl_menu_draw', a.ui)):
         if not on and re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present though its gate is off')
-    for s in ('tgl_dcs_guarded', 'tgl_fc_entry'):
-        if re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present in a chooser image')
+    for s, allowed in (('tgl_dcs_guarded', a.display), ('tgl_fc_entry', False)):
+        if not allowed and re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present in a chooser image')
     rec = dict(kind='chooser', version=1, avb_mode=a.avb, name=a.name, bootable=True, ios_entry=False, ios_root=a.ios_root,
                image=IT.sha(boot), image_bytes=boot.stat().st_size, kernel_blob=IT.sha(out / 'kernel.bin'), kernel_blob_bytes=len(blob),
                shim_bytes=len(shim), segment_offset=seg_off, segment_bytes=len(seg),
                stock=dict(boot_sha256=a.stock_kernel_sha, lz4_sha256=hashlib.sha256(st['kernel']).hexdigest(), lz4_bytes=len(st['kernel']),
                           image_sha256=hashlib.sha256(img).hexdigest(), image_len=len(img), image_size=ih['image_size'],
                           flags=hex(ih['flags']), csum64=hex(csum64(st['kernel'])), cmdline=st['cmdline'], os_version_raw=st['os_version_raw']),
-               header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui),
+               header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui), display=bool(a.display),
                stamp_nonce=(t / 'out/stamp-nonce.txt').read_text().strip(), keys='off (no pad read in v1)',
                tests=[l for l in tests.splitlines() if 'host test' in l or 'placement' in l],
                avb=v.strip().splitlines()[-1], shim_copy=IT.tree(IT.SHIM),
@@ -210,6 +213,7 @@ if __name__ == '__main__':
     i.add_argument('--stock-kernel-sha', required=True); i.add_argument('--ios-root', default='ios_system')
     i.add_argument('--avb', choices=('stock', 'test'), default='stock', help='stock: transplant the stock boot vbmeta (KeyMint sees a normal boot); test: project test-key footer (r1)')
     i.add_argument('--mmu', action='store_true', help='EL2 cached identity map for checksum, menu and decode (TGL_CHOOSER_MMU)')
+    i.add_argument('--display', action='store_true', help='show the menu on the panel via the display-frame-r1d ladder, full-panel layer (TGL_CHOOSER_DISPLAY)')
     i.add_argument('--ui', action='store_true', help='startup menu renderer into the console buffer (TGL_CHOOSER_UI)')
     i.add_argument('--fdt', help='A0 /sys/firmware/fdt dump: placement host test on real data')
     i.add_argument('--chooser', action='store_true', help='accepted for the image_tool.py spelling')
