@@ -1,5 +1,22 @@
 ## Shared QEMU handoffs completed, 2026-11-02 — Apps r5 and 15-minute phone plan
 
+DIRECT user architecture decision: "Keep the Pixel self-contained." Native
+on-device apps/authentication/SEP compatibility and online Apple-service goals
+remain; no Mac-backed validation/tethered service bridge. OpenBubbles stays
+research evidence, not adopted. Models/research activation are not Apple
+manufacturing identity. Host build/QEMU/debug tools remain development tools.
+
+Physical current reservation RUNNING:
+20261102-115426-phone-p29-art-container-15m-r1, image
+5e9bd94a40d83de15c2fe1a6b9c775c6bf27b93257e98ee21d389326b3ae5083,
+same p29 K/U/overlay42bb3b73/default900/916B, samplerOFF. User confirms Battery
+icon visible in Settings. HKART installed in iconservicesagent/Preferences but
+no recovered-hit receipt: attribution limited. HKCONTAINER execution0; known
+initial BB NSURLnil abort respawned, UI interactive. Capture pending planned
+deadline around12:10; preserve slot, no interruption or retry-policy promotion.
+Parent source input1176/presentation1177 advanced, p31 not linked; AKS timestamp
+race repair remains before integration. Physical input/ECM still unaccepted.
+
 Apps registration-r4 captured full planned900.4016465s, exit0/root unchanged.
 All837227consolebytes match final mirror/no lost tail; persona abort0/panic0,
 Photos+Settings home frame observed. Registrar exec but HKAPPS/readback0, no

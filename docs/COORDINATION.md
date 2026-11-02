@@ -22,6 +22,15 @@ The native parent confirmed all ten workers received its frozen contract.
 The phone parent maintains its existing requested fleet minimum and owns worker
 replacement. Do not start another fleet or restart completed tasks for a count.
 
+## Runtime architecture constraint
+
+The user requires the Pixel to remain self-contained. Apps, authentication and
+Apple-service work target native on-device operation; Mac-backed validation or
+a tethered Apple-service bridge is excluded. OpenBubbles is research evidence
+only. Online Apple services remain a goal, while models/research activation do
+not establish Apple manufacturing identity. Host builds, offline QEMU reference
+tests and debugging remain development tools, not a runtime service dependency.
+
 ## Priority order
 
 1. Retain the completed sampler OFF/FAST pair and its capture evidence. FAST's
@@ -51,7 +60,7 @@ existing pinned source inventories.
 | --- | --- | --- |
 | Sampler OFF | Attempt `20261102-111800-sampler-off-p29-r1` captured at expected deadline, unchanged p29, image `ee70fb73…`, raw `6ecc43d9…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
 | Sampler FAST | Attempt `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`, COMPLETE/captured; script matches OFF, live 997,224 bytes all match RAM; known startup abort confounds timing | Actual fast-path coverage is 1,437,573,559 eligible pixels, identity branch zero; FAST does not compare pixels. Owner missed the visual window. No speed/FPS/visual promotion |
-| UI observations | Next p29 `phone-p29-art-container-15m-r1` BUILDING, composition `42bb3b73…` passes actual overlay consumer (45 records/453-byte environment); qualified default 900-second inspection window | One artwork behavior change, sampler OFF and passive container result/error/PID; existing profiler. No AKS/new kernel/health/input/ECM additions. Ready work proceeds without optional tracing |
+| UI observations | RUNNING `20261102-115426-phone-p29-art-container-15m-r1`, image `5e9bd94a…`, unchanged p29, overlay `42bb3b73…`, qualified default900/916-byte line; capture pending around12:10 | User confirms Battery icon visible. HKART installed in iconservicesagent/Preferences but recovered-hit absent; attribution limited. HKCONTAINER execution0 and known initial BB nil abort persist. Sampler OFF; no AKS/new kernel/health/input/ECM additions |
 | New CPU health baseline | `7424c92` acceptance handoff, p30 present; proposed image NOT BUILT, literal-admission/common-config review pending; no slot request | New verification/floor/required-sensor/health gates need functional acceptance before sharing an unchanged configuration in later UI timing arms |
 | GPU timeout diagnostic | Native parent independently verifies p30 SOURCE/LINK/IMAGE PASS; diagnostic stays BUILD ONLY for CPU/Trusty and RAM-layout context | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset after exact accepted context |
 | GPT readback r2 | Host PMBR correction `f329418`, reviewed hash and frozen profile; no reservation here | Both GPT copies, CRC/geometry/agreement, saved-byte offline verification and bounded failure evidence; separate storage capture |
@@ -82,8 +91,11 @@ Kernel SHA256:
 unstripped:
 `5dc553c614d2c9ee65fa21451aa72db550e696e2e3318cee5095a87b94aabeea`.
 It contains floor0772/0773 with probe off and standalone GPU diagnostic compiled
-on/runtime off. Live input1410 is held, unapplied; fixing its three reviewed
-defects requires a separately identified p31 and acceptance. Never relabel p30.
+on/runtime off. Original live input1410 was held; reviewed input fixes1176 and
+presentation1177 have now advanced parent source, but p31 is not linked and
+physical input/ECM remain unaccepted. AKS timestamp-race repair is still in the
+parent namespace before integration. Existing p29/p30 images stay identified
+by their exact hashes; never relabel p30.
 
 ## Shared QEMU queue
 
