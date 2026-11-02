@@ -162,6 +162,13 @@ are not touch-to-glass measurements.
   fails its payload hash; the set also lacks matching dependencies/trusted AVB
   graph. It is not a verified restore set. Android integrity and isolated iOS
   storage remain unproved; no Android/root/slot/GPT/firmware change follows.
+  Offline planning af2fcaf/05d8532 has not qualified an independent backup
+  destination, bulk readback or recoverable key state. Its smallest later AVB
+  proposal is selected root-vbmeta's first 4 KiB after accepted GPT/context,
+  followed by separately reviewed exact extents; today's consumer stays GPT-only.
+  The reuse attribution is corrected: pinned f2fs-tools refuses aliases in
+  `do_defrag`, not `do_resize`. This proves no safe resize or migration route;
+  see [the corrected storage report](reuse/2026-11-02/storage-filesystems.md).
 
 ## Efficient integration and handoff
 

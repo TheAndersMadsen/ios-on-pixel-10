@@ -1,5 +1,22 @@
 {
   "schema": "hackios.reuse-audit.communications.v1",
+  "corrections": [
+    {
+      "date": "2026-11-02",
+      "source_checkpoint": "af2fcaf",
+      "report": "storage-filesystems.md",
+      "affected_message_id": "message:mcp:dbb97f49-89f8-4ba4-bf3a-080ae34cab8a:thread-send:reuse-audit-20261102-parent-35ce6a12-3365-4859-adf2-76570d8b2c7e",
+      "incorrect_claim": "The historical dualboot message says f2fs-tools rejects resize with the device-alias feature.",
+      "corrected_attribution": "At the pinned commit, fsck/main.c has the explicit DEVICE_ALIAS refusal in do_defrag lines1038-1050, not do_resize lines1099-1111. do_resize checks target range and calls f2fs_resize; inspected resize.c and mount.c have no alias-named handling.",
+      "limits": "This does not establish safe alias-aware resize, complete path support or migration readiness. No shrink, expanded read scope, new review task or device action follows.",
+      "source_commit": "d34dcc887617535a0001ea389a2bb8058f41ea05",
+      "file_sha256": {
+        "fsck/main.c": "986e7227b518e94e44cb225d01f1beb3fa5022ecc0cb85c3449c54b78e93395f",
+        "fsck/resize.c": "51261e5f9c33db2dce28f9121b4607410776b01ad7d279702089563fb1a8f030",
+        "fsck/mount.c": "a82bfe1d3ff3e60b25df5dcbfafc3dd7e22a2a08296c7c4f3ac804d3d8f17382"
+      }
+    }
+  ],
   "date": "2026-11-02",
   "purpose": "User requested communicating the completed reuse audit to currently working related agents and subagents.",
   "audit_commit": "3139238",

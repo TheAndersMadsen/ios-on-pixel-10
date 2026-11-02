@@ -1,3 +1,22 @@
+## Reuse attribution reconciled, 2026-11-02 — F2FS alias check
+
+Consumed dualboot **af2fcaf** / handoff **05d8532**. Corrected the tracked reuse
+storage report: at exact d34dcc88, DEVICE_ALIAS refusal is in do_defrag, not
+do_resize. Three saved source-file hashes and function boundaries checked.
+This establishes neither safe alias-aware resize nor migration readiness.
+
+Phone, apps and dualboot coordinators received the correction in their existing
+turns. communications.md/.json mark the old sentence superseded; original
+message bodies, delivery receipts and counts remain intact. Shared coordination
+policy updated; exact new deliveries in ignored
+research/ios26-orchestration-20261102/f2fs-attribution.json.
+
+GPT profile34a126b2 remains HELD; backup destination/bulk/key recoverability and
+isolated capacity remain unqualified. Later root-vbmeta4KiB is a bounded proposal,
+current consumer stays GPT-only. No new review/delegate, runtime change, suite
+rerun, build, boot, USB or storage action. Docs/receipt checks before commit.
+
+
 ## Dualboot CPU-context hold and frozen host profile, 2026-11-02 11:42 CET
 
 Docs/recovery milestone **af2fcaf**, consumes shared policy **99c96136**.

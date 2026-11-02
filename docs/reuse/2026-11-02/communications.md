@@ -1,5 +1,13 @@
 # Audit findings delivered to active owners
 
+**Source correction, 2026-11-02 (dualboot af2fcaf):** the historical dualboot
+message incorrectly attributes the device-alias refusal to resize. At pinned
+f2fs-tools d34dcc88 it is in `do_defrag`, not `do_resize`. The
+[current storage report](storage-filesystems.md) and `corrections` metadata in
+[communications.json](communications.json) supersede that sentence. Original
+message bodies and delivery receipts remain unchanged. This establishes no safe
+alias-aware resizing or migration path.
+
 2026-11-02. The user requested direct communication with the related agents
 and subagents currently working. The live project inventory was used rather
 than historical roster status fields, which contained completed assignments.

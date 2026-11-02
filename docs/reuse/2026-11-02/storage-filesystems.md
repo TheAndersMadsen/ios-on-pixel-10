@@ -93,8 +93,17 @@ distribution's `fsck.f2fs` understands device aliasing.
   `dump_node` and inode/block inspection supply an existing metadata explorer;
   its file notice is GPL-2.0-only.
 - [`fsck/main.c`](https://android.googlesource.com/platform/external/f2fs-tools/+/d34dcc887617535a0001ea389a2bb8058f41ea05/fsck/main.c)
-  rejects resize of an image with the device-alias feature. Do not base a
-  dual-boot migration plan on generic F2FS shrink instructions.
+  explicitly refuses device-alias images in `do_defrag` (lines 1038-1050).
+  **Attribution corrected 2026-11-02, dualboot checkpoint af2fcaf:** this check
+  is not in `do_resize` (lines 1099-1111), which checks the target range and
+  calls `f2fs_resize`. The pinned
+  [`fsck/resize.c`](https://android.googlesource.com/platform/external/f2fs-tools/+/d34dcc887617535a0001ea389a2bb8058f41ea05/fsck/resize.c)
+  and [`fsck/mount.c`](https://android.googlesource.com/platform/external/f2fs-tools/+/d34dcc887617535a0001ea389a2bb8058f41ea05/fsck/mount.c)
+  have no alias-named handling. These observations establish neither safe
+  alias-aware resize nor migration readiness. Do not base a dual-boot migration
+  plan on generic F2FS shrink instructions. Exact three-file hashes and the
+  superseded historical-message reference are in
+  [the communication erratum](communications.json).
 
 The original AOSP
 [`exp_alias` implementation commit](https://android.googlesource.com/platform/system/core/+/77ee43a9fe56db6042d9f91d75cab703f04180e7)
