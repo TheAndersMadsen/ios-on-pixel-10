@@ -38,6 +38,54 @@ container+Spotlightwherehostverified; noforcedSW/retrychangeinpair. StockAndroid
 savedinit_bootfailsAVBpayloadverificationperdualbootparent; nevercallitverified
 restore/trustedsetoruseitforAndroidboot. Allsavedartifactsandpartitionspreserved.
 
+## Fleet orchestration, 2026-11-02 — shared priorities and test queue
+
+User requested repo-wide coordination and more useful evidence per slow boot.
+Committed policy **99c9613**, `docs/COORDINATION.md` (documentation index linked).
+Opening inventory: five other coordinators +15 workers; read their contexts and
+the subsequent ECM reviewer. All five coordinators received targeted steers and
+returned coordination/readiness acknowledgments. Native parent confirmed ten
+workers have the frozen CONTRACT and UC-r2 composed-adapter owner. No new agent,
+review task, kernel build, USB/phone operation or destructive action here.
+
+Single phone/release owner retained. **OFF20261102-111800 captured** at expected
+deadline, rawSHA6ecc43d91a88562ffe17b9dddc70b6bbdc8b058a1958a6a4f23fec7cdc557d64.
+Phone owner reports **FAST running**, own attempt directory
+`20261102-112806-sampler-fast-p29-r1`, image128674c9…; result NOT YET KNOWN.
+Pair stays unchangedp29/990Bscript/clocks/diagnosticset. Next UI may combine one
+behavior change with host-verified passive container/Spotlight/battery/profiler
+observations; optional work must not delay a ready comparison.
+
+p30 already built ONCE af08a9f5 (parent reports0undefined/276checks); no rebuild
+or relabel requested. Input1410 remains held/unapplied pending three fixes/p31.
+Fresh CPU audit bit9clear/bit38set STOP propagated across goals: independently
+checked GPU and GPT profiles both have cpus=1 and no blazer_bootcpu. Phone/native/
+CPU/dualboot owners now hold those candidates for explicit CPU/context review;
+no automatic A725 argument substitution. Existing LBA0 evidence remains observed.
+Dualboot froze HELD profile34a126b2… and exact f329418 host tool04ba2870…;
+no newer storage capture, no Android/root/slot/GPT write. Native diagnostic still
+needs separate reviewed START/health/reset; a timeout capture remains healthFAIL.
+
+Independently located apps QEMUr2 retained-console seed40 EINVAL after root mount,
+mapped exact p29 halt/caller symbols and routed evidence to apps owner. Its actual
+host read-path test confirmed20GiB clone extent beyond fakeUFS's8GiB view.
+RAMDiskr3 passed varfs and execed SpringBoard/lsd/MCM/registrar, but has NO
+registration/readback/frames: persona manifest from old light baseline is absent.
+Owner stopped own guest and prepares apps-full-r2 using canonical r3 var.skel/
+prefs while retaining49 apps/resources. No physical-root persona regression
+established.20GiB cannot fit current8GiB; no deployment candidate/approval implied.
+
+18 unique successful steering deliveries to the five existing coordinators,
+inventory/receipts in ignored `research/ios26-orchestration-20261102/`.
+Policy uses milestone/blocker/readiness events sent back to this thread with
+modeauto; no routine delegate polling or duplicate fleet. Meaningful local-link/
+JSON/whitespace checks and tracked-artifact scanner PASS (220files); no new
+runtime/compile/boot PASS claimed by coordination. Source/host/guest/physical
+acceptance remain separate. Next: consume FAST capture and concrete composed UI
+candidate; continue apps prerequisite repair/native composition in parallel,
+then resolve joint CPU-context acceptance before GPU/GPT scheduling.
+
+
 ## Stock apps and Apple identity goal, 2026-11-02 — host candidate, guest in progress
 
 User requires all apps running plus legitimate device identity/Apple services

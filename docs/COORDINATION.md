@@ -46,8 +46,8 @@ existing pinned source inventories.
 
 | Item | Observed readiness / reservation | Evidence to collect together |
 | --- | --- | --- |
-| Sampler OFF | Phone owner reports attempt `20261102-111800` running on unchanged p29, image `ee70fb73…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
-| Sampler FAST | Image `128674c9…`, immediately after OFF capture, conditional on normal acceptance | Same kernel, unstripped kernel, script/config, clocks, diagnostic set and starting-state record; fresh fast-path coverage and visible correctness |
+| Sampler OFF | Attempt `20261102-111800-sampler-off-p29-r1` captured at expected deadline, unchanged p29, image `ee70fb73…`, raw `6ecc43d9…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
+| Sampler FAST | Phone owner reports running; attempt directory `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`; no verdict yet | Same kernel, unstripped kernel, script/config, clocks, diagnostic set and starting-state record; fresh fast-path coverage and visible correctness |
 | UI observations | Next slot accepted in principle; isolated artwork image `f89f74c6…` is available; a composition still needs validation | At most one behavior change (for example artwork), plus compatible passive MCM/Spotlight/battery observations, existing live profiler and ordinary CPU health |
 | GPU timeout diagnostic | p30 build exists; diagnostic image is BUILD ONLY pending CPU/Trusty context and exact artifact acceptance | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset |
 | GPT readback r2 | Host PMBR correction `f329418`, reviewed hash and frozen profile; no reservation here | Both GPT copies, CRC/geometry/agreement, saved-byte offline verification and bounded failure evidence; separate storage capture |
@@ -108,7 +108,7 @@ are not touch-to-glass measurements.
   five-A725 SMP passed. No A520/OFF/re-entry/cpu1/register write or unchanged retry.
   CPU parent is reviewing privilege/reset context on primary sources, host only.
 - **One-core test recipes:** p30 GPU diagnostic `d8925f4f…` and dualboot
-  `phone-test-r2.json` use `cpus=1` without `bootcpu`. CPU parent identified
+  `phone-test-r2.json` use `cpus=1` without `blazer_bootcpu`. CPU parent identified
   that GPU recipe as entering unfixed cpu0 A520; coordination also checked the
   GPT recipe and routed it for review. Both need explicit CPU and test-owner
   context acceptance before scheduling. A possible A725 recipe is a changed
@@ -122,9 +122,12 @@ are not touch-to-glass measurements.
   existed despite UART0. Coordination located the panic and exact p29 symbols.
   Apps owner confirmed the file extent at17,532,928,000 exceeds fake UFS's
   8,589,934,592-byte view, using the actual sanitized read path. Its r3 guest
-  now uses the full RAMDisk backend and the same root hash; the apps handoff
-  reports it passed varfs and reached launchd, SpringBoard and lsd/MCM.
-  Registration readback and representative launch results are still pending.
+  uses the full RAMDisk backend and the same root hash; it passed varfs and
+  reached launchd, SpringBoard, lsd/MCM and the actual registrar. No registration
+  readback/UI frames appeared; usermanagerd aborts on its missing persona
+  manifest. Apps owner requested its own stop and is preparing apps-full-r2
+  with the canonical current-r3 var.skel/prefs instead of the old light clone's
+  baseline. This is not evidence of a new physical-root persona regression.
   Do not remove seed data or widen physical partition bounds to bypass this.
 - **Native Metal:** `9db93cb` and the ignored
   `research/ios26-metal-native-20261102/integration/CONTRACT.md` freeze the
