@@ -541,7 +541,7 @@ candidate; continue apps prerequisite repair/native composition in parallel,
 then resolve joint CPU-context acceptance before GPU/GPT scheduling.
 
 
-## Stock apps and Apple identity, 2026-11-02 — r7 captured; selected-app exercise host-ready
+## Stock apps and Apple identity, 2026-11-02 — r7 captured; registration-r8 ACTIVE
 
 Goal ACTIVE: all stock apps running plus legitimate identity/Apple services/SEP.
 DIRECT constraint self-contained Pixel; no Mac-backed validation/tethered bridge.
@@ -612,9 +612,21 @@ Exact source/commands/results:receipts/exercise-first-r8/. No repeated broad CI.
 
 Frozen p29 K5aad8978…/Ucc979153… overlay61c38161… mask0xA0080081 and28GiB
 RAMDisk remain next-test baseline; no physical p31 substitution. Own Standard
-job90368813… stays. Next: coordinator commits frozen tested owned scope; compose
-one clone with same49apps/resources/55seed/676jobs, fsck/hash/bind exact argv,
-then normal shared admission ONLY after Connectivity release/yield. Rollback
+job90368813… stays. Coordinator committed frozen source/test/docs/own NOTES as48bb18c6e82a695bec5da8954560538992c69ede.
+ONE next clone apps-full-r6.img20GiB/0444 SHA
+aff3ebbeef3464ebbd1ac439c04e0d9a959aa9baac5109e8e9fdd34865549f80,
+free4183867392B; readonly virtual fsck exit0/OK. Only registrar changes from
+7ee9df13… root; manifest43d40274/job90368813/cachefc54e23b/49apps/55seedfiles/
+676baselinejobs unchanged. Exact package-r6/fsck-r6/freeze-r8/guest-command-r8
+receipts +recipeba5136fd… bind composition and full build/boot argv. Direct BT420
+terminal release/yield and4GiB unit correction received; no BT health inference.
+ONE authorized normal claim SUCCEEDED: registration-r8 ACTIVE, runner43665/
+QEMU43767/unified1997; intent67ade835… in receipts/registration-r8-admission.json.
+Cmain/framework/manifest+Calculator Info read/parse and all_applications_enter
+observed; no return/readback/request/exec accepted at early snapshot. Preserve
+full1200/capture/cleanup, report registration/request/exec/foreground separately.
+No second claim/retry or peer interruption. Source actual48bb18c/binary93db246a/
+rootaff3ebbe remain frozen; no new helper/guest requested. Rollback
 select immutable prior guest root. Actual exec/foreground/interaction still
 needed, full goal unmet. GitHub pins preserve OpenSEP backend prerequisites,
 vphone iCloud limits, Mac route exclusion and public NAC-stub TODO dependency.
