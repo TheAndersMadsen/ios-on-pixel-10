@@ -171,6 +171,21 @@ still failed for both results. Neither result is an accepted restore image.
 Preserve the originals and obtain an independently verified matching component;
 successful ramdisk restoration alone does not establish a valid stock image.
 
+An independently downloaded **same-build factory reference** is now available
+for `DP11.261002.005`. The complete archive matches Google's published SHA-256.
+Pinned AOSP tools verify five signed metadata blocks, four parent/child key
+bindings, 28 payload hashes and six hashtrees. Factory `boot` and `vendor_boot`
+exactly match the saved slot-a copies. Factory `init_boot` matches the original
+image SHA-1 recorded in that copy's Magisk backup. The missing
+`vendor_kernel_boot`, DTBO and AVB reference files are also present. Source,
+commands, hashes and results are in ignored
+`research/ios26-dualboot-r4/factory-google-dp11/HANDOFF.md`.
+
+This qualifies the stock reference, not the phone's current contents, configured
+root of trust, protected rollback state or a complete recovery backup. Keep the
+modified saved copies intact. The frozen GPT profile and CPU-context hold remain
+unchanged; the factory reference authorizes no restore, boot or firmware change.
+
 Run owned synthetic and malformed-image tests with
 `python3 -I tools/test_android_bootset.py`; the vendored tool makes these checks
 independent of local research artifacts or network access.
@@ -189,6 +204,14 @@ raw ciphertext alone does not demonstrate recoverability after a reset or key
 state change. The reported normal UFS LUNs also do not constitute an RPMB or
 secure-key backup. Keep original backups intact and use an independent storage
 destination; a host filesystem clone is not an independent copy.
+
+The downloaded package also contains a sparse `userdata_exp.ai` image whose
+header describes an 8,000,000,000-byte expanded image. This supplies a factory
+baseline, not the alias's actual pre-write contents or current F2FS reservation
+state. It is not migration space or permission to restore it. After archive and
+reference staging, the refreshed host-space observation no longer fits the
+reported normal-LUN backup plus the 40 GiB working reserve. Recheck capacity and
+qualify an independent destination before staging a backup.
 
 After GPT acceptance, the smallest proposed AVB discovery starts with the first
 block of the owner-selected slot's top-level `vbmeta`, if it is in the attached
