@@ -1,3 +1,35 @@
+## Native Metal goal started, 2026-11-02 10:09 CET
+
+User explicitly requests native Metal on Pixel 10 Pro / iOS 26 with ten agents
+continuously working. **Ten new background implementation delegates launched;
+all ten launch responses reported `running`, inherited Codex gpt-6.1-sol.**
+Scopes: firmware, HMGU user client, GPU VM, submission/completion, DXT ISA, AIR
+frontend, PDS/CDM streams, Metal command path, IOSurface integration and native
+execution smoke test. Exact task IDs, thread links and prompts:
+`research/ios26-metal-native-20261102/{fleet.json,FLEET.md,launch-spec.json,PLAN.md}`.
+Each writes only its own subdirectory, HANDOFF.md and messages.md; older fleet
+and release sources are read-only. No nested agents. At each completion, review
+and start a fresh bounded task to maintain ten; no delegate polling/waits.
+
+Starting physical evidence remains the earlier captured boots: iOS UI/touch and
+GPU core ID, **no proven native GPU shader/Metal execution**. First GPU target is
+an own compute shader, fresh real engine completion, cache-synchronized matching
+readback and sentinel guards. Host/model tests never count as physical success.
+Firmware health alone is insufficient. Current release may be newer than the
+09:35 handoff; reconcile source/captures before integration.
+
+Committed acceptance/ownership document: `b887615`, `docs/NATIVE-METAL.md`.
+Validation: documentation diff check and tracked-artifact pre-commit scan PASS
+(clean 148 files); no new runtime/build/boot test claimed. **No new device
+attempt, USB command, guest, firmware send, root write or destructive operation
+in this startup milestone.** Another project parent thread is active: coordinate
+phone ownership before any boot and never interrupt its attempts. Preserve Android,
+bootloaders, slots, firmware and backups; confirm each destructive step.
+
+Next: consume delegate completion events, reconcile cross-layer APIs, rerun
+meaningful tests/ARM64 gate-on symbol checks, review provenance, integrate and
+commit completed implementation. The long-running native Metal goal stays active.
+
 ## Fleet review block, 2026-11-02 09:35 CET
 
 AoC feature task rejected for possible cybersecurity risk, stopped without rephrasing/rerouting. Other hardware work continues. Freed slot assigned dedicated A725 owner (explicit gpt-6.1-sol); roster now31 launched including1 rejected,23 pending capacity. Details in features-20261102/fleet.json and BOARD.
