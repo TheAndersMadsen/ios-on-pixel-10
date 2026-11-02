@@ -2,7 +2,8 @@
 
 Active effort started 2026-11-02. The target is native Metal execution on the
 Pixel 10 Pro under iOS 26. Ten implementation agents work on separate layers;
-the coordinating agent reviews, integrates, commits and owns device testing.
+this coordinator reviews, integrates and commits. The existing phone/release
+coordinator exclusively owns full release builds, USB and physical testing.
 
 ## Starting evidence
 
@@ -18,6 +19,18 @@ Later physical checkpoint, 2026-11-02: SEND2 accepted the signed firmware
 FW connection0, pending FWCCB1/0 and no execution return. No unchanged retry
 is scheduled. Capture/decode the pending firmware message in a reviewed
 diagnostic before requesting another device test. Native Metal is unproved.
+
+The standalone timeout diagnostic now passes independent parent review:
+actual health/hook sanitizer tests, three rejected behavioral mutations,
+byte-identical vendor layout measurement, sparse patch application and
+enabled ARM64 text-symbol checks with gate-off controls. It captures bounded
+pending FWCCB entries without acknowledging or consuming them. Its corrected
+compatibility offsets also show why the old log's layout words were not BVNC.
+Exact review, patch hashes and build request are under
+`research/ios26-metal-native-20261102/integration/diagnostic-review-r1/`.
+This qualifies a new diagnostic artifact for build review; it establishes no
+firmware execution and schedules no boot. Lifecycle/queue diagnostics remain
+separate candidates.
 
 Current source reuse decisions and refresh instructions are in
 [NATIVE-METAL-UPSTREAM.md](NATIVE-METAL-UPSTREAM.md), alongside the broader

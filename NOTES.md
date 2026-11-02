@@ -1,3 +1,57 @@
+## Native Metal diagnostic qualified, 2026-11-02 11:21 CET — build only
+
+Independent parent review selected firmware's standalone pending-FWCCB
+diagnostic, not the queue alternative or lifecycle/combined patches. Exact
+source/gate/tool patch SHAs: fee036ca368ac3e0fc23144c57deb2aeca07b7e29f628fd306e3ba376550a8a2,
+afb560a7f96281d79c8ce61ce1edd33b9b0768825c0a9eb8f4dc9b3f821ce07c,
+0bb6deef70de4ad4b189f2cad7f7f8926480d420716ca07e466c96289f8f1372.
+Current release HEAD b03d04d1e8111d8bfae34379c1565ed370105524; tipc7efcfe4d…
+unchanged. Sparse apply+byte comparison PASS. Parent isolated actual health/
+hook/core ASan/UBSan PASS; three compiled behavioral mutations rejected;
+fresh vendor header measurement byte-identical; canonical profile + four
+drift controls PASS; two enabled ARM64 objects/named text symbols and two
+gate-off controls PASS; actual image-token positive/negative controls PASS.
+Exact commands, source/object/profile hashes, receipts and request:
+research/ios26-metal-native-20261102/integration/diagnostic-review-r1/
+{HANDOFF.md,REVIEW.json,receipts/,coordination.json}.
+
+Reader captures actual pending READ slot, max4 whole112-byte entries before
+timeout/failed return, all28 raw words/type/flags/race + SYS/COMP metadata.
+No ack/consume, invented return bit, extra kick, power/clock/SMC/firmware change.
+Correct compatibility offsets show old labelled BVNC words were layout/padding.
+Runtime requires rung5+diag1; original timeout/result unchanged. Host diagnostic
+qualification is NOT physical health or execution acceptance. HEALTH5 remains
+FAIL at attempt20261102-102719-native-metal-health-p29-r1, no unchanged retry.
+
+Phone/release owner read request and acknowledged BUILD ONLY source review of
+these three patches, with new p30/interactive input subject to its own review.
+It will return source/kernel/unstripped/image hashes, enabled final symbols and
+exact embedded firmware proof before any new sequential health-slot request.
+No health boot scheduled; exclusive USB/current cpu0-audit then sampler queue
+preserved. This goal parent ran no device command, full build/link or image.
+
+All previous-wave owners returned;17 bounded milestones now in terminal history.
+Ten fresh Sol implementation owners launched/steered successfully: firmware-r2
+runtime profile; uc-r2 queue/failed-work wiring; vm-r2 FW context/MMUCACHE;
+queue-r2 native compute state/body; isa-r3 native C ALU/control/allocator;
+streams-r3 shared/frozen integration; metal-r3 readiness lease; surfaces-r3
+imported failed-data handback; air-r3 typed VS/FS; validation-r4 real IOKit BO
+acceptance app. Exact IDs/links/briefs in fleet.json,FLEET.md and
+successor-wave3-briefs.json. Each writes only its new ignored directory; old
+milestones frozen. Ten coordination deliveries recorded, no delegate polling.
+Other milestones' test totals remain child-reported pending parent integration.
+
+Existing upstream collector refreshed eight exact GitHub heads: unchanged;
+all24 text source/licence files rehashed PASS. Additional reuse audit retained
+and conveyed to current successors. Firmware canonical measured profile
+68f5ba78e85ec7750668de3a4ed1cebe5ba0b4a7a84017e39dda2cc486ef967c
+and queue agreement header must be reconciled/adopted across real adapters;
+no fourth constant set. Runtime ABI, complete USC/FP/launch rules, real MMU/
+context/cache/UPL handback and authentic engine completion remain unproved.
+Next parent work: review returned implementations/owned offline compiler
+request and returned p30 artifacts; only then request a phone diagnostic slot.
+Native Metal/original goal remain ACTIVE, not complete.
+
 ## Saved Android AVB recovery gap, 2026-11-02 11:22 CET (host only)
 
 Android structural inventory committed **7e43b70**;8owned-fixture/AOSP testsPASS,

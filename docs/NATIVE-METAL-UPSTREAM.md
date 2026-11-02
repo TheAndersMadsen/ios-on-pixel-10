@@ -50,5 +50,15 @@ Completed validation, AIR and ISA first milestones have successor implementation
 tasks; the target remains ten concurrent owners. Delegate completion events
 drive replacement; do not poll running delegates.
 
+The firmware milestone adds one versioned profile under
+`firmware/profile/lga26.1-abi41-v1.json`, consolidating existing firmware,
+queue and VM measurements with exact donor/configuration hashes. Firmware
+builds check it before compiling; parent independently reproduced its checks
+and vendor layout output. Queue's agreement header checks shared constants.
+Runtime ABI compatibility and cross-adapter adoption remain unfinished.
+Use these existing artifacts for composition rather than another constant set.
+The post-milestone eight-repository refresh found no changed heads; all24 saved
+source/licence files were rehashed successfully.
+
 `tools/native_gpu_upstream.py` is original hackios code under its per-file MIT
 notice. Third-party snapshots retain their own licenses and remain out of git.
