@@ -1,0 +1,140 @@
+{
+  "schema": "hackios.ca_sampler.source-proposal.v1",
+  "target": "runtime/ca_sampler",
+  "self": {
+    "path": "MANIFEST.json",
+    "sha256": "see outer SHA256SUMS; no recursive digest"
+  },
+  "status": "proposal only; coordinator applies and commits",
+  "license": "MIT; external local inputs excluded",
+  "files": {
+    "src/hsampler.c": {
+      "bytes": 7193,
+      "sha256": "f98aa32e92c638619d3d3cf5ae52ed39e08764f84015555b7d9ca88964cec00f",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/src/hsampler.c",
+      "original_sha256": "f98aa32e92c638619d3d3cf5ae52ed39e08764f84015555b7d9ca88964cec00f",
+      "byte_identical_to_original": true
+    },
+    "src/hsampler.h": {
+      "bytes": 1770,
+      "sha256": "8fba19e97864115525240650b134ea35820fd75d16892a76f5cba157c303ec84",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/src/hsampler.h",
+      "original_sha256": "8fba19e97864115525240650b134ea35820fd75d16892a76f5cba157c303ec84",
+      "byte_identical_to_original": true
+    },
+    "src/hs_hook.c": {
+      "bytes": 9397,
+      "sha256": "8adc9ea538703d7e6aa2b7f4a570175307f4b882682afdc1b545c2a98fd7039a",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/src/hs_hook.c",
+      "original_sha256": "8adc9ea538703d7e6aa2b7f4a570175307f4b882682afdc1b545c2a98fd7039a",
+      "byte_identical_to_original": true
+    },
+    "tests/differential.c": {
+      "bytes": 11540,
+      "sha256": "da42d33383cdc7c10d707b69a350453c497e78eacd0e147270d2cb102879452f",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/tests/differential.c",
+      "original_sha256": "da42d33383cdc7c10d707b69a350453c497e78eacd0e147270d2cb102879452f",
+      "byte_identical_to_original": true
+    },
+    "tests/kernel_overlay.c": {
+      "bytes": 2240,
+      "sha256": "5a81f79883e7f92bbe039fa8263a4c7d5fdde0aef7ff33203d63e1d8ea1a0e50",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/tests/kernel_overlay.c",
+      "original_sha256": "5a81f79883e7f92bbe039fa8263a4c7d5fdde0aef7ff33203d63e1d8ea1a0e50",
+      "byte_identical_to_original": true
+    },
+    "tools/build.py": {
+      "bytes": 10806,
+      "sha256": "43e5522c570fdd1334614e471b7bf82c7a20420c68eb016fe1e2430e1acba649",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/tools/build.py",
+      "original_sha256": "821337e42276f12bc056a905c4911845ab7987782cd859052cbfb7df744e4052",
+      "byte_identical_to_original": false
+    },
+    "tools/prepare.py": {
+      "bytes": 4744,
+      "sha256": "acd6ef19bf427ff6f9e337e850395ae45f327e424cdad6fd860bef62e008293a",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/tools/prepare.py",
+      "original_sha256": "e801419e43749e4bc0cc7d6b5359842327662d58cb3a9c6efc34fd5005e6ec77",
+      "byte_identical_to_original": false
+    },
+    "tools/compose.py": {
+      "bytes": 6334,
+      "sha256": "99268ca4c9d6fda0bdf7cd2ee25fda46f1b0c8125da26f0017fed608a92829b8",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/tools/compose.py",
+      "original_sha256": "ed6d0a5d920059d1626120c4570f3efb78b827002b09992c04c36405c3aaef5d",
+      "byte_identical_to_original": false
+    },
+    "tests/overlay.py": {
+      "bytes": 4481,
+      "sha256": "af70c41011afa998d3a6c155ddf100299e45e8c8ac25f0892f235179f8c86a12",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included",
+      "original_source": "research/ios26-opt-20261102/sampler/tests/overlay.py",
+      "original_sha256": "fd723bcd2cf27b5842e434e113e608d8d4a8235abd222505ad808fb4d6c513d8",
+      "byte_identical_to_original": false
+    },
+    "tools/paths.py": {
+      "bytes": 1550,
+      "sha256": "4b26ff0314d95e0e3208d55b2740952ddfc62f45ff7c9ebb5f07f98ed53af31f",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included"
+    },
+    "README.md": {
+      "bytes": 5805,
+      "sha256": "668b744c2d88eb2b2085ad46dfc26fc22a908dac4a43fa0b4f9799701cf4c415",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included"
+    },
+    "PROVENANCE.md": {
+      "bytes": 6286,
+      "sha256": "3714aad5d2f58249da8a83d47198dbe6ed3e9ea1e5b806b725fa09915781cb8e",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included"
+    },
+    "LICENSE": {
+      "bytes": 1349,
+      "sha256": "277b2ba83e61ca0218723388c980dc15155d6c778c24b3d8e4bbeb7658074456",
+      "license": "MIT",
+      "origin": "original project work; no vendor implementation included"
+    }
+  },
+  "generated_outputs": "ignored research/ only; no generated files in this manifest",
+  "reproduction": [
+    "python3",
+    "-B",
+    "runtime/ca_sampler/tools/build.py",
+    "--output-dir",
+    "research/ios26-opt-20261102/sampler_package/run/applied-r1",
+    "--compare-original",
+    "research/ios26-opt-20261102/sampler"
+  ],
+  "evidence": {
+    "attempt": "20261102-110205-sampler-verify-p29-r1",
+    "reviewer_handoff": "research/ios26-fleet/handoffs/opt-sampler_review.md",
+    "full_span_pixels_compared": 598888390,
+    "eligible_interior_pixels": 594003511,
+    "mismatches": 0,
+    "latch": 0,
+    "verify_long": 0,
+    "projective_identity": 0,
+    "physical_projective_specialization_covered": false,
+    "speed_claim": false,
+    "pending": "controlled OFF/FAST performance and visible latency; existing visual issues unresolved"
+  }
+}

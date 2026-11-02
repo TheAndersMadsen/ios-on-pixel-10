@@ -23,6 +23,7 @@ Sources: file headers, `research/legacy-root-20261101/PROJECT-COMPOSITION.md` an
 | `dualboot/`, `tools/dualboot.py`, `tools/stage_dualboot_readback.py`, `tools/test_dualboot.py` | Original project readback protocol, XNU adapter, host GPT verifier and tests. GPT field facts follow the UEFI specification; no UEFI or Android implementation copied | MIT, by file headers. Kernel patches containing existing third-party context remain under ignored `research/` |
 | `tools/image_tool.py` | Local work. Its `USER` boot arguments were copied from tegu's build script | No licence stated. Owner decision pending |
 | `tools/native_gpu_upstream.py` | Original GitHub source inventory and immutable snapshot tool; no upstream implementation copied | MIT, by file header. Downloaded source/license snapshots stay under ignored `research/` with their own terms |
+| `runtime/ca_sampler/` | Original guarded CPU sampler, runtime hook and source/test/build helpers; ABI facts from the local 23G90 reference, no Apple implementation or artwork included | MIT under the scoped `runtime/ca_sampler/LICENSE`. Generated fingerprints, Apple reference inputs, binaries and overlays stay in ignored `research/` |
 | `tools/mkadt.py` and other files in `tools/` | Local work and porting code. Some come from upstream porting code; provenance is recorded per file only in part | No licence stated |
 | `*.md`, `docs/`, `.github/` | Local work. The design of some documents follows `ios-tegu`'s structure, with this project's content | No licence stated |
 

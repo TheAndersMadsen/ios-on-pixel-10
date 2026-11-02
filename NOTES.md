@@ -1,3 +1,43 @@
+## Phone owner checkpoint, 2026-11-02 11:33 CET — sampler FAST, p30 built but CPU hold
+
+SamplerOFF20261102-111800 COMPLETE/captured, rawkernelSHA6ecc43d91a88562ffe17b9dddc70b6bbdc8b058a1958a6a4f23fec7cdc557d64.
+All953870livebytesmatchcurrentRAMepoch;479finaltailnotlive,0lost. Script66tokens/
+1569eventscomplete, noBBcrash; expecteddeadline300,XNU300.7s,39C/SOC89/4332,0CPM.
+FAST20261102-112806 RUNNING, image128674c9… samep29/kernel/U/990Bscript/clocks/
+diagnosticset; onlysamplermode. Latest984198030fastinteriorpixels/identity0,
+verified0(asFASTdoesnotcompare); scriptcomplete, capturepending. Useraskedfor
+visiblefeelafterautomatedphase. NoFPS/causalspeedclaimyet. Runner85573/live86244/
+decoder34940; filesunderios26-opt-20261102/parent. DoNOTbootanotherimageuntilcapture.
+
+p30fullbuildPASS: sourceaf08a9f5,176series/combinedtreeexact,0undefined,276checks.
+Kernel9bbc57038f46622e8faa2ac2d04fd595184a305d959bf8ee8c5202e825e74e55,
+U5dc553c614d2c9ee65fa21451aa72db550e696e2e3318cee5095a87b94aabeea.
+Final7diag/healthTEXT_EXECsymbolsverified; signed344068-bytefirmwareexact148aacc5…
+inboth. Image native-metal-health-p30-diag-r1 d8925f4fcac7f4977770defc0a098df509d4a627115bb26a497c7d8160f97ea6
+built/checkPASS,471Bline. **BUILDONLY/HOLD**: cpus1/no-bootcpuentersA520withphysical
+ACTLRbit9clear. SameholdforGPTimage21cba4e8. Noautomaticbootcpuadjustment/retry;
+newCPU/Trustyreviewandnewhashrequired. Native/CPU/dualboot/coordinatornotified.
+Independentgpu_cpu_context_reviewactive; no speculativeACTLRwrite/A520admission.
+
+Liveinput1410 reviewfoundP1abortACKsubmission,P2physicalUPinterleaving,P2socket
+expiry. Originalpatchnotapplied. ParentrepairONLYunderlive_input_fix: checksboth
+completedTRBs/HWO/status/residual, tracksinflightphysicaldispatchbeforeliveownership,
+carriesoriginalsocketdeadlinebeforeARM/commit. Fullactual-sourcehostvalidation+
+enabledARM64objectsPASS; reviewerextraEP0/physicalrace/deadlineregressionsnowPASS.
+No fullnewkernel/link/phoneinputyet; originalhostfixturesadaptedfortypeddeadline
+return, no proofdowngraded. KeepphysicalTAP/HOMEHELDuntilintegrationandacceptance.
+
+Originalsamplersourcepackagenowappliedtoruntime/ca_sampler, exactCbytes+signeddylib
+unchanged; parentappliedpathbuildPASStwodifferentialruns/gates/objects/overlayconsumer.
+NoApplebytes/artwork/dumpsinpackage. Commitpendinghere; docs/LICENSINGscopedentry
+added. Previousprofilercommite4e4c9c andFPSclaimcorrection1278265 preserved.
+Existing>=5ownSolrequirementretainedwithboundedintegration/reviewworkers; counts
+mustbecheckedatmilestones. Sharedcoordpolicy99c96136consumed, oneUSB/buildowner,
+nooptionaladditiontoOFF/FAST. NextUIwillcomposeoneartworkbehaviorwithpassive
+container+Spotlightwherehostverified; noforcedSW/retrychangeinpair. StockAndroid
+savedinit_bootfailsAVBpayloadverificationperdualbootparent; nevercallitverified
+restore/trustedsetoruseitforAndroidboot. Allsavedartifactsandpartitionspreserved.
+
 ## Stock apps and Apple identity goal, 2026-11-02 — host candidate, guest in progress
 
 User requires all apps running plus legitimate device identity/Apple services
