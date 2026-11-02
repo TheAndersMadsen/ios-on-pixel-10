@@ -38,6 +38,11 @@
 @end
 
 static void progress(const char *, NSString *);
+#if defined(HK_STOCK_APPS_LSLOG) && !defined(HK_STOCK_APPS_HOST_FIXTURE)
+static void hkDumpLaunchServicesLog(NSDate *since);
+static NSDate *hkLsLogSince;
+static BOOL hkLsLogDone;
+#endif
 static void fileReadProbe(NSString *);
 static id readPlist(NSString *path) {
     fileReadProbe(path);
@@ -351,6 +356,10 @@ int hkRegisterStockApps(NSString *action, NSString *manifestPath, unsigned attem
                     progress("register_url_call_enter", identifier);
                     accepted = [workspace registerApplication:bundleURL];
                     progress(accepted ? "register_url_call_return_accepted" : "register_url_call_return_refused", identifier);
+#if defined(HK_STOCK_APPS_LSLOG) && !defined(HK_STOCK_APPS_HOST_FIXTURE)
+                    /* r11c never reached the end of the loop in 1200 s: read lsd's account at the first refusal. */
+                    if (!accepted && !hkLsLogDone) { hkLsLogDone = YES; usleep(500000); hkDumpLaunchServicesLog(hkLsLogSince); }
+#endif
                     // Allow an asynchronous registration to appear; re-enumerate each time.
                     for (unsigned poll = 0; poll < 10 && !verified; poll++) {
                         usleep(100000); verified = hkStockAppIsListed(workspace, identifier, path);
@@ -462,9 +471,9 @@ int main(int argc, const char *argv[]) {
         progress("framework_loaded", nil);
 #endif
 #if defined(HK_STOCK_APPS_LSLOG) && !defined(HK_STOCK_APPS_HOST_FIXTURE)
-        NSDate *since = [NSDate date];
+        hkLsLogSince = [[NSDate date] dateByAddingTimeInterval:-2.0];
         int status = hkRegisterStockApps(@(argv[1]), @(argv[2]), (unsigned)attempts);
-        hkDumpLaunchServicesLog([since dateByAddingTimeInterval:-2.0]);
+        if (!hkLsLogDone) { hkLsLogDone = YES; hkDumpLaunchServicesLog(hkLsLogSince); }
         return status;
 #else
         return hkRegisterStockApps(@(argv[1]), @(argv[2]), (unsigned)attempts);
