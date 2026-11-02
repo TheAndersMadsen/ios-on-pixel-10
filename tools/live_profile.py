@@ -36,6 +36,10 @@ TOP = re.compile(r'HK TOP: t=(\d+) frames\+(\d+) cpu_ms=(\d+):((?: [^\s\[\]=]+\[
 TASK = re.compile(r' ([^\s\[\]=]+)\[(\d+)\]=(\d+)')
 TRACE = re.compile(r'HK UITRACE token seq=(\d+) event=(\d+) tok=(\d+) op=([a-z]) callback_us=(\d+) begin_us=(\d+) end_us=(\d+) late_us=(\d+)$')
 DONE = re.compile(r'HK UITRACE done us=(\d+) events=(\d+) tokens=(\d+) max_late_us=(\d+) max_call_us=(\d+) drift_us=(\d+)$')
+PRESENT_EVENT = re.compile(r'HK PRESENT event v=1 seq=(\d+) us=(\d+) stage=(layer_copy|copy_refused|copy_aggregate|submitted|submit_not_ok|unavailable|fetch_layer0|fetch_unproved|stop_unproved) id=(\d+) swap=(\d+) gen=(\d+) queue_us=(\d+) begin_us=(\d+) bytes=(\d+) layer=(\d+) plane=(\d+) rc=(-?\d+) status=(\d+) fe=(\d+) observed=(\d+)$')
+PRESENT_COUNTER_KEYS = ('seq us queued selected copy_ops copy_bytes copy_refused copy_aggregates submitted fetch_done uncertain unavailable submit_not_ok event_drops events reports pending').split()
+PRESENT_COUNTERS = re.compile(r'HK PRESENT counters v=1 ' + ' '.join(k + r'=(\d+)' for k in PRESENT_COUNTER_KEYS) + '$')
+PRESENT_CONFIG = re.compile(r'HK PRESENT config v=1 us=(\d+) every=(\d+) events_max=(\d+) reports_max=(\d+) clock=mach_absolute_us glass=unavailable$')
 HOG = re.compile(r'HK HOG: (\S+)\[(\d+)\] s=(\d+) tid=(\d+) x16=(-?\d+) pc=(0x[0-9a-f]+) lr=(0x[0-9a-f]+) slide=(0x[0-9a-f]+) main=(0x[0-9a-f]+):((?: 0x[0-9a-f]+)*)$')
 CRASH = re.compile(r'(userabort|usercrash|usertrap): ([^\s\[]+)\[(\d+)\]')
 EXEC = re.compile(r'(?:^|\s)exec ([^\s/]+)$')
@@ -391,6 +395,7 @@ class Analyzer:
         self.pending, self.pending_off, self.end, self.discard = b'', 0, 0, False
         self.period, self.tops, self.tokens, self.done = None, [], [], None
         self.ui_start, self.last_anchor_low, self.epoch_starts = None, None, 0
+        self.present_seqs, self.present_config = set(), None
 
     def feed(self, off, data, host=None):
         if off < self.end:
@@ -449,6 +454,36 @@ class Analyzer:
             if self.tokens and us < self.tokens[-1]['end_us']:
                 raise ValueError('trace done clock moved backwards within the replay thread')
             self.done = r
+        elif (match := PRESENT_CONFIG.search(text)):
+            if self.present_config is not None:
+                raise ValueError('second presentation config: refusing duplicated/foreign epoch')
+            us, every, events_max, reports_max = map(int, match.groups())
+            if (every, events_max, reports_max) != (32, 448, 64):
+                raise ValueError('unknown presentation sampling/bounds')
+            r.update(kind='present_config', us=us, every=every, events_max=events_max,
+                     reports_max=reports_max, clock='mach_absolute_us', glass='unavailable',
+                     kernel_s=[us / 1e6, us / 1e6])
+            self.present_config = r
+        elif (match := PRESENT_EVENT.search(text)):
+            names = 'seq us stage id swap gen queue_us begin_us bytes layer plane rc status fe observed'.split()
+            fields = dict(zip(names, match.groups()))
+            fields = {k: v if k == 'stage' else int(v) for k, v in fields.items()}
+            if not fields['id'] or not fields['seq'] or not fields['queue_us'] <= fields['begin_us'] <= fields['us']:
+                raise ValueError('invalid presentation identity/observation timestamps')
+            if fields['layer'] >= 4 or fields['plane'] > 1 or fields['observed'] not in (0, 1, 3):
+                raise ValueError('invalid presentation layer/plane')
+            if fields['stage'] in ('submitted', 'fetch_layer0') and (fields['rc'] or not fields['gen']):
+                raise ValueError('invalid successful presentation observation')
+            if fields['stage'] == 'fetch_layer0' and (fields['observed'] != 3 or not fields['status'] & 2 or not fields['fe'] & 0x40 or fields['fe'] & 0x1f000):
+                raise ValueError('presentation fetch lacks existing Layer0 completion evidence')
+            if fields['stage'] == 'layer_copy' and (fields['rc'] != 1 or fields['bytes'] == 0):
+                raise ValueError('presentation copy lacks successful row-helper evidence')
+            r.update(kind='present_event', **fields, kernel_s=[fields['us'] / 1e6] * 2)
+        elif (match := PRESENT_COUNTERS.search(text)):
+            fields = dict(zip(PRESENT_COUNTER_KEYS, map(int, match.groups())))
+            if not fields['seq'] or fields['events'] > 448 or not 1 <= fields['reports'] <= 64:
+                raise ValueError('presentation counter bounds violated')
+            r.update(kind='present_counters', **fields, kernel_s=[fields['us'] / 1e6] * 2)
         elif (match := HOG.search(text)):
             name, pid, sample, tid, x16, pc, lr, slide, main, frames = match.groups()
             r.update(kind='hog', name=name, pid=int(pid), sample=int(sample), tid=int(tid), x16=int(x16),
@@ -487,11 +522,18 @@ class Analyzer:
             r.update(kind='end_marker', termination='deadline_panic' if re.search(r'blazer-root: deadline \d+ s', text) else 'panic', detail=text)
         elif text.startswith('HK UI: refused'):
             r.update(kind='ui_refused')
-        elif text.startswith(('HK UITRACE', 'HK HOG:', 'HK TOP:')):
+        elif text.startswith(('HK UITRACE', 'HK HOG:', 'HK TOP:', 'HK PRESENT ')):
             self.warnings.append(dict(offset=off, reason='malformed/interleaved diagnostic line', detail=text))
             return
         else:
             return
+        if r['kind'] in ('present_event', 'present_counters'):
+            # The trace lock orders observations; it is dropped BEFORE printing.
+            # Out-of-order seq is legal, duplicate seq is not. Source byte/epoch
+            # validation remains in Journal/dump_ranges, never inferred from IDs.
+            if r['seq'] in self.present_seqs:
+                raise ValueError('duplicate presentation sequence in this epoch')
+            self.present_seqs.add(r['seq'])
         if 'kernel_s' in r:
             low, high = r['kernel_s']
             if self.last_anchor_low is not None and high < self.last_anchor_low:
@@ -605,7 +647,14 @@ class Analyzer:
                     phases=phases, crash_report_lines=dict(crash_lines),
                     crash_affected_pids={n: sorted(p) for n, p in crash_pids.items()}, task_pids={n: sorted(p) for n, p in pids.items()},
                     termination=[r for r in records if r['kind'] == 'end_marker'],
-                    hogs=hogs, limitations=[
+                    hogs=hogs, presentation=dict(config=self.present_config,
+                        counters=[r for r in records if r['kind'] == 'present_counters'],
+                        observations=[r for r in records if r['kind'] == 'present_event'],
+                        glass_timing='unavailable', input_causality='unavailable'), limitations=[
+                        'HK PRESENT counts row-helper returns, submitted aggregates and existing DPU poll Layer0 evidence separately; none is glass/FPS.',
+                        'Presentation stamps are CPU observation times; fetch status freshness and independent Layer1 completion are not established.',
+                        'Sampled presentation records can be capped/reordered; counter snapshots are cumulative and bounded, not final boot totals.',
+                        'UITRACE and presentation share a kernel clock, but temporal proximity does not prove input caused a particular aggregate.',
                         'Trace times cover callback/injection-call work, not delivery, response, scanout or glass.',
                         'HK HOG is selected TH_RUN threads at their last kernel entry, not a statistical CPU profile.',
                         'HK HOG sampling occurs after the preceding TOP window; stacks do not apportion that window CPU.',
@@ -671,6 +720,12 @@ def text_report(report):
     lines.append(f"gaps={report['gaps']} trailing_partial_bytes={report['trailing_partial_bytes']}")
     if report['termination']:
         lines.append('stream ending: ' + ','.join(e['termination'] for e in report['termination']))
+    presentation = report['presentation']
+    if presentation['counters']:
+        c = max(presentation['counters'], key=lambda item: item['seq'])
+        lines.append(f"PRESENT cumulative snapshot seq={c['seq']} us={c['us']}: copy_ops={c['copy_ops']} copy_bytes={c['copy_bytes']} submitted={c['submitted']} fetch_layer0={c['fetch_done']} unproved={c['uncertain']} event_drops={c['event_drops']}; glass/input causality unavailable")
+    elif presentation['observations']:
+        lines.append('PRESENT sampled observations only; no counter snapshot; glass/input causality unavailable')
     lines.append('TOP windows: kernel absolute seconds; frames+ counts attempted layers/admitted flips, not completed frames or FPS')
     for w in report['windows']:
         start, end = w['start_s'], w['kernel_s']

@@ -2,7 +2,7 @@
 """Live XNU console over USB, from a kernel booted with blazer_usbcon=1 or 2.
 
 Reads the XNU-MSGBUF mirror over EP0 from 1209:0002 "hackios XNU console" while iOS boots, and writes it to the
-terminal with time since connect. Read-only on the phone unless --reset-after is given. Never touches 1209:0001, so
+terminal with time since connect. Read-only unless --reset-after or an explicit local TAP/HOME request is given. Never touches 1209:0001, so
 it runs beside tools/usb_log.py, which owns the shim's gadget. Run it with the runner's Python, TEGU_PYTHON, which
 has pyusb.
 
@@ -10,11 +10,24 @@ has pyusb.
     $TEGU_PYTHON -u tools/usbcon.py --output X.log --reset-after 300     # needs blazer_usbcon=2
     python3 -I tools/usbcon.py --verify X.log --dump ATTEMPT/ramdump/kernel.log
 
+Optional attended live input (needs blazer_usbcon_input=1, no hk_ui/sweethidtest):
+    $TEGU_PYTHON -u tools/usbcon.py --output X.log --control-socket /tmp/hackios-live.sock
+    python3 -I tools/usbcon.py --control-socket /tmp/hackios-live.sock --tap 147 274
+    python3 -I tools/usbcon.py --control-socket /tmp/hackios-live.sock --home
+    python3 -I tools/usbcon.py --control-socket /tmp/hackios-live.sock --input-status
+Only the reader opens USB. A dispatched receipt means both HID dispatch calls returned;
+it does not certify queue acceptance, visible UI response, or touch-to-glass latency.
+Ambiguous transfers are never automatically retried.
+
 --output writes X.log, bytes at their stream offsets; X.log.times, one "seconds offset length" per read; X.log.json,
 the summary. --drop REGEX only quiets the terminal: X.log keeps everything. --verify compares those bytes with both
 stores in the capture after the reset: the RAM console, which holds the stream's first MiB, and the ring, its last.
 """
 import argparse
+import fcntl
+import os
+import socket
+import stat
 import json
 from pathlib import Path
 import re
@@ -43,6 +56,162 @@ DUMP_HEADER = struct.Struct('<16sIIQQIIQII')
 DUMP_MAGIC = b'XNU-MSGBUF v2'
 DUMP_CONSOLE_SIG = 0x43474244   # osfmk/arm64/tegu_early.c: sig, start, used, then bytes
 DUMP_CONSOLE_HEADER = struct.Struct('<III')
+
+
+# Optional HLI1 control ABI; the 0x5a/0x5f/0x5c protocol above stays byte-for-byte.
+INPUT = struct.Struct('<IHHQQ12I')
+INPUT_MAGIC = 0x31494c48
+INPUT_FIELDS = ('magic', 'version', 'size', 'nonce', 'entry_t', 'generation', 'ticket',
+                'phase', 'result', 'op', 'x', 'y', 'width', 'height', 'capabilities', 'interval_ms', 'hold_ms')
+REQ_INPUT, REQ_ARM, REQ_TAP, REQ_HOME = 0x60, 0x61, 0x62, 0x63
+INPUT_RESULTS = ('ok', 'unsupported', 'notready', 'busy', 'stale', 'badarg', 'rate',
+                 'expired', 'nomem', 'cancelled', 'failed')
+INPUT_PHASES = ('idle', 'armed', 'staged', 'queued', 'down', 'dispatched', 'refused')
+
+
+def parse_input(data):
+    if len(data) != INPUT.size:
+        raise ValueError(f'input reply size {len(data)}, expected {INPUT.size}')
+    s = dict(zip(INPUT_FIELDS, INPUT.unpack(data)))
+    if (s['magic'], s['version'], s['size']) != (INPUT_MAGIC, 1, INPUT.size):
+        raise ValueError('unsupported input ABI')
+    if s['phase'] >= len(INPUT_PHASES) or s['result'] >= len(INPUT_RESULTS):
+        raise ValueError('unknown input phase/result')
+    return s
+
+
+class UsbOwnerLock:
+    """Every reader uses the same process lock; command clients never open USB."""
+    def __init__(self, path=None):
+        self.path = path or f'/tmp/hackios-usbcon-{os.getuid()}.lock'
+
+    def __enter__(self):
+        path = self.path
+        self.fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+        try:
+            s = os.fstat(self.fd)
+            if s.st_uid != os.getuid() or not stat.S_ISREG(s.st_mode) or s.st_mode & 0o077:
+                raise ValueError('unsafe USB owner lock file')
+            fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except Exception:
+            os.close(self.fd)
+            raise
+        return self
+
+    def __exit__(self, *_):
+        os.close(self.fd)
+
+
+class ControlServer:
+    """Nonblocking local ingress, one bounded request. No client code executes here."""
+    def __init__(self, path, clock=time.monotonic):
+        self.path, self.clock = str(path), clock
+        self.listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.client = None
+        self.buffer = b''
+        self.busy = False
+        self.bound = None
+        try:
+            # Refuse an occupied or stale name, never unlink another reader's socket.
+            self.listener.bind(self.path)
+            self.bound = os.stat(self.path).st_ino
+            os.chmod(self.path, 0o600)
+            self.listener.listen(1)
+            self.listener.setblocking(False)
+        except Exception:
+            self.close()
+            raise
+
+    def reply(self, reply):
+        if self.client is not None:
+            try:
+                data = json.dumps(reply, separators=(',', ':')).encode() + b'\n'
+                self.client.send(data)  # bounded to well below a Unix socket send buffer
+            except OSError:
+                pass
+            self.client.close()
+        self.client, self.buffer, self.busy = None, b'', False
+
+    def poll(self):
+        if self.client is None:
+            try:
+                self.client, _ = self.listener.accept()
+                self.client.setblocking(False)
+                self.until = self.clock() + 2
+            except BlockingIOError:
+                return None
+        if self.busy:
+            return None
+        if self.clock() >= self.until:
+            self.reply(dict(state='refused', error='local request expired'))
+            return None
+        try:
+            data = self.client.recv(257 - len(self.buffer))
+        except BlockingIOError:
+            return None
+        if not data:
+            self.reply(dict(state='refused', error='empty local request'))
+            return None
+        self.buffer += data
+        if len(self.buffer) > 256:
+            self.reply(dict(state='refused', error='local request too long'))
+            return None
+        if b'\n' not in self.buffer:
+            return None
+        try:
+            envelope = json.loads(self.buffer)
+            if not isinstance(envelope, dict) or set(envelope) != {'request', 'expires_ns'}:
+                raise ValueError('request and expires_ns envelope required')
+            expires = envelope['expires_ns']
+            now = int(self.clock() * 1_000_000_000)
+            if type(expires) is not int or not now < expires <= now + 5_000_000_000:
+                raise ValueError('local request expired or invalid deadline')
+            request = envelope['request']
+            if not isinstance(request, dict):
+                raise ValueError('object required')
+            if request == {'command': 'home'} or request == {'command': 'status'}:
+                pass
+            elif set(request) == {'command', 'x', 'y'} and request['command'] == 'tap':
+                if any(type(request[k]) is not int or not 0 <= request[k] <= 65535 for k in ('x', 'y')):
+                    raise ValueError('tap needs unsigned 16-bit integer coordinates')
+            else:
+                raise ValueError('only tap x y, home, and status are supported')
+        except (ValueError, TypeError) as exc:
+            self.reply(dict(state='refused', error=str(exc)))
+            return None
+        self.busy = True
+        return dict(request=request, expires_ns=expires)
+
+    def close(self):
+        self.reply(dict(state='refused', error='console owner stopped', ambiguous=True))
+        self.listener.close()
+        if self.bound is not None:
+            try:
+                if os.stat(self.path).st_ino == self.bound:
+                    os.unlink(self.path)
+            except FileNotFoundError:
+                pass
+
+
+def send_control(path, request):
+    """Local socket only. Never discover a USB device from a command invocation."""
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.settimeout(15)
+        client.connect(str(path))
+        envelope = dict(request=request, expires_ns=time.monotonic_ns() + 5_000_000_000)
+        client.sendall(json.dumps(envelope).encode() + b'\n')
+        reply = b''
+        while b'\n' not in reply and len(reply) <= 4096:
+            data = client.recv(4096 - len(reply) + 1)
+            if not data:
+                break
+            reply += data
+        if len(reply) > 4096 or not reply.endswith(b'\n'):
+            raise ValueError('incomplete local control receipt; do not retry an ambiguous action')
+        result = json.loads(reply)
+        if not isinstance(result, dict):
+            raise ValueError('invalid local control receipt')
+        return result
 
 
 class Gone(Exception):
@@ -92,9 +261,11 @@ def parse_status(data):
 
 
 class Console:
-    def __init__(self, args, backend, clock=time.monotonic, sleep=time.sleep, out=sys.stdout, err=sys.stderr):
+    def __init__(self, args, backend, clock=time.monotonic, sleep=time.sleep, out=sys.stdout, err=sys.stderr, controller=None):
         self.args, self.backend, self.clock, self.sleep = args, backend, clock, sleep
         self.out, self.err = out, err
+        self.controller = controller
+        self.control = None
         self.t0 = None                  # first connect
         self.offset = 0
         self.boot = None
@@ -198,9 +369,104 @@ class Console:
             self.summary['reset'] = f'failed at t={self.elapsed():.1f}s: {exc}'
             self.note(self.summary['reset'] + '. A stall means blazer_usbcon=1: end this boot another way')
 
+    def control_reply(self, state, error=None, **extra):
+        reply = dict(state=state, ui_observed=False, **extra)
+        if error:
+            reply['error'] = error
+        if self.control:
+            reply['command'] = self.control['request']
+            if self.control.get('reply'):
+                reply['input'] = self.control['reply']
+        self.summary.setdefault('controls', []).append(reply)
+        self.note('input ' + json.dumps(reply, separators=(',', ':')))
+        self.controller.reply(reply)
+        self.control = None
+
+    def control_step(self, device):
+        if self.controller is None:
+            return
+        envelope = self.controller.poll()
+        if envelope:
+            self.control = dict(request=envelope['request'], phase='probe',
+                                send_until=envelope['expires_ns'] / 1_000_000_000,
+                                until=self.clock() + 10, next=0)
+        c = self.control
+        if c is None or self.clock() < c['next']:
+            return
+        if self.clock() >= c['until']:
+            self.control_reply('unknown', 'input receipt deadline; do not repeat the action', ambiguous=c['phase'] in ('commit', 'wait'))
+            return
+        phase = c['phase']
+        # Keep the caller's original freshness bound. After commit we only
+        # collect its receipt; expiry never resends or cancels a delivered pair.
+        if phase in ('probe', 'arm', 'commit') and self.clock() >= c['send_until']:
+            self.control_reply('refused', 'local request expired before action', ambiguous=False)
+            return
+        if phase in ('probe', 'wait'):
+            req, value, index = REQ_INPUT, 0, 0
+        elif phase == 'arm':
+            req, value, index = REQ_ARM, c['ticket'] & 65535, c['ticket'] >> 16
+        else:
+            req = REQ_TAP if c['request']['command'] == 'tap' else REQ_HOME
+            value, index = c['request'].get('x', 0), c['request'].get('y', 0)
+        try:
+            s = parse_input(bytes(device.ctrl_transfer(0xc0, req, value, index, INPUT.size, timeout=TRANSFER_TIMEOUT_MS)))
+        except self.backend.error as exc:
+            unsupported = phase == 'probe' and getattr(exc, 'errno', None) == 32
+            self.control_reply('refused' if unsupported else 'unknown', 'unsupported kernel input ABI' if unsupported else str(exc),
+                               ambiguous=phase in ('commit', 'wait'))
+            return
+        except ValueError as exc:
+            self.control_reply('unknown', str(exc), ambiguous=phase in ('commit', 'wait'))
+            return
+        c['reply'] = s
+        if (s['nonce'], s['entry_t']) != self.boot:
+            self.control_reply('refused', 'stale boot identity', ambiguous=phase in ('commit', 'wait'))
+            return
+        if not s['capabilities'] & 1:
+            self.control_reply('refused', 'unsupported: blazer_usbcon_input=1 is required')
+            return
+        if s['result'] and not (phase == 'probe' and s['phase'] == 6):
+            self.control_reply('refused', INPUT_RESULTS[s['result']])
+            return
+        if phase == 'probe':
+            if c['request']['command'] == 'status':
+                self.control_reply('status')
+                return
+            cap = 16 if c['request']['command'] == 'tap' else 8
+            if not s['capabilities'] & cap:
+                self.control_reply('refused', 'notready: service/client missing, or scripted replay owns input')
+                return
+            if c['request']['command'] == 'tap' and (c['request']['x'] >= s['width'] or c['request']['y'] >= s['height']):
+                self.control_reply('refused', 'tap outside the current canvas')
+                return
+            c.update(phase='arm', ticket=s['ticket'], previous=s['generation'])
+        elif phase == 'arm':
+            if s['phase'] != 1 or s['generation'] != c['previous'] + 1:
+                self.control_reply('refused', 'arm generation/phase mismatch')
+                return
+            c.update(phase='commit', generation=s['generation'])
+        else:
+            if s['generation'] != c['generation']:
+                self.control_reply('unknown', 'generation changed; no automatic retry', ambiguous=True)
+                return
+            if phase == 'commit':
+                if s['phase'] != 2 or (s['op'], s['x'], s['y']) != (req, value, index):
+                    self.control_reply('unknown', 'commit receipt mismatch', ambiguous=True)
+                    return
+                c['phase'] = 'wait'
+            elif s['phase'] == 5:
+                self.control_reply('dispatched')
+                return
+            elif s['phase'] not in (2, 3, 4):
+                self.control_reply('unknown', 'unexpected completion phase', ambiguous=True)
+                return
+            c['next'] = self.clock() + 0.1
+
     def step(self, device):
         """One read. Returns how long to wait before the next."""
         self.maybe_reset(device)
+        self.control_step(device)
         offset = self.offset
         payload = bytes(device.ctrl_transfer(0xc0, REQ_READ, offset & 0xffff, (offset >> 16) & 0xffff, READ_LEN, timeout=TRANSFER_TIMEOUT_MS))
         if self.silence_said:
@@ -236,6 +502,8 @@ class Console:
         try:
             while self.clock() < deadline:
                 if device is None:
+                    if self.controller and self.controller.poll():
+                        self.controller.reply(dict(state='refused', error='notready: kernel console not connected', ui_observed=False))
                     device = self.open_or_none()
                     if device is None:
                         if gone_at is not None and self.clock() - gone_at >= args.gone_exit:
@@ -257,6 +525,8 @@ class Console:
                 except self.backend.error as exc:
                     if self.fail(exc):
                         continue    # a timeout: same device, same offset, and the next read asks again
+                    if self.control:
+                        self.control_reply('unknown', 'USB disconnected; no automatic retry', ambiguous=True)
                     backend.dispose(device)
                     device = None
                     if not self.present():
@@ -317,6 +587,8 @@ class Console:
         return False
 
     def finish(self, result):
+        if self.control:
+            self.control_reply('unknown', 'console stopped; no automatic retry', ambiguous=True)
         self.summary['end'] = result
         self.summary['final_offset'] = self.offset
         self.summary['elapsed_s'] = round(self.elapsed(), 3)
@@ -409,16 +681,45 @@ def main():
     parser.add_argument('--stats', type=float, default=30, help='seconds between status lines on stderr')
     parser.add_argument('--drop', action='append', metavar='REGEX', help="terminal only, repeatable, e.g. --drop '^com\\.apple\\.xpc\\.launchd.*<Notice>'; --output keeps all")
     parser.add_argument('--reset-after', type=float, metavar='SECONDS', help='end the boot this long after the first connect: panic, reset, park. Needs blazer_usbcon=2')
+    parser.add_argument('--control-socket', metavar='PATH', help='owner serves bounded local TAP/HOME requests on this private socket')
+    control = parser.add_mutually_exclusive_group()
+    control.add_argument('--tap', nargs=2, type=int, metavar=('X', 'Y'), help='send canvas-pixel TAP to the running owner; no USB in this process')
+    control.add_argument('--home', action='store_true', help='send HOME to the running owner; no USB in this process')
+    control.add_argument('--input-status', action='store_true', help='query HLI1 status through the running owner')
     parser.add_argument('--verify', metavar='RAW', help='compare a finished --output with a capture; no USB')
     parser.add_argument('--dump', metavar='KERNEL_LOG', help='ramdump/kernel.log for --verify')
     args = parser.parse_args()
+    if args.tap is not None or args.home or args.input_status:
+        if not args.control_socket:
+            parser.error('input commands need --control-socket of the existing reader')
+        if args.verify or args.reset_after is not None:
+            parser.error('input client cannot verify or reset')
+        request = dict(command='tap', x=args.tap[0], y=args.tap[1]) if args.tap else dict(command='home' if args.home else 'status')
+        try:
+            result = send_control(args.control_socket, request)
+        except (OSError, ValueError) as exc:
+            print(json.dumps(dict(state='unknown', error=str(exc), ambiguous=True)), file=sys.stderr)
+            return 4
+        print(json.dumps(result, indent=1))
+        return 0 if result.get('state') in ('dispatched', 'status') else 4
     if args.verify:
         if not args.dump:
             parser.error('--verify needs --dump')
         result = verify(args.verify, args.dump)
         print(json.dumps(result, indent=1))
         return 0 if result['ok'] else 1
-    return Console(args, UsbBackend()).run()
+    try:
+        with UsbOwnerLock():
+            controller = ControlServer(args.control_socket) if args.control_socket else None
+            try:
+                return Console(args, UsbBackend(), controller=controller).run()
+            finally:
+                if controller:
+                    controller.close()
+    except BlockingIOError:
+        parser.error('another usbcon reader owns USB; use its --control-socket')
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
 
 
 if __name__ == '__main__':

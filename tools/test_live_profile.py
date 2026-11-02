@@ -328,5 +328,77 @@ int main(int argc, char **argv) {
                 self.assertEqual(rows, expected)
 
 
+
+class PresentationTests(unittest.TestCase):
+    @staticmethod
+    def event(seq=1, us=120, stage='layer_copy', gen=0, bytes_=16, rc=1, status=0, fe=0):
+        return (f'HK PRESENT event v=1 seq={seq} us={us} stage={stage} id=1 swap=7 gen={gen} '
+                f'queue_us=100 begin_us=110 bytes={bytes_} layer=0 plane=0 rc={rc} status={status} fe={fe} observed=3\n').encode()
+
+    def test_observations_keep_bytes_stamps_and_no_input_causality(self):
+        raw=(self.event()+self.event(2,130,'submitted',1,16,0)+
+             self.event(3,150,'fetch_layer0',1,0,0,2,0x40))
+        a=live.Analyzer()
+        for at in range(0,len(raw),11):a.feed(at,raw[at:at+11],0.3)
+        r=a.report();events=r['presentation']['observations']
+        self.assertEqual([e['stage'] for e in events],['layer_copy','submitted','fetch_layer0'])
+        self.assertEqual([e['us'] for e in events],[120,130,150])
+        self.assertEqual(r['presentation']['glass_timing'],'unavailable')
+        self.assertEqual(r['presentation']['input_causality'],'unavailable')
+        for e in events:
+            self.assertEqual(raw[e['offset']:e['end_offset']].count(b'\n'),1)
+            self.assertEqual(e['host_received_s'],0.3)
+            self.assertNotIn('fps',e)
+            self.assertNotIn('touch_latency_us',e)
+
+    def test_trace_lock_order_may_differ_from_console_order(self):
+        a=live.Analyzer();a.feed(0,self.event(2,130)+self.event(1,120))
+        self.assertEqual([e['seq'] for e in a.records],[2,1])
+        self.assertTrue(a.report()['warnings'])
+        with self.assertRaisesRegex(ValueError,'duplicate presentation'):
+            a.feed(a.end,self.event(1,140))
+
+    def test_success_needs_actual_boundary_evidence(self):
+        for line in (self.event(us=109), self.event(stage='layer_copy',rc=0),
+                     self.event(stage='layer_copy',bytes_=0),
+                     self.event(stage='submitted',gen=1,rc=1),
+                     self.event(stage='fetch_layer0',gen=1,bytes_=0,rc=0,status=0,fe=0x40),
+                     self.event(stage='fetch_layer0',gen=1,bytes_=0,rc=0,status=2,fe=0),
+                     self.event(stage='fetch_layer0',gen=1,bytes_=0,rc=0,status=2,fe=0x1040),
+                     self.event(stage='fetch_layer0',gen=1,bytes_=0,rc=0,status=2,fe=0x40).replace(b'observed=3',b'observed=0')):
+            with self.subTest(line=line),self.assertRaises(ValueError):live.Analyzer().feed(0,line)
+        a=live.Analyzer();a.feed(0,self.event(stage='fetch_unproved',gen=1,bytes_=0,rc=0,status=2,fe=0))
+        self.assertEqual(a.records[0]['stage'],'fetch_unproved')
+
+    def test_config_counter_bounds_truncation_and_holes(self):
+        config=b'HK PRESENT config v=1 us=90 every=32 events_max=448 reports_max=64 clock=mach_absolute_us glass=unavailable\n'
+        a=live.Analyzer();a.feed(0,config)
+        with self.assertRaisesRegex(ValueError,'second presentation config'):a.feed(a.end,config)
+        values={k:0 for k in live.PRESENT_COUNTER_KEYS};values.update(seq=1,us=150,reports=1,events=448)
+        line=lambda:('HK PRESENT counters v=1 '+' '.join(f'{k}={v}' for k,v in values.items())+'\n').encode()
+        a=live.Analyzer();a.feed(0,line());self.assertEqual(a.records[0]['events'],448)
+        values['events']=449
+        with self.assertRaisesRegex(ValueError,'bounds'):live.Analyzer().feed(0,line())
+        raw=self.event();a=live.Analyzer();a.feed(0,raw[:-1]);self.assertFalse(a.records)
+        a.feed(len(raw)+10,b'incomplete\n'+self.event(2));self.assertEqual(len(a.records),1)
+        self.assertTrue(a.gaps)
+        a=live.Analyzer();a.feed(0,raw.replace(b'fe=0',b'fe=0garbage'))
+        self.assertFalse(a.records);self.assertTrue(a.warnings)
+
+    def test_raw_cli_uses_same_journal_epoch_and_offsets(self):
+        raw=self.event()+self.event(2,150,'fetch_unproved',1,0,0,2,0)
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'synthetic-host.raw';path.write_bytes(raw)
+            Path(str(path)+'.times').write_text(f'0.25\t0\t{len(raw)}\n')
+            epoch=dict(nonce=123,entry_t=456,hz=24000000)
+            Path(str(path)+'.json').write_text(json.dumps(dict(bytes=len(raw),final_offset=len(raw),reads=1,last_status=epoch)))
+            result=subprocess.run([sys.executable,'-I',str(HERE/'live_profile.py'),'--raw',str(path),'--no-symbols'],
+                                  capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            r=json.loads(result.stdout)
+            self.assertEqual(r['source']['epoch'],epoch)
+            self.assertEqual([e['offset'] for e in r['presentation']['observations']],[0,len(self.event())])
+            self.assertEqual(r['presentation']['observations'][1]['stage'],'fetch_unproved')
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

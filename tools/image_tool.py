@@ -68,7 +68,7 @@ PHONE_ALLOWED = {# handoffs/wifi.md
                  # handoffs/ram.md. blazer_mem above 4 needs ram 0760 in the kernel; 13 clamps to the map's top
                  'blazer_mem': r'blazer_mem=([5-9]|1[0-3])', 'blazer_mem_test': r'blazer_mem_test=(64|4096)', 'blazer_mem_report': r'blazer_mem_report=1',
                  'blazer_wifi': r'blazer_wifi=1', 'blazer_wifi_stage': r'blazer_wifi_stage=[0-3]', 'blazer_wifi_gen': r'blazer_wifi_gen=[1-3]', 'blazer_wifi_delay': r'blazer_wifi_delay=[0-9]{1,3}', 'blazer_wifi_end': r'blazer_wifi_end=[0-9]{1,4}', 'blazer_wifi_hold': r'blazer_wifi_hold=1', 'blazer_wifi_aux': r'blazer_wifi_aux=1', 'blazer_wifi_force': r'blazer_wifi_force=1',
-                 'blazer_usbcon': r'blazer_usbcon=[12]', 'blazer_touch': r'blazer_touch=1', 'blazer_touch_bars': r'blazer_touch_bars=1', 'touch_flip': r'touch_flip=[123]',
+                 'blazer_usbcon': r'blazer_usbcon=[12]', 'blazer_usbcon_input': r'blazer_usbcon_input=1', 'blazer_touch': r'blazer_touch=1', 'blazer_touch_bars': r'blazer_touch_bars=1', 'touch_flip': r'touch_flip=[123]',
                  # handoffs/cpmlock.md. Each its own boot, in that order. The panic limit is the kernel's own range, 30..102
                  'blazer_thermal': r'blazer_thermal=[12]', 'blazer_thermal_panic_c': r'blazer_thermal_panic_c=(3[0-9]|[4-9][0-9]|10[0-2])', 'blazer_keys': r'blazer_keys=1',
                  'blazer_sensors': r'blazer_sensors=[123]', 'blazer_sensors_flip': r'blazer_sensors_flip=[0-7]',
@@ -81,6 +81,7 @@ PHONE_ALLOWED = {# handoffs/wifi.md
 PHONE_ALLOWED.update({'blazer_persist': r'blazer_persist=[13]', 'blazer_persist_period': r'blazer_persist_period=[1-9][0-9]{1,3}', 'blazer_persist_selftest': r'blazer_persist_selftest=1', 'blazer_persist_fresh': r'blazer_persist_fresh=1'})
 # docs/DUALBOOT.md: read-only native metadata capture; no host reset/persist mode.
 PHONE_ALLOWED.update({'blazer_usb_readback': r'blazer_usb_readback=1', 'blazer_usbcon_ch9': r'blazer_usbcon_ch9=1'})
+PHONE_ALLOWED.update({'blazer_aks_trace': r'blazer_aks_trace=1', 'hk_present_trace': r'hk_present_trace=1'})
 PHONE_ALLOWED.update({'blazer_battery_chg': r'blazer_battery_chg=1', 'blazer_aoc': r'blazer_aoc=1'})  # handoffs/battery.md: the charger's frames, off unless asked; parent, aoc
 PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
 # validation_disables: kconfig.md, osfmk/kern/debug.c. atm_diagnostic_config: mine.md, osfmk/atm/atm.c:60. hk_fb_*: render's names.

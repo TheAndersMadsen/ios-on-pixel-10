@@ -1,3 +1,41 @@
+## Phone owner checkpoint, 2026-11-02 12:09 CET — Battery visible, 15-minute UI active
+
+RUNNING:20261102-115426-phone-p29-art-container-15m-r1, temporary image
+5e9bd94a40d83de15c2fe1a6b9c775c6bf27b93257e98ee21d389326b3ae5083,
+unchanged p29 K5aad8978/Ucc979153, overlay42bb3b73, five A725/cap16/B40,
+thermal2/fast1/panic70,60Hz,samplerOFF. Qualified default900,916B; no explicit
+deadline bypass. Runner64842/live43712; capture pending expected around12:10.
+User confirms Battery icon visible in Settings. HKART fallback installed in
+iconservicesagent/Preferences but recovered-hit0, so causal attribution remains
+unproved. HKCONTAINER execution0; retry/hook acceptance HELD. Initial known
+BaseBoard NSURLnil abort respawned, UI interactive. Raw/visual receipt under
+research/ios26-opt-20261102/parent/art-container-15m-r1*. No speed claim.
+
+OFF111800 and FAST112806 captured/byte-verified; FAST startup abort confounds
+timing, user only saw fastboot after test. No speed/FPS/visual promotion. VERIFY
+110205 compared598888390 full-span pixels/0 mismatch; projective identity0.
+Original sampler tracked/committed0137a92, runtime source unchanged.
+
+Nested release source1176 fixed1410 input+genericDMA reset-order b8a75c2d;
+1177 passive presentation8b529372;1178 bounded AKS trace2da4ed57. Parent repaired
+reviewed AKS P2: stale ns<first drops only that call, not all later tracing.
+Fixed actual-handler clock race PASS; old race mutant rejected; enabled ARM64
+handler/trace text and gate0 identity PASS,283451 source assertions. Exact fixed
+patch899baf2c... under spotlight_fix/. Physical input still HELD pending fresh
+review/full link; ECM R2-R4 delivered, fresh ownership review active, unintegrated.
+P31 NOT LINKED. Presentation decoder22 testsPASS; image admission tests running.
+P30 af08a9f K9bbc5703/U5dc553c6/image d8925f4f remains BUILD ONLY CPU/Trusty/
+RAM-layout HOLD. CPU goal BLOCKEDfa5a08f/84, A520 bit9-clear STOP; high HOLD.
+GPT frozen34a126b2/host04ba2870 HELD; saved/restored init_boot not accepted.
+Pixel must remain self-contained; no Mac-backed Apple-service bridge.
+
+Five own Sol workers: repaired-input review, ECM ownership review, scanout
+lifetime, passive Wi-Fi snapshot integration, existing MotionProbe delivery.
+No new CPU helper/retry, AoC revival, Android/root/slot/firmware/storage write.
+Next: preserve/capture current boot, inspect exact receipts, freeze/link one p31
+from reviewed sources. Brightness late-SError and battery allocation P2 repairs
+remain parent-owned/unintegrated; RTC runtime reviewed, stale token pin P3.
+
 ## Shared QEMU handoffs completed, 2026-11-02 — Apps r5 and 15-minute phone plan
 
 DIRECT user architecture decision: "Keep the Pixel self-contained." Native

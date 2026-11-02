@@ -107,6 +107,67 @@ epoch, format or integrity failure. No GPU/UI/performance fix is implied.
 
 Validation:
 
+`HK PRESENT` v1 is an optional default-off kernel observation stream. The
+decoder retains its exact stream byte offsets, receipt times and explicit
+`mach_absolute_time` microseconds within the same validated capture epoch as
+UITRACE. `epoch=` in an image is not its clock origin. No USB reader/protocol
+change is needed. Event sequence numbers order observations under the trace
+lock; console print order may differ. Duplicate sequence numbers are refused.
+Missing/interleaved/partial lines remain missing; do not interpolate them.
+
+Kernel `hk_present_trace=1` enables fixed sampling (first four selected
+aggregates, then every 32nd), at most 448 event lines plus 64 counter snapshots
+and one config line per boot. The existing TOP thread requests a snapshot after
+each TOP interval. The new token needs the phone owner's explicit exact-1
+image-allowlist integration; this decoder does not add or bypass that policy.
+Without a config/counter line, trace enablement or final totals are unknown.
+Counters continue after the event cap; snapshots also stop after their bound.
+`event_drops` counts sampled observations suppressed by the event cap, not
+transport loss or all unsampled work. A last snapshot is not a final boot total.
+
+Each boot-local `id` names one accepted queue record, even when the client
+reuses a `swap` ID. Replaced records need not be selected or submitted. Stages:
+
+- `layer_copy`: an actual bounded row helper returned success. `bytes` is its
+  destination span (width × height × 4), including blend destinations; it is
+  neither memory-bus traffic nor a completed display frame. A plane trial and
+  fallback can perform two copy operations for one layer. `copy_refused` is
+  recorded separately. Empty partial damage may invoke no helper. This proves
+  CPU loop return/stores issued, without a new barrier or PoC/visibility claim.
+- `copy_aggregate`: the selected copy-path loop returned, with accumulated
+  successful helper bytes. It can have zero copied bytes. It precedes the
+  original panel-buffer selection/kick and does not prove publication.
+- `submitted`: the existing `tdpu_kick` returned `TDPU_OK` for this aggregate
+  and generation. `submit_not_ok` records any other kick return; a negative
+  return can follow partial register programming, so it is not proof of a safe
+  pre-submit refusal. Inactive/no-hardware paths are separate events.
+  No ownership, retry, MMIO, polling, refresh, brightness or quarantine rule is
+  changed by tracing. Probes/black frames without a UI tag are not UI totals.
+- `fetch_layer0`: the existing terminal `tdpu_poll` observed FRM_DONE and
+  FE_LAYER_DONE with no fetch-bus error. Its stamp is CPU observation time,
+  potentially later than hardware completion. It does not independently prove
+  Layer1 completion or FE-status freshness; the original driver's FE status
+  clearing/attribution rules are unchanged. Fault, timeout, missing evidence,
+  overlapping observer flight or undrained stop yields an unproved event.
+  `observed` is a register-evidence mask: 1 means the status argument was read,
+  2 means the FE argument was read. Other zero fields are placeholders, not
+  observations of a zero register. Timeout passes status only; SError passes
+  neither. Full existing terminal evidence has mask 3.
+
+Timestamp differences include observer work, lock contention, earlier sampled
+prints and scheduling. They are not pure renderer time. Keep the same trace
+configuration for an off/fast experiment and inspect event caps and correctness
+separately. The trace does not repair the existing flip-admission/stop lifetime
+gaps or make zero-copy safe to enable. Counter `pending` is only the observer's
+pending correlation ID; it says nothing about held surfaces or a safe drain.
+
+The report's `presentation` field preserves observations and cumulative
+snapshots. It reports glass timing and input causality as unavailable.
+UITRACE temporal proximity can guide inspection; it cannot bind a response to
+an injected or physical touch. Neither fetch evidence nor layer/copy counters
+are scanout/glass timestamps or FPS. Physical visible-response measurement
+remains separate and coordinator-owned.
+
 ```sh
 python3 -I -W error::ResourceWarning tools/test_live_profile.py
 ```
