@@ -1,3 +1,39 @@
+## Shared QEMU handoff queued, 2026-11-02 — sampler pair captured
+
+Native parent independently qualified p30 SOURCE/LINK/IMAGE PASS: exact K9bbc5703/
+U5dc553c6/image d8925f4f, seven final text symbols, zero undefined and both
+344068-byte firmware copies148aacc5 by symbol/section/header. Receipt:
+research/ios26-metal-native-20261102/integration/diagnostic-review-r1/p30-parent-review.json.
+CPU/Trusty CONTEXT HOLD remains; phone's existing reviewer also flagged RAM
+window0x882 versus prior health0xa000. No automatic core/window substitution,
+new image or health slot. CPU/native/phone owners received that changed context.
+
+One read-only host snapshot identified CURRENT Apps registration-r4:
+Python43866/QEMU44168, shared lock43866; native's earlier r3/PIDs were stale.
+Apps reports persona passed/drawing, LS still processing, readback pending.
+Its current planned run/final capture/cleanup stays intact. NEXT queued guest
+is native parent's one bounded300s/no-disk/no-NIC OWN five-source reference batch,
+CPIO2a1654e5…/76498796B/60 pinned harness inputs. Apps sends explicit release
+to native+this thread after capture/cleanup; native claims existing lock, runs
+once, then returns capture/cleanup/release event for Apps' next launch guest.
+No release/free-slot claim yet. No status/lock polling or guest interruption.
+UC/VM/FW/streams composition and Apps host launch preparation continue meanwhile.
+
+Phone owner confirms OFF20261102-111800 and FAST20261102-112806 COMPLETE/captured:
+66tokens/1569events/39C/intendeddeadline, all953870+997224 livebytes match RAM,
+zero lost/mismatches. FAST1.437573559B eligible pixels, identity0/uncompared;
+known initial BB NSURLnil abort absent in OFF confounds timing. No speed/FPS/
+visual promotion; owner missed visual window. Next ready p29 artwork+passiveMCM,
+samplerOFF, composition42bb3b73… actual consumerPASS45records/453Benv, image
+BUILDING/window1800 for inspection. No AKS/newkernel/CPUhealth/input/ECM addition.
+900 profile was refused before build; no900 boot.
+
+Four existing-owner steering deliveries and exact queue snapshot:
+research/ios26-orchestration-20261102/qemu-reference-queue.json.
+Shared docs/COORDINATION.md updated. No new agent/review task, build, guest,
+phone/USB operation or runtime acceptance by orchestration.
+
+
 ## Reuse attribution reconciled, 2026-11-02 — F2FS alias check
 
 Consumed dualboot **af2fcaf** / handoff **05d8532**. Corrected the tracked reuse

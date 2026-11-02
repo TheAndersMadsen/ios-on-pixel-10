@@ -24,8 +24,9 @@ replacement. Do not start another fleet or restart completed tasks for a count.
 
 ## Priority order
 
-1. Finish the already reserved sampler OFF/FAST comparison. It targets a measured
-   software-rendering path and needs no new kernel. Preserve the matched pair.
+1. Retain the completed sampler OFF/FAST pair and its capture evidence. FAST's
+   initial BaseBoard NSURL-nil abort confounds the timing comparison; do not
+   promote a speed/FPS claim or blindly repeat it. Diagnose startup readiness.
 2. Use the next compatible UI run to gather several useful observations:
    one selected behavior change, with reviewed passive container, Spotlight,
    battery and existing profiler observations where ready.
@@ -47,10 +48,10 @@ existing pinned source inventories.
 | Item | Observed readiness / reservation | Evidence to collect together |
 | --- | --- | --- |
 | Sampler OFF | Attempt `20261102-111800-sampler-off-p29-r1` captured at expected deadline, unchanged p29, image `ee70fb73…`, raw `6ecc43d9…` | Existing 66-token/1,569-event workload, process CPU by actual phase, crashes, sampler mode, thermal/reset and capture integrity |
-| Sampler FAST | Attempt `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`; script reported complete and user reports phone in fastboot; final capture/verdict pending | Same kernel, unstripped kernel, script/config, clocks, diagnostic set and starting-state record; fresh fast-path coverage and visible correctness |
-| UI observations | Next slot accepted in principle; isolated artwork image `f89f74c6…` is available; a composition still needs validation | At most one behavior change (for example artwork), plus compatible passive MCM/Spotlight/battery observations, existing live profiler and ordinary CPU health |
+| Sampler FAST | Attempt `20261102-112806-sampler-fast-p29-r1`, image `128674c9…`, COMPLETE/captured; script matches OFF, live 997,224 bytes all match RAM; known startup abort confounds timing | Actual fast-path coverage is 1,437,573,559 eligible pixels, identity branch zero; FAST does not compare pixels. Owner missed the visual window. No speed/FPS/visual promotion |
+| UI observations | Next ready p29 artwork + passive MCM composition `42bb3b73…` passes actual overlay consumer (45 records/453-byte environment); image BUILDING, 1,800-second inspection window | One artwork behavior change, sampler OFF and passive container result/error/PID; existing profiler. No AKS/new kernel/health/input/ECM additions. Ready work proceeds without optional tracing |
 | New CPU health baseline | `7424c92` acceptance handoff, p30 present; proposed image NOT BUILT, literal-admission/common-config review pending; no slot request | New verification/floor/required-sensor/health gates need functional acceptance before sharing an unchanged configuration in later UI timing arms |
-| GPU timeout diagnostic | p30 build exists; diagnostic image is BUILD ONLY pending CPU/Trusty context and exact artifact acceptance | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset |
+| GPU timeout diagnostic | Native parent independently verifies p30 SOURCE/LINK/IMAGE PASS; diagnostic stays BUILD ONLY for CPU/Trusty and RAM-layout context | Actual pending FWCCB raw words, SYS/COMP and original STOP; separate signed START/health/reset after exact accepted context |
 | GPT readback r2 | Host PMBR correction `f329418`, reviewed hash and frozen profile; no reservation here | Both GPT copies, CRC/geometry/agreement, saved-byte offline verification and bounded failure evidence; separate storage capture |
 | Thermal R1/R2 | Existing lowered-trip stages; not part of UI or sampler timing | Actual sensor downvote, floor release and the stage's own STOP criteria |
 
@@ -61,6 +62,12 @@ a broad speed claim; repeat only if workload variance or a decision requires it.
 
 p30 is already linked once from release-tree source `af08a9f5`: parent reports
 176-series/combined proof, zero undefined symbols and 276 checklist checks.
+Native parent independently qualified the exact candidate source, final link
+and image in its
+`research/ios26-metal-native-20261102/integration/diagnostic-review-r1/p30-parent-review.json`: seven final
+executable-text symbols, zero undefined, both length-prefixed 344,068-byte
+firmware copies hash148aacc5…, exact image d8925f4f… and 471-byte command line.
+This is artifact acceptance; it does not clear CPU/Trusty or memory-layout context.
 Kernel SHA256:
 `9bbc57038f46622e8faa2ac2d04fd595184a305d959bf8ee8c5202e825e74e55`;
 unstripped:
@@ -68,6 +75,30 @@ unstripped:
 It contains floor0772/0773 with probe off and standalone GPU diagnostic compiled
 on/runtime off. Live input1410 is held, unapplied; fixing its three reviewed
 defects requires a separately identified p31 and acceptance. Never relabel p30.
+
+## Shared QEMU queue
+
+The existing /tmp/fleet/qemu-guest-slot.lock remains the admission authority.
+Current Apps registration-r4 keeps its planned run, final capture and cleanup.
+A read-only host snapshot identified Python43866/QEMU44168 and lock43866;
+native parent's earlier r3/PID observation was stale. The corrected guest has
+passed persona and is drawing while LaunchServices processes the larger app set;
+registration readback remains pending.
+
+After Apps sends an explicit capture-complete and lock-release event, native
+Metal has the next one bounded 300-second offline OWN shader-reference run:
+five pinned SPIR-V inputs, 60 pinned harness inputs, no disk or NIC, immutable
+76,498,796-byte CPIO
+`2a1654e53d9d22405bf44161896f223fde60064b527b13d9cb72f25a4301214f`.
+The existing native parent runs it under the shared lock and returns its capture,
+input-hash/cleanup proof and release event. Apps can then take its next guest for
+registration plus representative launches if needed. Compiler reference output
+is not native GPU execution or firmware-health acceptance.
+
+Apps and native Metal send release events directly to each other and the
+coordination thread using mode auto. A refused claim gets one blocker report;
+wait for the owner's next event. Do not interrupt a guest or poll its status or
+lock. Host composition and launch preparation continue while the slot is occupied.
 
 ## Collect more evidence without losing attribution
 
@@ -130,6 +161,10 @@ are not touch-to-glass measurements.
   GPT recipe and routed it for review. Both need explicit CPU and test-owner
   context acceptance before scheduling. A possible A725 recipe is a changed
   image/context, never an automatic argument substitution.
+  Phone owner's existing context reviewer also found p30's RAM window base
+  0x882 differs from prior health's 0xa000. Bind CPU, Trusty and full memory
+  layout in the existing review; source/link/image PASS does not clear this
+  difference. No automatic window or core replacement is accepted.
 - **Apps:** commit `c214b86` supplies the inventory/registrar and host tests.
   The own 20 GiB clone restores all 49 bundles and passes signature/fs checks;
   it cannot fit the phone's current 8 GiB allocation. No registration, launch,
