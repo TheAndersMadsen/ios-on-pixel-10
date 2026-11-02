@@ -12,7 +12,7 @@
     {
       "value": "5/5",
       "label": "fast cores up under iOS",
-      "note": "A725 at 533 MHz, about 8.5 min, one run"
+      "note": "A725s, 15 min runs, governor 533–1075 MHz"
     },
     {
       "value": "3052",
@@ -49,10 +49,11 @@
     {
       "stage": "Now",
       "items": [
+        "Stop the compositor crash on the home key: a fix that tracks its surfaces is built, not run",
         "Read the GPU's ID, now that the power firmware reports its domain on",
         "Wi-Fi: load the regulatory data, then scan and join from the kernel",
         "Motion data: a stream from the chip that answered, then the other sensors on that bus",
-        "A clock governor, so iOS can leave 533 MHz within the thermal limits"
+        "Settings' text and colours on the phone: they draw in QEMU"
       ]
     },
     {
@@ -62,7 +63,7 @@
         "Volume and power keys into iOS, display off and wake",
         "Battery percentage from the real gauge, real date and time",
         "Live USB console, then the link to the Mac",
-        "Brightness control, 60 Hz and frame sync"
+        "Brightness control, 60 Hz and frame sync, and the clock governor on every boot"
       ]
     },
     {
@@ -87,13 +88,13 @@
         ],
         [
           "CPU clock control",
-          "partial",
-          "All five A725s at 1075 MHz under iOS for 15 min, 38 C; one core 3052 MHz in a short test"
+          "works",
+          "Governor ran 15 min under iOS: 533–1075 MHz on demand, 125 clock reads within 2%, 33–35 °C"
         ],
         [
           "Higher clocks, up to the 3052 MHz top",
           "partial",
-          "Short test only: one core, each step under 1 s, 36 °C; no governor, heat under load unknown"
+          "Short test only: one core, each step under 1 s, 36 °C; the governor stops at 1075 MHz for now"
         ],
         [
           "2 A520 cores",
@@ -143,7 +144,7 @@
         [
           "120 Hz",
           "partial",
-          "Panel runs at 120, iOS draws about 20–31 fps"
+          "Panel runs at 120, iOS draws about 20–31 fps; rate switch built, not run"
         ],
         [
           "60 Hz mode and frame sync",
@@ -224,6 +225,11 @@
           "Touch",
           "works",
           "Works; feel unconfirmed"
+        ],
+        [
+          "Scripted taps and keys",
+          "partial",
+          "Ran on the phone: a scripted tap opened Settings; the home key then crashed the compositor"
         ],
         [
           "Volume keys",

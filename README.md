@@ -1,24 +1,24 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 43% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 44% of reachable hardware" width="100%"></p>
 
 <h2 align="center">A phone that was never meant to do this.</h2>
 <p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 43% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 44% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>43%</b> across 46 reachable features. Updated 2026-11-02.</p>
+<p align="center"><b>44%</b> across 47 reachable features. Updated 2026-11-02.</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
 | | Status | Features | Counts as |
 | --- | --- | ---: | ---: |
-| ✅ | Works on the phone | 10 | 100% |
+| ✅ | Works on the phone | 11 | 100% |
 | 🟡 | Partly working | 11 | 60% |
 | 🔧 | Built, not run | 3 | 35% |
 | ⏳ | In progress | 10 | 20% |
@@ -30,8 +30,8 @@
 | Block | Feature | Status |
 | --- | --- | --- |
 | **CPU** | 5 A725 cores | ✅ Ran 15 min under iOS at 1075 MHz, no kernel crash |
-|  | CPU clock control | 🟡 All five A725s at 1075 MHz under iOS for 15 min, 38 C; one core 3052 MHz in a short test |
-|  | Higher clocks, up to the 3052 MHz top | 🟡 Short test only: one core, each step under 1 s, 36 °C; no governor, heat under load unknown |
+|  | CPU clock control | ✅ Governor ran 15 min under iOS: 533–1075 MHz on demand, 125 clock reads within 2%, 33–35 °C |
+|  | Higher clocks, up to the 3052 MHz top | 🟡 Short test only: one core, each step under 1 s, 36 °C; the governor stops at 1075 MHz for now |
 |  | 2 A520 cores | 🟡 cpu0 parked in the shim; cpu1 unused |
 |  | X4 core | 🚫 For now: its errata aren't fixed |
 |  | Idle sleep | ✅ By code reading: cores already idle in WFI |
@@ -39,7 +39,7 @@
 |  | RAM | ✅ 12.92 GiB under iOS for 15 min; memory test passed |
 |  | The rest of the 16 GiB | ❌ Not assigned |
 | **Display** | Full 1280x2856 picture | ✅ Scaled from 1125x2511 |
-|  | 120 Hz | 🟡 Panel runs at 120, iOS draws about 20–31 fps |
+|  | 120 Hz | 🟡 Panel runs at 120, iOS draws about 20–31 fps; rate switch built, not run |
 |  | 60 Hz mode and frame sync | 🔧 Next test |
 |  | Variable refresh down to low rates | ❌ Automatic idle rate isn't built |
 |  | Brightness | 🟡 Capped at about 140 nits; no user control yet |
@@ -53,6 +53,7 @@
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified; root unchanged; real-setting test pending |
 |  | Maximum speed | ⏳ Patches being measured |
 | **Input** | Touch | ✅ Works; feel unconfirmed |
+|  | Scripted taps and keys | 🟡 Ran on the phone: a scripted tap opened Settings; the home key then crashed the compositor |
 |  | Volume keys | 🟡 Read in a probe |
 |  | Power key | ⏳ Retry needs someone at the phone |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
@@ -115,10 +116,11 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
+- Stop the compositor crash on the home key: a fix that tracks its surfaces is built, not run
 - Read the GPU's ID, now that the power firmware reports its domain on
 - Wi-Fi: load the regulatory data, then scan and join from the kernel
 - Motion data: a stream from the chip that answered, then the other sensors on that bus
-- A clock governor, so iOS can leave 533 MHz within the thermal limits
+- Settings' text and colours on the phone: they draw in QEMU
 
 **Next**
 
@@ -126,7 +128,7 @@ Generated from `docs/status.json`. Order can change with each physical result.
 - Volume and power keys into iOS, display off and wake
 - Battery percentage from the real gauge, real date and time
 - Live USB console, then the link to the Mac
-- Brightness control, 60 Hz and frame sync
+- Brightness control, 60 Hz and frame sync, and the clock governor on every boot
 
 **Later**
 

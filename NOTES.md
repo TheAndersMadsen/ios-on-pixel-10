@@ -1,8 +1,16 @@
-## Handoff, 2026-11-02 03:05 (parent): read `research/ios26-fleet/STATUS.md` first
+## Handoff, 2026-11-02 09:15 (parent): read `research/ios26-fleet/STATUS.md` first
 
-Physical tonight, each under `research/laguna-usb-fix/attempts/`: p11 fullcheck on cpu0 and cpu2; `vote-write-r2` reaches 1536 MHz; `floor-probe-r1` FLOORS_CLEAN, 2.02x and 2.25x; `smp-check-r1` 5/5 A725s; `phone-fast-r2` 5 cores under iOS for 368 s until a long press; `t2-p14-r1` guard panics as designed; `wifi-stage2-r1` firmware up, IPC 9; `ram-short-r1` passes. `phone-all-r1`, p15, was running at this note, no result yet.
-Kernels: `research/ios26-release-r1/artifacts`, newest p16 `ca79e2a8…`; p17 queue holds hwtune and ufsmax. Next boots: GPU `gpu-stage1-r1`, `gpu-tipc-r1`; keys-probe-r2 needs the owner at the phone.
-Open owner decisions: GPU firmware in local images; 42 vs 150 GiB GPU disk limit; stock-compiled shader bytes; private backup of the kernel series; transmission from the modem.
+Tracked tree: status refreshed after `0e91414`; this note's commit is the newest on `origin/ios26`. `research/` stays git-ignored.
+
+**Physical since 07:58** (captures under `research/laguna-usb-fix/attempts/`, kernel p26):
+- `gov-g1-r1`, image `91fbe420…`: PASS, deadline end at 900 s. 125 `blazer-clock` reads, 0 off by more than 2%; cores step 533<->1075 MHz; Tj 33-35 C; about 240 mW idle (estimate). `handoffs/gov.md`.
+- `20261102-084446-bench-g1-r1` (p26 + gov + fallback `hk_ui`): all 22 script tokens ran; scripted tap 147,274 -> `exec Preferences` pid 177, Settings launched from a script for the first time. Home key -> backboardd new surface 1125x2511 -> `push_surface` assertion (`ogl-context.cpp:1186`) -> SIGABRT; SpringBoard, Preferences, Spotlight respawned. Owner's long press ended it at 480 s, Tj max 35 C. `handoffs/bench.md`.
+
+**QEMU or host only, not phone evidence:** `colour-1` (QEMU, p26, `qemu-test5.ovl`): cover works, Settings draws its titles, text and coloured icons; a sampler dylib injected into SpringBoard ran. `hgltrack.dylib` overlay `p5-merged-r2-gltrack.ovl` `61c38161…` (bench-g2-r1) is built, host-checked, not run: unknown whether our kernel allows `vm_protect` copy on shared-cache data. `hk_panel_hz=120|60|30|10` is compiled (release 1074), never run. `handoffs/gpugl.md`, `overlay.md`, `release.md`.
+
+**Agents running (host or QEMU, none commits; parent alone boots):** GPU kernel driver, shader compiler, Metal user driver, GPU memory/IOSurface, Mesa hardware route, display DPU, Wi-Fi/BT iOS integration, depth tuning, gpugl (p3 in QEMU, detached pid 78844), bench.
+
+**Next:** bench-g2-r1 on the phone with `hgltrack` (look for `HGLTRACK: SWContext slot wrapped`, then the home key without a backboardd abort); gov on the daily line; Settings' colours on the phone; GPU ID read; Wi-Fi regulatory then join (owner's transmit decision). Open owner decisions unchanged from `STATUS.md`.
 `README.md` status comes from `docs/status.json`: edit it, run `python3 -I tools/readme_status.py`.
 
 # iOS 26 on blazer (Pixel 10 Pro, Tensor G5) - working notes
