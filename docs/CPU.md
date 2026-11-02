@@ -75,6 +75,43 @@ in git. The existing phone coordinator retains exclusive USB/boot ownership.
 
 ## Remaining acceptance toward 100%
 
+Before higher-clock testing, `tools/cpu_dvfs_check.py` extends the existing
+99-row literal check with strict saved-table identity, explicit-level and unit
+checks. It reuses the existing nonce/epoch/seal-aware clock-probe decoder at its
+recorded hash; changed decoder code must be reviewed before reuse. It compares
+the complete saved CPU tables to the selected governor source and the retained
+decompiled FDT. It changes no governor source, runtime gate or operating point.
+
+Firmware IDs34/35 (`cpu1g0`/`cpu1g1`) and MMIO vote domains1/2 are different
+namespaces. Duplicate IDs/names/levels, missing entries, unsupported OPPs,
+override-only OPPs, incorrect units and changed existing domain ceilings are
+refused. List position never substitutes for an explicit ID/level. OPP table
+availability is not permission to execute every entry; the receipt separately
+marks rows above each existing domain ceiling. The tool does not certify every
+queue-protocol detail or replace physical clock/thermal measurements.
+
+Source references at vendor pin `5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c`:
+[DVFS helper](https://gitlab.com/grapheneos/kernel_pixel_6.12/-/blob/5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c/private/google-modules/soc/rdo/drivers/soc/google/dvfs-helper/dvfs_helper.c)
+and [cpufreq](https://gitlab.com/grapheneos/kernel_pixel_6.12/-/blob/5940a3171fc6f6aa48c24fcc97c98b80d3fdde7c/private/google-modules/soc/rdo/cpufreq/google_cpufreq.c),
+both GPL-2.0-only. The checker is original host code using protocol facts. An
+isolated comparison harness compiles unchanged GPL lookup functions in ignored
+research storage with their notices; no vendor implementation is copied into
+XNU or tracked sources. The vendor cpufreq table sorts by frequency and stores
+the explicit OPP level separately. Its helper exposes integer wire MHz; exact
+AMU clocks can differ by fractional MHz and require the existing tolerance.
+
+```sh
+python3 -I tools/test_cpu_dvfs_check.py
+python3 -I tools/cpu_dvfs_check.py --capture CLOCK_ATTEMPT/ramdump/kernel.log \
+  --ids research/ios26-dramclk-r1/run/boot/ufs-ids.json \
+  --source research/ios26-release-r1/work/xnu/osfmk/arm64/blazer_gov.c \
+  --dts research/ios26-dramclk-r1/work/laguna.dts
+```
+
+The ignored CPU handoff's `dvfs/` receipts bind actual input hashes and the
+vendor comparison. `physical_acceptance` and `clock_cap_change_authorized`
+remain false even when this source/table check passes.
+
 1. Capture this audit and review all applicable A520 errata/firmware state.
    A cpu0 result does not cover cpu1. Resolve the parked-cpu0/GICR dependency
    before any CPU_OFF/re-entry route, or review the alternative boot-on-cpu0
