@@ -38,8 +38,9 @@ recoverable. QEMU and host tools support development; they are not phone results
 - **Apps (QEMU, 2026-11-02):** LaunchServices refuses every container-requiring
   restored app. App-Placeholder (H1) and MCM-container (H2) causes were tested and
   rejected; see `docs/IOS-APPS-IDENTITY.md`. With lsd's os_log mirrored to the console
-  (r11g), lsd and launchd report that no user persona exists (usermanagerd creates none):
-  leading hypothesis H3, not yet tested.
+  (r11g/r11h), no user persona exists. usermanagerd finds no user session (no
+  `/var/keybags/usersession.kb`). Leading hypothesis H3: registration waits on a genuine
+  user-session/AKS bootstrap. Not yet tested.
 - **Not complete:** native Metal, stable compositing, strict GPT, a working Android chain
   and visible menu, higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.

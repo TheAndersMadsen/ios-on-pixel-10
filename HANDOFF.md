@@ -12,6 +12,8 @@ it is not a second project journal.
 3. Host: r4 (cached decode) and r6 (menu renderer) are built and QEMU-tested; next are the visible
    menu (r6 plus the `tgl_dcs_run` full-screen layer, `research/ios26-dualboot-r8/menu-ui/SCANOUT-PATH.md`),
    the volume-key pad read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).
+   Apps lane (QEMU): registration is blocked behind a missing user session/persona
+   (`research/ios26-apps-r1/receipts/lslog-r11/result-r11h.json`); next is a genuine user-session bootstrap.
 
 ## Latest completed maintenance
 
