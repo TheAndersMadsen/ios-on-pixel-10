@@ -26,6 +26,14 @@
 #define TGL_STAGE_CHOOSER_VERIFY 0x00c7u	/* DONE arg = image magic<<32 | csum lo */
 #define TGL_STAGE_CHOOSER_JUMP	0x00c8u	/* ENTER arg = base; last stamp before Linux */
 #define TGL_STAGE_CHOOSER_CSUM	0x00c9u	/* DONE arg = ms<<32 | csum lo */
+#define TGL_STAGE_CHOOSER_MMU	0x00cau	/* DONE/REFUSED arg = wb<<32 | nc<<16 | refused */
+#define TGL_STAGE_CHOOSER_UI	0x00cbu	/* DONE arg = render ms<<32 | cached */
+#ifndef TGL_CHOOSER_MMU
+#define TGL_CHOOSER_MMU 0
+#endif
+#ifndef TGL_CHOOSER_UI
+#define TGL_CHOOSER_UI 0
+#endif
 
 struct tgl_chooser_seg {
 	uint64_t comp_len, image_len, image_size, image_flags, csum;

@@ -115,5 +115,7 @@ if [ -f test_dcs_bright.py ]; then python3 -I test_dcs_bright.py --quick; fi
 if [ -f chooser_test.c ]; then
 	$HOSTCC -O1 -Wall -Wextra -DTGL_CHOOSER_HOST -o out/chooser_test chooser.c fdt.c chooser_test.c && ./out/chooser_test
 	$HOSTCC -O2 -Wall -Wextra -o out/lz4_test lz4.c lz4_test.c && ./out/lz4_test
+	$HOSTCC -O1 -Wall -Wextra -DTGL_CHOOSER_HOST -o out/el2_mmu_test el2_mmu.c fdt.c el2_mmu_test.c && ./out/el2_mmu_test
+	$HOSTCC -O2 -Wall -Wextra -o out/menu_ui_preview menu_ui.c menu_ui_preview.c && ./out/menu_ui_preview out/menu
 fi
 ls -l out/Image out/shim-boot-laguna.img

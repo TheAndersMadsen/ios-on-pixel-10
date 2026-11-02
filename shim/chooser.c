@@ -144,6 +144,13 @@ unsigned tgl_chooser_menu_step(struct tgl_chooser_menu *s, uint64_t now_ms,
 #ifndef TGL_CHOOSER_HOST
 #include "console.h"
 #include "tgl_stamp.h"
+#if TGL_CHOOSER_MMU
+#include "el2_mmu.h"
+static struct tgl_el2_tables el2t __attribute__((aligned(4096)));
+#endif
+#if TGL_CHOOSER_UI
+#include "menu_ui.h"
+#endif
 
 extern char _head[], _end[];
 
@@ -176,6 +183,47 @@ static void __attribute__((noreturn)) chain_jump(uint64_t entry, uint64_t fdt)
 	__builtin_unreachable();
 }
 
+#if TGL_CHOOSER_MMU
+/* Registers only: clean+invalidate the decoded Image to PoC, restore the entry
+ * SCTLR_EL2 (MMU and caches off), drop I-cache and EL2 TLBs, enter Linux. */
+static void __attribute__((noreturn)) chain_jump_mmu_off(uint64_t sctlr, uint64_t lo,
+	uint64_t hi, uint64_t entry, uint64_t fdt)
+{
+	register uint64_t x0 __asm__("x0") = sctlr;
+	register uint64_t x1 __asm__("x1") = lo;
+	register uint64_t x2 __asm__("x2") = hi;
+	register uint64_t x3 __asm__("x3") = entry;
+	register uint64_t x4 __asm__("x4") = fdt;
+	__asm__ volatile(
+	    "msr daifset, #0xf\n\t"
+	    "mov x5, x3\n\t"
+	    "mrs x9, ctr_el0\n\t"
+	    "ubfx x9, x9, #16, #4\n\t"
+	    "mov x10, #4\n\t"
+	    "lsl x10, x10, x9\n\t"
+	    "sub x11, x10, #1\n\t"
+	    "bic x1, x1, x11\n"
+	    "1:\tdc civac, x1\n\t"
+	    "add x1, x1, x10\n\t"
+	    "cmp x1, x2\n\t"
+	    "b.lo 1b\n\t"
+	    "dsb sy\n\t"
+	    "msr sctlr_el2, x0\n\t"
+	    "isb\n\t"
+	    "ic iallu\n\t"
+	    "tlbi alle2\n\t"
+	    "dsb sy\n\t"
+	    "isb\n\t"
+	    "mov x0, x4\n\t"
+	    "mov x1, xzr\n\t"
+	    "mov x2, xzr\n\t"
+	    "mov x3, xzr\n\t"
+	    "br x5"
+	    :: "r"(x0), "r"(x1), "r"(x2), "r"(x3), "r"(x4) : "x5", "x9", "x10", "x11", "memory");
+	__builtin_unreachable();
+}
+#endif
+
 /* Our stores went straight to memory (SCTLR_EL2.C=0); any line ABL left
  * for these addresses is stale, so discard it rather than clean it. */
 static void inval_dcache(uint64_t lo, uint64_t hi)
@@ -188,6 +236,7 @@ static void inval_dcache(uint64_t lo, uint64_t hi)
 	__asm__ volatile("dsb sy\n\tic iallu\n\tdsb sy\n\tisb" ::: "memory");
 }
 
+#if !TGL_CHOOSER_UI
 static void con_dec(const char *label, uint64_t v)
 {
 	char b[24];
@@ -196,6 +245,7 @@ static void con_dec(const char *label, uint64_t v)
 	do { b[--i] = (char)('0' + v % 10); v /= 10; } while (v && i);
 	con_str(label, b + i);
 }
+#endif
 
 const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	void (*pat)(void), unsigned (*keys)(void))
@@ -226,13 +276,6 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	tgl_stamp(TGL_STAGE_CHOOSER_SEG, why ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE,
 	    why ? (uint64_t)(uintptr_t)p : seg.comp_len);
 	if (why) return why;
-	uint64_t t0 = now_ms();
-	uint64_t c = tgl_chooser_csum64(seg.data, seg.comp_len);
-	tgl_stamp(TGL_STAGE_CHOOSER_CSUM, c == seg.csum ? TGL_STAMP_F_DONE : TGL_STAMP_F_REFUSED,
-	    (now_ms() - t0) << 32 | (uint32_t)c);
-	if (c != seg.csum) return "chooser: stock kernel checksum mismatch";
-	if (pat) pat();
-
 	struct tgl_range live[4];
 	unsigned nl = 0;
 	live[nl++] = (struct tgl_range){ (uint64_t)(uintptr_t)head, isz };
@@ -245,12 +288,45 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	tgl_stamp(TGL_STAGE_CHOOSER_PLACE, why ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, base);
 	if (why) return why;
 
+	int cached = 0;
+	uint64_t sctlr0 = sctlr;
+#if TGL_CHOOSER_MMU
+	{
+		struct tgl_el2_region rg[3] = {
+			{ (uint64_t)(uintptr_t)head, isz, TGL_EL2_WB, 1 },
+			{ base, seg.image_size, TGL_EL2_WB, 0 },
+			{ CHOOSER_FB, (uint64_t)FB_STRIDE * FB_H, TGL_EL2_NC, 0 },
+		};
+		const char *mw = tgl_el2_build(&el2t, m, rg, 3);
+		if (!mw) mw = tgl_el2_mmu_on(&el2t, rg, 3, &sctlr0);
+		cached = !mw;
+		tgl_stamp(TGL_STAGE_CHOOSER_MMU, mw ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE,
+		    (uint64_t)el2t.wb_blocks << 32 | (uint64_t)el2t.nc_blocks << 16 | el2t.refused_blocks);
+		/* A refusal keeps the proven uncached path (chooser-v1-r1-t1). */
+	}
+#endif
+	uint64_t t0 = now_ms();
+	uint64_t c = tgl_chooser_csum64(seg.data, seg.comp_len);
+	tgl_stamp(TGL_STAGE_CHOOSER_CSUM, c == seg.csum ? TGL_STAMP_F_DONE : TGL_STAMP_F_REFUSED,
+	    (now_ms() - t0) << 32 | (uint32_t)c);
+	if (c != seg.csum) return "chooser: stock kernel checksum mismatch";
+	if (pat) pat();
+
+#if TGL_CHOOSER_UI
+	struct tgl_menu_view view = { 0, TGL_CHOOSER_TIMEOUT_MS / 1000, 0 };
+	uint32_t *fb = (uint32_t *)(uintptr_t)CHOOSER_FB;
+	t0 = now_ms();
+	tgl_menu_draw(fb, FB_W, &view);
+	tgl_stamp(TGL_STAGE_CHOOSER_UI, TGL_STAMP_F_DONE, (now_ms() - t0) << 32 | (uint32_t)cached);
+	if (pat) pat();
+#else
 	con_tick = pat;
 	con_init((uintptr_t)CHOOSER_FB);
 	con_clear(BLACK);
 	con_str("BOOT", "Vol-Up: Android   Vol-Down: iOS");
 	con_str("IOS", "no iOS root yet: Android only");
 	con_hex("LINUX", base);
+#endif
 	struct tgl_chooser_menu s;
 	uint64_t start = now_ms(), last_pat = start, last_line = start;
 	tgl_chooser_menu_init(&s, start, 0);
@@ -267,7 +343,13 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 		if (r) break;
 		if (t - last_pat >= 1000) { if (pat) pat(); last_pat = t; }
 		if (t - last_line >= 1000) {
+#if TGL_CHOOSER_UI
+			view.sel = s.sel;
+			view.seconds = (unsigned)((s.deadline_ms - t + 999) / 1000);
+			tgl_menu_draw_band(fb, FB_W, &view);
+#else
 			con_dec(s.sel ? "iOS T-" : "ANDROID T-", (s.deadline_ms - t + 999) / 1000);
+#endif
 			last_line = t;
 		}
 		for (volatile unsigned d = 0; d < 20000; d++) { }
@@ -275,7 +357,9 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	tgl_stamp(TGL_STAGE_CHOOSER_PICK, TGL_STAMP_F_DONE,
 	    (now_ms() - start) << 8 | r << 4 | s.why);
 	if (r != TGL_CHOOSE_ANDROID) return "chooser: iOS entry not built in this image";
+#if !TGL_CHOOSER_UI
 	con_str("PICK", s.why == TGL_WHY_NO_IOS ? "Android (no iOS root yet)" : "Android");
+#endif
 
 	if (pat) pat();
 	t0 = now_ms();
@@ -295,10 +379,16 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	    (uint64_t)magic << 32 | (uint32_t)le64(img + 16));
 	if (!hdr_ok) return "chooser: decoded Image header mismatch";
 
+#if !TGL_CHOOSER_UI
 	con_str("JUMP", "stock Android kernel, EL2");
-	inval_dcache(base, base + seg.image_size);
+#endif
 	if (pat) pat();
-	tgl_stamp(TGL_STAGE_CHOOSER_JUMP, TGL_STAMP_F_ENTER, base);
+	tgl_stamp(TGL_STAGE_CHOOSER_JUMP, TGL_STAMP_F_ENTER, base | (uint64_t)cached << 63);
+#if TGL_CHOOSER_MMU
+	if (cached) chain_jump_mmu_off(sctlr0, base, base + seg.image_size, base, dtb);
+#endif
+	(void)cached; (void)sctlr0;
+	inval_dcache(base, base + seg.image_size);
 	chain_jump(base, dtb);
 }
 #endif
