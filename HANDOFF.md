@@ -9,8 +9,8 @@ it is not a second project journal.
    receipts go to `research/ios26-dualboot-r8/`). It supersedes the storage and
    chooser prose below and in `docs/DUALBOOT.md`.
 1. Continue host-only p32 compositor, Volcanic GPU and saved-GPT diagnosis.
-2. In QEMU, require LaunchServices record/readback before app exec or foreground
-   acceptance. Keep physical and QEMU results separate.
+2. Apps: make lsd's os_log refusal reason visible in QEMU before trying another
+   registration variant (H1 placeholders and H2 MCM are rejected). Pacstrip every registrar.
 3. Storage is blocked at owner decisions (`research/ios26-dualboot-r7/STORAGE-DECISION.json`):
    approve a readback bind that exposes no Android partition before one complete
    read-only GPT capture; decide the media-padding policy; and qualify a backup

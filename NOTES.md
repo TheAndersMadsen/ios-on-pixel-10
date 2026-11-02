@@ -27,6 +27,10 @@ recoverable. QEMU and host tools support development; they are not phone results
   no unallocated LUN0 space: isolated iOS storage requires an attended Android
   shrink/migration. No physical GPT candidate is admissible, because every readback
   recipe binds `userdata_exp.ai`. See `research/ios26-dualboot-r7/STORAGE-DECISION.json`.
+- **Apps (QEMU, 2026-11-02):** LaunchServices refuses every container-requiring
+  restored app. App-Placeholder (H1) and MCM-container (H2) causes were tested and
+  rejected; see `docs/IOS-APPS-IDENTITY.md`. The lane is stopped until lsd's
+  refusal reason is observable.
 - **Not complete:** native Metal, stable compositing, strict GPT, higher-clock/
   A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.

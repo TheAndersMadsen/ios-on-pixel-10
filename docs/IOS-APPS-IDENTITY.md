@@ -5,14 +5,15 @@ Scope: run stock iOS 26 apps and legitimate Apple services on a self-contained P
 ## Current result
 
 - **Host:** the 20 GiB guest image restores all 49 missing staged apps and passes deep signature checks. `apps-full-r6.img` is current; `apps-full-r5.img` is the rollback image.
-- **QEMU:** r8 ended normally after its 1200-second capture with the root unchanged. Calculator, Clock and Notes URL registration returned false and fresh readback did not list them.
+- **QEMU:** r8, h1-r9 and h2-r10b each ended normally after 1200 s with the root unchanged. `registerApplication:` returned NO for every restored app it was called on. Fresh readback lists only the 6 bundles carrying `com.apple.private.security.no-container` (Preferences, AegirProxyApp, Camera and three posters); none of 20+ container-requiring apps appear.
+- **Rejected (QEMU):** H1, the same-identifier App Placeholders: removing them changed nothing ([r9](../research/ios26-apps-r1/receipts/placeholder-h1-r9/result.json)). H2, MobileContainerManager provisioning: real MCM returned containers for 28/28 apps without error, and registration still failed ([r10b](../research/ios26-apps-r1/receipts/container-h2-r10/result-r10b.json)). r10 was inconclusive: the registrar was built without `pacstrip.py` and hit SIGILL on `braa`.
 - **QEMU:** r8 has no selected-app registration acceptance and no representative app exec, foreground UI or interaction acceptance.
 - **Physical:** no apps image is deployed and no stock-app registration or launch is accepted on the phone.
 - `SweetKeyStore` is fixed-state compatibility, not a SEP backend. Apple login, activation, attestation and native Apple services remain unaccepted; Mac tools are development-only.
 
 ## Remaining work
 
-1. Diagnose the observed LaunchServices registration refusal at its real service boundary, then obtain accepted registration and fresh installed-path readback in QEMU.
+1. Obtain lsd's own refusal reason (os_log/unified-log visibility in QEMU) before any further registration variant. Placeholder and container hypotheses are rejected. Every registrar artifact must go through `pacstrip.py`.
 2. After readback, prove selected app exec, foreground rendering and interaction; expand to every restored stock app and repair actual framework, container or service failures.
 3. Establish networking, real time, securityd/keychain and supported AKS behavior before designing an on-device SEP/identity path; never substitute fabricated credentials or skipped checks.
 4. Consider physical deployment only after guest acceptance and a fresh approved storage/recovery plan.
