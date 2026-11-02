@@ -103,7 +103,7 @@ BOOT_MANIFEST_HASH = hashlib.sha384(b'laguna boot manifest').digest()
 # or ExclaveOS in the 23G90 BuildManifest, @3x 1125x2436). /product comes from the real
 # tree, an Apple artifact kept out of git: root agent's handoffs/iphone12-dt.md.
 D421AP_ADT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                          '../../ios26-root-r1/apple/dt/DeviceTree.d421ap.bin')
+                          '../research/ios26-root-r1/apple/dt/DeviceTree.d421ap.bin')
 D421AP_SHA256 = '6bb989988c897e13295219e2f5bbd9df34c766e6863debcf13ec1b407b46d8ad'
 IDENTITY = dict(compatible=('D421AP', 'iPhone12,3'), model='iPhone12,3', target_type='D421',
                 target_sub_type='D421AP', platform_name='t8030', chip_id=0x8030, board_id=0x06,
@@ -200,7 +200,7 @@ def node(name, props=(), children=()):
 
 
 def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpus=1,
-          canvas=None, gamut=None, product_children=PRODUCT_CHILDREN, nvram=False, donor=D421AP_ADT, headless=False, disp0=False):
+          canvas=None, gamut=None, product_children=PRODUCT_CHILDREN, nvram=False, donor=D421AP_ADT, headless=False, disp0=False, boot_mpidr=0, cpu_order=None):
     """qemu=True: same tree, but with QEMU virt's GIC/UART addresses and CNTFRQ
     (tests/smoke-qemu-laguna.sh). bank1=True: kernel RAM in the first upper bank
     (device only; QEMU virt has no RAM there). mem_size overrides the kernel
@@ -234,8 +234,20 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
     seed = seed if seed is not None else os.urandom(256)
     if len(seed) != 256 or not any(seed):  # iBoot's size; an all-zero seed reads as none
         raise SystemExit('random-seed must be 256 non-zero bytes')
-    if type(cpus) is not int or not 1 <= cpus <= (1 if qemu else 8):
+    if type(cpus) is not int or not 1 <= cpus <= (1 if qemu else 8):  # cpu_order, below, is how QEMU gets more than one
         raise SystemExit(f'invalid cpus {cpus}')
+    # ios26-fastcore-r1: the shim starts on this core, so it's first: logical 0. cpus=N adds the other A725s after it. Node order is logical order.
+    # Never cpu0, on and parked in the shim. Not cpu1: A520 4615642 (OFF to ON, complex quiet) and 3685825 (CAS). Not the X4. With cpus=1 only reg differs from cpu0's node.
+    a725 = (0x200, 0x300, 0x400, 0x500, 0x600)
+    if boot_mpidr and (qemu or not 1 <= cpus <= len(a725) or boot_mpidr not in (0x200, 0x300, 0x500)):
+        raise SystemExit(f'invalid boot_mpidr {boot_mpidr:#x} at cpus {cpus}')
+    boot_regs = [boot_mpidr] + [r for r in a725 if r != boot_mpidr]
+    # ios26-smp-r1: cores for cpus=N, as core numbers in node order. Node order is XNU's logical id, and the scheduler takes the
+    # lowest idle id first, so fastest first is the placement. The boot core stays cpu0, wherever it is listed; state "running"
+    # marks it. handoffs/smp.md. Refused with boot_mpidr: that image parks cpu0 in the shim, and has its own order above. On the phone, no X4: handoffs/smp.md.
+    if cpu_order is not None and (boot_mpidr or cpus != 1 or len(set(cpu_order)) != len(cpu_order) or not 2 <= len(cpu_order) <= 8 or
+                                  0 not in cpu_order or any(type(c) is not int or not 0 <= c <= (7 if qemu else 6) for c in cpu_order)):
+        raise SystemExit(f'invalid cpu_order {cpu_order}')
     canvas = canvas or IDENTITY['canvas']
     phandle = iter(range(1, 1000))
     ph = lambda: ('AAPL,phandle', u32(next(phandle)))
@@ -324,17 +336,17 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
     # prefix (N <= 8). QEMU retains its original single-CPU tree: its MPIDRs
     # differ from laguna. Boot core assumed cpu0 (verify on first hardware boot).
     cpu_nodes = []
-    for core in range(cpus):
-        cpu_nodes.append(node(f'cpu{core}', [
+    for i, core in enumerate(cpu_order if cpu_order is not None else range(cpus)):
+        cpu_nodes.append(node(f'cpu{i}', [
             ph(),
             ('device_type', cstr('cpu')),
             ('compatible', b''.join(cstr(x) for x in CPU_COMPAT)),
-            ('reg', u32(core << 8)),  # actual MPIDR Aff1:Aff0, NOT logical ID
-            ('cpu-id', u32(core)),   # descriptive: XNU assigns IDs by DT order
+            ('reg', u32(boot_regs[i] if boot_mpidr else core if qemu else core << 8)),  # actual MPIDR Aff1:Aff0, NOT logical ID. QEMU virt's core is Aff0
+            ('cpu-id', u32(i)),   # descriptive: XNU assigns IDs by DT order
             ('cluster-id', u32(0)),  # descriptive; see ml_parse_cpu_topology
             ('cluster-type', u32(0)),  # homogeneous CLUSTER_TYPE_SMP, not AMP
             ('die-cluster-id', u32(0)),
-            ('cluster-core-id', u32(core)),
+            ('cluster-core-id', u32(i)),
             ('l2-cache-id', u32(core)),  # per-core L2 in the live FDT
             ('l3-cache-id', u32(0)),     # shared L3
             ('state', cstr('running' if core == 0 else 'stopped')),
@@ -542,6 +554,7 @@ if __name__ == '__main__':
     root = build(qemu='--qemu' in argv, bank1='--bank1' in argv,
         mem_size=_mem_size_arg(argv), phys_base=_phys_base_arg(argv),
         cpus=int(_opt(argv, '--cpus', '1')), gamut=_opt(argv, '--gamut'), nvram='--nvram' in argv,
+        cpu_order=[int(x) for x in _opt(argv, '--cpu-order').split(',')] if _opt(argv, '--cpu-order') else None,
         canvas=tuple(int(x) for x in canvas.split('x')) if canvas else None,
         product_children=PRODUCT_CHILDREN if pc is None else 'all' if pc == 'all' else tuple(filter(None, pc.split(','))),
         donor=_opt(argv, '--donor', D421AP_ADT))

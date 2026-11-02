@@ -69,6 +69,14 @@
 #define FORCE_BE_CSR_RD_CNT 30u
 /* Compare PPS 0-88. Physical, r1a and r1b: byte 89 (second_line_bpg_offset, native 4:2:0 only) reads 0xff before and after we write 0. Recorded, not compared. */
 #define PPS_COMPARE_BYTES 89u
+#if TGL_DCS_BRIGHT
+/* panel-gs-bmea.c, bmea_brt_configs for PANEL_REV_GE(EVT1), which holds this panel (id 42a1a00a, rev MP): default_brightness = 4637, "dbv_for_140_nits". FDT /chosen/display/panel@0 says the same.
+ * Below 3726 (BMEA_ACL_ENHANCED_THRESHOLD_DBV) the vendor driver also turns ACL off, a path this write doesn't take. */
+#define TGL_DCS_BRIGHT_DBV 4637u
+_Static_assert(TGL_DCS_BRIGHT_DBV >= 3726u && TGL_DCS_BRIGHT_DBV <= 4637u, "low, and above the ACL threshold");
+#define BRIGHT_SETTLE_US 50000u /* three TE periods at 60 Hz; dbv_extra_frame means the level may land a vsync late */
+#define DCS_PM_UP 0x14u /* get_power_mode: sleep out, display on */
+#endif
 /* FDT pinctrl@EC7E000, pin 0 XDPU_TE0; pinctrl-lga.c offsets, stride 0x1000; common.h fields. Stock Linux doesn't bind this block: status "disabled". */
 /* FDT dpu_smmu; arm-smmu-v3.h. Read only. Registers restart with the top domain, so ABL's state doesn't apply. */
 #define DPU_SMMU UINT64_C(0x0ed80000)
@@ -474,10 +482,17 @@ static int dcs_read(uint32_t cmd, uint8_t *out, uint32_t want, uint32_t *n, uint
 static int dcs_read1(uint32_t cmd, uint8_t *out, uint32_t mode) { uint32_t n; return dcs_read(cmd, out, 1, &n, mode); }
 /* Exact byte strings from panel-gs-bmea.c: bmea_get_opr and bmea_enable. Nothing else can be sent. */
 static const uint8_t k_f0u[3] = { 0xf0, 0x5a, 0x5a }, k_f0l[3] = { 0xf0, 0xa5, 0xa5 }, k_fcu[3] = { 0xfc, 0x5a, 0x5a }, k_fcl[3] = { 0xfc, 0xa5, 0xa5 }, k_b0opr[4] = { 0xb0, 0x01, 0x1a, 0x63 };
+#if TGL_DCS_BRIGHT
+/* bmea_set_brightness: swab16, then mipi_dsi_dcs_set_display_brightness sends low byte first. So the level's high byte goes first on the wire, as in bmea_enable and bmea_lp_*_cmds. */
+static const uint8_t k_bright[3] = { 0x51, TGL_DCS_BRIGHT_DBV >> 8, TGL_DCS_BRIGHT_DBV & 0xff };
+#define DCS_LONG_BRIGHT(di, b, len) ((b) == k_bright && (len) == 3 && (di) == 0x39)
+#else
+#define DCS_LONG_BRIGHT(di, b, len) 0
+#endif
 static int dcs_long(uint32_t di, const uint8_t *b, uint32_t len)
 {
     int rc;
-    if (!(((b == k_f0u || b == k_f0l || b == k_fcu || b == k_fcl) && len == 3 && di == 0x39) || (b == k_b0opr && len == 4 && di == 0x39) || (b == fr_pps && len == 128 && di == 0x0a && TGL_FRAME_RUNG >= 2))) return stop_with(DCS_C_DCS_REFUSED, di);
+    if (!(((b == k_f0u || b == k_f0l || b == k_fcu || b == k_fcl) && len == 3 && di == 0x39) || (b == k_b0opr && len == 4 && di == 0x39) || (b == fr_pps && len == 128 && di == 0x0a && TGL_FRAME_RUNG >= 2) || DCS_LONG_BRIGHT(di, b, len))) return stop_with(DCS_C_DCS_REFUSED, di);
     if ((rc = cri_idle())) return rc;
     for (uint32_t off = 0; off < len; off += 4) {
         uint32_t w = 0;
@@ -487,6 +502,9 @@ static int dcs_long(uint32_t di, const uint8_t *b, uint32_t len)
     if ((rc = wr(DSI + DSI_CRI_TX_HDR, di | len << 8 | HDR_LONG | d.tx_mode))) return rc;
     return cri_idle();
 }
+#if TGL_DCS_BRIGHT
+static uint32_t panel_power;
+#endif
 static int stage_f(void)
 {
     static const uint8_t ids[4] = { 0xda, 0xdb, 0xdc, 0xa1 };
@@ -500,6 +518,9 @@ static int stage_f(void)
     if (rc < 0) return stop_with(DCS_C_NO_PANEL_REPLY, 0x0a);
     note(DCS_N_TX_LP, d.tx_mode ? 1 : 0);
     note(DCS_N_POWER_MODE, b);
+#if TGL_DCS_BRIGHT
+    panel_power = b;
+#endif
     rc = dcs_read1(0x05, &b, d.tx_mode);
     if (rc > 0) return rc;
     if (!rc) note(DCS_N_ERR_COUNT, b);
@@ -543,7 +564,35 @@ static int pps_read(uint32_t id, uint32_t *n)
     for (uint32_t i = 0; i < *n; i += 4) note(id, (uint32_t)pps_buf[i] | (uint32_t)(i + 1 < *n ? pps_buf[i + 1] : 0) << 8 | (uint32_t)(i + 2 < *n ? pps_buf[i + 2] : 0) << 16 | (uint32_t)(i + 3 < *n ? pps_buf[i + 3] : 0) << 24);
     return 0;
 }
-/* Read-only, panel side. Nothing here may stop the boot except a stop from the bus. */
+#if TGL_DCS_BRIGHT
+static int bright_read(uint32_t id, uint32_t *v, int *ok)
+{
+    uint8_t b[2] = { 0, 0 }; uint32_t n = 0;
+    int rc = dcs_read(0x52, b, 2, &n, d.tx_mode);
+    *ok = 0;
+    if (rc > 0) return rc;
+    if (!rc && n == 2) { *v = (uint32_t)b[0] << 8 | b[1]; *ok = 1; note(id, *v); }
+    return 0;
+}
+/* ABL leaves a level that differs by boot, up to about 860 nits (inferred). One write, no DPU touched yet, the same packet shape and state as opr_read's long writes. A wrong read-back is logged, not a stop. */
+static int bright_set(void)
+{
+    uint32_t v = 0, n = 0; uint8_t b = 0; int rc, ok = 0;
+    note(DCS_N_BRIGHT_TARGET, TGL_DCS_BRIGHT_DBV);
+    if ((panel_power & DCS_PM_UP) != DCS_PM_UP) { note(DCS_N_BRIGHT_RESULT, DCS_BR_PANEL_NOT_UP); return 0; }
+    if ((rc = dcs_long(0x39, k_bright, 3))) return rc;
+    if ((rc = bright_read(DCS_N_BRIGHT_AT_WRITE, &v, &ok))) return rc;
+    dcs_port_delay_us(BRIGHT_SETTLE_US);
+    if ((rc = bright_read(DCS_N_BRIGHT_SETTLED, &v, &ok))) return rc;
+    if ((rc = dcs_read(0x05, &b, 1, &n, d.tx_mode)) > 0) return rc;
+    if (!rc) note(DCS_N_BRIGHT_ERR_COUNT, b);
+    if ((rc = dcs_read(0x0a, &b, 1, &n, d.tx_mode)) > 0) return rc;
+    if (!rc) note(DCS_N_BRIGHT_POWER, b);
+    note(DCS_N_BRIGHT_RESULT, !ok ? DCS_BR_NO_READBACK : v == TGL_DCS_BRIGHT_DBV ? DCS_BR_OK : DCS_BR_MISMATCH);
+    return 0;
+}
+#endif
+/* Read-only unless TGL_DCS_BRIGHT, panel side. Nothing here may stop the boot except a stop from the bus. */
 static int stage_g(void)
 {
     uint8_t b[2] = { 0, 0 }; uint32_t n = 0, v = 0; int rc, ok;
@@ -552,6 +601,9 @@ static int stage_g(void)
     if (!rc) note(DCS_N_COMPRESSION, b[0]);
     if ((rc = dcs_read(0x52, b, 2, &n, d.tx_mode)) > 0) return rc;
     if (!rc) note(DCS_N_BRIGHTNESS, (uint32_t)b[0] << 8 | (n > 1 ? b[1] : 0));
+#if TGL_DCS_BRIGHT
+    if ((rc = bright_set())) return rc;
+#endif
     if ((rc = pps_read(DCS_N_PPS_BEFORE, &n))) return rc;
     pps_before_n = n; pps_before_same = n == 90;
     for (unsigned i = 0; pps_before_same && i < PPS_COMPARE_BYTES; ++i) if (pps_buf[i] != fr_pps[i]) pps_before_same = 0;
@@ -854,6 +906,9 @@ __attribute__((unused)) static int stage_m(void)
 int dcs_test_pa_ok(uint64_t pa, int wr) { return pa_ok(pa, wr); }
 #if TGL_FRAME_RUNG >= 3
 int dcs_test_set_buffer(uint64_t pa, uint32_t stride) { int rc = frame_set_buffer(pa, stride); d.stop = 0; return rc; }
+#endif
+#if TGL_DCS_BRIGHT
+int dcs_test_bright_long(uint32_t di, uint32_t len, int other) { static const uint8_t x[3] = { 0x51, 0x12, 0x1d }; int rc = dcs_long(di, other ? x : k_bright, len); d.stop = 0; return rc; }
 #endif
 #endif
 void tgl_dcs_begin(uint64_t stamp_nonce, const uint8_t record_nonce[16], uint64_t epoch)

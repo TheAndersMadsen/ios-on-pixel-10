@@ -1293,10 +1293,10 @@ static int u_prefix(const char *tok, const char *pre)
 int tgl_ufs_cmdline_admit(char *cmdline, const struct tgl_ufs_result *r)
 {
 	unsigned len = 0, changed = 0, out = 0;
-	char tmp[608];
+	char tmp[TGL_UFS_CMDLINE_BYTES];
 
-	while (len < 608 && cmdline[len]) len++;
-	if (len >= 608) return -1; /* unterminated: caller refuses the boot */
+	while (len < TGL_UFS_CMDLINE_BYTES && cmdline[len]) len++;
+	if (len >= TGL_UFS_CMDLINE_BYTES) return -1; /* unterminated: caller refuses the boot */
 #if TGL_UFS_HANDOFF
 	/* Lists are stopped and the DMA is over, so a mismatch only loses the root. */
 	if (r && r->live && ufsh_cmdline_ok(cmdline, r->proven_lun)) return 0;
@@ -1335,7 +1335,7 @@ int tgl_ufs_cmdline_admit(char *cmdline, const struct tgl_ufs_result *r)
 		i = j + 1;
 	}
 	if (!changed) return 0;
-	if (out >= 608) return -1;
+	if (out >= TGL_UFS_CMDLINE_BYTES) return -1;
 	u_copy(cmdline, tmp, out);
 	cmdline[out] = 0;
 	tgl_stamp(TGL_STAGE_UFS_LIVE, TGL_STAMP_F_REFUSED, out);

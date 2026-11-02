@@ -18,6 +18,9 @@
 #include "laguna_usb.h"
 #include "tgl_display.h"
 #include "tgl_ufs.h"
+#if TGL_FASTCORE
+#include "tgl_fastcore.h"
+#endif
 
 #define BOOT_LINE_LENGTH	1024	/* xnu-12377 pexpert/arm64/boot.h; was 608 on 8796 */
 #define PAGE_16K		0x4000UL
@@ -38,7 +41,8 @@ struct boot_args {
 	uint64_t bootFlags, memSizeActual;
 };
 
-_Static_assert(__builtin_offsetof(struct payload, segs) == 0x2a8, "payload header layout");
+_Static_assert(__builtin_offsetof(struct payload, segs) == 0x448, "payload header layout");
+_Static_assert(TGL_BOOT_LINE_LENGTH == BOOT_LINE_LENGTH && TGL_UFS_CMDLINE_BYTES == BOOT_LINE_LENGTH, "one line length everywhere");
 _Static_assert(__builtin_offsetof(struct boot_args, Video) == 40, "boot_args layout");
 _Static_assert(__builtin_offsetof(struct boot_args, CommandLine) == 108, "boot_args layout");
 _Static_assert(sizeof(struct boot_args) == 1152, "boot_args layout");
@@ -128,7 +132,7 @@ const char *loader_boot(uintptr_t dtb)
 	 * can reach boot_args, gate it on the UFS ladder's LIVE attestation
 	 * (shim_main 6.5 ran the ladder). Without U8 the rewrite drops every
 	 * blazer_ufs* token and substitutes rd=ufsroot0 -> rd=md0 — the
-	 * shrink-only in-place edit of the payload's 608-byte field. A
+	 * shrink-only in-place edit of the payload's command line field. A
 	 * malformed (unterminated) field refuses the whole boot. */
 	if (tgl_ufs_cmdline_admit((char *)p->cmdline, tgl_ufs_result()) < 0) {
 		LB_FAIL("malformed cmdline");
@@ -259,7 +263,7 @@ const char *loader_boot(uintptr_t dtb)
 	} /* Otherwise all Video fields remain zero: a headless contract. */
 	ba->deviceTreeP = adt_pa - pa_of_va_base;	/* xnu reads it with the MMU on: a VA */
 	ba->deviceTreeLength = (uint32_t)p->adt_size;
-	for (int i = 0; i < TGL_BOOT_LINE_LENGTH; i++) /* payload field stays 608; rest stays zero */
+	for (int i = 0; i < TGL_BOOT_LINE_LENGTH; i++) /* same length as XNU's field */
 		ba->CommandLine[i] = p->cmdline[i];
 	ba->memSizeActual = p->mem_size;
 	/* The second half of this 16 KiB metadata page is below topOfKernelData
@@ -310,6 +314,19 @@ const char *loader_boot(uintptr_t dtb)
 	 * and branches with x0 = boot_args PA — register-for-register the
 	 * handoff that physically reached XNU PID1 on tegu. */
 	tgl_stamp(TGL_STAGE_EL_DROP, TGL_STAMP_F_ENTER, el);
+#if TGL_FASTCORE
+	{
+		/* blazer_bootcpu=: the drop and jump below run on that core instead. A refusal
+		 * returns here on cpu0, and shim_main resets. tgl_fastcore.h. */
+		uint64_t fc_core;
+		int fc = tgl_fastcore_parse((const char *)p->cmdline, TGL_BOOT_LINE_LENGTH, &fc_core);
+		if (fc) {
+			const char *fc_why = fc < 0 ? "fc-token" : tgl_fastcore_handoff(fc_core, entry_pa, ba_pa);
+			LB_FAIL(fc_why);
+			return fc_why;
+		}
+	}
+#endif
 	tegu_el_drop_and_jump(entry_pa, ba_pa);
 	return "unreachable";
 }

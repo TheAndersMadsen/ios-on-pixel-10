@@ -333,12 +333,13 @@ unsigned tgl_ufs_attempted(void);
 const struct tgl_ufs_result *tgl_ufs_result(void);
 
 /* Honest handoff (PLAN.md 4.3): called by loader.c on the payload's
- * 608-byte cmdline BEFORE it is copied into boot_args.
+ * 1024-byte cmdline BEFORE it is copied into boot_args.
  *   returns 0  cmdline admitted unchanged (ladder LIVE, or nothing to gate)
  *   returns 1  cmdline REWRITTEN to the recovery profile (tokens dropped,
  *              rd=ufsroot0 -> rd=md0); always length-shrinking
- *   returns -1 malformed (no NUL within 608): caller must refuse the boot
+ *   returns -1 malformed (no NUL within the field): caller must refuse the boot
  * Rewrite is stamped (TGL_STAGE_UFS_LIVE REFUSED) so dumps see it. */
+#define TGL_UFS_CMDLINE_BYTES 1024u /* payload.h TGL_BOOT_LINE_LENGTH; loader.c asserts they match */
 int tgl_ufs_cmdline_admit(char *cmdline, const struct tgl_ufs_result *r);
 
 /* Handoff, default OFF. With it on only this sets live; the legacy ladder never does, because it leaves its

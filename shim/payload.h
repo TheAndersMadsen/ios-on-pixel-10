@@ -2,11 +2,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* TEGUXNU v1 offsets are relative to the matched payload, not to the
+/* TEGUXNU v2 offsets are relative to the matched payload, not to the
  * concatenated ABL ramdisk. This parser performs no destination writes.
  * It validates arithmetic and source/destination extents; it does not turn
  * a static RAM-window choice into a runtime reservation authority. */
-#define TGL_BOOT_LINE_LENGTH 608
+/* XNU 12377's whole line, pexpert/arm64/boot.h. Version 2: the field was 608 in version 1. Old and new can't pair: the version check refuses. */
+#define TGL_BOOT_LINE_LENGTH 1024
+#define TGL_PAYLOAD_VERSION 2u
 #define TGL_PAGE UINT64_C(0x4000)
 #define TGL_MAX_SEGS 64
 #define TGL_SCAN_LIMIT UINT64_C(0x4000000)
@@ -28,7 +30,7 @@ struct tgl_payload_view {
 	uint64_t adt_pa, ba_pa, top, entry_pa;
 };
 
-_Static_assert(offsetof(struct payload, segs) == 0x2a8, "TEGUXNU v1 layout");
+_Static_assert(offsetof(struct payload, segs) == 0x448, "TEGUXNU v2 layout");
 
 static int tgl_add(uint64_t a, uint64_t b, uint64_t *out)
 {
@@ -60,7 +62,7 @@ static const char *tgl_payload_validate(uintptr_t source, uint64_t available,
 	if (!source || (source & 7) || !out || available < sizeof(struct payload))
 		return "truncated/misaligned payload";
 	const struct payload *p = (const struct payload *)source;
-	if (!tgl_magic(p->magic) || p->version != 1 || !p->nsegs || p->nsegs > TGL_MAX_SEGS)
+	if (!tgl_magic(p->magic) || p->version != TGL_PAYLOAD_VERSION || !p->nsegs || p->nsegs > TGL_MAX_SEGS)
 		return "bad payload header";
 	uint64_t table_end = sizeof(*p) + (uint64_t)p->nsegs * sizeof(struct payload_seg);
 	if (table_end > available) return "truncated segment table";

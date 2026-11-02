@@ -109,6 +109,16 @@ class Links(unittest.TestCase):
         self.assertIsNone(summary.macho_uuid("/nonexistent"))
         self.assertIsNone(summary.macho_uuid(__file__))
 
+    def test_payload_uuid_reads_both_layouts(self):
+        for version, table in ((1, 0x2a8), (2, 0x448)):
+            with tempfile.TemporaryDirectory() as d:
+                uuid = bytes(range(16)); macho = struct.pack("<8I", 0xfeedfacf, 0x100000c, 0, 2, 1, 24, 0, 0) + struct.pack("<II", 0x1b, 24) + uuid
+                off = 0x1000; blob = bytearray(off + 0x4000); blob[:7] = b"TEGUXNU"; struct.pack_into("<I", blob, 8, version)
+                struct.pack_into("<Q", blob, table + 16, off); blob[off:off + len(macho)] = macho
+                (Path(d) / "payload-usb.bin").write_bytes(blob)
+                self.assertIsNotNone(summary.uuid_of(macho))
+                self.assertEqual(summary.payload_uuid(Path(d) / "boot.img"), summary.uuid_of(macho), f"version {version}")
+
 
 @unittest.skipUnless(ATTEMPTS.is_dir(), "no captures")
 class RealAttempts(unittest.TestCase):

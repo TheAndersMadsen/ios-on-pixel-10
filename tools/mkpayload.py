@@ -10,15 +10,15 @@ rewritten to its unslid target. The shim then only copies flat segments.
 
 Payload layout (little endian, all offsets from payload start):
   0x000  char  magic[8] = "TEGUXNU"
-  0x008  u32   version = 1, nsegs
+  0x008  u32   version = 2, nsegs
   0x010  u64   virt_base      kernel VA that maps to phys_base
   0x018  u64   entry_va       LC_UNIXTHREAD pc
   0x020  u64   adt_off, adt_size
   0x030  u64   kernel_end_va  end of the highest segment (page aligned)
   0x038  u64   phys_base      kernel-managed RAM (same values as the ADT's dram-base/size)
   0x040  u64   mem_size
-  0x048  char  cmdline[608]
-  0x2a8  seg[nsegs] { u64 vmaddr, vmsize, file_off(in payload), file_size }
+  0x048  char  cmdline[1024]
+  0x448  seg[nsegs] { u64 vmaddr, vmsize, file_off(in payload), file_size }
 
 --ramdisk appends IMAGE as one more segment right after the kernel and moves
 kernel_end past it, so the shim needs no changes: the image lands below the
@@ -38,9 +38,10 @@ import adt  # noqa: E402
 
 LC_SEGMENT_64, LC_UNIXTHREAD, LC_DYLD_CHAINED_FIXUPS = 0x19, 0x5, 0x80000034
 PAGE = 0x4000
-BOOT_LINE_LENGTH = 608
+BOOT_LINE_LENGTH = 1024  # xnu-12377 boot.h; 608 in payload version 1
+PAYLOAD_VERSION = 2
 CMDLINE = 0x48
-SEG_TABLE = CMDLINE + BOOT_LINE_LENGTH	# 0x2a8
+SEG_TABLE = CMDLINE + BOOT_LINE_LENGTH	# 0x448
 MAX_SEGS = 64                 # shim/payload.h TGL_MAX_SEGS
 UINT64_MAX = (1 << 64) - 1
 HEADROOM_MIN = 0x4000000      # shim/payload.h metadata placement rule
@@ -139,7 +140,7 @@ def decode(raw, fmt, image_base):
 
 def add_ramdisk_to_adt(adt_blob, phys, size, name='RAMDisk'):
     """Publish one RAMDisk property as two little-endian uintptr_t values."""
-    if name not in ('RAMDisk', 'RAMDisk1'):
+    if name not in ('RAMDisk', 'RAMDisk1', 'HKVarOverlay'):
         raise ValueError('unsupported ramdisk property')
     root, _ = adt.parse(adt_blob)
     chosen = next(c for c in root.children if c.name == 'chosen')
@@ -184,7 +185,7 @@ def validate_layout(pieces, virt_base, phys_base, mem_size, kernel_end, adt_size
         raise ValueError('insufficient kernel headroom or metadata overflow')
 
 
-def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None, legacy_base=False):
+def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None, legacy_base=False, var_overlay_path=None):
     cl = cmdline.encode()
     if b'\0' in cl or len(cl) >= BOOT_LINE_LENGTH:  # was a silent truncation
         raise ValueError(f'command line must be NUL-free and under {BOOT_LINE_LENGTH} bytes; got {len(cl)}')
@@ -209,7 +210,9 @@ def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None,
     pieces = [(s['vmaddr'], s['vmsize'], buf[s['fileoff']:s['fileoff'] + s['filesize']]) for s in segs]
     ramdisk = None
     ramdisk1 = None
-    for name, path in (('RAMDisk', ramdisk_path), ('RAMDisk1', ramdisk1_path)):
+    var_overlay = None
+    # HKVarOverlay: same placement as a ramdisk, never handed to the VM. hk_overlay=MASK reads it (varfs_seed.c)
+    for name, path in (('RAMDisk', ramdisk_path), ('RAMDisk1', ramdisk1_path), ('HKVarOverlay', var_overlay_path)):
         if path is None:
             continue
         image = Path(path).read_bytes()
@@ -225,8 +228,10 @@ def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None,
         adt_blob = add_ramdisk_to_adt(adt_blob, rd_pa, rd_size, name)
         if name == 'RAMDisk':
             ramdisk = (hex(rd_pa), hex(rd_size))
-        else:
+        elif name == 'RAMDisk1':
             ramdisk1 = (hex(rd_pa), hex(rd_size))
+        else:
+            var_overlay = (hex(rd_pa), hex(rd_size))
 
     validate_layout(pieces, virt_base, PHYS_BASE, MEM_SIZE, kernel_end, len(adt_blob))
 
@@ -242,7 +247,7 @@ def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None,
     out += adt_blob
     out += b'\0' * (-len(out) & 0xf)
 
-    struct.pack_into('<8sII', out, 0, b'TEGUXNU', 1, len(pieces))
+    struct.pack_into('<8sII', out, 0, b'TEGUXNU', PAYLOAD_VERSION, len(pieces))
     struct.pack_into('<7Q', out, 0x10, virt_base, m['entry'], adt_off, len(adt_blob), kernel_end,
                      PHYS_BASE, MEM_SIZE)
     out[CMDLINE:CMDLINE + len(cl)] = cl
@@ -253,6 +258,8 @@ def build(kernel_path, adt_path, cmdline, ramdisk_path=None, ramdisk1_path=None,
                 segs=[(s['name'], hex(s['vmaddr']), hex(s['vmsize'])) for s in segs])
     if ramdisk1 is not None:
         info['ramdisk1'] = ramdisk1
+    if var_overlay is not None:
+        info['var_overlay'] = var_overlay
     return bytes(out), info
 
 

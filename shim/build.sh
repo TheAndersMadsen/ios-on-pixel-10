@@ -108,4 +108,6 @@ python3 -I test_ufs_route.py
 python3 -I test_ufs_speed.py
 # all-r1: the fallback and the PHY check, on the same fake.
 if [ -f test_all_stages.py ]; then python3 -I test_all_stages.py; fi
+# The DPU stage on a fake bus, gate TGL_DCS_BRIGHT off and on. No mutants here: run test_dcs_bright.py itself for those.
+if [ -f test_dcs_bright.py ]; then python3 -I test_dcs_bright.py --quick; fi
 ls -l out/Image out/shim-boot-laguna.img

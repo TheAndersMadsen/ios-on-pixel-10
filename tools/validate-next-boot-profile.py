@@ -19,7 +19,7 @@ def load_profile(path, mach):
         raise ValueError('invalid root size')
     mem = int(d['mem_size'],0)
     if not 0<mem<=0x180000000 or mem%0x4000: raise ValueError('invalid memory window')
-    if len(d['cmdline'].encode())>=608: raise ValueError('command line exceeds payload field')
+    if len(d['cmdline'].encode())>=1024: raise ValueError('command line exceeds payload field')
     root=Path(d['root_path'])
     if not root.is_absolute() or not root.is_file(): raise ValueError('root must be an absolute regular file')
     b=root.read_bytes()

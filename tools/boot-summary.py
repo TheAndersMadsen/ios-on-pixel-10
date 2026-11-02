@@ -312,10 +312,12 @@ def payload_uuid(image):
     """LC_UUID of the kernel in the payload beside this image: what actually booted."""
     try:
         with open(Path(image).parent / "payload-usb.bin", "rb") as source:
-            head = source.read(0x2a8 + 32)
+            head = source.read(0x448 + 32)
             if head[:7] != b"TEGUXNU":
                 return None
-            source.seek(struct.unpack_from("<Q", head, 0x2a8 + 16)[0])
+            # Segment table: 0x2a8 in payload version 1, 0x448 in version 2 (1024-byte command line)
+            table = 0x2a8 if struct.unpack_from("<I", head, 8)[0] == 1 else 0x448
+            source.seek(struct.unpack_from("<Q", head, table + 16)[0])
             macho = source.read(0x10000)
     except (OSError, struct.error):
         return None
