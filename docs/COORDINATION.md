@@ -128,7 +128,13 @@ Both explicit release handoffs completed, without interruption or polling:
 4. Apps source98b4530 commits C-only startup/receipt formatting, removing the
    NSJSON class import. Its next own image will add narrow POSIX/header and
    NSData/plist enter/return probes around the observed manifest boundary.
-   Concrete frozen candidate/argv is pending; no new guest is requested here.
+   Frozen source da2c1a3e and apps-full-r4 candidate
+   `d90a58d61f60e3260f76499960949ed59e4b65acc4e9358dd3356368fa3072ed`
+   are now ready; only registrar changes from the prior image. Exact
+   guest-command-r6/package-r4 receipts retain all49 apps/55 seed files/676 jobs.
+   ONE normal shared-lock admission is planned for r6, host budget1,200 seconds
+   and existing guest deadline1,800; no physical phone budget changes. Claim/
+   runtime result remains unreported. No other reservation is held here.
    Registration plus conditional representative launches remain its acceptance
    goal. Existing reservations retain priority under the shared lock.
 

@@ -103,7 +103,7 @@ Next: preserve/capture current boot, inspect exact receipts, freeze/link one p31
 from reviewed sources. Brightness late-SError and battery allocation P2 repairs
 remain parent-owned/unintegrated; RTC runtime reviewed, stale token pin P3.
 
-## Shared QEMU handoffs completed, 2026-11-02 — Apps r5 and 15-minute phone plan
+## Shared QEMU handoffs completed, 2026-11-02 — p31r1 and Apps r6
 
 DIRECT user architecture decision: "Keep the Pixel self-contained." Native
 on-device apps/authentication/SEP compatibility and online Apple-service goals
@@ -142,9 +142,12 @@ Live892546B match final mirror0 mismatch;1331B finaltail separately parsed,
 merged893877B. Final Cmain/framework_load/framework_loaded/manifest_read positive;
 earlier C-entry-only barrier superseded. No workspace/readback/launch requests,
 not an established workspace/registration API failure. Source98b4530 commits
-C-only logger/startup phases; next narrow POSIX/header/NSData/plist probes await
-concrete frozen image/argv. QEMU captured/released/no reservation held; no next
-guest requested here. Self-contained rule retained; public NAC stub is not an
+C-only logger/startup phases. Next narrow POSIX/header/NSData/plist probe is now
+FROZEN source da2c1a3e/candidate d90a58d61f60e3260f76499960949ed59e4b65acc4e9358dd3356368fa3072ed,
+only registrar changes; same49apps/55seed/676jobs. Exact guest-command-r6 and
+package-r4 bind ONE normal shared-lock claim, host1200/guest1800; claim/result
+not yet reported. No coordination reservation held; current phone budget stays
+300. Self-contained rule retained; public NAC stub is not an
 implemented validation path. No peer MCM/AKS/service change.
 
 CPIO mode0644/hash-pinned input is explicit; prior unsupported read-only-mode
