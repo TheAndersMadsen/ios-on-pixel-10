@@ -1,0 +1,14 @@
+== m1box 2026-11-03T20:27:50Z, shared tools/image_tool.py (two-kernel gate, other owners' uncommitted edits present) 746c55733c9e4f70
+persist ios_data: blazer_persist=1 blazer_persist_period=15 kernel 0d0c99b2cd7b1c71
+OK a7-ios-system-int1-persist bootable 84f993b65fb24f2c98af106f49b5265d57677a9fe54eed75ce42c7ce6fbf519a
+rc=0
+== m1box persist copy
+persist ios_data: blazer_persist=1 blazer_persist_period=15 kernel 0d0c99b2cd7b1c71
+OK a7-ios-system-int1-persist bootable 84f993b65fb24f2c98af106f49b5265d57677a9fe54eed75ce42c7ce6fbf519a
+rc=0
+== int1 itself still OK (no persist tokens)
+OK a7-ios-system-int1 bootable f67220f8fada32b0795548bb4974a875c9801a6936d9ac6ed03307df947b066c
+rc=0
+== the old pin-only shared tool (before this change) refuses it
+MISMATCH persist: blazer_persist on the line without the --persist-ios-data record, kernel or ios_system root
+rc=1

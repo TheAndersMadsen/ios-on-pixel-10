@@ -1,0 +1,112 @@
+diff --git 1/tmp/persist-int1/test_image_tool.before.py 2/tools/test_image_tool.py
+index fca92fd..1cec18d 100644
+--- 1/tmp/persist-int1/test_image_tool.before.py
++++ 2/tools/test_image_tool.py
+@@ -205,7 +205,8 @@ class TwoShapes(unittest.TestCase):
+             self.assertEqual(adt.serialize(mkadt.build(seed=b'S' * 256, **k)), adt.serialize(mkadt.build(seed=b'S' * 256, cpu_order=None, **k)))
+ 
+ class PersistIosData(unittest.TestCase):
+-    """--persist-ios-data: blazer_persist=1 (+ period 15..3600) for the pinned kernel.rootview on ios_system, nothing else."""
++    """--persist-ios-data: blazer_persist=1 (+ period 15..3600) for the pinned kernel.rootview or kernel.int1 on ios_system, nothing else."""
++    RV, INT1 = 'ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3', '0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf'
+     LINE = T.PHONE_ARGS.replace('ROUTE', T.PHONE_ROUTES['md0-mountroot'])
+     def kernel(self, *need, fake_lun=False):
+         p = Path(tempfile.mkdtemp())/'k'
+@@ -217,14 +218,14 @@ class PersistIosData(unittest.TestCase):
+         d.update(k); return T.argparse.Namespace(**d)
+     def gate(self, extra, line=None, kernel=None, pin=True, **k):
+         kernel = kernel or self.kernel(); a = self.ns(kernel, **k); c = (line or self.LINE) + ' ' + extra
+-        with patch.object(T, 'PERSIST_KERNEL_SHA', kernel[1] if pin else T.PERSIST_KERNEL_SHA): return T.persist_ios_data(a, c)
++        with patch.dict(T.PERSIST_KERNELS, {kernel[1]: 'test kernel'} if pin else {}): return T.persist_ios_data(a, c)
+     def refused(self, why, extra='blazer_persist=1', **k):
+         with self.assertRaises(SystemExit, msg=f'{extra} {k}') as e: self.gate(extra, **k)
+         self.assertIn(why, str(e.exception))
+     def test_admitted(self):
+         for extra, toks in (('blazer_persist=1', ['blazer_persist=1']), ('blazer_persist=1 blazer_persist_period=15', ['blazer_persist=1', 'blazer_persist_period=15']),
+                             ('blazer_persist_period=3600 blazer_persist=1', ['blazer_persist_period=3600', 'blazer_persist=1']), ('blazer_persist=1 blazer_persist_period=60', None)):
+-            r = self.gate(extra); self.assertEqual(r['target'], 'ios_data'); self.assertEqual(r['root'], 'ios_system')
++            r = self.gate(extra); self.assertEqual(r['target'], 'ios_data'); self.assertEqual(r['root'], 'ios_system'); self.assertEqual(r['kernel'], 'test kernel')
+             if toks: self.assertEqual(r['tokens'], toks)
+         for n in (15, 16, 19, 20, 99, 100, 999, 1000, 2999, 3000, 3599, 3600): self.assertTrue(self.gate(f'blazer_persist=1 blazer_persist_period={n}'))
+     def test_off_without_the_flag(self):
+@@ -252,16 +253,24 @@ class PersistIosData(unittest.TestCase):
+             with self.assertRaises(SystemExit, msg=line[-40:]) as e: self.gate('blazer_persist=1', line=line)
+             self.assertIn(why, str(e.exception))
+     def test_kernel_refused(self):
+-        self.refused('kernel must be', pin=False)  # any kernel but the pinned one
++        self.refused('kernel must be', pin=False)  # any kernel but the pinned ones
+         self.refused('kernel lacks the ios_data writer', kernel=self.kernel(b'blazer-persist: ios_data at LBA'))
+         self.refused('kernel lacks the ios_data writer', kernel=self.kernel(b'refused root "%s": userdata'))
+         self.refused('fake-LUN', kernel=self.kernel(fake_lun=True))
+         for digest, why in (('052d00f8680e1632fb680f62ecf2369457d10f82a3e4384eb93f6203606eafc8', '7227fe7'), ('3563a0406a24d51080f1afd41a22447a5baf57d243ca062e264d28b57f5b6e7e', 'QEMU only')):
+             with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(self.kernel()[0], digest)), self.LINE + ' blazer_persist=1')
+             self.assertIn(why, str(e.exception))
+-        path, _ = self.kernel()  # the claimed sha is the pin, the file is not
+-        with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(path, T.PERSIST_KERNEL_SHA)), self.LINE + ' blazer_persist=1')
+-        self.assertIn('kernel must be', str(e.exception))
++        path, _ = self.kernel()  # the claimed sha is a pin, the file is not
++        for pin in (self.RV, self.INT1):
++            with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(path, pin)), self.LINE + ' blazer_persist=1')
++            self.assertIn('kernel must be', str(e.exception))
++        kernel = self.kernel()  # a pinned kernel's file named under another pin
++        with patch.dict(T.PERSIST_KERNELS, {kernel[1]: 'test kernel'}):
++            with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(kernel[0], self.INT1)), self.LINE + ' blazer_persist=1')
++            self.assertIn('kernel must be', str(e.exception))
++    def test_pins(self):
++        self.assertEqual(set(T.PERSIST_KERNELS), {self.RV, self.INT1})
++        self.assertFalse(set(T.PERSIST_KERNELS) & set(T.PERSIST_KERNEL_REFUSED))
+     def test_profile_refused(self):
+         for k in (dict(phone_root=False), dict(preflight=True), dict(test_kernel=True), dict(first_boot=True), dict(second_boot=True), dict(soak=0), dict(fullcheck='x'),
+                   dict(readback='x'), dict(persist=3), dict(persist_table='t.json'), dict(expect_test_block='t.json:A')):
+@@ -270,7 +279,7 @@ class PersistIosData(unittest.TestCase):
+         rv, p32 = T.R/'ios26-dualboot-r8/rootview/kernel.rootview', T.R/'ios26-dualboot-r8/ios-data-persist/kernel.p32-iosdata-dd000c8'
+         if not rv.exists() or not p32.exists(): self.skipTest('kernels absent')
+         r = T.persist_ios_data(self.ns(kernel=(str(rv), T.sha(rv))), self.LINE + ' blazer_persist=1 blazer_persist_period=15')
+-        self.assertEqual(r['kernel_sha256'], T.PERSIST_KERNEL_SHA)
++        self.assertEqual(r['kernel_sha256'], self.RV); self.assertIn('kernel.rootview', r['kernel'])
+         with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(str(p32), T.sha(p32))), self.LINE + ' blazer_persist=1')
+         self.assertIn('8 GiB userdata_exp.ai', str(e.exception))
+     def test_build_still_refuses_without_the_flag(self):
+@@ -278,18 +287,34 @@ class PersistIosData(unittest.TestCase):
+         for extra in ('blazer_persist=1', 'blazer_persist=1 blazer_persist_period=15', 'blazer_persist=3'):
+             with self.assertRaises(SystemExit) as e: T.build(b.ns(phone_args=extra, kernel=kernel[0], kernel_sha=kernel[1]))
+             self.assertIn('blazer_persist is bound at compile time', str(e.exception))
+-        with patch.object(T, 'PERSIST_KERNEL_SHA', kernel[1]):  # the flag, but a preflight image: refused at the gate
++        with patch.dict(T.PERSIST_KERNELS, {kernel[1]: 'test kernel'}):  # the flag, but a preflight image: refused at the gate
+             with self.assertRaises(SystemExit) as e: T.build(b.ns(phone_args='blazer_persist=1', persist_ios_data=True, kernel=kernel[0], kernel_sha=kernel[1]))
+             self.assertIn('--phone-root alone', str(e.exception))
+         self.assertFalse((T.RUN/'phone-preflight-t2').exists())
++    def test_real_int1_kernel(self):
++        k = T.R/'ios26-phaseb-r1/int/build/kernel.int1'
++        if not k.exists(): self.skipTest('kernel.int1 absent')
++        line = self.LINE.replace(' rd=md0 ', ' rd=ufsroot0 ') if ' rd=md0 ' in self.LINE else self.LINE
++        r = T.persist_ios_data(self.ns(kernel=(str(k), T.sha(k))), line + ' blazer_persist=1 blazer_persist_period=15')
++        self.assertEqual((r['kernel_sha256'], r['tokens']), (self.INT1, ['blazer_persist=1', 'blazer_persist_period=15'])); self.assertIn('kernel.int1', r['kernel'])
++        for extra in ('blazer_persist=3', 'blazer_persist=1 blazer_persist_fresh=1', 'blazer_persist=1 blazer_persist_period=14'):
++            with self.assertRaises(SystemExit): T.persist_ios_data(self.ns(kernel=(str(k), T.sha(k))), line + ' ' + extra)
++        with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(str(k), T.sha(k))), line.replace('blazer_ufs_root=ios_system', 'blazer_ufs_root=userdata') + ' blazer_persist=1')
++        self.assertIn('exactly blazer_ufs_root=ios_system', str(e.exception))
++        with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(str(k), T.sha(k)), first_boot=True), line + ' blazer_persist=1')
++        self.assertIn('--phone-root alone', str(e.exception))
+     def test_check_manifest(self):
+-        rec = dict(kernel_sha256=T.PERSIST_KERNEL_SHA, tokens=['blazer_persist=1'], target='ios_data', root='ios_system')
+-        T.check_persist(dict(cmdline=self.LINE)); T.check_persist(dict(cmdline=self.LINE + ' blazer_persist=1', mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec))
+-        for m in (dict(cmdline=self.LINE + ' blazer_persist=1', mach=T.PERSIST_KERNEL_SHA), dict(cmdline=self.LINE + ' blazer_persist=1', mach='0' * 64, persist_ios_data=rec),
+-                  dict(cmdline=self.LINE + ' blazer_persist=1 blazer_persist_period=15', mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec),
+-                  dict(cmdline=self.LINE.replace('ios_system', 'userdata_exp.ai') + ' blazer_persist=1', mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec),
+-                  dict(cmdline=self.LINE, mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec)):
+-            with self.assertRaises(SystemExit): T.check_persist(m)
++        T.check_persist(dict(cmdline=self.LINE))
++        for pin, other in ((self.RV, self.INT1), (self.INT1, self.RV)):
++            rec = dict(kernel_sha256=pin, tokens=['blazer_persist=1'], target='ios_data', root='ios_system')
++            T.check_persist(dict(cmdline=self.LINE + ' blazer_persist=1', mach=pin, persist_ios_data=rec))
++            for m in (dict(cmdline=self.LINE + ' blazer_persist=1', mach=pin), dict(cmdline=self.LINE + ' blazer_persist=1', mach='0' * 64, persist_ios_data=rec),
++                      dict(cmdline=self.LINE + ' blazer_persist=1', mach=other, persist_ios_data=rec),  # record for one pin, image built on the other
++                      dict(cmdline=self.LINE + ' blazer_persist=1', mach='0' * 64, persist_ios_data=dict(rec, kernel_sha256='0' * 64)),
++                      dict(cmdline=self.LINE + ' blazer_persist=1 blazer_persist_period=15', mach=pin, persist_ios_data=rec),
++                      dict(cmdline=self.LINE.replace('ios_system', 'userdata_exp.ai') + ' blazer_persist=1', mach=pin, persist_ios_data=rec),
++                      dict(cmdline=self.LINE, mach=pin, persist_ios_data=rec)):
++                with self.assertRaises(SystemExit): T.check_persist(m)
+ 
+ class FirstBootContract(unittest.TestCase):
+     def test_headless_adt(self):

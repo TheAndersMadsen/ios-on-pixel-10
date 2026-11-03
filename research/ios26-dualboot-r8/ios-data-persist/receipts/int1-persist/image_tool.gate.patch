@@ -1,0 +1,60 @@
+diff --git 1/tmp/persist-int1/image_tool.m1box-before.py 2/tools/image_tool.py
+index 32b49a7..7ae1f46 100644
+--- 1/tmp/persist-int1/image_tool.m1box-before.py
++++ 2/tools/image_tool.py
+@@ -152,6 +152,8 @@ PHONE_ALLOWED = {# handoffs/wifi.md
+                  # handoffs/cpmlock.md. Each its own boot, in that order. The panic limit is the kernel's own range, 30..102
+                  'blazer_thermal': r'blazer_thermal=[12]', 'blazer_thermal_panic_c': r'blazer_thermal_panic_c=(3[0-9]|[4-9][0-9]|10[0-2])', 'blazer_keys': r'blazer_keys=1',
+                  'blazer_sensors': r'blazer_sensors=[123]', 'blazer_sensors_flip': r'blazer_sensors_flip=[0-7]',
++                 # research/ios26-sensors-r1/PLAN.md S2: compass (patch 0930); the kernel refuses it without blazer_sensors=2
++                 'blazer_sensors_mag': r'blazer_sensors_mag=1', 'blazer_sensors_mag_flip': r'blazer_sensors_mag_flip=[0-7]',
+                  'hk_clk': r'hk_clk=([6-9]|[1-9][0-9]|[1-5][0-9][0-9]|600)',  # handoffs/dramclk.md
+                  'hk_top': r'hk_top=([5-9]|[1-9][0-9]|[1-5][0-9][0-9]|600)', 'hk_ui': r'hk_ui=[0-9]+:[a-z0-9.,]+',
+                  # handoffs/overlay.md. hk_overlay: nonzero, and only once the image carries an overlay (build() checks), or the kernel panics by design.
+@@ -202,10 +204,13 @@ def phone_extra(text, *, cpu_health=False):
+         if any(n.startswith('blazer_persist') for n in names): die('readback capture cannot enable persistence writes')
+     return toks
+ # --persist-ios-data: the one gate for blazer_persist on the phone (research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md).
+-# Admitted only for this kernel: release tree 7227fe7 = dd000c8 (persist writes only to the GPT-resolved ios_data) + the
+-# ios_system root view. QEMU NEGATIVE-r1 ran this tree plus the fake-LUN patch (off without blazer_ufs_fake_lun); A7 booted
+-# this exact kernel from ios_system physically. Mode 1 and a period in the kernel's own range (15..3600) only.
+-PERSIST_KERNEL_SHA = 'ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3'  # research/ios26-dualboot-r8/rootview/kernel.rootview
++# Admitted only for these kernels, each release tree 7227fe7 = dd000c8 (persist writes only to the GPT-resolved ios_data) + the
++# ios_system root view, and each booted physically from ios_system read-only. QEMU NEGATIVE-r1 ran 7227fe7 plus the fake-LUN
++# patch (off without blazer_ufs_fake_lun). kernel.int1 is XNU hk-int1 484717f = 7227fe7 + 15 picks, none of which changes a
++# persist, ufs or n882/n913 file (ios-data-persist/INT1-PERSIST.md). Mode 1 and a period in the kernel's own range (15..3600) only.
++PERSIST_KERNELS = {
++    'ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3': 'research/ios26-dualboot-r8/rootview/kernel.rootview (7227fe7; A7 r1)',
++    '0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf': 'research/ios26-phaseb-r1/int/build/kernel.int1 (hk-int1 484717f on 7227fe7; a7-ios-system-int1)'}
+ PERSIST_KERNEL_NEEDS = (b'blazer-persist: ios_data at LBA', b'refused root "%s": userdata')
+ PERSIST_KERNEL_REFUSED = {
+     '052d00f8680e1632fb680f62ecf2369457d10f82a3e4384eb93f6203606eafc8': 'kernel.p32-iosdata-dd000c8 predates 7227fe7: its root view is pinned to the 8 GiB userdata_exp.ai extent, so it cannot root on ios_system (A7-READY section 3)',
+@@ -216,7 +221,7 @@ def persist_ios_data(a, c):
+     if not getattr(a, 'persist_ios_data', False): return None
+     why = PERSIST_KERNEL_REFUSED.get(a.kernel_sha)
+     if why: die(f'--persist-ios-data: {why}')
+-    if a.kernel_sha != PERSIST_KERNEL_SHA or sha(a.kernel) != PERSIST_KERNEL_SHA: die(f'--persist-ios-data: kernel must be {PERSIST_KERNEL_SHA} (kernel.rootview, dd000c8 + 7227fe7)')
++    if a.kernel_sha not in PERSIST_KERNELS or sha(a.kernel) != a.kernel_sha: die(f'--persist-ios-data: kernel must be one of {sorted(PERSIST_KERNELS.values())} (dd000c8 + 7227fe7)')
+     buf = Path(a.kernel).read_bytes()
+     if any(t not in buf for t in PERSIST_KERNEL_NEEDS) or b'blazer_ufs_fake_lun' in buf: die('--persist-ios-data: kernel lacks the ios_data writer or the userdata refusal, or carries the QEMU fake-LUN mode')
+     if not a.phone_root or a.preflight or a.test_kernel or a.first_boot or a.second_boot or a.soak is not None or a.fullcheck or a.readback \
+@@ -230,15 +235,15 @@ def persist_ios_data(a, c):
+     if 'blazer_persist=1' not in p: die('--persist-ios-data needs blazer_persist=1 in --phone-args')
+     bad = [t for t in p if t != 'blazer_persist=1' and not re.fullmatch(PERSIST_PERIOD, t)]
+     if bad or len(p) != len(set(t.split('=')[0] for t in p)): die(f'--persist-ios-data admits blazer_persist=1 and blazer_persist_period=15..3600 only, not {bad or p}')
+-    return dict(kernel_sha256=PERSIST_KERNEL_SHA, tokens=p, target='ios_data', root='ios_system', plan='research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md')
++    return dict(kernel_sha256=a.kernel_sha, kernel=PERSIST_KERNELS[a.kernel_sha], tokens=p, target='ios_data', root='ios_system', plan='research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md')
+ def check_persist(m):
+-    """check: a line with blazer_persist must carry the gate's record, for the pinned kernel and ios_system, and agree with it."""
++    """check: a line with blazer_persist must carry the gate's record, for a pinned kernel and ios_system, and agree with it."""
+     toks = m.get('cmdline', '').split(); p = [t for t in toks if re.match(r'blazer_persist(_\w+)?=', t)]; rec = m.get('persist_ios_data')
+     if not p and not rec: return
+-    if not rec or m.get('mach') != PERSIST_KERNEL_SHA or rec.get('kernel_sha256') != PERSIST_KERNEL_SHA or rec.get('tokens') != p \
++    if not rec or m.get('mach') not in PERSIST_KERNELS or rec.get('kernel_sha256') != m.get('mach') or rec.get('tokens') != p \
+             or [t for t in toks if t.startswith('blazer_ufs_root=')] != ['blazer_ufs_root=ios_system'] or 'blazer_persist=1' not in p:
+         sys.exit('MISMATCH persist: blazer_persist on the line without the --persist-ios-data record, kernel or ios_system root')
+-    print('persist ios_data:', ' '.join(p), 'kernel', PERSIST_KERNEL_SHA[:16])
++    print('persist ios_data:', ' '.join(p), 'kernel', m['mach'][:16])
+ PHONE_KERNEL_NEEDS = (b'ramfs', b'hk_fb_scanout', b'var.skel')
+ SECOND_ARGS = 'hk_fb_scanout=1 sweetfb_noconsole=1 hk_fb_probe=1'  # parent, STATUS 2026-11-01
+ FIRST_MD0 = (R/'laguna-usb-fix/native-fleet-20261031/N419-ioctl-phone-package/admission/artifacts/root.hfs', '3cd4dcb5a505783157d5a1612916e6834ee270edd1139d0c830022986a462780')

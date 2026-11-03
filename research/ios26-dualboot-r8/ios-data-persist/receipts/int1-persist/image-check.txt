@@ -1,0 +1,2 @@
+persist ios_data: blazer_persist=1 blazer_persist_period=15 kernel 0d0c99b2cd7b1c71
+OK a7-ios-system-int1-persist bootable 84f993b65fb24f2c98af106f49b5265d57677a9fe54eed75ce42c7ce6fbf519a

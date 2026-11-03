@@ -1,0 +1,33 @@
+215,218c215,221
+< # Admitted only for this kernel: release tree 7227fe7 = dd000c8 (persist writes only to the GPT-resolved ios_data) + the
+< # ios_system root view. QEMU NEGATIVE-r1 ran this tree plus the fake-LUN patch (off without blazer_ufs_fake_lun); A7 booted
+< # this exact kernel from ios_system physically. Mode 1 and a period in the kernel's own range (15..3600) only.
+< PERSIST_KERNEL_SHA = 'ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3'  # research/ios26-dualboot-r8/rootview/kernel.rootview
+---
+> # Admitted only for these kernels, each release tree 7227fe7 = dd000c8 (persist writes only to the GPT-resolved ios_data) + the
+> # ios_system root view, and each booted physically from ios_system read-only. QEMU NEGATIVE-r1 ran 7227fe7 plus the fake-LUN
+> # patch (off without blazer_ufs_fake_lun). kernel.int1 is XNU hk-int1 484717f = 7227fe7 + 15 picks, none of which changes a
+> # persist, ufs or n882/n913 file (ios-data-persist/INT1-PERSIST.md). Mode 1 and a period in the kernel's own range (15..3600) only.
+> PERSIST_KERNELS = {
+>     'ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3': 'research/ios26-dualboot-r8/rootview/kernel.rootview (7227fe7; A7 r1)',
+>     '0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf': 'research/ios26-phaseb-r1/int/build/kernel.int1 (hk-int1 484717f on 7227fe7; a7-ios-system-int1)'}
+229c232
+<     if a.kernel_sha != PERSIST_KERNEL_SHA or sha(a.kernel) != PERSIST_KERNEL_SHA: die(f'--persist-ios-data: kernel must be {PERSIST_KERNEL_SHA} (kernel.rootview, dd000c8 + 7227fe7)')
+---
+>     if a.kernel_sha not in PERSIST_KERNELS or sha(a.kernel) != a.kernel_sha: die(f'--persist-ios-data: kernel must be one of {sorted(PERSIST_KERNELS.values())} (dd000c8 + 7227fe7)')
+243c246
+<     return dict(kernel_sha256=PERSIST_KERNEL_SHA, tokens=p, target='ios_data', root='ios_system', plan='research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md')
+---
+>     return dict(kernel_sha256=a.kernel_sha, kernel=PERSIST_KERNELS[a.kernel_sha], tokens=p, target='ios_data', root='ios_system', plan='research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md')
+245c248
+<     """check: a line with blazer_persist must carry the gate's record, for the pinned kernel and ios_system, and agree with it."""
+---
+>     """check: a line with blazer_persist must carry the gate's record, for a pinned kernel and ios_system, and agree with it."""
+248c251
+<     if not rec or m.get('mach') != PERSIST_KERNEL_SHA or rec.get('kernel_sha256') != PERSIST_KERNEL_SHA or rec.get('tokens') != p \
+---
+>     if not rec or m.get('mach') not in PERSIST_KERNELS or rec.get('kernel_sha256') != m.get('mach') or rec.get('tokens') != p \
+251c254
+<     print('persist ios_data:', ' '.join(p), 'kernel', PERSIST_KERNEL_SHA[:16])
+---
+>     print('persist ios_data:', ' '.join(p), 'kernel', m['mach'][:16])

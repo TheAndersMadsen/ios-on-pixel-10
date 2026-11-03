@@ -1,0 +1,33 @@
+/srv/dev/repos/personal/hackios/tools/mkadt.py:128: ResourceWarning: unclosed file <_io.BufferedReader name='/srv/dev/repos/personal/hackios/tools/../research/ios26-root-r1/apple/dt/DeviceTree.d421ap.bin'>
+  raw = open(path, 'rb').read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...............................................................................................
+----------------------------------------------------------------------
+Ran 95 tests in 23.269s
+
+OK
+persist ios_data: blazer_persist=1 kernel ddf874fb41cf4871
+persist ios_data: blazer_persist=1 kernel 0d0c99b2cd7b1c71
+test_admitted (__main__.PersistIosData.test_admitted) ... ok
+test_build_still_refuses_without_the_flag (__main__.PersistIosData.test_build_still_refuses_without_the_flag) ... ok
+test_check_manifest (__main__.PersistIosData.test_check_manifest) ... ok
+test_kernel_refused (__main__.PersistIosData.test_kernel_refused) ... ok
+test_off_without_the_flag (__main__.PersistIosData.test_off_without_the_flag) ... ok
+test_pins (__main__.PersistIosData.test_pins) ... ok
+test_profile_refused (__main__.PersistIosData.test_profile_refused) ... ok
+test_real_int1_kernel (__main__.PersistIosData.test_real_int1_kernel) ... ok
+test_real_kernels (__main__.PersistIosData.test_real_kernels) ... ok
+test_root_refused (__main__.PersistIosData.test_root_refused) ... ok
+test_tokens_refused (__main__.PersistIosData.test_tokens_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.668s
+
+OK
+persist ios_data: blazer_persist=1 kernel ddf874fb41cf4871
+persist ios_data: blazer_persist=1 kernel 0d0c99b2cd7b1c71
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 117.603s
+
+OK

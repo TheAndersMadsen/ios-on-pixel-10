@@ -1,0 +1,17 @@
+2026-11-03T20:28:37Z
+tree HEAD (shared, must stay p1): b228c4f4e5b1753034e2e3d7e6ba8a7ce64361f1 clean=0
+hk-int1 = 484717fc194d599cfd28985012b19e7bf0be9748
+dd000c8 is an ancestor of 7227fe7: yes
+dd000c8 is an ancestor of 484717f: yes
+7227fe7 is an ancestor of 484717f: yes
+commits 7227fe7..484717f: 15
+files changed 7227fe7..484717f: 33
+of which persist/ufs/n882/n913: []
+diff lines naming persist/write_guard/ios_data/bp_part: 0
+bsd/miscfs/ramfs/varfs_persist.inc 7227fe7=ad4c98ff2aa6 484717f=ad4c98ff2aa6
+bsd/miscfs/ramfs/varfs_persist_core.h 7227fe7=468d2f478d3b 484717f=468d2f478d3b
+bsd/dev/hakios.blazer_persist_disk.inc 7227fe7=676dd2f3ff68 484717f=676dd2f3ff68
+bsd/dev/hakios.blazer_ufs.c 7227fe7=fec346e9b64d 484717f=fec346e9b64d
+dd000c8 blazer persist: write only to the GPT-resolved ios_data partition
+7227fe7 blazer ufs: root view takes the attached partition's real size and name; refuse userdata* roots
+484717f blazer gpu: blazer_gpu=3 read-only register survey and timer tick check after stage 1's CORE_ID PASS
