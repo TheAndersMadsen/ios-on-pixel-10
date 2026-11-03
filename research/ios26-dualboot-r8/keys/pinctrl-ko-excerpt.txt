@@ -1,0 +1,69 @@
+# Stock pinctrl.ko excerpt (bounded receipt for KEYS.md)
+# source: research/ios26-dualboot-r8/truth/vendor_boot_b.img sha256 06a40d4cfee5291562ceede22caa853dfe057efab4a8918082a58b22865afe2b
+#   vendor ramdisk table entry 1 ('16K', lz4 legacy) -> lib/modules/6.12.81-android16-6-g61789b3255c8-ab16116373_16k/pinctrl.ko
+# pinctrl.ko sha256 12a0698c72cc657e60adb289b145661bb4b9912c68988541b5823b3f07dbb47f
+# tool: LLVM version 23.1.4
+
+## google_gpio_get (address computation and level bit)
+    895c:      	mov	w0, #0x4                // =4
+    8960:      	bl	0x8960 <google_gpio_get+0xe4>
+		0000000000008960:  R_AARCH64_CALL26	get_reg2offset
+    8964:      	ldr	x8, [x20, #0x2f0]
+    8968:      	ldr	x9, [x20, #0x2e0]
+    896c:      	mov	w21, w0
+    8970:      	ldr	x8, [x8, #0x40]
+    8974:      	ldr	x23, [x8, #0x10]
+    8978:      	cbz	x9, 0x89bc <google_gpio_get+0x140>
+    897c:      	ldr	x8, [x20, #0x2e8]
+    8980:      	ldr	w9, [x22, #0x8]
+    8984:      	ldr	w8, [x8, x9, lsl #2]
+    8988:      	cmp	w8, #0x1
+    898c:      	b.lt	0x89bc <google_gpio_get+0x140>
+    8990:      	mov	w0, #0x1                // =1
+    8994:      	bl	0x8994 <google_gpio_get+0x118>
+		0000000000008994:  R_AARCH64_CALL26	get_reg2offset
+    8998:      	cmp	w0, w21
+    899c:      	b.hs	0x89bc <google_gpio_get+0x140>
+    89a0:      	ldr	x8, [x20, #0x2e8]
+    89a4:      	ldr	w9, [x22, #0x8]
+    89a8:      	ldr	w8, [x8, x9, lsl #2]
+    89ac:      	add	x9, x20, #0x2e0
+    89b0:      	sub	w8, w8, #0x1
+    89b4:      	sxtw	x8, w8
+    89b8:      	b	0x89c4 <google_gpio_get+0x148>
+    89bc:      	ldr	w8, [x22, #0x8]
+    89c0:      	add	x9, x20, #0x2d8
+    89c4:      	ldr	x9, [x9]
+    89c8:      	madd	x8, x8, x23, x9
+    89cc:      	add	x0, x8, w21, uxtw
+    89d0:      	bl	0x64e0 <readl>
+    89d4:      	ldr	x1, [sp]
+    89d8:      	mov	w21, w0
+    89dc:      	add	x0, x20, #0x2f8
+    89e0:      	bl	0x89e0 <google_gpio_get+0x164>
+		00000000000089e0:  R_AARCH64_CALL26	_raw_spin_unlock_irqrestore
+    89e4:      	and	w21, w21, #0x1
+
+## get_reg2offset: ldrb from .rodata+0x3478[reg]
+    2db4:      	and	w8, w0, #0xff
+    2db8:      	cmp	w8, #0xc
+    2dbc:      	b.hs	0x2dd4 <get_reg2offset+0x20>
+    2dc0:      	and	x8, x0, #0xff
+    2dc4:      	adrp	x9, 0x2000 <pins_show+0x2c>
+		0000000000002dc4:  R_AARCH64_ADR_PREL_PG_HI21	.rodata+0x3478
+    2dc8:      	add	x9, x9, #0x0
+		0000000000002dc8:  R_AARCH64_ADD_ABS_LO12_NC	.rodata+0x3478
+    2dcc:      	ldrb	w0, [x9, x8]
+    2dd0:      	ret
+    2dd4:      	brk	#0x800
+
+## .rodata+0x3478 reg2offset[0..11]: 00 04 08 0c 10 14 18 1c 20 24 00 00
+##   column order from the debugfs header string: PARAM DMUX TXDATA RXGATE RXDATA ISR ISROVF IER IMR ITR -> [4] = 0x10 RXDATA
+
+## google_lga_of_match entry at .rodata+0x3938 (compatible 'google,lga-cpm-pinctrl' at +0x40 = 0x3978); data ptr at +0xc0 (.rodata+0x39f8, .rela.rodata R_AARCH64_ABS64) -> .rodata+0x6f78
+## cpm soc data .rodata+0x6f78: +0x10 pins -> .rodata+0x7530 (48-byte entries), +0x18 npins = 57 , +0x40 -> .rodata+0x4168
+## .rodata+0x4168 +0x10 (pin stride, google_readl: madd idx, [x8+0x10], base): 0x1000
+## pin 48: entry .rodata+0x7e30 field+8 index = 48
+## pin 51: entry .rodata+0x7ec0 field+8 index = 51
+## pin 52: entry .rodata+0x7ef0 field+8 index = 52
+## pin names (R_AARCH64_ABS64 at entry+0 -> .rodata strings): 48 XCPM_GPI0, 51 XCPM_GPI1, 52 XCPM_EINT_12

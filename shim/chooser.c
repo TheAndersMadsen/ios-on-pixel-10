@@ -209,6 +209,27 @@ static uint64_t now_ms(void)
 static void (*chooser_pat)(void);
 static void lz4_tick(void) { if (chooser_pat) chooser_pat(); }
 
+#if TGL_CHOOSER_KEYS_POLL
+/* keys_laguna.c: debounced pads 51/52 (same reads as chooser_keys); research/ios26-dualboot-r8/keys/KEYS.md. */
+#if !TGL_CHOOSER_KEYS || !TGL_KEYS_POLL
+#error "TGL_CHOOSER_KEYS_POLL needs TGL_CHOOSER_KEYS=1 and TGL_KEYS_POLL=1"
+#endif
+#include "keys_laguna.h"
+static struct keys_state chooser_ks;
+static unsigned chooser_ks_last = ~0u;
+static unsigned chooser_keys_db(void)
+{
+	unsigned r = keys_poll(&chooser_ks, now_ms());
+	if (r != chooser_ks_last) {
+		chooser_ks_last = r;
+		tgl_stamp(KEYS_STAGE_DB, r & KEYS_FAULT ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE,
+		    (uint64_t)r << 48 | (uint64_t)keys_raw_levels(&chooser_ks) << 40 |
+		    (uint64_t)(chooser_ks.bad & 0xffu) << 32 | chooser_ks.samples);
+	}
+	return r & (KEYS_VOL_UP | KEYS_VOL_DOWN);
+}
+#endif
+
 static void __attribute__((noreturn)) chain_jump(uint64_t entry, uint64_t fdt)
 {
 	register uint64_t x0 __asm__("x0") = fdt;
@@ -392,6 +413,12 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 		tgl_stamp(TGL_STAGE_CHOOSER_KEYS, kw || !keys_ok ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE, karg);
 		if (kw) return kw;
 		if (keys_ok) keys = chooser_keys;
+#if TGL_CHOOSER_KEYS_POLL
+		if (keys_ok) {
+			keys_init(&chooser_ks, probe_read32, KEYS_VOL_UP | KEYS_VOL_DOWN, now_ms(), TGL_CHOOSER_TIMEOUT_MS);
+			keys = chooser_keys_db;
+		}
+#endif
 	}
 #endif
 	struct tgl_chooser_menu s;
