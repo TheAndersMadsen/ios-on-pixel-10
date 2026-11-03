@@ -1,0 +1,30 @@
+== blazer_bcm4390_join.arm64e.o
+Mach header
+      magic cputype cpusubtype  caps    filetype ncmds sizeofcmds      flags
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        696 SUBSECTIONS_VIA_SYMBOLS
+defines _b4_net_parse
+defines _b4_join_run
+defines _b4_join_heard
+defines _b4_join_event
+defines _b4_net_rx
+defines _b4_on_flow_created
+defines _b4_join_pre_up
+defines _b4_join_pre_clm
+== A7-r3 kernel de01876e713d45bf (unstripped; stripped kernel.rootview is ddf874fb, A7-r3's mach)
+kernel has _b4_net_parse
+kernel has _b4_join_run
+kernel has _blazer_wifi_net_secret
+kernel has _blazer_wifi_net_ready
+kernel has _blazer_wifi_net_addr
+kernel has _b4_img_fw
+kernel has _b4_img_clm
+kernel has _b4_img_txcap
+kernel has _b4_img_nv_7311
+kernel string: blazer_wifi_join
+kernel string: blazer_wifi_stage
+kernel string: blazer_wifi_net
+kernel string: blazer_wifi_run
+kernel string: join: dry run done
+kernel string: en0 address err
+kernel string: the image holds a network
+kernel string: HKVarOverlay

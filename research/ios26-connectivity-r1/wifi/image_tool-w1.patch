@@ -1,0 +1,24 @@
+--- a/tools/image_tool.py	2026-11-03 16:22:17.214241375 +0100
++++ b/tools/image_tool.py	2026-11-03 16:22:17.232388897 +0100
+@@ -147,7 +147,7 @@
+ PHONE_ALLOWED = {# handoffs/wifi.md
+                  # handoffs/ram.md. blazer_mem above 4 needs ram 0760 in the kernel; 13 clamps to the map's top
+                  'blazer_mem': r'blazer_mem=([5-9]|1[0-3])', 'blazer_mem_test': r'blazer_mem_test=(64|4096)', 'blazer_mem_report': r'blazer_mem_report=1',
+-                 'blazer_wifi': r'blazer_wifi=1', 'blazer_wifi_stage': r'blazer_wifi_stage=[0-3]', 'blazer_wifi_gen': r'blazer_wifi_gen=[1-3]', 'blazer_wifi_delay': r'blazer_wifi_delay=[0-9]{1,3}', 'blazer_wifi_end': r'blazer_wifi_end=[0-9]{1,4}', 'blazer_wifi_hold': r'blazer_wifi_hold=1', 'blazer_wifi_aux': r'blazer_wifi_aux=1', 'blazer_wifi_force': r'blazer_wifi_force=1',
++                 'blazer_wifi': r'blazer_wifi=1', 'blazer_wifi_stage': r'blazer_wifi_stage=[0-8]', 'blazer_wifi_join': r'blazer_wifi_join=1', 'blazer_wifi_run': r'blazer_wifi_run=[0-9]{1,3}', 'blazer_wifi_gen': r'blazer_wifi_gen=[1-3]', 'blazer_wifi_delay': r'blazer_wifi_delay=[0-9]{1,3}', 'blazer_wifi_end': r'blazer_wifi_end=[0-9]{1,4}', 'blazer_wifi_hold': r'blazer_wifi_hold=1', 'blazer_wifi_aux': r'blazer_wifi_aux=1', 'blazer_wifi_force': r'blazer_wifi_force=1',
+                  'blazer_usbcon': r'blazer_usbcon=[12]', 'blazer_usbcon_input': r'blazer_usbcon_input=1', 'blazer_touch': r'blazer_touch=1', 'blazer_touch_bars': r'blazer_touch_bars=1', 'touch_flip': r'touch_flip=[123]',
+                  # handoffs/cpmlock.md. Each its own boot, in that order. The panic limit is the kernel's own range, 30..102
+                  'blazer_thermal': r'blazer_thermal=[12]', 'blazer_thermal_panic_c': r'blazer_thermal_panic_c=(3[0-9]|[4-9][0-9]|10[0-2])', 'blazer_keys': r'blazer_keys=1',
+@@ -418,6 +418,12 @@
+         for t in phone_extra(a.phone_args, cpu_health=health):
+             if t.split('=')[0].encode() not in buf: die(f'kernel does not read {t}')
+         extra = phone_extra(a.phone_args, cpu_health=health)
++        # research/ios26-connectivity-r1/wifi/PLAN.md W1: THIS TRANSMITS. Stage 8 with the owner's network in overlay group 26, never applied
++        if 'blazer_wifi_join=1' in extra:
++            if not {'blazer_wifi=1', 'blazer_wifi_stage=8'} <= set(extra): die('blazer_wifi_join=1 needs blazer_wifi=1 blazer_wifi_stage=8')
++            if not ov or 26 not in ov['groups'] or ov['mask'] >> 26 & 1: die('blazer_wifi_join=1 needs an overlay holding group 26 (compose_wifi_join.py) and an hk_overlay mask without bit 26')
++            if b'the image holds a network' not in buf: die('kernel has no Wi-Fi network reader')
++        elif any(t.startswith('blazer_wifi_run=') for t in extra): die('blazer_wifi_run goes with blazer_wifi_join=1')
+         if 'blazer_keys=1' in extra and b'blazer-keys: polling pads' not in buf: die('kernel holds keys until keys-probe-r1 passes: handoffs/cpmlock.md')
+         if any(t.startswith('blazer_thermal_panic_c=') for t in extra) and 'blazer_thermal=2' not in extra: die('blazer_thermal_panic_c needs blazer_thermal=2')
+         if getattr(a, 'phone_deadline', None) not in (None, 300, 1800, 3600): die('--phone-deadline: 300, 1800 or 3600')

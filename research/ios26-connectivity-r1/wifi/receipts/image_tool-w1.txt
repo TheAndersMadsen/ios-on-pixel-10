@@ -1,0 +1,7 @@
+test_join_tokens (__main__.W1.test_join_tokens) ... ok
+test_still_refused (__main__.W1.test_still_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK

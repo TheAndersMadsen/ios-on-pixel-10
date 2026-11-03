@@ -1,0 +1,19 @@
+test_base_pinned_and_kernel_accepts_base (__main__.Compose.test_base_pinned_and_kernel_accepts_base) ... ok
+test_base_records_byte_identical_and_in_order (__main__.Compose.test_base_records_byte_identical_and_in_order) ... ok
+test_cmdline (__main__.Compose.test_cmdline) ... ok
+test_cmdline_limit_enforced (__main__.Compose.test_cmdline_limit_enforced) ... ok
+test_composed_kernel_reader (__main__.Compose.test_composed_kernel_reader) ... ok
+test_kernel_rejects_bad_net_records (__main__.Compose.test_kernel_rejects_bad_net_records) ... ok
+test_kernel_rejects_damage (__main__.Compose.test_kernel_rejects_damage) ... ok
+test_mask_that_applies_group_26_fails (__main__.Compose.test_mask_that_applies_group_26_fails) ... ok
+test_open_network_and_mac (__main__.Compose.test_open_network_and_mac) ... ok
+test_output_refuses_overwrite_and_is_private (__main__.Compose.test_output_refuses_overwrite_and_is_private) ... ok
+test_password_never_in_blob (__main__.Compose.test_password_never_in_blob) ... ok
+test_refuse_bad_blob (__main__.Compose.test_refuse_bad_blob) ... ok
+test_refuse_twice (__main__.Compose.test_refuse_twice) ... ok
+test_secret_permissions_enforced (__main__.Compose.test_secret_permissions_enforced) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 1.485s
+
+OK
