@@ -1,0 +1,10 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ arm64e-ios ]
+install-name:    '/usr/lib/libSystem.B.dylib'
+current-version: 1351
+exports:
+  - targets:     [ arm64e-ios ]
+    symbols:     [ __dyld_get_image_header, __dyld_get_image_name, __dyld_get_image_vmaddr_slide, __dyld_image_count,
+                   _close, _dispatch_once_f, dyld_stub_binder, _getenv, _getprogname, _memcmp, _open, _snprintf, _strcmp, _strlen, _write ]
+...

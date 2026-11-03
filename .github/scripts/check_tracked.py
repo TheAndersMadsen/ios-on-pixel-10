@@ -26,6 +26,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-apps-r1/tools/m1box/[A-Za-z0-9_.-]+\.(py|sh|md)
   | ios26-apps-r1/receipts/(m1box-rig|l1-r16|h3-static-r12)/[A-Za-z0-9_.-]+\.md
   | ios26-phaseb-r1/home-budget/(data/)?[A-Za-z0-9_.-]+\.(md|py|json)
+  | ios26-phaseb-r1/accel-wait/((src|test)/)?[A-Za-z0-9_.-]+\.(md|py|sh|c|h|tbd)
   | ios26-phaseb-r1/corebrightness/([a-z]+/)?[A-Za-z0-9_.-]+\.(md|patch|h|c|cpp|py)
   | ios26-dualboot-r8/keys/r12-(panel|diff)/[A-Za-z0-9_.-]+\.(c|py|diff|txt)
   | ios26-dualboot-r8/chooser-ios/receipts/(r0b?/)?[A-Za-z0-9_.-]+\.(txt|diff|json|sha256)
