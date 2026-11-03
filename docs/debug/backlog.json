@@ -101,7 +101,7 @@
       "status": "FIXED-PENDING-VERIFY",
       "owner": "ROOT-r5",
       "approach": "int2 cover partial; r5 fixes at source",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:4259",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:3911",
       "next": {
         "kind": "unattended",
         "minutes": 10,
@@ -109,115 +109,17 @@
       }
     },
     {
-      "id": "crash:22489cba6d",
-      "subsystem": "MobilePhone",
-      "title": "userabort:MobilePhone@0x2294c9498",
-      "kind": "crash",
-      "verdict": "not seen since: 1 later boot(s) ran MobilePhone without it; but MobilePhone still fails later as kill:MobilePhone:SIGKILL by runningboardd ns 10 code 0xdeadf",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "Phone white screen: restore MobilePhone.app + UI framework Assets.car",
-      "evidence": "live-20261103-224007-a7-int2-ui:9390",
-      "next": ""
-    },
-    {
-      "id": "crash:232eb130d5",
-      "subsystem": "Health",
-      "title": "crash:Health:ns 2 code 0x5",
+      "id": "crash:6c8f3507cb",
+      "subsystem": "MobileSMS",
+      "title": "userabort:MobileSMS@0x1d5139b20",
       "kind": "crash",
       "verdict": "open (latest boot)",
       "phone_only": true,
       "severity": "high",
       "status": "IN-PROGRESS",
       "owner": "ROOT-r5",
-      "approach": "pruned-resource SIGABRT",
-      "evidence": "live-20261103-230031-a7-int2:4909",
-      "next": ""
-    },
-    {
-      "id": "crash:2444eb9e39",
-      "subsystem": "Photos",
-      "title": "crash:Photos:ns 2 code 0x6",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
-      "evidence": "live-20261103-230031-a7-int2:5511",
-      "next": ""
-    },
-    {
-      "id": "crash:395127b17f",
-      "subsystem": "Magnifier",
-      "title": "kill:Magnifier:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "MEM",
-      "approach": "0xdeadfa11 = jetsam; likely the 4 GiB memsize cap; re-check after full-RAM lands",
-      "evidence": "live-20261103-230031-a7-int2:8809",
-      "next": ""
-    },
-    {
-      "id": "crash:46e0b770ce",
-      "subsystem": "Journal",
-      "title": "crash:Journal:ns 2 code 0x6",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
-      "evidence": "live-20261103-230031-a7-int2:5824",
-      "next": ""
-    },
-    {
-      "id": "crash:549209ba54",
-      "subsystem": "MobileCal",
-      "title": "kill:MobileCal:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "MEM",
-      "approach": "0xdeadfa11 = jetsam; likely the 4 GiB memsize cap; re-check after full-RAM lands",
-      "evidence": "live-20261103-230031-a7-int2:5086",
-      "next": ""
-    },
-    {
-      "id": "crash:83081e1dfa",
-      "subsystem": "AppleVisionProAp",
-      "title": "crash:AppleVisionProAp:ns 2 code 0x6",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
-      "evidence": "live-20261103-230031-a7-int2:5631",
-      "next": ""
-    },
-    {
-      "id": "crash:84baf75b8f",
-      "subsystem": "Weather",
-      "title": "kill:Weather:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "MEM",
-      "approach": "0xdeadfa11 = jetsam; likely the 4 GiB memsize cap; re-check after full-RAM lands",
-      "evidence": "live-20261103-230031-a7-int2:8792",
+      "approach": "Messages app SIGABRT from pruned Assets.car",
+      "evidence": "live-20261103-232046-a7-int3:4154",
       "next": ""
     },
     {
@@ -225,7 +127,7 @@
       "subsystem": "MobileSMS",
       "title": "crash:MobileSMS:ns 2 code 0x6",
       "kind": "crash",
-      "verdict": "open (latest boot)",
+      "verdict": "not seen since: 1 later boot(s) ran MobileSMS without it; but MobileSMS still fails later as userabort:MobileSMS@0x1d5139b20",
       "phone_only": true,
       "severity": "high",
       "status": "IN-PROGRESS",
@@ -239,21 +141,21 @@
       "subsystem": "Preferences",
       "title": "userabort:Preferences@0x233074728",
       "kind": "crash",
-      "verdict": "not seen since: 1 later boot(s) ran Preferences without it; but Preferences still fails later as crash:Preferences:ns 2 code 0x6",
+      "verdict": "open (latest boot)",
       "phone_only": true,
       "severity": "high",
       "status": "IN-PROGRESS",
       "owner": "ROOT-r5",
       "approach": "About: restore MLSortMapTables.plist at its real path (not en.lproj)",
-      "evidence": "live-20261103-224007-a7-int2-ui:4566",
-      "next": "Settings > About: Preferences aborts (SIGABRT) right after tccd answers its kTCCServiceMediaLibrary request with generic_extension=\"invalid\" (no usable sandbox extension). ABOUT finding, int1."
+      "evidence": "live-20261103-232046-a7-int3:4018",
+      "next": ""
     },
     {
       "id": "crash:9cafb39ebf",
       "subsystem": "Preferences",
       "title": "crash:Preferences:ns 2 code 0x6",
       "kind": "crash",
-      "verdict": "open (latest boot)",
+      "verdict": "not seen since: 1 later boot(s) ran Preferences without it; but Preferences still fails later as userabort:Preferences@0x233074728",
       "phone_only": true,
       "severity": "high",
       "status": "IN-PROGRESS",
@@ -263,53 +165,11 @@
       "next": "Settings > About: Preferences aborts (SIGABRT) right after tccd answers its kTCCServiceMediaLibrary request with generic_extension=\"invalid\" (no usable sandbox extension). ABOUT finding, int1."
     },
     {
-      "id": "crash:9cb7f8e8da",
-      "subsystem": "MobilePhone",
-      "title": "kill:MobilePhone:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "Phone white screen: restore MobilePhone.app + UI framework Assets.car",
-      "evidence": "live-20261103-230031-a7-int2:8777",
-      "next": ""
-    },
-    {
-      "id": "crash:b3653ffec1",
-      "subsystem": "SpringBoard",
-      "title": "crash:SpringBoard:ns 2 code 0x6",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
-      "evidence": "live-20261103-230031-a7-int2:10525",
-      "next": ""
-    },
-    {
-      "id": "crash:b976cb6869",
-      "subsystem": "VoiceMemos",
-      "title": "crash:VoiceMemos:ns 2 code 0x6",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "IN-PROGRESS",
-      "owner": "ROOT-r5",
-      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
-      "evidence": "live-20261103-230031-a7-int2:6062",
-      "next": ""
-    },
-    {
       "id": "crash:c47563a3bc",
       "subsystem": "FaceTime",
       "title": "crash:FaceTime:ns 2 code 0x6",
       "kind": "crash",
-      "verdict": "open (latest boot)",
+      "verdict": "not seen since: 1 later boot(s) ran FaceTime without it; but FaceTime still fails later as userabort:FaceTime@0x1b7379328",
       "phone_only": true,
       "severity": "high",
       "status": "IN-PROGRESS",
@@ -319,17 +179,17 @@
       "next": ""
     },
     {
-      "id": "crash:f63f1df277",
-      "subsystem": "Freeform",
-      "title": "crash:Freeform:ns 2 code 0x6",
+      "id": "crash:fc54c48e41",
+      "subsystem": "FaceTime",
+      "title": "userabort:FaceTime@0x1b7379328",
       "kind": "crash",
       "verdict": "open (latest boot)",
       "phone_only": true,
       "severity": "high",
       "status": "IN-PROGRESS",
       "owner": "ROOT-r5",
-      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
-      "evidence": "live-20261103-230031-a7-int2:5712",
+      "approach": "pruned-resource SIGABRT",
+      "evidence": "live-20261103-232046-a7-int3:5378",
       "next": ""
     },
     {
@@ -357,9 +217,9 @@
       "approach": "start the A520 efficiency cluster",
       "evidence": "",
       "next": {
-        "kind": "build",
-        "minutes": 18,
-        "test": "cpus=6 boot after the CAS-workaround (bit9) fix; unattended 900 s"
+        "kind": "unattended",
+        "minutes": 8,
+        "test": "a7-cpu0-em-r1 (blazer_cpu0_audit=2, 300 s, five A725s): read the Errata ABI answers in stamps-decode.txt"
       }
     },
     {
@@ -465,9 +325,9 @@
       "approach": "read charger IC; safe control (owner-approved writes)",
       "evidence": "",
       "next": {
-        "kind": "build",
-        "minutes": 10,
-        "test": "Log charger state (max77779 CHG registers) read-only; any unattended boot"
+        "kind": "unattended",
+        "minutes": 15,
+        "test": "Boot a7-ios-system-chg1 (hk-chg1, built, not booted): blazer-battery: charger lines with in=usb and the ABL limits; read only"
       }
     },
     {
@@ -825,9 +685,9 @@
       "approach": "detect wireless charger",
       "evidence": "",
       "next": {
-        "kind": "none",
-        "minutes": 0,
-        "test": "Not assigned"
+        "kind": "attended",
+        "minutes": 20,
+        "test": "a7-ios-system-chg1: owner puts the phone on a Qi pad, unplugs USB ~3 min, replugs before the deadline; ramdump charger lines (PLAN.md W1)"
       }
     },
     {
@@ -845,50 +705,20 @@
       "next": {
         "kind": "none",
         "minutes": 0,
-        "test": "No test until the errata work exists"
+        "test": "No test until the X4 errata are answered (an Errata ABI query must run on the X4 itself)"
       }
     },
     {
-      "id": "crash:52b5b37fa0",
-      "subsystem": "SpringBoard",
-      "title": "message:SpringBoard:uncaught NSInvalidArgumentException: *** -[__NSPlaceholderArray initWithObjects:count:]: attempt to insert nil object from objects[N]",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
+      "id": "finding:gpu-coremem-mmu-fault",
+      "subsystem": "gpu",
+      "title": "GPU firmware MMU-faults + locks up at init: SYSINIT coremem data-store field (offset 0x150) left 0 instead of the coremem device address (0xE1C0000000+0x13c000)",
+      "kind": "finding",
       "severity": "high",
       "status": "OPEN",
-      "owner": "UNASSIGNED",
-      "approach": "",
-      "evidence": "live-20261103-230031-a7-int2:10496",
-      "next": ""
-    },
-    {
-      "id": "crash:b04c256326",
-      "subsystem": "Magnifier",
-      "title": "crash:Magnifier:ns 2 code 0x5",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "OPEN",
-      "owner": "UNASSIGNED",
-      "approach": "",
-      "evidence": "live-20261103-230031-a7-int2:6188",
-      "next": ""
-    },
-    {
-      "id": "crash:e74f2df5b9",
-      "subsystem": "WidgetRenderer_Default",
-      "title": "kill:WidgetRenderer_Default:SIGKILL by runningboardd ns 15 code 0xb111b111",
-      "kind": "crash",
-      "verdict": "open (latest boot)",
-      "phone_only": true,
-      "severity": "high",
-      "status": "OPEN",
-      "owner": "UNASSIGNED",
-      "approach": "",
-      "evidence": "live-20261103-230031-a7-int2:10533",
-      "next": ""
+      "owner": "GPU (stream code classifier-blocked)",
+      "approach": "stages 0-1 (power-on, firmware via Trusty) are PHYSICAL PASS (gpu2 M2 HEALTH PASS). Set the coremem 0x150 field, then the rung-7 firmware command stream. The command-stream code hit the classifier; host layout tools + the fault decode are in research/ios26-gpu-r1/m3/",
+      "evidence": "20261103-205316-a7-ios-system-gpu2 fw log: MMU page fault (META DMA, addr 0x0) -> GPU-0 locked up",
+      "next": "apply the coremem fix (research/ios26-gpu-r1/m3), rebuild, retest for mmu_fault 0 lockup 0"
     },
     {
       "id": "probe:chooser",
@@ -967,7 +797,7 @@
       "status": "DEFERRED",
       "owner": "DEFERRED",
       "approach": "gated on the SEP trust chain; park until a SEP bring-up lane exists",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:948",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:1184",
       "next": {
         "kind": "none",
         "minutes": 0,
@@ -985,7 +815,7 @@
       "status": "IN-PROGRESS",
       "owner": "UNASSIGNED",
       "approach": "add a panel-brightness readback log line to promote to confirmed",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:3220",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:2945",
       "next": {
         "kind": "unattended",
         "minutes": 10,
@@ -1003,7 +833,7 @@
       "status": "IN-PROGRESS",
       "owner": "PROMOTION",
       "approach": "promote once 120 lands; already 60 confirmed",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:119",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:121",
       "next": {
         "kind": "unattended",
         "minutes": 10,
@@ -1021,7 +851,7 @@
       "status": "OPEN",
       "owner": "UNASSIGNED",
       "approach": "",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:809",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:824",
       "next": {
         "kind": "unattended",
         "minutes": 10,
@@ -1039,7 +869,7 @@
       "status": "OPEN",
       "owner": "UNASSIGNED",
       "approach": "",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:490",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:464",
       "next": {
         "kind": "build",
         "minutes": 18,
@@ -1057,7 +887,7 @@
       "status": "OPEN",
       "owner": "UNASSIGNED",
       "approach": "",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:3768",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:3546",
       "next": {
         "kind": "attended",
         "minutes": 5,
@@ -1075,7 +905,7 @@
       "status": "OPEN",
       "owner": "UNASSIGNED",
       "approach": "",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:139",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:141",
       "next": {
         "kind": "unattended",
         "minutes": 10,
@@ -1093,7 +923,7 @@
       "status": "TEST-ONLY",
       "owner": "COORDINATOR",
       "approach": "bt2 built; needs a boot + Settings>Bluetooth",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:1164",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:1221",
       "next": {
         "kind": "build",
         "minutes": 15,
@@ -1111,7 +941,7 @@
       "status": "DEFERRED",
       "owner": "PARKED",
       "approach": "USB-net root shell lane classifier-blocked; parked",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:840",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:852",
       "next": {
         "kind": "build",
         "minutes": 10,
@@ -1129,7 +959,7 @@
       "status": "OPEN",
       "owner": "UNASSIGNED",
       "approach": "",
-      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:206",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-232046-a7-int3/console.txt:209",
       "next": {
         "kind": "build",
         "minutes": 5,
@@ -1140,8 +970,8 @@
   "groups": {
     "DEFERRED": 7,
     "FIXED-PENDING-VERIFY": 2,
-    "IN-PROGRESS": 47,
-    "OPEN": 9,
+    "IN-PROGRESS": 37,
+    "OPEN": 7,
     "TEST-ONLY": 3
   }
 }
