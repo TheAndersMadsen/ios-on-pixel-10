@@ -13,8 +13,8 @@ it is not a second project journal.
 3. Host: r4 (cached decode) and r6 (menu renderer) are built and QEMU-tested; next are the visible
    menu (r6 plus the `tgl_dcs_run` full-screen layer, `research/ios26-dualboot-r8/menu-ui/SCANOUT-PATH.md`),
    the volume-key pad read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).
-   A7 boot blocker (source): XNU `n892_xnu_selected_view` (n913_n892_bridge.inc) requires an exactly
-   2,097,152-block root named userdata_exp.ai; rebind to ios_system at its GPT size, link, QEMU with the real size.
+   A7 boot blocker fixed (QEMU): the root view now takes ios_system's real size; kernel
+   `research/ios26-dualboot-r8/rootview/kernel.rootview` mounted a 20 GiB ios_system root for 600 s in QEMU.
    Flash/readback side is ready: `tools/ios_partition_flash.py`, `research/ios26-dualboot-r8/A7-READY.md`.
    Apps lane (QEMU): registration is blocked behind a missing user session/persona
    (`research/ios26-apps-r1/receipts/lslog-r11/result-r11h.json`); next is a genuine user-session bootstrap.
