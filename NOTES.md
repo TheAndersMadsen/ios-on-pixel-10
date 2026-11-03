@@ -15,10 +15,8 @@ recoverable. QEMU and host tools support development; they are not phone results
   physical evidence. Backboardd respawns and queued presentations mean the UI is
   interactive but unstable; there is no clean-compositor, FPS or speed acceptance.
 - **Android:** restored on slot b (exceptions: `research/factory-alias-restore-r1/HANDOFF.md`).
-  **Since 21:11 on 2026-11-02 the phone is parked in fastboot with force-fastboot ON and a
-  recovery request in misc** after chooser t1; the owner returns it per
-  `research/ios26-dualboot-r8/NEEDS-OWNER.md` section 0 ("Try again", never factory reset).
-  A1 backup: `research/android-backup-20261102/`.
+  After chooser t1 the owner returned it via recovery "Try again" (2026-11-03, return check PASS,
+  `research/ios26-dualboot-r8/attempts/return-after-t1/`); force-fastboot off. A1 backup: `research/android-backup-20261102/`.
 - **No iOS root is deployed.** `userdata_exp.ai` is a member of Android's multi-device
   F2FS `/data`; every XNU recipe now binds `blazer_ufs_root=ios_system` and
   `tools/image_tool.py` refuses `userdata_exp.ai` and `blazer_persist` (b1d2971, ff9261d).

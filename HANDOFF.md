@@ -5,8 +5,7 @@ it is not a second project journal.
 
 ## Next actions
 
-1. **Owner:** return the phone per `research/ios26-dualboot-r8/NEEDS-OWNER.md` section 0
-   (force-fastboot off, reboot, recovery "Try again", never factory reset), then the return check.
+1. Done: phone back in Android, return check PASS (2026-11-03). pKVM prints "hVHE" on this kernel.
 2. With the owner present: boot chooser-v1-r3 (stock vbmeta transplanted) once; the
    discriminator is vold mounting /data and `Kernel code` at 0xc9c00000 in `/proc/iomem`.
 3. Host: r4 (cached decode) and r6 (menu renderer) are built and QEMU-tested; next are the visible
