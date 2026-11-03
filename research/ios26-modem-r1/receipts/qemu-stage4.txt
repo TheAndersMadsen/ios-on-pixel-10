@@ -1,0 +1,11 @@
+QEMU qf-modem1-stage4 (m1box rig TCG, kernel.modem1 159898f6, int3-r1.ovl, harness args of the pre-flight + hk_dbg=0x4000000), 2026-11-03T22:49:14Z
+{"elapsed": 300.21115827299946, "exit": 0, "root_unchanged": true}
+rc 0
+panics: 0
+blazer-modem: stage 4 (link), hold 0, force 0, starts in 30 s
+exec launchd
+blazer-modem: stopped: mailbox magic, detail 0x0
+blazer-modem: verdict: STOP stage 4, at none: mailbox magic, detail 0x0, frames 0
+exec SpringBoard
+exec backboardd
+QEMU has no CPM/S5400: this proves the thread arms from hk_dbg, maps its windows, stops before any frame, and the boot continues. Not a modem result.

@@ -1,0 +1,74 @@
+--- a/tools/hk_dbg.py
++++ b/tools/hk_dbg.py
+@@ -8,7 +8,8 @@
+ 
+ Layout: bit 0 input (blazer_usbcon_input=1), 1 snap (blazer_usbcon_snap=1), 2 usertrace (hk_usertrace=1),
+ 3 ustack (hk_ustack=Preferences,MobilePhone when no hk_ustack= is given), 4 crashinfo (hk_crashinfo=1, needs usertrace),
+-bits 8..15 hk_screen period (0, 1 or >= 10), bits 16..23 hk_top period (0 or 5..255).
++bits 8..15 hk_screen period (0, 1 or >= 10), bits 16..23 hk_top period (0 or 5..255),
++bits 24..27 modem stage 1..4 (blazer_modem=N, hk-modem1), bit 28 modem hold (blazer_modem_hold=1).
+ """
+ import argparse
+ import sys
+@@ -16,18 +17,20 @@
+ FLAGS = (('input', 0x01, 'blazer_usbcon_input=1'), ('snap', 0x02, 'blazer_usbcon_snap=1'),
+          ('usertrace', 0x04, 'hk_usertrace=1'), ('ustack', 0x08, 'hk_ustack=Preferences,MobilePhone'),
+          ('crashinfo', 0x10, 'hk_crashinfo=1'))
+-KNOWN = 0x1f | 0xffff00
++KNOWN = 0x1f | 0xffff00 | 0x1f000000
+ 
+ 
+-def encode(input=False, snap=False, usertrace=False, ustack=False, crashinfo=False, screen=0, top=0):
++def encode(input=False, snap=False, usertrace=False, ustack=False, crashinfo=False, screen=0, top=0, modem=0, modem_hold=False):
+     if screen not in (0, 1) and not 10 <= screen <= 255:
+         raise ValueError('screen period: 0, 1 or 10..255')
+     if top and not 5 <= top <= 255:
+         raise ValueError('top period: 0 or 5..255')
+     if crashinfo and not usertrace:
+         raise ValueError('crashinfo needs usertrace')
++    if not 0 <= modem <= 4 or (modem_hold and not modem):
++        raise ValueError('modem stage: 0..4; hold needs a stage')
+     v = sum(bit for (name, bit, _), on in zip(FLAGS, (input, snap, usertrace, ustack, crashinfo)) if on)
+-    v |= screen << 8 | top << 16
++    v |= screen << 8 | top << 16 | modem << 24 | (0x10000000 if modem_hold else 0)
+     if not v:
+         raise ValueError('nothing to encode')
+     return v
+@@ -41,7 +44,7 @@
+     if v & ~KNOWN:
+         raise ValueError(f'unknown bits {v & ~KNOWN:#x}')
+     out = {name: bool(v & bit) for name, bit, _ in FLAGS}
+-    out.update(screen=v >> 8 & 0xff, top=v >> 16 & 0xff)
++    out.update(screen=v >> 8 & 0xff, top=v >> 16 & 0xff, modem=v >> 24 & 0xf, modem_hold=bool(v & 0x10000000))
+     return out
+ 
+ 
+@@ -53,6 +56,10 @@
+         t.append(f'hk_screen={d["screen"]}')
+     if d['top']:
+         t.append(f'hk_top={d["top"]}')
++    if d['modem']:
++        t.append(f'blazer_modem={d["modem"]}')
++    if d['modem_hold']:
++        t.append('blazer_modem_hold=1')
+     return t
+ 
+ 
+@@ -64,6 +71,8 @@
+         e.add_argument(f'--{name}', action='store_true')
+     e.add_argument('--screen', type=int, default=0)
+     e.add_argument('--top', type=int, default=0)
++    e.add_argument('--modem', type=int, default=0)
++    e.add_argument('--modem-hold', action='store_true')
+     d = sub.add_parser('decode')
+     d.add_argument('value')
+     x = sub.add_parser('expand')
+@@ -71,7 +80,7 @@
+     a = p.parse_args()
+     try:
+         if a.cmd == 'encode':
+-            print(token(encode(a.input, a.snap, a.usertrace, a.ustack, a.crashinfo, a.screen, a.top)))
++            print(token(encode(a.input, a.snap, a.usertrace, a.ustack, a.crashinfo, a.screen, a.top, a.modem, a.modem_hold)))
+         elif a.cmd == 'decode':
+             v = int(a.value.split('=')[-1], 16)
+             print(decode(v))

@@ -1,0 +1,7 @@
+research/ios26-modem-r1/build/kernel.modem1: OK
+research/ios26-phaseb-r1/int3/overlays/int3-r1.ovl: OK
+kernel has: blazer-modem: stage %u (%s), hold %d, force %d, starts in %u s
+kernel has: PCIe0 power vote
+kernel has: S5400 CP boot ROM
+kernel has: HK DBG: hk_dbg=%#x
+kernel has: HKOBS %u %s t=%llu %s: %s

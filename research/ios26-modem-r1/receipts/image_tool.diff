@@ -1,0 +1,14 @@
+14c14
+< X = Path(__file__).resolve().parents[5]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # live/uidrive/tools/image_tool_int2.py: int/tools/image_tool_int1.py + hk_dbg (UIDRIVE.md), run from here
+---
+> X = Path(__file__).resolve().parents[3]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # research/ios26-modem-r1/tools/image_tool_modem1.py: live/uidrive/tools/image_tool_int2.py + hk_dbg modem bits 24..28 (MODEM.md), run from here
+179c179
+< PHONE_ALLOWED.update({'hk_dbg': r'hk_dbg=0x[0-9a-f]{1,6}'})
+---
+> PHONE_ALLOWED.update({'hk_dbg': r'hk_dbg=0x[0-9a-f]{1,8}'})  # research/ios26-modem-r1/MODEM.md: bits 24..27 modem stage 1..4, bit 28 hold (hk-modem1)
+446c446,448
+<             if v & ~0xffff1f or v == 0: die(f'{t}: unknown bits or empty (kern/hk_dbg.h: bits 0..4, screen 8..15, top 16..23)')
+---
+>             if v & ~0x1fffff1f or v == 0: die(f'{t}: unknown bits or empty (kern/hk_dbg.h: bits 0..4, screen 8..15, top 16..23; hk-modem1: modem stage 24..27, hold 28)')
+>             if v >> 24 & 0xf > 4: die(f'{t}: modem stage {v >> 24 & 0xf} (1..4 only, MODEM.md)')
+>             if v >> 24 & 0x1f and b'blazer-modem: stage %u (%s), hold %d, force %d, starts in %u s' not in buf: die('hk_dbg modem bits: kernel has no blazer_modem ladder (hk-modem1)')

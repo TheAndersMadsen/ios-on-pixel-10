@@ -1,0 +1,35 @@
+# hk_cycle expectations for a7-ios-system-modem1 (research/ios26-modem-r1/PHONE-TEST.md).
+# Schema: research/ios26-phaseb-r1/live/expect/int1.yaml (HARNESS.md "Expect / probes schema").
+# Patterns are the kernel's printf formats (src/bsd/dev/blazer_modem*.c), checked against the host model's console
+# (tests/test_modem_core.c HK_MODEM_LOG). No line here has been seen on the phone yet.
+name: modem1
+image: a7-ios-system-modem1
+probes:
+  - id: boot.root
+    feature: XNU rooted on ios_system, launchd running (int3 regression)
+    need: ['blazer-root: .*rooting on|BSD root: ', '(?:^|\s)exec launchd$']
+  - id: boot.home
+    feature: Home up, as int3 (regression; the modem thread must not cost it)
+    need: ['(?:^|\s)exec SpringBoard$', 'SWEET HID: SweetHIDTouch open by']
+    marker: HOME
+    forbid: ['\((?:[^\s()]*/)?(?:backboardd|SpringBoard) \[\d+\]\).*service has crashed [3-9] times in a row']
+  - id: M.start
+    feature: modem thread armed from hk_dbg (stage 4, no hold)
+    need: ['blazer-modem: stage 4 \(link\), hold 0, force 0, starts in 30 s']
+  - id: M.read
+    feature: rung 1, pads and power domains as found
+    need: ['blazer-modem: read: HSIO_N state 2', 'blazer-modem: read: HSIO_S state 2', 'blazer-modem: read: CP as found: ']
+    values:
+      - {re: 'blazer-modem: pad (AP2CP_CP_PWR_ON|AP2CP_CP_WRST_N|AP2CP_NRESET|AP2CP_PM_WRST_N) .*tx 0x([0-9a-f]+)', agg: count, min: 4}
+  - id: M.ctrl
+    feature: rung 2, PCIe0 power vote, resets, PHY SRAM
+    need: ['blazer-modem: ctrl: PCIe0 domain voted on', 'blazer-modem: ctrl: PHY SRAM ready after \d+ polls']
+  - id: M.phy
+    feature: rung 3, PHY table, root port
+    need: ['blazer-modem: phy: table in, PHY told', 'blazer-modem: rc: set up']
+  - id: M.link
+    feature: rung 4, CP power-on, S5400 boot ROM on PCIe0, ID 144d:a5a5, CP off again
+    need: ['blazer-modem: cp: powered, \d+ us', 'blazer-modem: link: UP, attempt \d', 'blazer-modem: id: 144d:a5a5 class 0x028000',
+           'blazer-modem: tidy: .* errors 0x0', 'blazer-modem: verdict: PASS stage 4, at id: PCIe0 link gen 1 x1, endpoint 144d:a5a5, CP off again']
+    forbid: ['blazer-modem: verdict: STOP', 'blazer-modem: tidy: .* errors 0x[1-9a-f]']
+    note: "a STOP names its rung and reason; everything driven is restored (tidy errors 0x0). Return check must PASS either way"

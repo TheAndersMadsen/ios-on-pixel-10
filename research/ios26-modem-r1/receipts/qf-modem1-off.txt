@@ -1,0 +1,93 @@
+qemu_preflight: qf-modem1-off: 600 s on the rig (slots cap 6)
+QEMU pre-flight: a7-ios-system-modem1  (QEMU/TCG evidence only; nothing touched the phone)
+  kernel  /srv/dev/repos/personal/hackios/research/ios26-modem-r1/build/kernel.modem1  sha 159898f6619f2024  (not needed: phone build runs on the rig ADT)
+          Darwin Kernel Version 25.5.0: Sun Nov  1 23:52:38 CET 2026; andersmadsen:obj/DEVELOPMENT_ARM64_BLAZER
+  overlay /srv/dev/repos/personal/hackios/research/ios26-phaseb-r1/int3/overlays/int3-r1.ovl  sha 898740adf222a874  mask 0xa0080081
+  root    /data/hackios-qemu/research/ios26-root-r1/build-r3/ios26-phone-r3.img  (fake UFS LUN, read-only)
+  run     /data/hackios-qemu/research/ios26-apps-r1/runs/qf-modem1-off  host 599.0 s of 600 s; exit {"elapsed": 600.154742570001, "exit": 0, "root_unchanged": true}
+  boot-args translation:
+    harness  debug=0x8                                set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  serial=3                                 set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  cpus=5                                   set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  rd=ufsroot0                              set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  msgbuf=1048576                           set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs=2                             set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs_live=1                        set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs_root=ios_system               set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs_lun=0                         set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  launchd_disable_all_timeouts=1           set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    drop     blazer_touch=1                           phone-only: touch controller (SPI/Laguna)
+    drop     blazer_touch_bars=1                      phone-only: touch controller (SPI/Laguna)
+    keep-new atm_diagnostic_config=0x400              ATM diagnostics config (software); first use on the rig
+    drop     blazer_ufs_multi=1                       phone-only: real UFS host queueing
+    drop     blazer_ufs_spin_us=300                   phone-only: real UFS host polling
+    drop     blazer_ufs_hold=1                        phone-only: real UFS link hold
+    drop     blazer_ssbs=3                            phone-only: Tensor CPU SSBS errata
+    drop     hk_fb_scale=1                            phone-only: DPU scaler
+    drop     hk_fb_fast=1                             phone-only: DPU fast path
+    drop     hk_fb_refresh=60                         phone-only: DPU refresh
+    drop     blazer_battery=1                         phone-only: fuel gauge / PMIC
+    drop     blazer_mem=13                            phone-only: phone DRAM map
+    drop     blazer_thermal=2                         phone-only: Tensor thermal sensors
+    drop     blazer_thermal_fast=1                    phone-only: Tensor thermal sensors
+    drop     blazer_thermal_panic_c=70                phone-only: Tensor thermal sensors
+    drop     blazer_gov=1                             phone-only: Tensor DVFS governor
+    drop     blazer_gov_cap=16                        phone-only: Tensor DVFS governor
+    drop     blazer_gov_stages=15                     phone-only: Tensor DVFS governor
+    drop     blazer_gov_b=40                          phone-only: Tensor DVFS governor
+    drop     blazer_usbcon=1                          phone-only: DWC3 USB gadget console
+    drop     blazer_usbcon_ch9=1                      phone-only: DWC3 USB gadget console
+    drop     blazer_rtc=1                             phone-only: PMIC RTC
+    drop     blazer_rtc_bounds=1                      phone-only: PMIC RTC
+    drop     blazer_battery_status=1                  phone-only: fuel gauge / PMIC
+    drop     hk_bright=140                            phone-only: panel backlight / DCS
+    drop     blazer_keys=1                            phone-only: GPIO volume keys
+    drop     blazer_power_key=1                       phone-only: PMIC power key
+    drop     blazer_key_delivery=1                    phone-only: key HID delivery (needs blazer_keys)
+    drop     blazer_haptic_tap=1                      phone-only: haptics driver (CS40L)
+    drop     hk_dbg=0x41e1e1f                         not proven on the rig (unknown to the pre-flight; --keep to try)
+    drop     blazer_bootcpu=0x200                     phone-only: phone boot cluster id
+    add      sched_preemption_disable_debug_mode=0    QEMU observability (runq.sh TAIL)
+    add      wdt=-1                                   QEMU observability (runq.sh TAIL)
+    add      hk_usertrace=1                           QEMU observability (runq.sh TAIL)
+    add      hk_top=30                                QEMU observability (runq.sh TAIL)
+    keep     15 QEMU-proven tokens
+  milestones (host s):
+    OK  kernel                 0.0  XNU arm_init
+    OK  root                   2.0  root mounted, pid 1 exec
+    OK  overlay                2.0  var overlay applied
+    OK  launchd                2.0  launchd
+    OK  usermanagerd          14.0  boot tasks: usermanagerd
+    OK  backboardd            65.0  backboardd
+    OK  SpringBoard           32.0  SpringBoard
+    OK  display               91.0  SWEET FB display on
+    OK  PosterBoard          353.0  PosterBoard (phone: first frame ~10 s)
+    OK  iconservicesagent    133.0  iconservicesagent (phone: Home-time)
+    OK  Home equivalent      353.0  (UI stable: True; QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame.)
+  HK TOP samples 19, frames 3
+  overlay: varfs-overlay: mask 0xa0080081 of groups 0xf8ffffff, 65 entries, 676376 bytes, hash f2cd4bb0169afa58; applied 18; expected listed 18; missing 1; rejected 0
+  respawns / crashes (daemons with exec > 1 or a crash event):
+    fairplayd.H2                 exec  32 respawns  31 crashes   0 
+    com.apple.datamigrator       exec   5 respawns   4 crashes   0 
+    cfprefsd                     exec   2 respawns   1 crashes   0 
+    corecaptured                 exec   2 respawns   1 crashes   0 
+    keybagd                      exec   2 respawns   1 crashes   0 
+    mount                        exec   2 respawns   1 crashes   0 
+    usermanagerd                 exec   2 respawns   1 crashes   0 
+  daemons exec'd: 121
+  panics: 0
+  expect (tools/hk_cycle.py evaluate (sha eacb1d523520022d)):
+    PHONE_ONLY hk_dbg-parsed              
+    PASS       overlay-65                 varfs-overlay: mask 0xa0080081 of groups 0xf8ffffff, 65 entries, 676376 bytes, hash f2cd4bb0169afa58
+    PASS       about-covers               hkcover: 4 of 4 covers from the overlay
+    PASS       obs-dyld-merge             hk_env: SpringBoard: 2 rules' libraries in one DYLD_INSERT_LIBRARIES
+    PASS       obs-hkobs                  HKOBS 1 tick t=10 wifi: off (no blazer_wifi=1)
+    PASS       obs-mirror                 HKL SpringBoard[27] -- mirror on: os_log and stderr, 8 lines/s burst 64, 320 B a line
+    PASS       no-blastdoor-sandbox-crash 
+    PASS       no-ax-crash                
+  findings: 
+    - note (not a fault): applied count 18 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']
+    - crash loop: com.apple.datamigrator exec 5x (respawns 4 > 2), crashes 0 []
+    - crash loop: fairplayd.H2 exec 32x (respawns 31 > 2), crashes 0 []
+VERDICT: FAIL (2 finding(s))
+rc 1

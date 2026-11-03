@@ -1,0 +1,84 @@
+--- a/docs/probes.yaml
++++ b/docs/probes.yaml
+@@ -547,34 +547,71 @@
+   - id: cellular
+     phone_only: true
+     row: Cellular
++    # S5400 modem on PCIe0. Rungs and lines: research/ios26-modem-r1/MODEM.md (hk-modem1 kernel, hk_dbg bits 24..27 = stage).
+     needs:
+-      markers: ['cell: |blazer-modem|s5400']
++      markers: ['blazer-modem: |cell: ']
++      image: 'hk-modem1 kernel (research/ios26-modem-r1/PHONE-TEST.md): hk_dbg | 0x04000000 for stage 4'
+     works:
+       all:
+-        - {re: 'cell: the data session is up'}
++        - {re: 'cell: the data session is up', label: 'planned (rung 10): packet service'}
++        - {re: 'cell: registered (?P<rat>\S+)', label: 'planned (rung 9): network registration'}
+       confirm: owner
++      note: 'Registered on {rat}, data session up ({attempt})'
+     partial:
++      all:
++        - {re: 'blazer-modem: cp: ONLINE', label: 'planned (rung 7): CP firmware booted, INIT_END sent'}
++      note: 'S5400 firmware booted under iOS ({attempt})'
++    built:
++      all:
++        - {re: 'blazer-modem: rom: boot_stage 0x(?P<boot_stage>[0-9a-f]+)', label: 'planned (rung 5): CP ROM boot handshake'}
++      note: 'CP ROM handshake, boot_stage 0x{boot_stage} ({attempt})'
++    active:
++      all:
++        - {re: 'blazer-modem: verdict: PASS stage 4, at id: PCIe0 link gen (?P<gen>\d) x(?P<width>\d+), endpoint 144d:(?P<dev>[0-9a-f]{4})', label: 'S5400 boot ROM linked on PCIe0, config ID read'}
+       any:
+-        - {re: 'blazer-modem: .*boot(ed)?', label: planned modem boot}
++        - {re: 'blazer-modem: id: 144d:a5a5 class 0x028000', label: 'the ID Android reads (144d:a5a5)'}
++        - {re: 'blazer-modem: link: UP, attempt \d+'}
++      note: 'S5400 boot ROM on PCIe0 under iOS: gen {gen} x{width}, 144d:{dev}, no firmware ({attempt})'
++    fails:
++      - {re: 'blazer-modem: verdict: STOP stage (?P<stage>\d), at (?P<at>\S+): (?P<why>[^,]+), detail 0x(?P<detail>[0-9a-f]+)', label: modem rung stopped}
++      - {re: 'blazer-modem: read: CP as found: NOT off', label: CP not off as found (stage 4 refuses)}
++      - {re: 'blazer-modem: link: attempt 4 failed', label: CP ROM never trained}
++      - {re: 'blazer-modem: tidy: .*errors 0x[1-9a-f]', label: tidy could not restore a pad}
+     owner: 'Does the status bar show a carrier?'
+-    next: {kind: build, minutes: 15, test: 'PCIe0 link-up kernel; unattended boot logs link state'}
++    next: {kind: unattended, minutes: 15, test: 'research/ios26-modem-r1/PHONE-TEST.md: the int3/obs image on hk-modem1 with hk_dbg | 0x04000000 (stage 4); verdict line + return check'}
+ 
+   - id: sim
+     phone_only: true
+     row: SIM, eSIM
++    # Read by the CP firmware only (Dual SIM detect = 2 on Android); the AP sees it through RIL IPC. Needs Cellular rung 9.
+     needs:
+-      markers: ['blazer-sim|cell: ']
++      markers: ['blazer-modem: |cell: ']
++    works:
++      all:
++        - {re: 'cell: SIM ready', label: 'planned (rung 9): SIM status over umts_ipc0'}
++      confirm: owner
+     partial:
+       any:
+-        - {re: 'blazer-sim: .*ATR', label: planned SIM ATR}
+-    owner: 'Is the SIM read?'
+-    next: {kind: build, minutes: 15, test: 'Depends on the modem boot'}
++        - {re: 'cell: SIM (?P<sim>ready|absent|locked|error)', label: 'planned (rung 9): SIM status answered'}
++      note: 'CP reports SIM {sim} ({attempt})'
++    owner: 'Does Settings > Cellular show the SIM (carrier name)?'
++    next: {kind: build, minutes: 15, test: 'Blocked on Cellular rungs 5..9 (CP firmware boot, RFS, RIL): research/ios26-modem-r1/MODEM.md section 6'}
+ 
+   - id: gps
+     phone_only: true
+     row: GPS
+-    owner: 'Not assigned'
+-    next: {kind: none, minutes: 0, test: 'Not assigned'}
++    # Samsung KEPLER GNSS: SPI (lsios_cli6_spi) for IPC, firmware loaded through the CP (gnss_boot into GNSS_FW). Needs the CP running.
++    needs:
++      markers: ['blazer-gnss: |gnss: ']
++    works:
++      all:
++        - {re: 'gnss: fix', label: 'planned (G2): a position fix'}
++      confirm: owner
++    partial:
++      any:
++        - {re: 'blazer-gnss: KEPLER ready', label: 'planned (G1): GNSS firmware up, SPI link'}
++    owner: 'Does Maps show the position?'
++    next: {kind: build, minutes: 15, test: 'Blocked on Cellular rung 7 (CP online), then G1: research/ios26-modem-r1/MODEM.md section 6'}
+ 
+   - id: nfc
+     phone_only: true

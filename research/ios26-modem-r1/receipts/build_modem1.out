@@ -1,0 +1,37 @@
+phone-bridge: m1box is at 3e3ec7b545, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: uncommitted on m1box and different on the Mac (the Mac's version runs): docs/debug/MAP.md docs/probes.yaml dualboot/validate.py .github/scripts/ci-tests.sh research/ios26-connectivity-r1/wifi/receipts/image_tool-w1.txt research/ios26-connectivity-r1/wifi/receipts/tests.txt tools/decode-shim-stamps.py tools/hk.py tools/image_tool.py tools/live_boot.sh tools/test_image_tool.py tools/test_qemu_preflight.py tools/test_usbcon_tool.py 
+phone-bridge: replacing the Mac's Developer/personal/hackios/research/ios26-modem-r1/src/bsd/dev/blazer_modem.c (--overwrite)
+23:36:33 waiting for build slot lock
+23:36:33 lock held
+23:36:33 tree branch p1 HEAD b228c4f
+23:36:33 hk-modem1 at a97bdc639f4e0bae7f6815be0673597192b56c56 was made from earlier source: replaced
+23:36:35 hk-modem1 = 0fc0013d5cca8282649f7788d87da54ed69950d1 (on 3dc7fec); patch sha256 3a968d6c9353d187f08c113585b95acacf1a7c73db0984465a038a7768f84754
+23:36:36 checked out hk-modem1 0fc0013d5cca8282649f7788d87da54ed69950d1
+23:38:09 build modem1-build rc 0
+23:38:10 159898f6619f20249e56a1f15f34fe7a426cb95cda793f4bf6e76bbf30c5e29f  kernel.modem1
+23:38:10 8579208ffcac62c8ebe0125e2b43b3b45ce6598e32ba4d463171bc0671da7b4e  kernel.modem1.unstripped
+23:38:10 receipts:
+92c6a59208f614f0685fa067982980bfd94f744c56ddf858c1e6f1d584704b7a  blazer_modem.o  Mach-O 64-bit object arm64
+  symbols: _blazer_cpmq_enter _blazer_cpmq_exit _blazer_modem_init _blazer_modem_obs _blazer_modem_phase _hk_dbg_bits _m0_at_name _m0_init _m0_run _m0_stop_name
+809c53c143aab111d82c9684390ab5aebcca4ef99056dca1338c37e7beea83bf  blazer_modem_core.o  Mach-O 64-bit object arm64
+  symbols: _m0_at_name _m0_at_name.names _m0_init _m0_is_cp_memory _m0_pads _m0_read_allowed _m0_run _m0_stop_name _m0_stop_name.names _m0_write_allowed
+9a34728c99e33787c418d522cbce78523b29fc952fe30bdbc6c9f6b3afe6b095  bsd_init.o  Mach-O 64-bit object arm64
+  symbols: _blazer_modem_init
+kernel string 'blazer-modem: verdict: PASS stage %u': True
+kernel string 'PCIe0 power vote': True
+kernel string 'S5400 CP boot ROM': True
+kernel string 'CP not off as found': True
+kernel string 'hk_dbg': True
+kernel symbol _blazer_modem_init: True
+kernel symbol _m0_run: True
+kernel symbol _blazer_modem_obs: True
+kernel symbol _modem_thread: True
+kernel symbol _hk_dbg_bits: True
+bsd_init calls _blazer_modem_init: False
+23:38:10 restored branch p1 HEAD b228c4f
+23:39:28 build modem1-restore-p1-build rc 0
+23:39:28 obj kernel after restore 4cec9f87a493dd8899b3382842266815a286c6faedaca2f33de9763e5e015e28
+23:39:28 restored p1 kernel has the modem1 core: False
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-modem-r1/build/
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-modem-r1/xnu-src/
+rc 0

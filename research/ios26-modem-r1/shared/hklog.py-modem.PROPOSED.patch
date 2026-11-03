@@ -1,0 +1,11 @@
+--- a/tools/hklog.py
++++ b/tools/hklog.py
+@@ -50,6 +50,8 @@
+     ('apps', re.compile(rf'^HKL ({DAEMONS_APPS})\[|^HK USTACK|^HKMAIN|^HKSTDERR|^SWEET Sandbox|^usertrap:|^userabort'
+                         rf'|^hk_(env|deny): ({DAEMONS_APPS})\b|\(({DAEMONS_APPS})\)|\b(MobilePhone|Preferences)\[\d+')),
+     ('location', re.compile(r'^HKL (locationd)\[|\blocationd\[\d+')),
++    ('modem', re.compile(r'^(blazer-modem|blazer-gnss|cell|gnss): |^HKOBS \d+ \S+ t=\d+ modem:'
++                         r'|^HKL (CommCenter|abm-helper|locationd)\[|^hk_(env|deny): (CommCenter|abm-helper)\b')),  # research/ios26-modem-r1/MODEM.md
+     ('proc', re.compile(r'^HKOBS \d+ \S+ t=\d+ proc:|^hk_(env|deny|adaptive):|exited due to|exited with exit code'
+                         r'|\bjob state = (exited|spawn failed)|\bservice state: (spawn scheduled|penalty box)|^CRASH|crash(ed)? loop')),
+     ('status', re.compile(r'^HKOBS |^blazer-root: (watch|deadline)|^HK TOP|^HKBATT')),

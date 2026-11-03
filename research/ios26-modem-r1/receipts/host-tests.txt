@@ -1,0 +1,27 @@
+97 checks, 0 failures (rerun after the HK_MODEM_LOG hook)
+rc=0
+mutations (tests/test_modem_core.c against mutated blazer_modem_core.c, 2026-11-03T22:33:29Z)
+on order swapped: 97 checks, 1 failures
+vendor unchecked: 97 checks, 1 failures
+lsio_e ignored: 87 checks, 1 failures
+no CP off in tidy: 97 checks, 1 failures
+no pad restore: 94 checks, 4 failures
+no CP-off check: 113 checks, 15 failures
+cp memory allowed: 97 checks, 0 failures
+pads writable before LINK: 97 checks, 1 failures
+PERST not low first: 94 checks, 1 failures
+wrong vote: 103 checks, 10 failures
+ep cfg write ok: 97 checks, 1 failures
+HSIO_N unchecked: 97 checks, 1 failures
+
+ARM64 object, m1box clang, -DBLAZER:
+/tmp/hk-modem-core.o: ELF 64-bit LSB relocatable, ARM aarch64, version 1 (SYSV), not stripped
+00000000000000ac T m0_at_name
+0000000000001160 T m0_init
+00000000000000e0 T m0_is_cp_memory
+0000000000000000 D m0_pads
+0000000000000170 T m0_read_allowed
+00000000000011d0 T m0_run
+0000000000000084 T m0_stop_name
+00000000000005e8 T m0_write_allowed
+without -DBLAZER: 0 symbols (guarded empty unit)
