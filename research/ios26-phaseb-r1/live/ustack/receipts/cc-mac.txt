@@ -1,0 +1,37 @@
+== hk_ustack.c rc 0
+                 U _PE_parse_boot_arg_str
+                 U _bsd_getthreadname
+                 U _copyinmap
+                 U _get_user_regs
+                 U _recount_thread_time_mach
+                 U _tasks_threads_lock
+                 U _thread_wakeup_prim
+0000000000000000 T _hk_ustack_control
+0000000000000200 T _hk_ustack_start
+0000000000000510 t _hk_us_thread
+0000000000001be0 s _hk_us_grp
+0000000000001d28 s ___startup_lck_grp_spec_hk_us_grp
+0000000000001d78 s ___startup_lck_spin_spec_hk_us_lock
+0000000000001dc0 d _hk_us_period_s
+0000000000001dc4 d _hk_us_rounds_max
+0000000000001dc8 d _hk_us_lines_max
+000000000001b4a8 b _hk_us_lock
+000000000001b4b8 b _hk_us_running
+000000000001b4c0 b _hk_us_live
+000000000001b4c8 b _hk_us_names
+000000000001b510 b _hk_us_round
+000000000001b514 b _hk_us_lines
+000000000001b518 b _hk_us_dropped
+000000000001b520 b _hk_us_procs
+0000000000020fe0 b _hk_us_snaps
+00000000000236e0 b _hk_us_line
+00000000000239c0 b _hk_us_frames
+0000000000023ac0 b _hk_us_out
+/var/folders/sl/srcjy8n90xn143tgfg5sl30c0000gn/T/hk_ustack_cc.07vkungb/hk_ustack.c.o: Mach-O 64-bit object arm64
+33d45a457af5b710fba1f384b7cbdfcd75267157f0b6d6efc907ffd1d169bc20  /Users/andersmadsen/Developer/personal/hackios/research/ios26-phaseb-r1/live/ustack/xnu-src/osfmk/kern/hk_ustack.c
+== blazer_usbcon.c rc 0
+
+                 U _hk_ustack_control
+0000000000004fda s _uc_setup.zero
+/var/folders/sl/srcjy8n90xn143tgfg5sl30c0000gn/T/hk_ustack_cc.07vkungb/blazer_usbcon.c.o: Mach-O 64-bit object arm64
+e6dec8bd6390f1dd566c5164c81535669446cf5bab797f008008dad57e2ad19e  /Users/andersmadsen/Developer/personal/hackios/research/ios26-phaseb-r1/live/ustack/xnu-src/osfmk/arm64/blazer_usbcon.c

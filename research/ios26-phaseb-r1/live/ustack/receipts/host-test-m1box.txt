@@ -1,0 +1,10 @@
+sources: 8567a2f9b898a8ee58026a8ed5ca318e7b7ad50bd99a94089ead12c138f78c9c  osfmk/kern/hk_ustack.c;038288b5536eb99ad11c7218cdb85f25347b1a43aef455c0b8e7063a3504fb28  osfmk/kern/hk_ustack_pure.inc;37d02a4e8d86728191c99a45e2608109c4679b61b7371da906288c217dc722f7  osfmk/kern/hk_ustack_wire.h;6dde0641724f61e9e3f0b1e092bbe3a2f4b69bf8058ed6df2fc9a4f7d381a16a  osfmk/arm64/blazer_usbcon_core.inc;
+hk_ustack host test: 50 checks, 0 failed
+hk_ustack host test (no UC_USTACK): 36 checks, 0 failed
+mutant osfmk/arm64/blazer_usbcon_core.inc [s/ok = uc.input \&\& length == sizeof(struct hk_ustack_wire);/ok = length == sizeof(struct hk_ustack_wire);/]: hk_ustack host test: 50 checks, 3 failed
+mutant osfmk/kern/hk_ustack_pure.inc [s/if (index > HK_USTACK_ROUNDS_MAX) {/if (index > 200) {/]: hk_ustack host test: 50 checks, 2 failed
+mutant osfmk/kern/hk_ustack_pure.inc [s/len == HK_US_NAME_LEN - 1 ||/len == HK_US_NAME_LEN ||/]: hk_ustack host test: 50 checks, 1 failed
+mutant osfmk/kern/hk_ustack_pure.inc [s/strncmp(names->name\[i\], comm, HK_US_NAME_LEN) == 0/strncmp(names->name[i], comm, strlen(names->name[i])) == 0/]: hk_ustack host test: 50 checks, 1 failed
+mutant osfmk/kern/hk_ustack_pure.inc [s/uint64_t v\[4\] = { state, hint, pc, lr };/uint64_t v[4] = { state, 0, pc, lr };/]: hk_ustack host test: 50 checks, 1 failed
+mutant osfmk/kern/hk_ustack_pure.inc [s/if (!exists) {/if (0) {/]: hk_ustack host test: 50 checks, 2 failed
+RESULT PASS (2 builds, 6 mutants caught)

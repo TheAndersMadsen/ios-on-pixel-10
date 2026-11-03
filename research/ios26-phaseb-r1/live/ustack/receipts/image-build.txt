@@ -1,0 +1,2 @@
+a7-ios-system-dbg4-ustack bootable be862758eabdfb50b16494af06cf361180966d593523e758dae1a0034d266b70 payload 26061392 margin 39998896
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-dbg4-ustack/manifest.json

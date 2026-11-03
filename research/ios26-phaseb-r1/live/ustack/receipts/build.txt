@@ -1,0 +1,22 @@
+19:56:52 waiting for build slot lock
+19:56:52 lock held
+19:56:53 tree branch p1 HEAD b228c4f dirty=False
+19:56:53 staged:
+osfmk/arm64/blazer_usbcon.c        |   6 +
+ osfmk/arm64/blazer_usbcon_core.inc |  17 ++
+ osfmk/conf/files                   |   1 +
+ osfmk/kern/hk_top.c                |   2 +
+ osfmk/kern/hk_ustack.c             | 505 +++++++++++++++++++++++++++++++++++++
+ osfmk/kern/hk_ustack_pure.inc      | 120 +++++++++
+ osfmk/kern/hk_ustack_wire.h        |  42 +++
+ 7 files changed, 693 insertions(+)
+19:56:53 commit cac047f9c473b560cddd195063b0af050299aad5
+19:57:19 build ustack-dbg4-build rc 0
+19:57:19 e678dd710c20da1b51142d2bae9cbe6c2f3eccd315624a5c5c3ceb5cb7484228  kernel.dbg4-ustack
+19:57:19 c3fb0abb3105cfd00afb080140f3956a0de163468912a144b34164dc1e29c284  kernel.dbg4-ustack.unstripped
+19:57:19 d4fc27e8b8dd3083de543e83eaff9ebedb60ba753fb773cec17266b02959d15b  osfmk/DEVELOPMENT/hk_ustack.o
+19:57:19 a3ef531572768879e2f46482d359da106215a1459622fd14d1e6367e45e0aa4d  osfmk/DEVELOPMENT/blazer_usbcon.o
+19:57:19 535ef877bda09d9451872cee2d28f510224dba9cb8834985172207ad910f5f4e  osfmk/DEVELOPMENT/hk_top.o
+19:57:19 restored branch p1 HEAD b228c4f
+19:57:46 build ustack-dbg4-restore-p1-build rc 0
+19:57:46 obj kernel after restore e2a59d66b04527bbcfe7dc6db1ef61b9551dcb212a8d43b2db364612b795a2fc

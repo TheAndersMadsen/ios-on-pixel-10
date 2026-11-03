@@ -1,0 +1,2 @@
+ustack_sym host test: 16 checks, 0 failed (cache /data/hackios-qemu/dsc-r6/dyld_shared_cache_arm64e)
+ustack_ctl host test: 14 checks, 0 failed
