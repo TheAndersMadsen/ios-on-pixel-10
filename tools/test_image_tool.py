@@ -139,6 +139,17 @@ class TwoShapes(unittest.TestCase):
         for t in ('blazer_aoc=1', 'blazer_battery_chg=1', 'blazer_mem=5', 'blazer_mem=13', 'blazer_mem_test=64', 'blazer_mem_test=4096', 'blazer_mem_report=1', 'blazer_persist=1', 'blazer_persist=3', 'blazer_persist_period=60', 'blazer_rtc=1', 'blazer_keys=1', 'blazer_battery=1', 'blazer_wifi=1', 'blazer_thermal=1', 'hk_overlay=1'): self.assertEqual(T.phone_extra(t), [t])
         for t in ('blazer_mem=4', 'blazer_mem=14', 'blazer_mem_test=65', 'blazer_persist=2', 'blazer_rtc_fake=1'):
             with self.assertRaises(SystemExit, msg=t): T.phone_extra(t)
+    def test_a7_p32_tokens(self):
+        # phone-p32-combined-ui-r1's physical line (research/ios26-opt-20261102/combined_p32/image-build.json), less nothing
+        p32 = ('blazer_touch=1 blazer_touch_bars=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 '
+               'hk_fb_refresh=60 hk_overlay=0xA0080081 hk_top=30 blazer_battery=1 blazer_mem=13 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 blazer_gov=1 '
+               'blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 blazer_usbcon=1 blazer_usbcon_ch9=1 blazer_usbcon_input=1 hk_present_trace=1 blazer_rtc=1 blazer_rtc_bounds=1 '
+               'blazer_battery_status=1 blazer_battery_receipt=1 hk_bright=140 blazer_aks_log=1')
+        self.assertEqual(T.phone_extra(p32), p32.split())
+        for t in ('hk_fb_refresh=90', 'blazer_gov_cap=20', 'blazer_gov_stages=2', 'blazer_gov_b=60', 'hk_bright=1000', 'blazer_rtc_bounds=2'):
+            with self.assertRaises(SystemExit, msg=t): T.phone_extra(t)
+        src = Path(T.__file__).read_text()  # the build-time refusals A7 relies on stay in place
+        self.assertIn("if 'userdata_exp.ai' in c: die(", src); self.assertIn("if re.search(r'(^|\\s)blazer_persist(_\\w+)?=', c): die(", src)
     def test_window_base(self):
         d = T.adt_facts(adt.serialize(mkadt.build(seed=b'S' * 256, headless=True, disp0=True, phys_base=0x882000000)))['dram']; self.assertEqual(d[0], '0x882000000')
         self.assertEqual(adt.serialize(mkadt.build(seed=b'S' * 256, phys_base=T.PHYS)), adt.serialize(mkadt.build(seed=b'S' * 256)))

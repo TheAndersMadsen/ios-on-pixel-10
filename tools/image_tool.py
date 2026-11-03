@@ -163,9 +163,16 @@ PHONE_ALLOWED.update({'blazer_persist': r'blazer_persist=[13]', 'blazer_persist_
 PHONE_ALLOWED.update({'blazer_usb_readback': r'blazer_usb_readback=1', 'blazer_usbcon_ch9': r'blazer_usbcon_ch9=1'})
 PHONE_ALLOWED.update({'blazer_aks_trace': r'blazer_aks_trace=1', 'hk_present_trace': r'hk_present_trace=1'})
 PHONE_ALLOWED.update({'blazer_battery_chg': r'blazer_battery_chg=1', 'blazer_aoc': r'blazer_aoc=1'})  # handoffs/battery.md: the charger's frames, off unless asked; parent, aoc
+# A7 (GOAL.md): the tokens phone-p32-combined-ui-r1 booted with physically (research/ios26-opt-20261102/combined_p32/image-build.json),
+# same patterns as research/ios26-bootchain-r1/image_tool.py, which built that image. Persistence stays refused in build().
+PHONE_ALLOWED.update({'hk_fb_refresh': r'hk_fb_refresh=(60|120)', 'hk_bright': r'hk_bright=[0-9]{2,3}', 'blazer_aks_log': r'blazer_aks_log=1',
+                      'blazer_gov': r'blazer_gov=1', 'blazer_gov_cap': r'blazer_gov_cap=(18|16|13)', 'blazer_gov_stages': r'blazer_gov_stages=(1|3|5|7|9|11|13|15)',
+                      'blazer_gov_b': r'blazer_gov_b=(3[0-9]|4[0-9]|5[0-5])', 'blazer_thermal_fast': r'blazer_thermal_fast=1',
+                      'blazer_battery_status': r'blazer_battery_status=1', 'blazer_battery_receipt': r'blazer_battery_receipt=1'})
 PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
 # validation_disables: kconfig.md, osfmk/kern/debug.c. atm_diagnostic_config: mine.md, osfmk/atm/atm.c:60. hk_fb_*: render's names.
 PHONE_EXACT = ('blazer_fast_first=1', 'blazer_smp_report=1', 'blazer_smp_report=2', 'blazer_smp_test=1', 'blazer_ssbs=1', 'blazer_ssbs=3', 'validation_disables=0x39d64', 'atm_diagnostic_config=0x400', 'hk_fb_scale=1', 'hk_fb_scale=2', 'hk_fb_filter=1', 'blazer_ufs_multi=1', 'blazer_cs_nohash=1', 'blazer_rtc=1', 'blazer_keys=1', 'blazer_haptic=1', 'blazer_haptic=3', 'hk_bench=1', 'hk_amu=1', 'hk_pmu=1', 'hk_pmu=2', 'hk_fb_fast=1', 'blazer_ic_va=1', 'hk_fb_bench=2', 'blazer_ufs_spin_us=300', 'blazer_ufs_cost=1', 'blazer_ufs_hold=1', 'blazer_battery=1', 'blazer_battery=2', 'hk_fb_period=1', 'hk_fb_te=1', 'hk_fb_te=2', 'hk_panel_hz=120', 'hk_panel_hz=60', 'hk_panel_hz=30', 'hk_panel_hz=10', 'hk_panel_off=1')  # last two: mine.md
+PHONE_EXACT += ('blazer_rtc_bounds=1',)  # A7: p32's line, as research/ios26-bootchain-r1/image_tool.py
 def set_cpus(c, n):
     """The line it was, with cpus=N. Both multi-core shapes come through here."""
     if len(re.findall(r'(?<!\S)cpus=1(?!\S)', c)) != 1: die('line has no single cpus=1')
