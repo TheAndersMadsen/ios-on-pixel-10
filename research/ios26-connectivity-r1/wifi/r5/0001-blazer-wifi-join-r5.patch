@@ -1,0 +1,267 @@
+From 76bcd0325042ddd11ec52a7bcd2a6906c3a2da73 Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 23:10:13 +0100
+Subject: [PATCH 1/2] blazer wifi join r5: 1024 host RX buffers (was 64) in 2.5
+ MiB, capped by max_host_rxbufs; count the firmware's EL 30 b8c8
+ no-host-buffer drops
+
+r1-r3's consoles show 'EL: 30 b8c8 <pkt> 0' at every join: event_log2 in pciedev_process_d2h_rxpyld
+when pciedev_process_rxpost_msg has no host RX buffer, then hnd_pkt_free. This firmware is split-RX
+mode 4; its MAC RX fill holds host buffers (nrxbufpost 384 + 154), so 64 never left one spare.
+Stock posts max_host_rxbufs (6783).
+---
+ bsd/dev/blazer_bcm4390.c      | 24 ++++++++++++++++++++++++
+ bsd/dev/blazer_bcm4390_ring.c | 33 +++++++++++++++++++++++----------
+ bsd/dev/blazer_bcm4390_scan.c |  2 +-
+ bsd/dev/blazer_pcie1.h        |  3 +++
+ bsd/dev/blazer_wifi.c         |  2 +-
+ 5 files changed, 52 insertions(+), 12 deletions(-)
+
+diff --git a/bsd/dev/blazer_bcm4390.c b/bsd/dev/blazer_bcm4390.c
+index c61a5f2..96017fc 100644
+--- a/bsd/dev/blazer_bcm4390.c
++++ b/bsd/dev/blazer_bcm4390.c
+@@ -813,6 +813,7 @@ b4_console(struct p1 *p)
+ 			line[n] = 0;
+ 			if (n != 0) {
+ 				b4_scrub_text(p, line);
++				b4_console_note(p, line);
+ 				p->ops.log(p->ops.ctx, "fw says: %s\n", line);
+ 			}
+ 			n = 0;
+@@ -828,11 +829,34 @@ b4_console(struct p1 *p)
+ 			return 0;
+ 		}
+ 		line[n] = 0;
++		b4_console_note(p, line);
+ 		p->ops.log(p->ops.ctx, "fw says: %s\n", line);
+ 	}
+ 	return 0;
+ }
+ 
++/* r5: "EL: 30 b8c8 <packet> <rxfrag>" is event_log2(0x30, 0xb8c8, ...) in pciedev_process_d2h_rxpyld (RAM 0x2c45f8 in .57.31; the same number in .57.30's console):
++ * pciedev_process_rxpost_msg had no host RX buffer for a packet in dongle memory, and the packet was freed. Counted, and said once */
++void
++b4_console_note(struct p1 *p, const char *line)
++{
++	static const char tag[] = "EL: 30 b8c8 ";
++
++	for (const char *c = line; *c != 0; c++) {
++		unsigned i = 0;
++
++		while (tag[i] != 0 && c[i] == tag[i]) {
++			i++;
++		}
++		if (tag[i] == 0) {
++			if (p->fw_rx_nobuf++ == 0) {
++				p->ops.log(p->ops.ctx, "rx: the firmware dropped a packet for the host: no host RX buffer was queued (EL 30 b8c8)\n");
++			}
++			return;
++		}
++	}
++}
++
+ /* dhdpcie_wait_readshared_area_addr, polled. Stock sleeps until the firmware's boot interrupt and reads the top word once, so it never sees an early one; here the top word's every change goes to the log.
+  * Ready means the doorbell. With none in the time allowed, stock reads what's there and goes on, and so does this: the checks on the shared area below decide */
+ static int
+diff --git a/bsd/dev/blazer_bcm4390_ring.c b/bsd/dev/blazer_bcm4390_ring.c
+index bbb9d6a..3091e0c 100644
+--- a/bsd/dev/blazer_bcm4390_ring.c
++++ b/bsd/dev/blazer_bcm4390_ring.c
+@@ -91,14 +91,17 @@
+ #define D2H_TX_ITEM     24u
+ #define D2H_RX_ITEM     40u
+ #define CTRL_DEPTH      64u             /* Holds every buffer the firmware can owe back, plus the ioctl in flight */
+-#define RX_DEPTH        128u            /* RX_BUFS and room over: stock's are far deeper, but it posts far more */
++#define RX_POST_DEPTH   (RX_BUFS + 64u) /* r5: every buffer fits on the ring at once, so posting never waits on the dongle */
++#define RX_CPL_DEPTH    1024u           /* r5: as many completions as buffers can be owed back */
+ #define RESP_BUFS       8u              /* DHD_FLOWRING_MAX_IOCTLRESPBUF_POST */
+ #define RESP_BUF_BYTES  8192u           /* DHD_FLOWRING_IOCTL_BUFPOST_PKTSZ */
+ #define EVENT_BUFS      32u             /* DHD_FLOWRING_MAX_EVENTBUF_POST */
+ #define EVENT_BUF_BYTES 2048u           /* DHD_FLOWRING_RX_BUFPOST_PKTSZ */
+ #define IOC_REQ_BYTES   8200u           /* IOCT_RETBUF_SIZE */
+ #define IOC_MAX_IN      2008u           /* MSGBUF_IOCTL_MAX_RQSTLEN: DHD_IOCTL_REQ_PKTBUFSZ less one control ring item */
+-#define RX_BUFS         64u             /* Stock: thousands. Here: for a passive scan's firmware, which needs them back fast, nothing more */
++#define RX_BUFS         1024u           /* r5. This firmware is split-RX mode 4 (_bcmsplitrx 1, _bcmsplitrx_mode 4 in the .bin): its MAC rx fill holds host buffers (nrxbufpost 384 on unit 0, 154 on unit 1, console),
++                                         * and a packet for the host that is in dongle memory needs one more from the RX post queue, else pciedev_process_d2h_rxpyld drops it (EL 30 b8c8).
++                                         * r1-r3 posted 64 and their consoles show those drops at every join. Stock posts max_host_rxbufs (6783 here); 1024 is above both units' fill with 486 over */
+ #define RX_BUF_BYTES    2048u           /* Physical, Android here: "RxBuf Post : 2048" */
+ #define SCRATCH_BYTES   8u              /* DMA_D2H_SCRATCH_BUF_LEN */
+ #define IDX_WORD        4u
+@@ -109,7 +112,7 @@
+ #define FLOW_ITEM       48u             /* H2DRING_TXPOST_BASE_ITEMSIZE: no TXPOST_EXT capability claimed */
+ #define FLOW_ID         2u              /* FLOWID_RESERVED, the first there is. Also its slot in the H2D index arrays */
+ #define ETH_HDR         14u
+-#define B4_DMA_NEEDED   0x60000u
++#define B4_DMA_NEEDED   0x280000u       /* r5: 2.5 MiB, for 1024 RX buffers. blazer_wifi.c's WIFI_DMA_BYTES */
+ 
+ /* What comes back */
+ #define EVENT_LEN_AT    12u             /* wlevent_req_msg_t.event_data_len */
+@@ -152,9 +155,10 @@
+ #define SETTLE_MS       300u
+ #define TRAP_WORDS      16u
+ 
+-_Static_assert(RESP_BUF_BYTES * RESP_BUFS + EVENT_BUF_BYTES * EVENT_BUFS + RX_BUF_BYTES * RX_BUFS + IOC_REQ_BYTES + (CTRL_DEPTH * (H2D_CTRL_ITEM + D2H_CTRL_ITEM + D2H_TX_ITEM) + RX_DEPTH * (H2D_RXPOST_ITEM + D2H_RX_ITEM)) + 12 * 4096 + 4 * IDX_WORD * IDX_MAX_RINGS < B4_DMA_NEEDED, "host memory");
+-_Static_assert(RESP_BUFS + EVENT_BUFS + 1 < CTRL_DEPTH && RX_BUFS < RX_DEPTH, "a ring must hold everything that can be outstanding on it");
+-_Static_assert(RESP_BUF_BYTES * RESP_BUFS + EVENT_BUF_BYTES * EVENT_BUFS + RX_BUF_BYTES * RX_BUFS + TX_BUF_BYTES * TX_BUFS + FLOW_DEPTH * FLOW_ITEM + IOC_REQ_BYTES + (CTRL_DEPTH * (H2D_CTRL_ITEM + D2H_CTRL_ITEM + D2H_TX_ITEM) + RX_DEPTH * (H2D_RXPOST_ITEM + D2H_RX_ITEM)) + 14 * 4096 + 4 * IDX_WORD * IDX_MAX_RINGS < B4_DMA_NEEDED, "host memory, stage JOIN");
++_Static_assert(RESP_BUF_BYTES * RESP_BUFS + EVENT_BUF_BYTES * EVENT_BUFS + RX_BUF_BYTES * RX_BUFS + IOC_REQ_BYTES + (CTRL_DEPTH * (H2D_CTRL_ITEM + D2H_CTRL_ITEM + D2H_TX_ITEM) + RX_POST_DEPTH * H2D_RXPOST_ITEM + RX_CPL_DEPTH * D2H_RX_ITEM) + 12 * 4096 + 4 * IDX_WORD * IDX_MAX_RINGS < B4_DMA_NEEDED, "host memory");
++_Static_assert(RESP_BUFS + EVENT_BUFS + 1 < CTRL_DEPTH && RX_BUFS < RX_POST_DEPTH && RX_BUFS <= RX_CPL_DEPTH, "a ring must hold everything that can be outstanding on it");
++_Static_assert(RX_ID_BASE + RX_BUFS <= TX_ID_BASE && RX_BUF_BYTES >= 0x7f8u, "RX ids below TX ids; pciedev_process_rxpost_msg halts the firmware on a buffer under 2040 bytes");
++_Static_assert(RESP_BUF_BYTES * RESP_BUFS + EVENT_BUF_BYTES * EVENT_BUFS + RX_BUF_BYTES * RX_BUFS + TX_BUF_BYTES * TX_BUFS + FLOW_DEPTH * FLOW_ITEM + IOC_REQ_BYTES + (CTRL_DEPTH * (H2D_CTRL_ITEM + D2H_CTRL_ITEM + D2H_TX_ITEM) + RX_POST_DEPTH * H2D_RXPOST_ITEM + RX_CPL_DEPTH * D2H_RX_ITEM) + 14 * 4096 + 4 * IDX_WORD * IDX_MAX_RINGS < B4_DMA_NEEDED, "host memory, stage JOIN");
+ _Static_assert(TX_BUFS < FLOW_DEPTH, "the flow ring must hold every TX buffer");
+ _Static_assert(RESP_BUFS + EVENT_BUFS + 2 < CTRL_DEPTH, "and a flow ring request on top");
+ 
+@@ -184,7 +188,7 @@ static int
+ carve_all(struct p1 *p)
+ {
+ 	static const uint16_t items[B4_COMMON_RINGS] = { H2D_CTRL_ITEM, H2D_RXPOST_ITEM, D2H_CTRL_ITEM, D2H_TX_ITEM, D2H_RX_ITEM };
+-	static const uint16_t depths[B4_COMMON_RINGS] = { CTRL_DEPTH, RX_DEPTH, CTRL_DEPTH, CTRL_DEPTH, RX_DEPTH };
++	static const uint16_t depths[B4_COMMON_RINGS] = { CTRL_DEPTH, RX_POST_DEPTH, CTRL_DEPTH, CTRL_DEPTH, RX_CPL_DEPTH };
+ 	uint32_t arr[4];
+ 
+ 	if (p->cfg.dma.va == NULL || p->cfg.dma.bytes < B4_DMA_NEEDED || (p->cfg.dma.pa & 0xfffu) != 0 || p->ops.dma_sync == NULL) {
+@@ -555,10 +559,19 @@ b4_wipe_ioctl(struct p1 *p)
+ 	memset(p->ioc_big, 0, sizeof(p->ioc_big));
+ }
+ 
++/* r5: RX_BUFS, or fewer if the firmware's max_host_rxbufs (shared area) says so. Stock posts that many (dhd_prot_init's max_rxbufpost) */
++uint32_t
++b4_rx_bufs_wanted(const struct p1 *p)
++{
++	return p->max_rxbufs != 0 && p->max_rxbufs < RX_BUFS ? p->max_rxbufs : RX_BUFS;
++}
++
+ int
+ b4_rx_post_all(struct p1 *p)
+ {
+-	for (uint32_t i = 0; i < RX_BUFS; i++) {
++	uint32_t n = b4_rx_bufs_wanted(p);
++
++	for (uint32_t i = 0; i < n; i++) {
+ 		if (post_rx(p, i)) {
+ 			return (int)p->stop;
+ 		}
+@@ -577,9 +590,9 @@ b4_rx_witness(struct p1 *p, const char *when)
+ 	if (idx_get(p, IDX_H2D_R, h2d_index_slot(B4_H2D_RXPOST), &post_rd) || idx_get(p, IDX_D2H_W, B4_D2H_RX - B4_D2H_CTRL, &cpl_wr)) {
+ 		return (int)p->stop;
+ 	}
+-	p->ops.log(p->ops.ctx, "rx: witness %s: post ring written to %u, the dongle has read to %u (%s); completion ring: dongle at %u, us at %u. Items %u, %u bytes, %u dropped\n", when,
++	p->ops.log(p->ops.ctx, "rx: witness %s: post ring written to %u, the dongle has read to %u (%s); completion ring: dongle at %u, us at %u. Items %u, %u bytes, %u dropped. Firmware drops for want of a host buffer (EL 30 b8c8): %u\n", when,
+ 	    p->ring[B4_H2D_RXPOST].wr, post_rd, post_rd == p->ring[B4_H2D_RXPOST].wr ? "all taken" : post_rd == 0 ? "none taken" : "some taken", cpl_wr, p->ring[B4_D2H_RX].rd,
+-	    p->rx_items, p->rx_bytes, p->rx_dropped);
++	    p->rx_items, p->rx_bytes, p->rx_dropped, p->fw_rx_nobuf);
+ 	return 0;
+ }
+ 
+diff --git a/bsd/dev/blazer_bcm4390_scan.c b/bsd/dev/blazer_bcm4390_scan.c
+index f9a26d9..e9432f7 100644
+--- a/bsd/dev/blazer_bcm4390_scan.c
++++ b/bsd/dev/blazer_bcm4390_scan.c
+@@ -918,7 +918,7 @@ b4_scan(struct p1 *p)
+ 	if (b4_rx_post_all(p)) {
+ 		return (int)p->stop;
+ 	}
+-	p->ops.log(p->ops.ctx, "rx: %u buffers posted\n", p->rx_posted);
++	p->ops.log(p->ops.ctx, "rx: %u buffers posted. The firmware takes up to %u (max_host_rxbufs); r1-r4 posted 64\n", p->rx_posted, p->max_rxbufs);
+ 	if (b4_rx_witness(p, "after the posting")) {
+ 		return (int)p->stop;
+ 	}
+diff --git a/bsd/dev/blazer_pcie1.h b/bsd/dev/blazer_pcie1.h
+index d000616..0db544c 100644
+--- a/bsd/dev/blazer_pcie1.h
++++ b/bsd/dev/blazer_pcie1.h
+@@ -191,6 +191,7 @@ struct p1 {
+ 	char fw_ver[120];
+ 	/* Stage SCAN. rx_*, tx_items: what came back on the RX and TX completion rings */
+ 	uint32_t rx_posted, rx_items, rx_bytes, tx_items;
++	uint32_t fw_rx_nobuf;    /* r5: console lines "EL: 30 b8c8": pciedev_process_d2h_rxpyld dropped a packet for the host, no host RX buffer queued */
+ 	uint32_t preinit_status, axierror_addr, rxpost_size, scan_ver, up_ms;
+ 	int32_t preinit_err;
+ 	bool clm_loaded, txcap_loaded, wl_up, scan_running, scan_done;
+@@ -266,6 +267,8 @@ int b4_scan(struct p1 *p);      /* stage SCAN, called from inside stage RINGS's
+ int b4_ioctl(struct p1 *p, uint32_t cmd, uint8_t *buf, uint16_t len);   /* 0 means answered: the answer's in buf, the firmware's status in p->ioc_status. Refuses what b4_ioctl_allowed refuses */
+ int b4_poll(struct p1 *p);      /* All three completion rings, then the firmware's trap and mailbox state, once */
+ int b4_rx_post_all(struct p1 *p);
++uint32_t b4_rx_bufs_wanted(const struct p1 *p);
++void b4_console_note(struct p1 *p, const char *line);
+ int b4_rx_witness(struct p1 *p, const char *when);   /* r4: the RX rings' indices, read only. blazer_bcm4390_ring.c */
+ bool b4_ioctl_allowed(uint32_t cmd, const uint8_t *buf, uint32_t len, int level);
+ int b4_gate_level(const struct p1 *p);
+diff --git a/bsd/dev/blazer_wifi.c b/bsd/dev/blazer_wifi.c
+index a3c8337..19d000e 100644
+--- a/bsd/dev/blazer_wifi.c
++++ b/bsd/dev/blazer_wifi.c
+@@ -55,7 +55,7 @@ extern void blazer_wifi_net_addr(void *ctx, uint32_t ip, uint32_t mask, uint32_t
+ extern void blazer_wifi_net_mode(uint32_t mode);
+ static struct b4_network wifi_network;
+ static uint8_t nvram_buf[0x8000];
+-#define WIFI_DMA_BYTES  0x60000u        /* blazer_bcm4390_ring.c's B4_DMA_NEEDED. 384 KiB, once, never freed: a one-shot probe, and the chip must never hold an address of freed memory */
++#define WIFI_DMA_BYTES  0x280000u       /* blazer_bcm4390_ring.c's B4_DMA_NEEDED. 2.5 MiB (r5: 1024 RX buffers; was 384 KiB), once, never freed: a one-shot probe, and the chip must never hold an address of freed memory */
+ 
+ static struct {
+ 	uint64_t pa;
+-- 
+2.56.0
+
+
+From 2b7de9e165c542f6a0dd17a1ab19e73124700e2f Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 23:41:54 +0100
+Subject: [PATCH 2/2] blazer wifi join r5: say whether M1 reached the
+ supplicant (PSK_SUP state) and whether the posted RX buffers exceed the MAC
+ fill (538)
+
+---
+ bsd/dev/blazer_bcm4390_join.c | 9 +++++++++
+ bsd/dev/blazer_bcm4390_scan.c | 2 ++
+ bsd/dev/blazer_pcie1.h        | 1 +
+ 3 files changed, 12 insertions(+)
+
+diff --git a/bsd/dev/blazer_bcm4390_join.c b/bsd/dev/blazer_bcm4390_join.c
+index e5c9f2e..7f83326 100644
+--- a/bsd/dev/blazer_bcm4390_join.c
++++ b/bsd/dev/blazer_bcm4390_join.c
+@@ -763,6 +763,15 @@ b4_join_event(struct p1 *p, uint32_t type, uint32_t status, uint32_t reason, uin
+ 	}
+ 	/* Numbers only. An event's data can hold the name */
+ 	p->ops.log(p->ops.ctx, "join: %s: status %u, reason %u\n", name, status, reason);
++	if (type == E_PSK_SUP) {
++		/* r5: sup_auth_status_t (wlioctl_defs.h). 4 is WAIT_M1: no M1 reached the supplicant. 5 (PREP_M2), 6 (KEYED), 8 and on (WAIT_M3 .. PREP_G2) all come after it */
++		static const char *const st[] = { "disconnected", "connecting", "id required", "authenticating", "waiting for M1", "preparing M2", "keyed", "timeout",
++		    "waiting for M3", "preparing M4", "waiting for G1", "preparing G2" };
++		bool m1 = status == 5u || status == SUP_KEYED || (status >= 8u && status <= 11u);
++
++		p->ops.log(p->ops.ctx, "join: M1 received: %s (supplicant %s)\n", m1 ? "yes" : status == SUP_WAIT_M1 ? "no" : "unknown",
++		    status < sizeof(st) / sizeof(st[0]) ? st[status] : "in a state past this table");
++	}
+ 	return true;
+ }
+ 
+diff --git a/bsd/dev/blazer_bcm4390_scan.c b/bsd/dev/blazer_bcm4390_scan.c
+index e9432f7..74842d1 100644
+--- a/bsd/dev/blazer_bcm4390_scan.c
++++ b/bsd/dev/blazer_bcm4390_scan.c
+@@ -919,6 +919,8 @@ b4_scan(struct p1 *p)
+ 		return (int)p->stop;
+ 	}
+ 	p->ops.log(p->ops.ctx, "rx: %u buffers posted. The firmware takes up to %u (max_host_rxbufs); r1-r4 posted 64\n", p->rx_posted, p->max_rxbufs);
++	/* r5: what the two MAC units' RX fill holds (console: nrxbufpost 384 on unit 0, 154 on unit 1). At or under it, a packet for the host has no buffer left */
++	p->ops.log(p->ops.ctx, "rx: posted %u, above the %u the MAC fill holds: %s\n", p->rx_posted, B4_MAC_RX_FILL, p->rx_posted > B4_MAC_RX_FILL ? "yes" : "NO");
+ 	if (b4_rx_witness(p, "after the posting")) {
+ 		return (int)p->stop;
+ 	}
+diff --git a/bsd/dev/blazer_pcie1.h b/bsd/dev/blazer_pcie1.h
+index 0db544c..0573af1 100644
+--- a/bsd/dev/blazer_pcie1.h
++++ b/bsd/dev/blazer_pcie1.h
+@@ -268,6 +268,7 @@ int b4_ioctl(struct p1 *p, uint32_t cmd, uint8_t *buf, uint16_t len);   /* 0 mea
+ int b4_poll(struct p1 *p);      /* All three completion rings, then the firmware's trap and mailbox state, once */
+ int b4_rx_post_all(struct p1 *p);
+ uint32_t b4_rx_bufs_wanted(const struct p1 *p);
++#define B4_MAC_RX_FILL 538u     /* r5: nrxbufpost 384 (MAC unit 0) + 154 (unit 1), the firmware console at boot */
+ void b4_console_note(struct p1 *p, const char *line);
+ int b4_rx_witness(struct p1 *p, const char *when);   /* r4: the RX rings' indices, read only. blazer_bcm4390_ring.c */
+ bool b4_ioctl_allowed(uint32_t cmd, const uint8_t *buf, uint32_t len, int level);
+-- 
+2.56.0
+

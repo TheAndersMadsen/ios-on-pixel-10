@@ -1,0 +1,25 @@
+phone-bridge: m1box is at 1fe8327241, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: replacing the Mac's Developer/personal/hackios/research/ios26-connectivity-r1/wifi/r5/build_wifi_r5.py (--overwrite)
+23:42:00 fw-57.31: all 7 files as pinned
+23:42:00 waiting for build slot lock
+23:42:00 lock held
+23:42:01 tree branch p1 HEAD b228c4f dirty=False
+23:42:01 on hk-wifi-join4 2b7de9e165c542f6a0dd17a1ab19e73124700e2f; vs 76bcd0325042ddd11ec52a7bcd2a6906c3a2da73:
+bsd/dev/blazer_bcm4390_join.c | 9 +++++++++
+ bsd/dev/blazer_bcm4390_scan.c | 2 ++
+ bsd/dev/blazer_pcie1.h        | 1 +
+ 3 files changed, 12 insertions(+)
+23:42:19 build wifi-r5-build rc 0, 18 s, log research/ios26-release-r1/logs/wifi-r5-build.log
+23:42:19 f0a08477c42762c92bab0cfc769dfbdd5e3e05f1694725c4711c956932f7948a  kernel.rootview-wifi-r5
+23:42:19 73b10f57ea6ec24328624ecc3870cd167ae0ce1f8f36072cd20126d1223ab880  kernel.rootview-wifi-r5.unstripped
+23:42:19 kernel holds the .57.31 firmware bytes: True; a .57.30 version string: False
+23:42:19 kernel string 'Firmware drops for want of a host buffer (EL 30 b8c8)': True
+23:42:19 kernel string 'no host RX buffer was queued (EL 30 b8c8)': True
+23:42:19 kernel string 'r1-r4 posted 64': True
+23:42:19 kernel string 'join: M1 received: %s (supplicant %s)': True
+23:42:19 kernel string 'above the %u the MAC fill holds': True
+23:42:19 restored branch p1 HEAD b228c4f
+23:42:37 build wifi-r5-restore-p1-build rc 0, 18 s, log research/ios26-release-r1/logs/wifi-r5-restore-p1-build.log
+23:42:37 obj kernel after restore a274d48df2061b818c6151908094ea191bced9c1f7e0ce811b164392162f89a1
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r5
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r5.unstripped

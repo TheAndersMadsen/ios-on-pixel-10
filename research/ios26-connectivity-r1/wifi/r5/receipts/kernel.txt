@@ -1,0 +1,18 @@
+kernel.rootview-wifi-r5 (Mac build, build_wifi_r5.out; hk-wifi-join4 2b7de9e)
+f0a08477c42762c92bab0cfc769dfbdd5e3e05f1694725c4711c956932f7948a  kernel.rootview-wifi-r5
+73b10f57ea6ec24328624ecc3870cd167ae0ce1f8f36072cd20126d1223ab880  kernel.rootview-wifi-r5.unstripped
+Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
+_b4_rx_bufs_wanted (unstripped):
+fffffe0007a0d1c0 <_b4_rx_bufs_wanted>:
+fffffe0007a0d1c0:      	ldr	w9, [x0, #0x2ec]
+fffffe0007a0d1c4:      	mov	w8, #0x400      ; =1024
+fffffe0007a0d1c8:      	sub	w10, w9, #0x1
+fffffe0007a0d1cc:      	cmp	w10, #0x3ff
+fffffe0007a0d1d0:      	csel	w0, w9, w8, lo
+fffffe0007a0d1d4:      	ret
+wifi_thread's dma_alloc size (unstripped):
+fffffe0007a1a3e4:      	mov	w1, #0x280000   ; =2621440
+fffffe0007a1a400:      	mov	w21, #0x280000  ; =2621440
+M1 / MAC-fill strings:
+present: join: M1 received: %s (supplicant %s)
+present: rx: posted %u, above the %u the MAC fill holds: %s

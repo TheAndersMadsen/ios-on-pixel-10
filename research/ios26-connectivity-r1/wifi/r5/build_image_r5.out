@@ -1,0 +1,35 @@
+f0a08477c42762c9
+removed [secret dir entry]
+removed [secret dir entry]
+removed [secret dir entry]
+removed [secret dir entry]
+removed [secret dir entry]
+removed [secret dir entry]
+removed research/images/a7-wifi-join-r4
+removed research/images/a7-wifi-join-r5
+0 files gone. The secret file stays
+kernel ok: f0a08477c42762c92bab0cfc769dfbdd5e3e05f1694725c4711c956932f7948a
+secret: file reads fine
+secret:   open network: no
+secret:   password is a 64-hex PSK: no
+secret:   password starts or ends with a space: no
+secret:   name starts or ends with a space: no
+secret:   name is ASCII: yes
+secret:   BWN2 possible: yes
+overlay:  "bytes": 491272,
+overlay:  "sha256": "217da41b825451d9377b4626283e4894125adee29931770184a9f900e74c331f",
+overlay:  "records": 47,
+overlay:  "net_bytes": 176,
+overlay:  "blob": "BWN2",
+overlay:  "has_passphrase": true,
+image: research/images/a7-wifi-join-r5, mode 700, cmdline = r1's (913ab8d96ab64794362ce967ddd6f7ac341d81528f765ae18c2cb99322669459)
+boot.img sha256 a181b2bce9a512a7e15e6ed4377e249579566e5b2d9380569365d5e4928ee590
+unstripped mach for bootios: research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r5.unstripped 73b10f57ea6ec24328624ecc3870cd167ae0ce1f8f36072cd20126d1223ab880
+one network record: yes
+record is BWN2, 176 bytes: yes
+name = the file: yes
+PMK = PBKDF2(the file): yes
+passphrase = the file: yes
+boot.img holds the record: yes
+boot.img holds the whole overlay: yes
+rc 0

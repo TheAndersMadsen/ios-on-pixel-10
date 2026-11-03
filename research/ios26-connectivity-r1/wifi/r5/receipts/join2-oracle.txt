@@ -1,0 +1,1 @@
+join2 oracle: PASSED, 25 cases, 0 failures

@@ -1,0 +1,25 @@
+memory: stage JOIN carves 0x244000 of 0x280000 bytes; RX area 1024 x 2048 at +0x3a000
+post: max_host_rxbufs 6783 -> 1024 posted, 1024 doorbells, last 0xff010400
+post: max_host_rxbufs 100 -> 100 posted, 100 doorbells, last 0xff010064
+post: max_host_rxbufs 0 -> 1024 posted, 1024 doorbells, last 0xff010400
+recycle: completion of id 0x405 reposted at index 1024; witness: rx: witness after method 1: post ring written to 1025, the dongle has read to 1024 (some taken); completion ring: dongle at 1, us at 1. Items 1, 120 bytes, 0 dropped. Firmware drops for want of a host buffer (EL 30 b8c8): 4
+ring_oracle: all cases passed
+console: r3's lines -> 17 drops (13 in method 1, 4 in method 2), said once, all 25 lines logged
+console_oracle: all cases passed
+mutant  0: r4's 64 buffers: caught
+mutant  1: post ring with no room over: caught
+mutant  2: r4's completion depth: caught
+mutant  3: r4's host memory: caught
+mutant  4: cap ignored: caught
+mutant  5: 0 taken as a cap: caught
+mutant  6: buffer under 0x7f8: caught
+mutant  7: witness without the drop count: caught
+mutant  8: completion not reposted: caught
+mutant  9: tag too loose: caught
+mutant 10: wrong format number: caught
+mutant 11: said every time: caught
+mutant 12: whole lines not counted: caught
+mutant 13: M1 only when keyed: caught
+mutant 14: M1 for every state but 4: caught
+mutant 15: state names out of order: caught
+mutate_r5: 16/16 caught

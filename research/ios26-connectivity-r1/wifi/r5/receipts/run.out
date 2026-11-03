@@ -1,0 +1,95 @@
+memory: stage JOIN carves 0x244000 of 0x280000 bytes; RX area 1024 x 2048 at +0x3a000
+post: max_host_rxbufs 6783 -> 1024 posted, 1024 doorbells, last 0xff010400
+post: max_host_rxbufs 100 -> 100 posted, 100 doorbells, last 0xff010064
+post: max_host_rxbufs 0 -> 1024 posted, 1024 doorbells, last 0xff010400
+recycle: completion of id 0x405 reposted at index 1024; witness: rx: witness after method 1: post ring written to 1025, the dongle has read to 1024 (some taken); completion ring: dongle at 1, us at 1. Items 1, 120 bytes, 0 dropped. Firmware drops for want of a host buffer (EL 30 b8c8): 4
+ring_oracle: all cases passed
+console: r3's lines -> 17 drops (13 in method 1, 4 in method 2), said once, all 25 lines logged
+console_oracle: all cases passed
+mutant  0: r4's 64 buffers: caught
+mutant  1: post ring with no room over: caught
+mutant  2: r4's completion depth: caught
+mutant  3: r4's host memory: caught
+mutant  4: cap ignored: caught
+mutant  5: 0 taken as a cap: caught
+mutant  6: buffer under 0x7f8: caught
+mutant  7: witness without the drop count: caught
+mutant  8: completion not reposted: caught
+mutant  9: tag too loose: caught
+mutant 10: wrong format number: caught
+mutant 11: said every time: caught
+mutant 12: whole lines not counted: caught
+mutant 13: M1 only when keyed: caught
+mutant 14: M1 for every state but 4: caught
+mutant 15: state names out of order: caught
+mutate_r5: 16/16 caught
+join2 oracle: PASSED, 25 cases, 0 failures
+Ran 18 tests in 6.115s
+
+OK
+== ring.arm64e.o
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        456 SUBSECTIONS_VIA_SYMBOLS
+== bcm4390.arm64e.o
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        376 SUBSECTIONS_VIA_SYMBOLS
+== scan.arm64e.o
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        536 SUBSECTIONS_VIA_SYMBOLS
+== join.arm64e.o
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        776 SUBSECTIONS_VIA_SYMBOLS
+ring defines _b4_rx_post_all
+ring defines _b4_rx_bufs_wanted
+ring defines _b4_rx_witness
+ring defines _b4_rings
+ring defines _b4_poll
+bcm4390 defines _b4_console
+bcm4390 defines _b4_console_note
+ring string: Firmware drops for want of a host buffer (EL 30 b8c8): %u
+bcm4390 string: rx: the firmware dropped a packet for the host: no host RX buffer was queued (EL 30 b8c8)
+scan string: rx: %u buffers posted. The firmware takes up to %u (max_host_rxbufs); r1-r4 posted 64
+scan string: rx: posted %u, above the %u the MAC fill holds: %s
+join string: join: M1 received: %s (supplicant %s)
+ring: _b4_rx_bufs_wanted compares with 0x400 (1024)
+== kernel 73b10f57ea6ec24328624ecc3870cd167ae0ce1f8f36072cd20126d1223ab880
+kernel has _b4_rx_post_all
+kernel has _b4_rx_bufs_wanted
+kernel has _b4_rx_witness
+kernel has _b4_console_note
+kernel has _b4_join_run
+kernel has _b4_rx_counters
+kernel has _blazer_wifi_net_secret
+kernel string: Firmware drops for want of a host buffer (EL 30 b8c8)
+kernel string: no host RX buffer was queued (EL 30 b8c8)
+kernel string: r1-r4 posted 64
+kernel string: join: M1 received: %s (supplicant %s)
+kernel string: above the %u the MAC fill holds
+kernel string: waiting for M1
+kernel string: join: keyed by method %u
+kernel string: rx: witness %s
+kernel string: version 27.10.1121.57.31
+ok   bin sha256 db46afd6 (Android's .57.31, android-fw/adb-firmware.txt)
+ok   map sha256 12cf6569
+ok   _bcmsplitrx = 1, _bcmsplitrx_mode = 4 (RAM data at 0x2a0149, 0x2a014a)
+ok   EL 0x30/0xb8c8 is event_log2 then hnd_pkt_free at 0x2c45f8 (pciedev_data$pciedev_process_d2h_rxpyld+0x528); pciedev_process_rxpost_msg called at 0x2c4306
+ok   reached when the returned host address is 0: 0x2c4312 beq.w #0x2c45ea
+ok   rxpost item: type 0x11 checked 2x, length vs 0x7f8 at 0x3e4eec, 0x3e4f74, 0x3e50f0, osl_sys_halt at 0x3e4f8c, 0x3e506c, 0x3e5084, 0x3e50e8, 0x3e5126
+ok   wlc_recvdata_ordered: 0x888e at 0x3f5f00, 0x3f5f62, 0x3f6228, 0x3f64ce, 0x3f6512, 0x3f65be, 0x3f66cc, bl wlc_sup_eapol at 0x3f62f2, 0x3f6630
+ok   pciedev_handle_h2d_msg_rxsubmit calls pktpool_invoke_dmarxfill at 0x2c4934
+ok   symbols: wlc_eapol_pktfetch_required, wlc_recvdata_schedule_pktfetch, pciedev_lbuf_rxfrag_cb
+fw_facts: all facts hold
+b642bc96105dd078b0e991f44dbd002ab701859f1eba653e4772b751a8de2fb6  build/ring_oracle
+c217dc2bde69673c8aad8f7c263c0a6a2974e8d610ea811cbe4510ea1c896aab  build/console_oracle
+30cd30351d0f9e708b10606687e5af2565bde712e3bae8dce3f8f4b390e22e9e  build/bcm4390.arm64e.o
+fa5db0c7e8fe804f663e795f4589c9973c2ed322509ffb7900fb3cb58e8efbf5  build/join.arm64e.o
+8560bd1ec9cbbdd15cc8f3ca1eba5173fa7e2279ce5f39f17138ac3f690d34a6  build/ring.arm64e.o
+4b3034cfec20dda3ef51b1b6681c0024b35fcc2b957a5c2880305db4c4cda044  build/scan.arm64e.o
+1fa8a52c1d3ad9e003a80b033183a044951f073dbdbdda8ac504e8391c711fbc  ring_oracle.c
+bb3ece3e60f6dcdb4e1cc39426a1630094f5eb5859f514deba3a147c59685eee  console_oracle.c
+c1a27873041d7f107b305ff0607e4a1aa7daf0bfa6b7269984cfc1aba909157b  join2_oracle_r5.c
+1b91d34682ba7f7c90fe311b78aa97e2c58c2181dd3cef079fce08357b6ac6a8  mutate_r5.py
+20ab46254d27d01a69f094c3727e43bd9cacd242c0f9b35a7a78aae3ac4119aa  fw_facts.py
+8401668e8259c1c839e1b0b69be62143650c34810dccd5f04114d30694877d74  run.sh
+23096da890bef610070064fa0308900f88e8ef00d771cb248598d0d5378b3d60  src/blazer_bcm4390.c
+4232f73b5c73c5cd11ec6c1e06827e9ec3f8a79ed345a8962f335e4e44ed57a2  src/blazer_bcm4390_join.c
+44c55aa5f9c088837df568eae27e8b4bb2ac1bc785f180e3747ee52e9fb390dc  src/blazer_bcm4390_ring.c
+b71c4686f4cbe763dd198fc9553f682938e6be92b5cef60d597fe7f9b9e8285a  src/blazer_bcm4390_scan.c
+e32217f91d4c5c399f81095c400c95bc43c5debf5262a57252a4ea7ce358bc2b  src/blazer_pcie1.h
+4d676599699029d292452f1bf2cf9768ede02a4d9e708c47b87f9637d3a24e62  src/blazer_wifi.c

@@ -1,0 +1,10 @@
+ok   bin sha256 db46afd6 (Android's .57.31, android-fw/adb-firmware.txt)
+ok   map sha256 12cf6569
+ok   _bcmsplitrx = 1, _bcmsplitrx_mode = 4 (RAM data at 0x2a0149, 0x2a014a)
+ok   EL 0x30/0xb8c8 is event_log2 then hnd_pkt_free at 0x2c45f8 (pciedev_data$pciedev_process_d2h_rxpyld+0x528); pciedev_process_rxpost_msg called at 0x2c4306
+ok   reached when the returned host address is 0: 0x2c4312 beq.w #0x2c45ea
+ok   rxpost item: type 0x11 checked 2x, length vs 0x7f8 at 0x3e4eec, 0x3e4f74, 0x3e50f0, osl_sys_halt at 0x3e4f8c, 0x3e506c, 0x3e5084, 0x3e50e8, 0x3e5126
+ok   wlc_recvdata_ordered: 0x888e at 0x3f5f00, 0x3f5f62, 0x3f6228, 0x3f64ce, 0x3f6512, 0x3f65be, 0x3f66cc, bl wlc_sup_eapol at 0x3f62f2, 0x3f6630
+ok   pciedev_handle_h2d_msg_rxsubmit calls pktpool_invoke_dmarxfill at 0x2c4934
+ok   symbols: wlc_eapol_pktfetch_required, wlc_recvdata_schedule_pktfetch, pciedev_lbuf_rxfrag_cb
+fw_facts: all facts hold

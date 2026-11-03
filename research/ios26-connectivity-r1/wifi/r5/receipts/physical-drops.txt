@@ -1,0 +1,26 @@
+Physical consoles (strings of ramdump/kernel.log), lines 'EL: 30 b8c8' per attempt (each attempt's log holds two copies of the boot, as the r3 grep shows: counts are of distinct lines)
+20261102-065234-wifi-stage5-dry-r1: distinct EL 30 b8c8 lines 0; 'Start PSK to PMK conversion' lines 0; 'rx: item' lines 0
+20261103-163533-a7-wifi-join-r1: distinct EL 30 b8c8 lines 4; 'Start PSK to PMK conversion' lines 2; 'rx: item' lines 0
+20261103-184333-a7-wifi-join-r2: distinct EL 30 b8c8 lines 4; 'Start PSK to PMK conversion' lines 2; 'rx: item' lines 0
+20261103-203419-a7-wifi-join-r3: distinct EL 30 b8c8 lines 17; 'Start PSK to PMK conversion' lines 4; 'rx: item' lines 0
+
+r3 excerpt (fw console, both methods):
+blazer-wifi: fw says: 007.925154416 EL: 30 b8c8 473eac 0
+blazer-wifi: fw says: 007.929004448 EL: 30 b8c8 472fa4 0
+blazer-wifi: fw says: 007.929476350 EL: 30 b8c8 46fed0 0
+blazer-wifi: fw says: 007.948435500 EL: 30 b8c8 46fea8 0
+blazer-wifi: fw says: 007.949036581 EL: 30 b8c8 46fd5c 0
+blazer-wifi: fw says: 007.969069211 EL: 30 b8c8 472834 0
+blazer-wifi: fw says: 007.970230129 EL: 30 b8c8 47285c 0
+blazer-wifi: fw says: 007.989471826 EL: 30 b8c8 4703a8 0
+blazer-wifi: fw says: 007.991162688 EL: 30 b8c8 46fed0 0
+blazer-wifi: fw says: 008.150399140 Start PSK to PMK conversion 0
+blazer-wifi: fw says: 008.151632550 EL: 30 b8c8 471478 0
+blazer-wifi: fw says: 008.155908839 EL: 30 b8c8 46f39c 0
+blazer-wifi: fw says: 008.156232398 EL: 30 b8c8 471288 0
+blazer-wifi: fw says: 008.175547343 EL: 30 b8c8 470f48 0
+blazer-wifi: fw says: 014.206534871 Start PSK to PMK conversion 0
+blazer-wifi: fw says: 014.207633999 EL: 30 b8c8 4ff32c 0
+blazer-wifi: fw says: 014.212936376 EL: 30 b8c8 4ff2f4 0
+blazer-wifi: fw says: 014.213320761 EL: 30 b8c8 4ff284 0
+blazer-wifi: fw says: 014.230884123 EL: 30 b8c8 46ed9c 0

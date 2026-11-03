@@ -1,0 +1,108 @@
+QEMU (m1box rig, TCG, 1 CPU, 600 s budget, blazer_deadline 300; tools/qemu_preflight.py). Not Wi-Fi evidence: blazer_wifi* is dropped as phone-only (BCM4390 PCIe).
+Root, line and overlay of research/images/a7-ios-system-r3 for both; scratch manifest /data/hackios-qemu/wifi-r5-qf/a7-wifi-r5-qemu/manifest.json = r3's with mach 62ae0508 (r5) and blazer_wifi=1 blazer_wifi_stage=8 added (both dropped).
+
+== base qf-wifi-r5-base-r3 (kernel ddf874fb, r3's)
+  expect (tools/hk_cycle.py evaluate (sha eacb1d523520022d)):
+    PASS       root-on-ufs                blazer-root: stage t 930 ms stage pid1_exec reads 290 blocks 290 busy 1 ms max 121 us last lba 3850458
+    PASS       overlay-applied            varfs-overlay: 12 applied
+    PASS       launchd                    exec launchd
+    PASS       usermanagerd               com.apple.xpc.launchd|1970-01-01 00:00:14.460127 (user/501/com.apple.accountsd [exec usermanagerd
+    PASS       backboardd                 exec backboardd
+    PASS       SpringBoard                exec SpringBoard
+    FAIL       home-daemons               (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    PASS       no-lsd-abort               
+    PASS       no-NSURL-nil               (optional) 
+    PASS       no-panic                   
+    N/A        netstack-published         
+    PHONE_ONLY frame-display              
+    PHONE_ONLY power-key-armed            
+    PHONE_ONLY haptic-ready               
+    PHONE_ONLY rtc-publish                
+    PHONE_ONLY backlight-dcs              
+  findings: 
+    - note (not a fault): applied count 12 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']
+    - milestone not reached in 302.0 s: PosterBoard (PosterBoard (phone: first frame ~10 s))
+    - expect home-daemons FAIL: missing: (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    - note (not a fault): the recipe's blazer_deadline ended the guest at host 302.0 s
+VERDICT: FAIL (2 finding(s))
+
+== r5 qf-wifi-r5-k1 (kernel 62ae0508)
+  expect (tools/hk_cycle.py evaluate (sha eacb1d523520022d)):
+    PASS       root-on-ufs                blazer-root: stage t 882 ms stage pid1_exec reads 334 blocks 334 busy 1 ms max 128 us last lba 3850450
+    PASS       overlay-applied            varfs-overlay: 12 applied
+    PASS       launchd                    exec launchd
+    PASS       usermanagerd               exec usermanagerd
+    PASS       backboardd                 exec backboardd
+    PASS       SpringBoard                exec SpringBoard
+    FAIL       home-daemons               (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    PASS       no-lsd-abort               
+    PASS       no-NSURL-nil               (optional) 
+    PASS       no-panic                   
+    N/A        netstack-published         
+    PHONE_ONLY frame-display              
+    PHONE_ONLY power-key-armed            
+    PHONE_ONLY haptic-ready               
+    PHONE_ONLY rtc-publish                
+    PHONE_ONLY backlight-dcs              
+  findings: 
+    - note (not a fault): applied count 12 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']
+    - milestone not reached in 302.0 s: PosterBoard (PosterBoard (phone: first frame ~10 s))
+    - expect home-daemons FAIL: missing: (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    - note (not a fault): the recipe's blazer_deadline ended the guest at host 302.0 s
+VERDICT: FAIL (2 finding(s))
+
+
+== r5 against base (--baseline lists nothing lost)
+milestones, base | r5 (host seconds):
+    OK  kernel                 0.0  XNU arm_init|    OK  kernel                 0.0  XNU arm_init
+    OK  root                   3.0  root mounted, pid 1 exec|    OK  root                   2.0  root mounted, pid 1 exec
+    OK  overlay                2.0  var overlay applied|    OK  overlay                2.0  var overlay applied
+    OK  launchd                2.0  launchd|    OK  launchd                2.0  launchd
+    OK  usermanagerd          48.0  boot tasks: usermanagerd|    OK  usermanagerd          43.0  boot tasks: usermanagerd
+    OK  backboardd            53.0  backboardd|    OK  backboardd            49.0  backboardd
+    OK  SpringBoard           14.0  SpringBoard|    OK  SpringBoard           14.0  SpringBoard
+    OK  display              136.0  SWEET FB display on|    OK  display              135.0  SWEET FB display on
+    --  PosterBoard                 PosterBoard (phone: first frame ~10 s)|    --  PosterBoard                 PosterBoard (phone: first frame ~10 s)
+    OK  iconservicesagent    155.0  iconservicesagent (phone: Home-time)|    OK  iconservicesagent    128.0  iconservicesagent (phone: Home-time)
+    --  Home equivalent             (UI stable: True; QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame.)|    --  Home equivalent             (UI stable: True; QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame.)
+
+daemon table diff (name exec respawns exited), base < > r5:
+3c3
+< user/501/com.apple.datamigrator 0 0 3
+---
+> user/501/com.apple.datamigrator 0 0 4
+5c5
+< user/501/com.apple.fairplayd.H2 0 0 2
+---
+> user/501/com.apple.fairplayd.H2 0 0 3
+
+Reading: same milestones, same 0 respawns/0 crashes for backboardd and SpringBoard, 0 panics in both; both end on blazer_deadline 300 and both
+miss PosterBoard (a TCG/300 s limit of the r3 recipe, present with r3's own kernel). Only exited counts of two one-shot daemons differ by 1.
+
+== final kernel qf-wifi-r5-k2 (kernel f0a08477, hk-wifi-join4 2b7de9e)
+  expect (tools/hk_cycle.py evaluate (sha eacb1d523520022d)):
+    PASS       root-on-ufs                blazer-root: stage t 1068 ms stage pid1_exec reads 334 blocks 334 busy 1 ms max 127 us last lba 3850450
+    PASS       overlay-applied            varfs-overlay: 12 applied
+    PASS       launchd                    exec launchd
+    PASS       usermanagerd               exec usermanagerd
+    PASS       backboardd                 exec backboardd
+    PASS       SpringBoard                exec SpringBoard
+    FAIL       home-daemons               (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    PASS       no-lsd-abort               
+    PASS       no-NSURL-nil               (optional) 
+    PASS       no-panic                   
+    N/A        netstack-published         
+    PHONE_ONLY frame-display              
+    PHONE_ONLY power-key-armed            
+    PHONE_ONLY haptic-ready               
+    PHONE_ONLY rtc-publish                
+    PHONE_ONLY backlight-dcs              
+  findings: 
+    - note (not a fault): applied count 12 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']
+    - milestone not reached in 302.0 s: PosterBoard (PosterBoard (phone: first frame ~10 s))
+    - expect home-daemons FAIL: missing: (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    - note (not a fault): the recipe's blazer_deadline ended the guest at host 302.0 s
+VERDICT: FAIL (2 finding(s))
+  daemons exec'd: 66
+  panics: 0; deadline end at host 302.0 s
+Reading: same probes and verdict as the base and k1 (0 panics, PosterBoard missed at the 300 s deadline in all three).
