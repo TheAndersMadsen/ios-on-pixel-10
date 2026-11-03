@@ -1,0 +1,17 @@
+cmdline bytes 1015 -> 1012; tokens 57 -> 57
+cmdline DIFFERS: -['blazer_persona_log=1'] +['blazer_netstack=1']
+token order CHANGED
+adt: "f83c9c430a924bcc769355f0ad7153c3d71b0a76e044d5c980294550a4750113" -> "a8dc904923cf8a252ef82961f9ff02d438091ab285a171e43bf40213f6fe7a68"
+adt_facts: {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "c250c1c9a1 -> {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "7d9e4cc8f3
+cmdline: "debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=300 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-maske -> "debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=300 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-maske
+cmdline_bytes: 1015 -> 1012
+decode: "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r10-perf/manifest.json" -> "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-cfg1/manifest.json"
+epoch: 1793730673 -> 1793733253
+ids: {"epoch": "0x2f2c8eff7b", "handoff": 1, "record_nonce": "55f595b2405cf237dbb9d650bb0c273a", "stamp_nonce": "0x5090b7f19a1adefa"} -> {"epoch": "0x2f2c8effce", "handoff": 1, "record_nonce": "b3e23909c96904af266d60edcdfc4dc4", "stamp_nonce": "0xed0b7a041081827c"}
+image: "b851cd25e20a1885a5262746a39cb05a0af23d669556b7d204eeabcc85de061d" -> "9e48a97048f933fa0f907cc48b7fbcc0c33a7f29fbef7f9ee2ba810d63905373"
+mach: "d7f47431164650c96cbab32dde384a288c321f67adcaf69f37eccc3116133186" -> "f75a20c47dc978b8958bb359adf21ba143453fa567328af2ab4597a0f5ca5967"
+margin_bytes: 39999328 -> 39999040
+name: "a7-ios-system-r10-perf" -> "a7-ios-system-cfg1"
+payload: "8a800cd7b18da867ab108e65bd224c90a81dc0447334d2a99417ad95ef9694bb" -> "a6a0a4f0899a969fb831d47024c5d3a97fc9c21bae6d2727535d54416b06e7f3"
+payload_bytes: 26060960 -> 26061248
+tools: {"adt.py": "ebb7a858835fc7acf5da1e543a05b9561e70c6fd4f9328f4d52c009465573bdd", "image_tool.py": "45eadfe3cda13395f030a6abe256a31f1b4907cb3465bedf504b3b6a1bb633a3", "mkadt.py": "ad0f50ed677d0d44f44dddbef62fb74ab8b062def51611bd34cebfc352f42619", "mkbootimg.py": "2a8d05d34110f66c463668f43fc812ce2e46e66 -> {"adt.py": "ebb7a858835fc7acf5da1e543a05b9561e70c6fd4f9328f4d52c009465573bdd", "image_tool.py": "c1f2de1bd5fb3e49be21fb1f8257de804e9dd07f1fcb85a00f5e1c7594fd1104", "mkadt.py": "ad0f50ed677d0d44f44dddbef62fb74ab8b062def51611bd34cebfc352f42619", "mkbootimg.py": "2a8d05d34110f66c463668f43fc812ce2e46e66

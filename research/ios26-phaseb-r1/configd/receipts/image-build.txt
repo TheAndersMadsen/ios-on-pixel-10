@@ -1,0 +1,2 @@
+a7-ios-system-cfg1 bootable 9e48a97048f933fa0f907cc48b7fbcc0c33a7f29fbef7f9ee2ba810d63905373 payload 26061248 margin 39999040
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-cfg1/manifest.json

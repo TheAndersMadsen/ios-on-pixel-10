@@ -1,0 +1,21 @@
+{
+  "base_sha256": "95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55",
+  "output_sha256": "7acd3d4af2a25cd97a44acbeac94b9ac9d23fa02a8aea41fcdc0bfdbe9c82c52",
+  "bytes": 662840,
+  "records": 50,
+  "replaced": {
+    "39 hk_env powerd": {
+      "old": "powerd:DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1",
+      "new": "powerd:DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib:/private/var/hk/hk_scwait.dylib;HK_BATTERY_TRACE=1;HK_SCWAIT=1",
+      "bytes_with_NUL": 755
+    }
+  },
+  "appended": {
+    "/private/var/hk/hk_scwait.dylib": {
+      "group": 29,
+      "sha256": "910d02ac465fe50e578edd09248917b3ce638195662defd8d15502410dbfeafc",
+      "bytes": 51568
+    }
+  },
+  "other_records_byte_identical": 48
+}

@@ -1,0 +1,14 @@
+r10-perf 1015 B 57 tokens -> cfg1 1012 B 57 tokens
+replace at token 55: -['blazer_persona_log=1'] +['blazer_netstack=1']
+every other token identical and in the same order: True
+entry same
+kernel_end same
+plan same
+segs same
+var_overlay same
+shim_copy same
+cflags same
+bootcpu same
+cpus same
+route same
+avb same

@@ -1,0 +1,72 @@
+# 23G90 configd InterfaceNamer (HOST disassembly). Source: /usr/libexec/configd from research/ios26-apps-r1/artifacts/apps-full-r6.img (read-only mount), sha256 de08ba706bded89b6f8a992452ea20cefcf53aa93246ae3f42868f38743be29d, llvm-objdump --macho
+## InterfaceNamer.bundle/Info.plist has no WaitStackTimeout/WaitQuietTimeout keys:
+{'CFBundleIdentifier': 'com.apple.SystemConfiguration.InterfaceNamer', 'Builtin': True, 'WaitStackTimeout': None, 'WaitQuietTimeout': None}
+## defaults in __data: 0x1000855c8 = 300.0 (WaitStackTimeout), 0x1000855d0 = 240.0 (WaitQuietTimeout)
+0x1000855c8 300.0
+0x1000855d0 240.0
+## cfstrings
+0x1000801a0 WaitStackTimeout
+0x1000801c0 WaitQuietTimeout
+0x100080320 *QUIET*
+0x100080340 *QUIET&NAMED*
+0x100080360 %@InterfaceNamer
+0x100080460 *TIMEOUT*
+0x100080480 *TIMEOUT&NAMED*
+0x1000804a0 *STACK*
+0x1000804c0 *COMPLETE*
+## setup_IOKit: root busy interest, busy state, ONE timer at now + WaitStackTimeout -> timerCallback 0x10002c56c, IONetworkStack first-match
+10002b2b8:	add	x1, x1, #0x556 ; literal pool for: "IOService:/"
+10002b2c0:	bl	0x10006a718 ; symbol stub for: _IORegistryEntryFromPath
+10002b2d4:	add	x2, x2, #0x562 ; literal pool for: "IOBusyInterest"
+10002b2f8:	bl	0x10006a788 ; symbol stub for: _IOServiceAddInterestNotification
+10002b50c:	bl	0x10006a7b8 ; symbol stub for: _IOServiceGetBusyState
+10002b628:	bl	0x100069e88 ; symbol stub for: _CFAbsoluteTimeGetCurrent
+10002b630:	ldr	d1, [x8, #0x5c8]
+10002b63c:	add	x16, x16, #0x56c
+10002b65c:	bl	0x10006a398 ; symbol stub for: _CFRunLoopTimerCreate
+10002b664:	str	x0, [x20, #0x820]
+10002b66c:	bl	0x10006a338 ; symbol stub for: _CFRunLoopGetCurrent
+10002b670:	ldr	x1, [x20, #0x820]
+10002b678:	ldr	x8, [x8, #0x2d0] ; literal pool symbol address: _kCFRunLoopDefaultMode
+10002b684:	bl	0x10006a328 ; symbol stub for: _CFRunLoopAddTimer
+10002b690:	add	x0, x0, #0x585 ; literal pool for: "IONetworkStack"
+10002b694:	bl	0x10006a7f8 ; symbol stub for: _IOServiceMatching
+10002b6a4:	add	x1, x1, #0x571 ; literal pool for: "IOServiceFirstMatch"
+10002b6c4:	bl	0x10006a798 ; symbol stub for: _IOServiceAddMatchingNotification
+## after the first stack iteration: quietCallback(kIOMessageServiceBusyStateChange 0xe0000120, busy state read above)
+10002b944:	adrp	x8, 90 ; 0x100085000
+10002b948:	ldr	w1, [x8, #0x804]
+10002b94c:	bl	0x10002c96c
+10002b950:	ldur	w3, [x29, #-0x4c]
+10002b954:	mov	w2, #0x120
+10002b958:	movk	w2, #0xe000, lsl #16
+10002b95c:	bl	0x10002c2d0
+## quietCallback 0x10002c2d0: return if busy != 0; *QUIET* (0x100080320) then 'IOKit quiet'; then needs the stack connection (0x800) or returns
+10002c2fc:	cbz	x3, 0x10002c330
+10002c33c:	cmp	w2, w8
+10002c350:	add	x1, x1, #0x320
+10002c3ec:	add	x4, x4, #0x766 ; literal pool for: "IOKit quiet"
+10002c41c:	ldr	w8, [x8, #0x800]
+10002c43c:	ldr	x0, [x20, #0x820]
+10002c444:	bl	0x10006a3b8 ; symbol stub for: _CFRunLoopTimerInvalidate
+10002c448:	ldr	x0, [x20, #0x820]
+10002c450:	str	xzr, [x20, #0x820]
+## timerCallback 0x10002c56c: *TIMEOUT* (0x100080460), then quietCallback
+10002c5a4:	add	x1, x1, #0x460
+10002c5bc:	add	x0, x0, #0x478 ; literal pool for: "com.apple.SystemConfiguration"
+10002c5c4:	add	x1, x1, #0x4d9 ; literal pool for: "InterfaceNamer"
+10002c640:	add	x4, x4, #0x8f8 ; literal pool for: "timed out waiting for IOKit to quiesce"
+10002c678:	bl	0x10002c2d0
+## stackCallback: *STACK* (0x1000804a0) and the timer re-armed to now + WaitQuietTimeout
+10002c81c:	add	x1, x1, #0x4a0
+10002c8fc:	ldr	x0, [x20, #0x820]
+10002c900:	cbz	x0, 0x10002c928
+10002c904:	bl	0x10006a3c8 ; symbol stub for: _CFRunLoopTimerIsValid
+10002c908:	cbz	w0, 0x10002c928
+10002c90c:	ldr	x20, [x20, #0x820]
+10002c910:	bl	0x100069e88 ; symbol stub for: _CFAbsoluteTimeGetCurrent
+10002c914:	adrp	x8, 89 ; 0x100085000
+10002c918:	ldr	d1, [x8, #0x5d0]
+10002c91c:	fadd	d0, d0, d1
+10002c920:	mov	x0, x20
+10002c924:	bl	0x10006a3d8 ; symbol stub for: _CFRunLoopTimerSetNextFireDate

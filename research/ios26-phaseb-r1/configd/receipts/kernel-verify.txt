@@ -1,0 +1,28 @@
+## nm (unstripped)
+fffffe00080907b0 s __ZL22blazer_net_busy_leavesv
+fffffe0008090590 s __ZL22blazer_net_quiet_watchPvi
+fffffe0008090490 S __ZN24IONetworkStackUserClient12initWithTaskEP4taskPvjP12OSDictionary
+fffffe0008728dac b __ZZ27blazer_net_publish_servicesE4done
+fffffe0008728da8 b __ZZN24IONetworkStackUserClient12initWithTaskEP4taskPvjP12OSDictionaryE8watching
+fffffe0008090690 S _blazer_net_publish_services
+fffffe0007a2e420 S _blazer_usbnet_bsd_ready
+fffffe0007366470 s _blazer_usbnet_bsd_ready.uid
+fffffe0008713934 b _hk_exec_denied.said
+## strings (stripped kernel)
+blazer_netstack
+blazer-netstack: published alone (blazer_netstack=1)
+hk_deny: %.*s refused, EBADARCH (refusal %u)
+blazer-netstack: IONetworkStack opened by %s[%d] type %u, IOKit root busy %u
+blazer-usbnet: IONetworkStack published
+blazer-netstack: IOKit quiet %u ms after the open (InterfaceNamer posts *QUIET*)
+blazer-netstack: IOKit still busy (%u) 300 s after the open: InterfaceNamer's 240 s timer posts *TIMEOUT*
+blazer-netstack: busy leaves: no registry snapshot
+blazer-netstack: busy leaf %s (%s) busy %u
+blazer-netstack: %u busy leaves
+## objects
+                 U _PE_parse_boot_argn
+                 U _blazer_net_publish_services
+00000000000004f0 T _blazer_usbnet_bsd_ready
+0000000000000f38 s _blazer_usbnet_bsd_ready.uid
+0000000000000f50 s l___const.blazer_usbnet_bsd_ready.init
+kernel.rootview-bl-aks-us2-ns1: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>

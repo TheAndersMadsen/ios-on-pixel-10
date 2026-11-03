@@ -1,0 +1,26 @@
+== cfg1-qemu-a (console.log sha256 at capture a9d60f215703aedc; intent.json args tail: blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480)
+607:exec configd
+642:exec powerd
+677:HKSC: powerd[34] watching Plugin:InterfaceNamer
+876:HKSC: t=21.8 keys=none
+1360:HK TOP: t=181 frames+1 cpu_ms=29912: audiomxd[90]=5513 accountsd[31]=3860 kernel_task[0]=1941 liveactivitiesd[89]=1813 launchd[1]=1649 backboardd
+1420:HK TOP: t=211 frames+0 cpu_ms=29449: audiomxd[90]=2957 kernel_task[0]=1971 launchd[1]=1832 cameracaptured[44]=986 cfprefsd[74]=978 coreduetd[97]=
+1922:HK TOP: t=451 frames+0 cpu_ms=28179: lsd[76]=7467 kernel_task[0]=2768 cfprefsd[74]=2399 containermanager[54]=1911 cfprefsd[73]=1471 nsurlsessiond
+2072:HK TOP: t=481 frames+0 cpu_ms=29544: lsd[76]=4452 profiled[96]=4143 cfprefsd[74]=2621 kernel_task[0]=1725 launchd[1]=1518 cfprefsd[73]=1399 conta
+2403:HK TOP: t=511 frames+0 cpu_ms=28699: lsd[76]=13961 containermanager[54]=3883 kernel_task[0]=1786 profiled[96]=1626 launchd[1]=820 logd[27]=795 Co
+2414:HKSC: t=449.5 keys=*QUIET*,*TIMEOUT*,*TIMEOUT&NAMED*
+== cfg1-qemu-b (console.log sha256 at capture 83cfa1e91846f5af; intent.json args tail: blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480)
+119:blazer-usbnet: IONetworkStack published
+120:blazer-netstack: published alone (blazer_netstack=1)
+624:exec configd
+675:exec powerd
+691:HKSC: powerd[34] watching Plugin:InterfaceNamer
+922:HKSC: t=42.3 keys=none
+1353:HK TOP: t=181 frames+1 cpu_ms=29705: audiomxd[91]=4741 accountsd[31]=3324 kernel_task[0]=2140 launchd[1]=1844 liveactivitiesd[92]=1803 chronod[75
+1366:blazer-netstack: IONetworkStack opened by configd[32] type 0, IOKit root busy 0
+1410:HKSC: t=143.2 keys=*STACK*,*QUIET*,*QUIET&NAMED*,*COMPLETE*
+1420:HK TOP: t=211 frames+0 cpu_ms=29592: audiomxd[91]=3981 kernel_task[0]=1923 launchd[1]=1780 accountsd[31]=1088 logd[27]=1084 coreduetd[100]=918 ru
+1431:HKSC: SCNetworkInterfaceCopyAll returned after 154.4 s, 0 interfaces
+1861:HK TOP: t=451 frames+0 cpu_ms=28505: lsd[76]=6268 cfprefsd[74]=2533 containermanager[54]=1958 kernel_task[0]=1789 cfprefsd[73]=1632 intelligentro
+1948:HK TOP: t=481 frames+0 cpu_ms=28285: profiled[99]=4946 lsd[76]=2579 cfprefsd[74]=2231 kernel_task[0]=1910 launchd[1]=1584 cfprefsd[73]=1152 CommC
+2273:HK TOP: t=511 frames+0 cpu_ms=28544: lsd[76]=13681 containermanager[54]=3823 kernel_task[0]=2449 profiled[99]=1313 logd[27]=935 launchd[1]=877 ba
