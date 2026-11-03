@@ -1,0 +1,19 @@
+phone-bridge: m1box is at 48c76099a5, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: uncommitted on m1box and different on the Mac (the Mac's version runs): docs/probes.yaml dualboot/validate.py .github/scripts/ci-tests.sh research/ios26-connectivity-r1/wifi/receipts/image_tool-w1.txt research/ios26-connectivity-r1/wifi/receipts/tests.txt shim/tgl_cpu_audit.c shim/tgl_cpu_audit.h tools/cpu_audit.py tools/decode-shim-stamps.py tools/image_tool.py tools/live_boot.sh tools/test_cpu_audit.c tools/test_cpu_audit.py tools/test_image_tool.py tools/test_qemu_preflight.py tools/test_usbcon_tool.py 
+phone-bridge: copying research/ios26-phaseb-r1/chg/xnu-src/0001-hk-chg1.patch to the Mac (14K)
+phone-bridge: copying research/ios26-phaseb-r1/chg/tools/build_chg1.py to the Mac (5.2K)
+23:22:23 waiting for build slot lock
+23:22:23 lock held
+23:22:24 tree branch p1 HEAD b228c4f
+23:22:25 hk-chg1 = ca39cb4a50ff9fe8056257bc4b77fa86b5606b8b (on 2841211)
+23:22:25 checked out hk-chg1 ca39cb4a50ff9fe8056257bc4b77fa86b5606b8b
+23:23:37 build chg1-build rc 0
+23:23:37 660fd8cdcf6ea6d28ac978087aa8bc7ccca9e802c6ac73f98ca9868169423dda  kernel.chg1
+23:23:37 dfe5cc3894a115992fa553cf5cd867010a79150031c0ff318c9977e36b4435a2  kernel.chg1.unstripped
+23:23:37 da58ef691686ce670fca439bd4a368a9d714cfd236e4bd6ce3a14e94f78ed89a  blazer_gauge.o (/iokit/DEVELOPMENT/blazer_gauge.o)
+23:23:37 a0b5796aa6306648ea2effc013b565f406724b047e3cbaae2691a8dccdcc9620  SweetBattery.cpo (/iokit/DEVELOPMENT/SweetBattery.cpo)
+23:23:38 restored branch p1 HEAD b228c4f
+23:24:45 build chg1-restore-p1-build rc 0
+23:24:45 obj kernel after restore c08da32a320c622a680c5ab238ba65342892c0f9ae5a451e46af2aaa43adea0f
+23:24:45 restored p1 kernel has the chg1 line (must be False): False
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-phaseb-r1/chg/build/

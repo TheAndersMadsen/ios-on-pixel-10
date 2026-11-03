@@ -1,0 +1,7 @@
+research/ios26-phaseb-r1/chg/build/kernel.chg1: OK
+research/ios26-phaseb-r1/live/obs/overlays/obs1-r1.ovl: OK
+kernel has: rules' libraries in one DYLD_INSERT_LIBRARIES
+kernel has: HKOBS %u %s t=%llu %s: %s
+kernel has: hk_conlim
+kernel has: blazer-battery: charger %u in=
+kernel has: charger reads %s

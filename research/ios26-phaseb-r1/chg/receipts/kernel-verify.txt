@@ -1,0 +1,72 @@
+== object da58ef691686ce670fca439bd4a368a9d714cfd236e4bd6ce3a14e94f78ed89a build/obj/blazer_gauge.o
+Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+-- defined symbols
+0000000000000b10 T _blazer_gauge_boot_probe
+0000000000001300 t _blazer_gauge_boot_probe.cold.1
+0000000000001330 t _blazer_gauge_boot_probe.cold.2
+00000000000014d4 S _blazer_gauge_frames
+0000000000000100 T _blazer_gauge_gave_up
+0000000000000000 T _blazer_gauge_mode
+0000000000000a50 T _blazer_gauge_peek
+0000000000000110 T _blazer_gauge_read
+0000000000000a60 T _blazer_gauge_start
+00000000000020a8 s _frame_name
+0000000000000d70 t _spmi_frame
+-- undefined (object)
+_IOSleep _PE_parse_boot_argn ___stack_chk_fail ___stack_chk_guard _delay _ml_io_map _panic _printf _snprintf 
+-- blazer_gauge_frames decoded (opcode must be 3)
+section __const, 0 words
+all opcode 3: True | CHG_INT 0xb0/0xb1 present: False
+== kernel dfe5cc3894a115992fa553cf5cd867010a79150031c0ff318c9977e36b4435a2 build/kernel.chg1.unstripped
+undefined symbols: 0
+_blazer_gauge_read       fffffe0008084960 S
+_blazer_gauge_frames     fffffe00073dc190 S
+_blazer_gauge_start      fffffe00080852b0 S
+_report_charger          
+_read_charger            
+_spmi_frame              fffffe00080855c0 s
+-- strings (kernel.chg1)
+blazer-battery: charger %u in=%s chg=%s mode=%x      1
+charger reads %s                                     1
+report only                                          1
+blazer-battery: charger report %u unread             1
+has no voltage in the vendor                         1
+blazer_battery_chg=%u means nothing                  1
+blazer-battery: charger INT_OK=%02x                  1
+-- callers
+      1 fffffe00080849d0:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe00080849fc:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084a14:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084a2c:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084a44:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084a5c:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084a74:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084bec:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084c08:      	bl	0xfffffe00080855c0 <_spmi_frame>
+      1 fffffe0008084c28:      	bl	0xfffffe00080855c0 <_spmi_frame>
+kernel.chg1.unstripped _blazer_gauge_frames @ 0xfffffe00073dc190 (__TEXT), 22 words (F_COUNT)
+  DEVNAME     00108b0f  op 3 sid 6 reg 0x21 bytes 2
+  REPSOC      00038b0f  op 3 sid 6 reg 0x07 bytes 2
+  VCELL       000d0b0f  op 3 sid 6 reg 0x1a bytes 2
+  CURRENT     000e0b0f  op 3 sid 6 reg 0x1c bytes 2
+  AVGCURRENT  000e8b0f  op 3 sid 6 reg 0x1d bytes 2
+  TEMP        000d8b0f  op 3 sid 6 reg 0x1b bytes 2
+  FSTAT       001e8b0f  op 3 sid 6 reg 0x3d bytes 2
+  CHG_INT_OK  005b018f  op 3 sid 3 reg 0xb6 bytes 1
+  CHG_DTLS0   005b818f  op 3 sid 3 reg 0xb7 bytes 1
+  CHG_DTLS1   005c018f  op 3 sid 3 reg 0xb8 bytes 1
+  CHG_DTLS2   005c818f  op 3 sid 3 reg 0xb9 bytes 1
+  CHG_DTLS3   005d018f  op 3 sid 3 reg 0xba bytes 1
+  CHG_CNFG00  005e018f  op 3 sid 3 reg 0xbc bytes 1
+  CHG_CNFG02  005f018f  op 3 sid 3 reg 0xbe bytes 1
+  CHG_CNFG04  0060018f  op 3 sid 3 reg 0xc0 bytes 1
+  CHG_CNFG09  0062818f  op 3 sid 3 reg 0xc5 bytes 1
+  CHG_CNFG10  0063018f  op 3 sid 3 reg 0xc6 bytes 1
+  CHG_CNFG15  0065818f  op 3 sid 3 reg 0xcb bytes 1
+  CHGIN_I     0000098f  op 3 sid 3 reg 0x00 bytes 2
+  CHGIN_V     0001098f  op 3 sid 3 reg 0x02 bytes 2
+  WCIN_I      0002098f  op 3 sid 3 reg 0x04 bytes 2
+  WCIN_V      0003098f  op 3 sid 3 reg 0x06 bytes 2
+all EXT_REG_READ (op 3): True
+any charger CHG_INT/CHG_INT2/masks (0xb0-0xb4): False
+word 22 (must not be a frame word, table ends): 00000006

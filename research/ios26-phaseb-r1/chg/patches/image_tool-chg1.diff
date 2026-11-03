@@ -1,0 +1,6 @@
+165c165
+< PHONE_ALLOWED.update({'blazer_battery_chg': r'blazer_battery_chg=1', 'blazer_aoc': r'blazer_aoc=1'})  # handoffs/battery.md: the charger's frames, off unless asked; parent, aoc
+---
+> PHONE_ALLOWED.update({'blazer_battery_chg': r'blazer_battery_chg=[12]', 'blazer_aoc': r'blazer_aoc=1'})  # chg1 lane: =2 is report only (hk-chg1)  # handoffs/battery.md: the charger's frames, off unless asked; parent, aoc
+437a438
+>         if 'blazer_battery_chg=2' in extra and b'blazer-battery: charger %u in=' not in buf: die('blazer_battery_chg=2 needs the hk-chg1 kernel (report-only charger line)')

@@ -1,0 +1,2 @@
+a7-ios-system-chg1 bootable b2898a105610eb437bec6354f377dfe0aa7a7426cf0cc43f66386ae474facd4a payload 26150480 margin 39909808
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-chg1/manifest.json

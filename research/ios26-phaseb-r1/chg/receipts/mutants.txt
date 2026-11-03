@@ -1,0 +1,10 @@
+read-int-latch: caught (does not compile)
+publish-charger: caught (test FAIL)
+chg2-uses-status: caught (test FAIL)
+cc-step: SURVIVED
+cv-step: caught (test FAIL)
+icl-off-by-one: caught (test FAIL)
+wcin-bits: caught (test FAIL)
+adc-error-gives-up: caught (test FAIL)
+chg3-accepted: caught (test FAIL)
+no-cv-warning: caught (test FAIL)

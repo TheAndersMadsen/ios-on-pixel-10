@@ -1,0 +1,26 @@
+kernel.chg1.unstripped _blazer_gauge_frames @ 0xfffffe00073dc190 (__TEXT), 22 words (F_COUNT)
+  DEVNAME     00108b0f  op 3 sid 6 reg 0x21 bytes 2
+  REPSOC      00038b0f  op 3 sid 6 reg 0x07 bytes 2
+  VCELL       000d0b0f  op 3 sid 6 reg 0x1a bytes 2
+  CURRENT     000e0b0f  op 3 sid 6 reg 0x1c bytes 2
+  AVGCURRENT  000e8b0f  op 3 sid 6 reg 0x1d bytes 2
+  TEMP        000d8b0f  op 3 sid 6 reg 0x1b bytes 2
+  FSTAT       001e8b0f  op 3 sid 6 reg 0x3d bytes 2
+  CHG_INT_OK  005b018f  op 3 sid 3 reg 0xb6 bytes 1
+  CHG_DTLS0   005b818f  op 3 sid 3 reg 0xb7 bytes 1
+  CHG_DTLS1   005c018f  op 3 sid 3 reg 0xb8 bytes 1
+  CHG_DTLS2   005c818f  op 3 sid 3 reg 0xb9 bytes 1
+  CHG_DTLS3   005d018f  op 3 sid 3 reg 0xba bytes 1
+  CHG_CNFG00  005e018f  op 3 sid 3 reg 0xbc bytes 1
+  CHG_CNFG02  005f018f  op 3 sid 3 reg 0xbe bytes 1
+  CHG_CNFG04  0060018f  op 3 sid 3 reg 0xc0 bytes 1
+  CHG_CNFG09  0062818f  op 3 sid 3 reg 0xc5 bytes 1
+  CHG_CNFG10  0063018f  op 3 sid 3 reg 0xc6 bytes 1
+  CHG_CNFG15  0065818f  op 3 sid 3 reg 0xcb bytes 1
+  CHGIN_I     0000098f  op 3 sid 3 reg 0x00 bytes 2
+  CHGIN_V     0001098f  op 3 sid 3 reg 0x02 bytes 2
+  WCIN_I      0002098f  op 3 sid 3 reg 0x04 bytes 2
+  WCIN_V      0003098f  op 3 sid 3 reg 0x06 bytes 2
+all EXT_REG_READ (op 3): True
+any charger CHG_INT/CHG_INT2/masks (0xb0-0xb4): False
+word 22 (must not be a frame word, table ends): 00000006

@@ -1,0 +1,4 @@
+boot-args = debug=0x8 blazer_battery=1 blazer_battery_chg=2 blazer_deadline=900
+blazer-battery: mapping 0x53f1000 size 0x300, mode 1, charger reads report only
+blazer-battery: charger 3 in=wireless chg=cc mode=e cp=0 wdt=0 cc=1866 mA cv=4450 mV icl=1600 mA wicl=700 mA ichgin=0 mA iwcin=412 mA vwcin=9010 mV vchgin_raw=0000 ok=b8 dtls=18312000 bat=3
+blazer-battery: charger 4 in=wireless chg=cc mode=e cp=0 wdt=0 cc=1866 mA cv=4450 mV icl=1600 mA wicl=700 mA ichgin=0 mA iwcin=420 mA vwcin=9010 mV vchgin_raw=0000 ok=b8 dtls=18312000 bat=3

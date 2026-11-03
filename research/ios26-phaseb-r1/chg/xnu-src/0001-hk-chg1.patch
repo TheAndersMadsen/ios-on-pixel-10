@@ -1,0 +1,345 @@
+From 7c8161ae65f48d2adc1e6da4bdae2bcdd57f322a Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 23:21:42 +0100
+Subject: [PATCH] hk-chg1: blazer_battery_chg=2, report-only charger line
+ (status, programmed CC/CV/input limits, mode, watchdog, input ADCs)
+
+Reads only (EXT_REG_READ, compile-time frames, static-asserted register set; never CHG_INT/CHG_INT2). What iOS
+is told is unchanged: the line is the only output. blazer_charger.h decodes with the vendor driver's get_* steps
+and has no value-to-register direction. Host-only spmi_rd/spmi_wr hooks under BLAZER_GAUGE_HOST.
+---
+ iokit/Kernel/arm/blazer_charger.h | 158 ++++++++++++++++++++++++++++++
+ iokit/Kernel/arm/blazer_gauge.c   |  85 ++++++++++++++--
+ 2 files changed, 236 insertions(+), 7 deletions(-)
+ create mode 100644 iokit/Kernel/arm/blazer_charger.h
+
+diff --git a/iokit/Kernel/arm/blazer_charger.h b/iokit/Kernel/arm/blazer_charger.h
+new file mode 100644
+index 0000000..b0c226c
+--- /dev/null
++++ b/iokit/Kernel/arm/blazer_charger.h
+@@ -0,0 +1,158 @@
++/* SPDX-License-Identifier: MIT
++ * The max77779 charger's registers as numbers a person can read: pure decoding, no bus, no state. C, kernel and host.
++ * blazer_gauge.c reads the registers (blazer_battery_chg=2, EXT_REG_READ frames only) and prints what this returns.
++ *
++ * Own code. Field positions and unit steps are facts from the GPL vendor driver and its register header
++ * (google-modules/bms max77779_charger.c get_* functions, max77779_v20240115_regs.h, max77779_regs.h; links and
++ * the line numbers in research/ios26-phaseb-r1/chg/REGISTERS.md). This file encodes nothing: there is no
++ * value-to-register direction here, so nothing that could be used to program a limit.
++ */
++#ifndef BLAZER_CHARGER_H
++#define BLAZER_CHARGER_H
++#include <stdbool.h>
++#include <stdint.h>
++
++/* The raw bytes, as read. ADC words are L | H << 8 from one two-byte read at the L register. */
++struct blazer_charger_regs {
++	uint8_t int_ok;         /* 0xb6 CHG_INT_OK */
++	uint8_t d0, d1, d2, d3; /* 0xb7..0xba CHG_DETAILS_00..03 */
++	uint8_t cnfg00;         /* 0xbc MODE[3:0], CP_EN bit 5 */
++	uint8_t cnfg02;         /* 0xbe CHGCC[5:0]: fast-charge current */
++	uint8_t cnfg04;         /* 0xc0 CHG_CV_PRM[5:0]: regulation (float) voltage */
++	uint8_t cnfg09;         /* 0xc5 CHGIN_ILIM[6:0]: wired input limit */
++	uint8_t cnfg10;         /* 0xc6 WCIN_ILIM[6:0]: wireless input limit */
++	uint8_t cnfg15;         /* 0xcb WDTEN bit 0 */
++	uint16_t chgin_i;       /* 0x00/0x01 CHGIN_I_ADC */
++	uint16_t chgin_v;       /* 0x02/0x03 CHGIN_V_ADC: no unit in the vendor source, logged raw */
++	uint16_t wcin_i;        /* 0x04/0x05 WCIN_I_ADC */
++	uint16_t wcin_v;        /* 0x06/0x07 WCIN_V_ADC */
++};
++
++struct blazer_charger_view {
++	bool wired;             /* CHGIN_DTLS 2 or 3: max77779_is_online */
++	bool wireless;          /* WCIN_DTLS 2 or 3 */
++	unsigned chgin_dtls, wcin_dtls, chg_dtls, bat_dtls, mode;
++	bool cp_en, wdt_en;
++	bool charging;          /* an input is valid and CHG_DTLS is 0..3 (dead battery, CC, CV, top-off) */
++	bool cv_valid;          /* CHG_CV_PRM 0x3a..0x3f has no meaning in the vendor's decoder */
++	uint32_t cc_ma;         /* programmed fast-charge current; 0 = charging suspended by MODE 0 */
++	uint32_t cv_mv;         /* programmed regulation voltage; 0 if !cv_valid */
++	uint32_t icl_ma;        /* programmed wired input limit */
++	uint32_t wicl_ma;       /* programmed wireless input limit */
++	uint32_t ichgin_ma;     /* measured wired input current. Vendor: "only valid in mode 1, 5, 6, 7, c, d" */
++	uint32_t iwcin_ma;      /* measured wireless input current. Vendor: "only valid in mode e, f" */
++	uint32_t vwcin_mv;      /* measured wireless input voltage */
++};
++
++/* max77779_get_charger_current_max_ua */
++static inline uint32_t
++blazer_charger_cc_ma(uint8_t cnfg02)
++{
++	unsigned v = cnfg02 & 0x3fu;
++
++	if (v == 0) {
++		return 0;
++	}
++	if (v < 3) {
++		return 133;
++	}
++	if (v >= 0x3c) {
++		return 4000;
++	}
++	return (133000u + (v - 2u) * 66670u) / 1000u;
++}
++
++/* max77779_get_regulation_voltage_uv. False: a code the vendor calls -EINVAL. */
++static inline bool
++blazer_charger_cv_mv(uint8_t cnfg04, uint32_t *mv)
++{
++	unsigned v = cnfg04 & 0x3fu;
++
++	if (v < 0x38) {
++		*mv = 4000u + v * 10u;
++	} else if (v == 0x38) {
++		*mv = 3800u;
++	} else if (v == 0x39) {
++		*mv = 3900u;
++	} else {
++		*mv = 0;
++		return false;
++	}
++	return true;
++}
++
++/* max77779_chgin_get_ilim_max_ua (without its software input-suspend override, which is driver state, not a register) */
++static inline uint32_t
++blazer_charger_icl_ma(uint8_t cnfg09)
++{
++	unsigned v = cnfg09 & 0x7fu;
++
++	if (v == 0) {
++		return 0;
++	}
++	return v > 3 ? 100u + (v - 3u) * 25u : 100u;
++}
++
++/* max77779_wcin_get_ilim_max_ua (same remark) */
++static inline uint32_t
++blazer_charger_wicl_ma(uint8_t cnfg10)
++{
++	unsigned v = cnfg10 & 0x7fu;
++
++	if (v == 0) {
++		return 0;
++	}
++	return v < 4 ? 100u : 125u + (v - 4u) * 25u;
++}
++
++/* CHG_DETAILS_01 CHG_DTLS names, max77779_charger.c CHGR_DTLS_*. Codes it does not name print as "dtls<hex>". */
++static inline const char *
++blazer_charger_chg_name(unsigned chg_dtls)
++{
++	switch (chg_dtls) {
++	case 0x0: return "deadbat";
++	case 0x1: return "cc";
++	case 0x2: return "cv";
++	case 0x3: return "topoff";
++	case 0x4: return "done";
++	case 0x6: return "timer-fault";
++	case 0x7: return "detbat-suspend";
++	case 0x8: return "off";
++	case 0xa: return "off-hot";
++	case 0xb: return "off-watchdog";
++	case 0xc: return "off-jeita";
++	case 0xd: return "off-temp";
++	default: return 0;
++	}
++}
++
++static inline const char *
++blazer_charger_in_name(const struct blazer_charger_view *v)
++{
++	return v->wired ? (v->wireless ? "both" : "usb") : (v->wireless ? "wireless" : "none");
++}
++
++static inline void
++blazer_charger_decode(const struct blazer_charger_regs *r, struct blazer_charger_view *v)
++{
++	v->chgin_dtls = (r->d0 >> 5) & 3u;
++	v->wcin_dtls = (r->d0 >> 3) & 3u;
++	v->chg_dtls = r->d1 & 0xfu;
++	v->bat_dtls = (r->d1 >> 4) & 7u;
++	v->mode = r->cnfg00 & 0xfu;
++	v->cp_en = (r->cnfg00 >> 5) & 1u;
++	v->wdt_en = r->cnfg15 & 1u;
++	v->wired = v->chgin_dtls >= 2;
++	v->wireless = v->wcin_dtls >= 2;
++	v->charging = (v->wired || v->wireless) && v->chg_dtls <= 3;
++	v->cc_ma = blazer_charger_cc_ma(r->cnfg02);
++	v->cv_valid = blazer_charger_cv_mv(r->cnfg04, &v->cv_mv);
++	v->icl_ma = blazer_charger_icl_ma(r->cnfg09);
++	v->wicl_ma = blazer_charger_wicl_ma(r->cnfg10);
++	/* MAX77779_CHGIN_RAW_TO_UA 166, MAX77779_WCIN_RAW_TO_UA 166, MAX77779_WCIN_RAW_TO_UV 625 */
++	v->ichgin_ma = (uint32_t)r->chgin_i * 166u / 1000u;
++	v->iwcin_ma = (uint32_t)r->wcin_i * 166u / 1000u;
++	v->vwcin_mv = (uint32_t)r->wcin_v * 625u / 1000u;
++}
++
++#endif
+diff --git a/iokit/Kernel/arm/blazer_gauge.c b/iokit/Kernel/arm/blazer_gauge.c
+index dd3a2b1..4636c5f 100644
+--- a/iokit/Kernel/arm/blazer_gauge.c
++++ b/iokit/Kernel/arm/blazer_gauge.c
+@@ -9,6 +9,10 @@
+  *   blazer_battery_chg=1  also read the charger's status (SID 3). Off: the owner's approval names the gauge, so without
+  *                         this the charger's slave address never goes on the bus, external power stays reported as present
+  *                         and charging is inferred from the current
++ *   blazer_battery_chg=2  report only: read the charger's status, its programmed limits (charge current, float voltage, input
++ *                         limits, mode, watchdog) and its input ADCs, and print them as one line per sample (blazer_charger.h
++ *                         decodes them). What iOS is told stays exactly what it is without the charger: the line is the
++ *                         only output. Still no write opcode; CHG_INT/CHG_INT2 (read-to-clear latches) are never read
+  *
+  * What this file can put on the bus: only the rows of FRAMES below, whose command words are compile-time constants.
+  * Opcode 3 is EXT_REG_READ. Nothing else builds a REQ_COMMAND word, there is no write opcode in this file, and no
+@@ -39,6 +43,7 @@ extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
+ #endif
+ #include "blazer_gauge.h"
+ #include "blazer_gauge_ext.h"
++#include "blazer_charger.h"
+ 
+ #define SPMI_PA                 0x053f1000ULL   /* FDT */
+ #define SPMI_SIZE               0x300           /* FDT. A 16 KiB mapping also covers its neighbours, which nothing here reads */
+@@ -90,7 +95,18 @@ _Static_assert(SPMI_CONTROL_ABL == 0x00010191u, "ABL's CONTROL");
+ 	X(CHG_INT_OK, SID_CHARGER, 0xb6, 1) \
+ 	X(CHG_DTLS0,  SID_CHARGER, 0xb7, 1) \
+ 	X(CHG_DTLS1,  SID_CHARGER, 0xb8, 1) \
+-	X(CHG_DTLS2,  SID_CHARGER, 0xb9, 1)
++	X(CHG_DTLS2,  SID_CHARGER, 0xb9, 1) \
++	X(CHG_DTLS3,  SID_CHARGER, 0xba, 1) \
++	X(CHG_CNFG00, SID_CHARGER, 0xbc, 1) \
++	X(CHG_CNFG02, SID_CHARGER, 0xbe, 1) \
++	X(CHG_CNFG04, SID_CHARGER, 0xc0, 1) \
++	X(CHG_CNFG09, SID_CHARGER, 0xc5, 1) \
++	X(CHG_CNFG10, SID_CHARGER, 0xc6, 1) \
++	X(CHG_CNFG15, SID_CHARGER, 0xcb, 1) \
++	X(CHGIN_I,    SID_CHARGER, 0x00, 2) \
++	X(CHGIN_V,    SID_CHARGER, 0x02, 2) \
++	X(WCIN_I,     SID_CHARGER, 0x04, 2) \
++	X(WCIN_V,     SID_CHARGER, 0x06, 2)
+ 
+ #define X(name, sid, reg, bytes) F_##name,
+ enum { FRAMES(X) F_COUNT };
+@@ -98,7 +114,11 @@ enum { FRAMES(X) F_COUNT };
+ 
+ #define X(name, sid, reg, bytes) \
+ 	_Static_assert(((SPMI_READ_WORD(sid, reg, bytes) >> 2) & 0x1fu) == 3u, "EXT_REG_READ only"); \
+-	_Static_assert((sid) == SID_GAUGE || ((sid) == SID_CHARGER && (reg) >= 0xb6 && (reg) <= 0xb9), "gauge, or charger status only");
++	_Static_assert((sid) == SID_GAUGE || ((sid) == SID_CHARGER && \
++	    (((reg) >= 0xb6 && (reg) <= 0xba && (bytes) == 1) || (reg) == 0xbc || (reg) == 0xbe || (reg) == 0xc0 || \
++	    (reg) == 0xc5 || (reg) == 0xc6 || (reg) == 0xcb || \
++	    (((reg) == 0x00 || (reg) == 0x02 || (reg) == 0x04 || (reg) == 0x06) && (bytes) == 2))), \
++	    "gauge, or the charger's status, named CNFG bytes and input ADC words only: never CHG_INT 0xb0/0xb1");
+ FRAMES(X)
+ #undef X
+ 
+@@ -139,21 +159,25 @@ static bool args_read;
+ static uint32_t
+ spmi_rd(uint32_t off)
+ {
++#ifdef BLAZER_GAUGE_HOST
++	return host_spmi_rd(off);       /* the host test's fake controller (write-1-to-clear, transfers on REQ_COMMAND) */
++#else
+ 	uint32_t value = *(volatile uint32_t *)(gauge_regs + off);
+ 
+-#ifndef BLAZER_GAUGE_HOST
+ 	__asm__ volatile ("dmb oshld" ::: "memory");
+-#endif
+ 	return value;
++#endif
+ }
+ 
+ static void
+ spmi_wr(uint32_t off, uint32_t value)
+ {
+-#ifndef BLAZER_GAUGE_HOST
++#ifdef BLAZER_GAUGE_HOST
++	host_spmi_wr(off, value);
++#else
+ 	__asm__ volatile ("dmb oshst" ::: "memory");
+-#endif
+ 	*(volatile uint32_t *)(gauge_regs + off) = value;
++#endif
+ }
+ 
+ static void
+@@ -172,6 +196,10 @@ read_args(void)
+ 		printf("blazer-battery: blazer_battery=%u means nothing: off\n", mode);
+ 		mode = 0;
+ 	}
++	if (charger > 2) {
++		printf("blazer-battery: blazer_battery_chg=%u means nothing: no charger frames\n", charger);
++		charger = 0;
++	}
+ 	mode_arg = mode;
+ 	charger_arg = charger;
+ 	os_atomic_store(&args_read, true, release);
+@@ -336,6 +364,46 @@ read_charger(struct blazer_gauge_sample *s)
+ 	return true;
+ }
+ 
++/*
++ * blazer_battery_chg=2: everything the charger says about itself, one line, nothing kept. Reads only, all of them in the vendor
++ * regmap's readable range (max77779_chg_is_reg) and outside its interrupt latches. A failed frame ends this sample's line, not the
++ * gauge's sample: what iOS sees never depends on these.
++ */
++static uint32_t charger_reports;
++
++static void
++report_charger(void)
++{
++	struct blazer_charger_regs r;
++	struct blazer_charger_view v;
++	const char *chg;
++	char chg_buf[12];
++
++	memset(&r, 0, sizeof(r));
++	if (!read8(F_CHG_INT_OK, &r.int_ok) || !read8(F_CHG_DTLS0, &r.d0) || !read8(F_CHG_DTLS1, &r.d1) || !read8(F_CHG_DTLS2, &r.d2) ||
++	    !read8(F_CHG_DTLS3, &r.d3) || !read8(F_CHG_CNFG00, &r.cnfg00) || !read8(F_CHG_CNFG02, &r.cnfg02) ||
++	    !read8(F_CHG_CNFG04, &r.cnfg04) || !read8(F_CHG_CNFG09, &r.cnfg09) || !read8(F_CHG_CNFG10, &r.cnfg10) ||
++	    !read8(F_CHG_CNFG15, &r.cnfg15) || !read16(F_CHGIN_I, &r.chgin_i) || !read16(F_CHGIN_V, &r.chgin_v) ||
++	    !read16(F_WCIN_I, &r.wcin_i) || !read16(F_WCIN_V, &r.wcin_v)) {
++		printf("blazer-battery: charger report %u unread\n", charger_reports + 1);
++		return;
++	}
++	charger_reports++;
++	blazer_charger_decode(&r, &v);
++	chg = blazer_charger_chg_name(v.chg_dtls);
++	if (chg == 0) {
++		snprintf(chg_buf, sizeof(chg_buf), "dtls%x", v.chg_dtls);
++		chg = chg_buf;
++	}
++	printf("blazer-battery: charger %u in=%s chg=%s mode=%x cp=%u wdt=%u cc=%u mA cv=%u mV icl=%u mA wicl=%u mA ichgin=%u mA iwcin=%u mA vwcin=%u mV"
++	    " vchgin_raw=%04x ok=%02x dtls=%02x%02x%02x%02x bat=%u\n",
++	    charger_reports, blazer_charger_in_name(&v), chg, v.mode, v.cp_en, v.wdt_en, v.cc_ma, v.cv_mv, v.icl_ma, v.wicl_ma,
++	    v.ichgin_ma, v.iwcin_ma, v.vwcin_mv, r.chgin_v, r.int_ok, r.d0, r.d1, r.d2, r.d3, v.bat_dtls);
++	if (!v.cv_valid) {
++		printf("blazer-battery: charger %u CHG_CV_PRM %02x has no voltage in the vendor's table\n", charger_reports, r.cnfg04);
++	}
++}
++
+ bool
+ blazer_gauge_read(struct blazer_gauge_sample *out)
+ {
+@@ -380,6 +448,9 @@ blazer_gauge_read(struct blazer_gauge_sample *out)
+ 		 */
+ 		s.charging = s.ma_avg > CHARGING_MA_FLOOR;
+ 		s.external = true;
++		if (charger_arg == 2) {
++			report_charger();
++		}
+ 		if (charger_arg == 1 && !read_charger(&s)) {
+ 			/* The gauge's numbers stand, and so does the state from above. */
+ 			printf("blazer-battery: charger state unread: inferred from the current\n");
+@@ -420,7 +491,7 @@ blazer_gauge_start(void)
+ {
+ 	read_args();
+ 	if (gauge_regs == 0) {
+-		printf("blazer-battery: mapping %#llx size %#x, mode %u, charger reads %s\n", SPMI_PA, SPMI_SIZE, mode_arg, charger_arg == 1 ? "on" : "off");
++		printf("blazer-battery: mapping %#llx size %#x, mode %u, charger reads %s\n", SPMI_PA, SPMI_SIZE, mode_arg, charger_arg == 1 ? "on" : charger_arg == 2 ? "report only" : "off");
+ 		gauge_regs = ml_io_map((vm_offset_t)SPMI_PA, SPMI_SIZE);
+ 	}
+ 	return gauge_regs != 0;
+-- 
+2.56.0
+

@@ -1,0 +1,5 @@
+boot-args = debug=0x8 blazer_battery=1 blazer_battery_chg=2 blazer_deadline=900
+blazer-battery: mapping 0x53f1000 size 0x300, mode 1, charger reads report only
+blazer-battery: sample 1 SOC(89), VCELL(4334), INOW(468), IAVG(468), TEMP(3000), raw soc 5900
+blazer-battery: charger 1 in=usb chg=cc mode=5 cp=0 wdt=0 cc=1866 mA cv=4450 mV icl=1600 mA wicl=125 mA ichgin=830 mA iwcin=0 mA vwcin=0 mV vchgin_raw=1234 ok=d8 dtls=60312000 bat=3
+blazer-battery: charger 2 in=usb chg=cc mode=5 cp=0 wdt=0 cc=1866 mA cv=4450 mV icl=1600 mA wicl=125 mA ichgin=830 mA iwcin=0 mA vwcin=0 mV vchgin_raw=1234 ok=d8 dtls=60312000 bat=3

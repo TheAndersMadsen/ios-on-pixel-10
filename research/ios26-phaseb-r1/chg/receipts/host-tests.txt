@@ -1,0 +1,11 @@
+decode: 1338 checks, 0 failed
+chg0: 32 checks, 0 failed
+chg1: 63 checks, 0 failed
+chg2: 156 checks, 0 failed
+chg3: 33 checks, 0 failed
+wireless: 2 checks, 0 failed
+adc-error: 4 checks, 0 failed
+badcv: 2 checks, 0 failed
+PASS
+rc=0
+cc (GCC) 16.1.1 20260430
