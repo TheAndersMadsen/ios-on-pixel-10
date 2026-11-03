@@ -1,0 +1,81 @@
+             CC hakios.blazer_ufs.o
+             CC blazer_gpu.o
+     LDFILELIST bsd
+             LD kernel.development.blazer.unstripped.noctf
+ld: warning: search path '/Users/andersmadsen/Developer/personal/hackios/research/ios26-kernel-r1/work/sdk/MacOSX27.0.xnu.sdk/usr/local/lib/kernel/platform' not found
+ld: warning: search path '/Users/andersmadsen/Developer/personal/hackios/research/ios26-kernel-r1/work/no-kdk/usr/local/lib/kernel/platform' not found
+ld: warning: -segment_order should list all segments, __PRELINK_TEXT is missing
+ld: warning: -segment_order should list all segments, __PRELINK_INFO is missing
+ld: warning: -segment_order should list all segments, __PLK_TEXT_EXEC is missing
+ld: warning: -segment_order should list all segments, __PRELINK_DATA is missing
+ld: warning: -segment_order should list all segments, __PLK_DATA_CONST is missing
+ld: warning: -segment_order should list all segments, __PLK_LLVM_COV is missing
+ld: warning: -segment_order should list all segments, __PLK_LINKEDIT is missing
+ld: warning: -segment_order should list all segments, __LINKINFO is missing
+ld: warning: -segment_order of __LINKEDIT is ignored, the segment must be ordered last
+       DSYMUTIL kernel.development.blazer.dSYM
+          STRIP kernel.development.blazer
+        LIBTOOL kernel.development.blazer.a
+built kernel at /Users/andersmadsen/Developer/personal/hackios/research/ios26-release-r1/work/build/obj/DEVELOPMENT_ARM64_BLAZER//kernel.development.blazer
+libtool: warning: 'exclaves_aoe.o' has no symbols
+libtool: warning: 'exclaves_conclave.o' has no symbols
+libtool: warning: 'exclaves_driverkit.o' has no symbols
+libtool: warning: 'exclaves_frame_mint.o' has no symbols
+libtool: warning: 'exclaves_inspection.o' has no symbols
+libtool: warning: 'exclaves_log.o' has no symbols
+libtool: warning: 'exclaves_memory.o' has no symbols
+libtool: warning: 'exclaves_panic.o' has no symbols
+libtool: warning: 'exclaves_resource.o' has no symbols
+libtool: warning: 'exclaves_shared_memory.o' has no symbols
+libtool: warning: 'exclaves_storage.o' has no symbols
+libtool: warning: 'exclaves_tests.o' has no symbols
+libtool: warning: 'exclaves_xnuproxy.o' has no symbols
+libtool: warning: 'sched_amp.o' has no symbols
+libtool: warning: 'sched_amp_common.o' has no symbols
+libtool: warning: 'ptrauth_data_tests.o' has no symbols
+libtool: warning: 'bcopy_test.o' has no symbols
+libtool: warning: 'vm_memtag.o' has no symbols
+libtool: warning: 'vm_mteinfo.o' has no symbols
+libtool: warning: 'vm_mte_tests.o' has no symbols
+libtool: warning: 'pmap_cs.o' has no symbols
+libtool: warning: 'pmap_iommu.o' has no symbols
+libtool: warning: 'amcc_rorgn_ppl.o' has no symbols
+libtool: warning: 'amcc_rorgn_ppl_amcc.o' has no symbols
+libtool: warning: 'amcc_rorgn_common.o' has no symbols
+libtool: warning: 'amcc_rorgn_pv_ctrr.o' has no symbols
+libtool: warning: 'sweet_early.o' has no symbols
+libtool: warning: 'iofilter_asm.o' has no symbols
+libtool: warning: 'iofilter.o' has no symbols
+libtool: warning: 'gxf_exceptions.o' has no symbols
+libtool: warning: 'pinst.o' has no symbols
+libtool: warning: 'mte.o' has no symbols
+libtool: warning: 'vm_mte_compress.o' has no symbols
+libtool: warning: 'ecc_init.o' has no symbols
+libtool: warning: 'tegu_ufs.o' has no symbols
+libtool: warning: 'tegu_touch.o' has no symbols
+libtool: warning: 'tegu_keys.o' has no symbols
+libtool: warning: 'net_stubs.o' has no symbols
+libtool: warning: 'classq_util.o' has no symbols
+libtool: warning: 'key_debug.o' has no symbols
+libtool: warning: 'hfs_cprotect.o' has no symbols
+libtool: warning: 'txm.o' has no symbols
+libtool: warning: 'ppl.o' has no symbols
+libtool: warning: 'ptrauth_data_tests_sysctl.o' has no symbols
+libtool: warning: 'readonly_proc_tests_sysctl.o' has no symbols
+libtool: warning: 'skywalk_stubs.o' has no symbols
+libtool: warning: 'cpu_copy_in_cksum_gen.o' has no symbols
+libtool: warning: 'ctrr_test_sysctl.o' has no symbols
+libtool: warning: 'IOCommandQueue.cpo' has no symbols
+libtool: warning: 'AppleARMSMP.cpo' has no symbols
+         SYMSET IOKit (arm64)
+         SYMSET BSDKernel (arm64)
+         SYMSET Libkern (arm64)
+         SYMSET Mach (arm64)
+         SYMSET MACFramework (arm64)
+         SYMSET Unsupported (arm64)
+         SYMSET Private (arm64)
+         SYMSET Kasan (arm64, development )
+         SYMSET Kcov (arm64, development )
+real 20.47
+user 18.18
+sys 12.13

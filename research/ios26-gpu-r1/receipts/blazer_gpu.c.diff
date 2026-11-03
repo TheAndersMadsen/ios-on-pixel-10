@@ -1,0 +1,151 @@
+--- src/blazer_gpu.c.base	2026-11-03 16:23:27.176116566 +0100
++++ src/blazer_gpu.c	2026-11-03 16:24:12.927675423 +0100
+@@ -11,7 +11,10 @@
+  * Left out on purpose, each stock does: TMSS and DTS (thermal sensors, gpu_core_logic.c v2: inferred not needed for a register read; GPU is idle and on for milliseconds), PF state write,
+  * fabric vote 0x05361500 (memory traffic only, inferred; this reads CSRs), SMMU, interrupts, firmware, Trusty. No PMIC frame, polled or queued. No SMC.
+  * Any failure: one line, nothing further goes out. A failed step 3 or later leaves the domain on until the boot's deadline: stock has no recovery for it either.
+- * Facts from GPL-2.0 google-modules (GrapheneOS kernel_pixel_6.12 @5940a317) and Dual MIT/GPL pvrsrvkm: numbers only, no code copied. */
++ * Facts from GPL-2.0 google-modules (GrapheneOS kernel_pixel_6.12 @5940a317) and Dual MIT/GPL pvrsrvkm: numbers only, no code copied.
++ * blazer_gpu=3: stage 1, and between steps 5 and 6 a read-only survey (gpu_survey below): the registers stock's REE debug dump reads with plain
++ * OSReadHWReg (rgxdebug_common.c RGXDumpRGXRegisters, volcanic/rgxdebug.c Clk/MMU/SLC parts; none of its DDLOGSECURE, FW core or RISC-V DM reads),
++ * and RGX_CR_TIMER twice 1 ms apart: does the core's clock tick with our power-up. Reads only, a 64 KiB view of rgx, no write beyond stage 1's. */
+ #ifdef BLAZER_GPU_HOSTTEST
+ #include "blazer_gpu_test.h"
+ #else
+@@ -52,6 +55,11 @@
+ #define LPB_EVENT_OFF       1u
+ #define LPB_TIMEOUT_MS      3000u           /* tgl_display_power.c, physical */
+ 
++#ifdef BLAZER_GPU_HOSTTEST_BUS
++/* Host test only: the test's bus model sees every access */
++#define gpu_w32(va, value) blazer_gpu_test_w32((va), (value))
++#define gpu_r32(va) blazer_gpu_test_r32(va)
++#else
+ static inline void
+ gpu_w32(vm_offset_t va, uint32_t value)
+ {
+@@ -65,6 +73,7 @@
+ {
+ 	return *(volatile uint32_t *)va;
+ }
++#endif
+ 
+ static unsigned gpu_mode = 1;
+ 
+@@ -87,6 +96,97 @@
+ 	}
+ }
+ 
++/* blazer_gpu=3. Offsets: volcanic/km/rgx_cr_defs_km.h at the pin; 71.V.2448.1212 has no ERYX_TOP_INFRASTRUCTURE (so CLK_CTRL0/1/2, BIF_*) and
++ * no BRN72144 (so MMU_FAULT_STATUS1/2 are read unconditionally by stock). 64-bit ones as two words, high first, the access CORE_ID already passed with */
++#define GPU_SURVEY_BYTES    0x10000u        /* every offset below is under it */
++#define RGX_TIMER           0x160u          /* RGX_CR_TIMER: VALUE bits 0..47, bit 63 BIT31 */
++#define RGX_TIMER_VALUE     0x0000ffffffffffffULL
++#define GPU_TIMER_GAP_US    1000
++
++struct gpu_survey_reg {
++	uint16_t off;
++	uint8_t wide;
++	const char *name;
++};
++
++static const struct gpu_survey_reg gpu_survey_regs[] = {
++	{ 0x0020, 1, "CORE_ID" },               /* RGXDumpCoreRegisters */
++	{ 0x0000, 1, "CLK_CTRL0" },             /* RGXDumpClkRegisters, !ERYX_TOP */
++	{ 0x0008, 1, "CLK_STATUS0" },
++	{ 0x0080, 1, "CLK_CTRL1" },
++	{ 0x0088, 1, "CLK_STATUS1" },
++	{ 0x0090, 0, "CLK_CTRL2" },
++	{ 0x0130, 0, "EVENT_STATUS" },          /* RGXDumpRGXRegisters */
++	{ 0xe130, 1, "MMU_FAULT_STATUS_PM" },   /* RGXDumpMMURegisters */
++	{ 0xe150, 1, "MMU_FAULT_STATUS1" },
++	{ 0xe158, 1, "MMU_FAULT_STATUS2" },
++	{ 0xe160, 1, "MMU_FAULT_STATUS_META" },
++	{ 0xe170, 1, "MMU_STATUS" },
++	{ 0xe210, 1, "SLC_STATUS1" },
++	{ 0xe218, 1, "SLC_STATUS2" },
++	{ 0xe238, 1, "SLC_STATUS3" },
++	{ 0xe260, 1, "SLC_STATUS_DEBUG" },
++	{ 0xe230, 0, "SLC_IDLE" },              /* RGXDumpSLCRegisters, no MTX_SLC */
++	{ 0xe240, 0, "SLC_FAULT_STOP_STATUS" },
++};
++
++static uint64_t
++gpu_r64(vm_offset_t base, uint32_t off)
++{
++	uint64_t high = gpu_r32(base + off + 4);
++
++	return high << 32 | gpu_r32(base + off);
++}
++
++/* A 64-bit counter read as two words: take the low word only between two equal high words, at most three tries */
++static int
++gpu_timer(vm_offset_t rgx, uint64_t *out)
++{
++	for (unsigned n = 0; n < 3; n++) {
++		uint32_t high = gpu_r32(rgx + RGX_TIMER + 4), low = gpu_r32(rgx + RGX_TIMER);
++
++		if (gpu_r32(rgx + RGX_TIMER + 4) == high) {
++			*out = ((uint64_t)high << 32 | low) & RGX_TIMER_VALUE;
++			return 0;
++		}
++	}
++	return -1;
++}
++
++/* Reads only. One line per register, then the clock verdict. Never stops the sequence: the power-down after it runs either way */
++static void
++gpu_survey(void)
++{
++	vm_offset_t rgx = ml_io_map((vm_offset_t)GPU_RGX_PA, GPU_SURVEY_BYTES);
++	uint64_t t0 = 0, t1 = 0;
++
++	if (rgx == 0) {
++		printf("blazer-gpu: survey: no map\n");
++		return;
++	}
++	for (unsigned i = 0; i < sizeof(gpu_survey_regs) / sizeof(gpu_survey_regs[0]); i++) {
++		const struct gpu_survey_reg *r = &gpu_survey_regs[i];
++
++		if (r->wide) {
++			printf("blazer-gpu: reg %s +0x%x 0x%016llx\n", r->name, r->off, gpu_r64(rgx, r->off));
++		} else {
++			printf("blazer-gpu: reg %s +0x%x 0x%08x\n", r->name, r->off, gpu_r32(rgx + r->off));
++		}
++	}
++	if (gpu_timer(rgx, &t0) != 0) {
++		printf("blazer-gpu: TIMER UNSTABLE high word\n");
++		return;
++	}
++	delay(GPU_TIMER_GAP_US);
++	if (gpu_timer(rgx, &t1) != 0) {
++		printf("blazer-gpu: TIMER UNSTABLE high word\n");
++		return;
++	}
++	printf("blazer-gpu: %s timer 0x%llx -> 0x%llx, +%llu in %u us\n", t1 > t0 ? "CLOCK_RUNS" : "CLOCK_STOPPED", t0, t1,
++	    t1 > t0 ? t1 - t0 : 0ULL, (unsigned)GPU_TIMER_GAP_US);
++	printf("blazer-gpu: survey done, %u registers\n", (unsigned)(sizeof(gpu_survey_regs) / sizeof(gpu_survey_regs[0])));
++}
++
+ static int
+ gpu_vote(uint32_t on)
+ {
+@@ -181,6 +281,9 @@
+ 		if (gpu_mode == 2 && first == CORE_ID_EXPECT && second == first) {
+ 			gpu_smmu_survey();
+ 		}
++		if (gpu_mode == 3 && first == CORE_ID_EXPECT && second == first) {
++			gpu_survey();
++		}
+ 	}
+ 	if (gpu_gate(control, GPU_GATE_OFF, &seen) != 0) {
+ 		return;
+@@ -240,7 +343,7 @@
+ 	thread_t thread;
+ 	unsigned mode = 0;
+ 
+-	if (!PE_parse_boot_argn("blazer_gpu", &mode, sizeof(mode)) || (mode != 1 && mode != 2)) {
++	if (!PE_parse_boot_argn("blazer_gpu", &mode, sizeof(mode)) || mode < 1 || mode > 3) {
+ 		return;
+ 	}
+ 	gpu_mode = mode;

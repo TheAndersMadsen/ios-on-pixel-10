@@ -1,0 +1,3 @@
+a7-ios-system-r6-gpu bootable 25ca24fa280176847e9c0fd7cc90f3a28046447fa1ed099edb1aa4f3c679b75d payload 25907584 margin 40152704
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r6-gpu/manifest.json
+OK a7-ios-system-r6-gpu bootable 25ca24fa280176847e9c0fd7cc90f3a28046447fa1ed099edb1aa4f3c679b75d

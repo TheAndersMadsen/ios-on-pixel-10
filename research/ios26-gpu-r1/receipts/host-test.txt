@@ -1,0 +1,18 @@
+# 2026-11-03T16:34:31+01:00 m1box cc (GCC) 16.1.1 20260430
+cc -std=gnu11 -Wall -Wextra -Werror -Wno-format -fsanitize=address,undefined -g -DBLAZER=1 -DBLAZER_GPU_HOSTTEST=1 -DBLAZER_GPU_HOSTTEST_BUS=1 -Itests src/blazer_gpu.c tests/test_survey.c
+blazer_gpu=3 host test: 820 checks, 0 failed (8 cases)
+rc=0
+tests/mutants.sh
+caught extra-offset
+caught rgx-write
+caught survey-in-mode1
+caught no-id-guard
+caught survey-after-off
+caught timer-no-retry
+caught timer-unbounded
+caught stopped-as-runs
+caught no-delay
+caught wrong-width
+caught unstable-continues
+mutants: 11/11 caught
+rc=0

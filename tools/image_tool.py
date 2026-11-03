@@ -169,6 +169,8 @@ PHONE_ALLOWED.update({'hk_fb_refresh': r'hk_fb_refresh=(60|120)', 'hk_bright': r
                       'blazer_gov': r'blazer_gov=1', 'blazer_gov_cap': r'blazer_gov_cap=(18|16|13)', 'blazer_gov_stages': r'blazer_gov_stages=(1|3|5|7|9|11|13|15)',
                       'blazer_gov_b': r'blazer_gov_b=(3[0-9]|4[0-9]|5[0-5])', 'blazer_thermal_fast': r'blazer_thermal_fast=1',
                       'blazer_battery_status': r'blazer_battery_status=1', 'blazer_battery_receipt': r'blazer_battery_receipt=1'})
+# research/ios26-gpu-r1/PLAN.md: stage 1 plus a read-only register survey (blazer_gpu=3). Not 1 or 2 here; tipc refuses any blazer_gpu.
+PHONE_ALLOWED.update({'blazer_gpu': r'blazer_gpu=3'})
 PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
 # validation_disables: kconfig.md, osfmk/kern/debug.c. atm_diagnostic_config: mine.md, osfmk/atm/atm.c:60. hk_fb_*: render's names.
 PHONE_EXACT = ('blazer_fast_first=1', 'blazer_smp_report=1', 'blazer_smp_report=2', 'blazer_smp_test=1', 'blazer_ssbs=1', 'blazer_ssbs=3', 'validation_disables=0x39d64', 'atm_diagnostic_config=0x400', 'hk_fb_scale=1', 'hk_fb_scale=2', 'hk_fb_filter=1', 'blazer_ufs_multi=1', 'blazer_cs_nohash=1', 'blazer_rtc=1', 'blazer_keys=1', 'blazer_haptic=1', 'blazer_haptic=3', 'hk_bench=1', 'hk_amu=1', 'hk_pmu=1', 'hk_pmu=2', 'hk_fb_fast=1', 'blazer_ic_va=1', 'hk_fb_bench=2', 'blazer_ufs_spin_us=300', 'blazer_ufs_cost=1', 'blazer_ufs_hold=1', 'blazer_battery=1', 'blazer_battery=2', 'hk_fb_period=1', 'hk_fb_te=1', 'hk_fb_te=2', 'hk_panel_hz=120', 'hk_panel_hz=60', 'hk_panel_hz=30', 'hk_panel_hz=10', 'hk_panel_off=1')  # last two: mine.md
