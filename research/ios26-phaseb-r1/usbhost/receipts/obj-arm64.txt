@@ -1,0 +1,152 @@
+Mac XNU clang, the exact argv of build/obj/DEVELOPMENT_ARM64_BLAZER/osfmk/DEVELOPMENT/blazer_usbcon.o.json (-D BLAZER=1, -mkernel, -arch arm64), source swapped (tools/obj_usbhost.py). Tree and obj not written.
+Mac tree at the time: branch hk-chg1 (another owner's build running); generated headers from that build. 2026-11-03.
+f1fe36bb3b47324c67a73ac578394a6558503269350e83f189863310e957693a  research/ios26-phaseb-r1/usbhost/build/blazer_usbhost.o
+03d2485cd045ea3c902aa2fbe8d0a7c5603253af7a790e204ee627bdc8289ccb  research/ios26-phaseb-r1/usbhost/build/src/blazer_usbhost.c
+f4a0ef90bfe3244ee34c510a0a0a20c0b72800596d3c743371b8c9623ad497f1  research/ios26-phaseb-r1/usbhost/build/src/blazer_usbhost_core.inc
+research/ios26-phaseb-r1/usbhost/build/blazer_usbhost.o: Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+--- nm -m
+                 (undefined) external _PE_parse_boot_argn
+0000000000002838 (__BOOTDATA,__init_entry_set) non-external [no dead strip] ___startup_TUNABLES_entry_blazer_usbhost_mode_34
+0000000000002850 (__BOOTDATA,__init_entry_set) non-external [no dead strip] ___startup_TUNABLES_entry_blazer_usbhost_wait_35
+0000000000002868 (__BOOTDATA,__init_entry_set) non-external [no dead strip] ___startup_TUNABLES_entry_blazer_usbhost_window_36
+00000000000027b0 (__KLDDATA,__const) non-external [no dead strip] ___startup_TUNABLES_name_blazer_usbhost_mode
+00000000000027d8 (__KLDDATA,__const) non-external [no dead strip] ___startup_TUNABLES_name_blazer_usbhost_wait
+0000000000002808 (__KLDDATA,__const) non-external [no dead strip] ___startup_TUNABLES_name_blazer_usbhost_window
+00000000000027c0 (__KLDDATA,__const) non-external [no dead strip] ___startup_TUNABLES_spec_blazer_usbhost_mode
+00000000000027f0 (__KLDDATA,__const) non-external [no dead strip] ___startup_TUNABLES_spec_blazer_usbhost_wait
+0000000000002820 (__KLDDATA,__const) non-external [no dead strip] ___startup_TUNABLES_spec_blazer_usbhost_window
+                 (undefined) external _blazer_stamp_page
+00000000000026e8 (__DATA,__const) external [no dead strip] _blazer_usbhost_mode
+0000000000000000 (__TEXT,__text) external _blazer_usbhost_start
+00000000000026ec (__DATA,__const) external [no dead strip] _blazer_usbhost_wait
+00000000000026f0 (__DATA,__const) external [no dead strip] _blazer_usbhost_window
+                 (undefined) external _current_thread
+                 (undefined) external _delay_for_interval
+                 (undefined) external _kernel_startup_tunable_init
+                 (undefined) external _kernel_thread_start_priority
+                 (undefined) external _mach_absolute_time
+                 (undefined) external _ml_io_map
+                 (undefined) external _printf
+                 (undefined) external _thread_block
+                 (undefined) external _thread_deallocate
+                 (undefined) external _thread_set_thread_name
+                 (undefined) external _thread_terminate
+000000000001e678 (__DATA,__bss) non-external _uh
+0000000000001ff0 (__TEXT,__text) non-external _uh_command
+0000000000002310 (__TEXT,__text) non-external _uh_control_in
+000000000001e668 (__DATA,__bss) non-external _uh_dptop
+0000000000002150 (__TEXT,__text) non-external _uh_event
+000000000001e670 (__DATA,__bss) non-external _uh_glue
+000000000001e648 (__DATA,__bss) non-external _uh_mem.0
+000000000001e650 (__DATA,__bss) non-external _uh_mem.1
+000000000001e658 (__DATA,__bss) non-external _uh_regs
+000000000001e660 (__DATA,__bss) non-external _uh_tca
+0000000000001f70 (__TEXT,__text) non-external _uh_wait_sts
+00000000000026f8 (__DATA,__const) non-external _uh_why_name
+0000000000000270 (__TEXT,__text) non-external _usbhost_thread
+00000000000026e0 (__TEXT,__literal8) non-external lCPI1_0
+0000000000002880 (__TEXT,__cstring) non-external l_.str
+000000000000289d (__TEXT,__cstring) non-external l_.str.1
+00000000000029e9 (__TEXT,__cstring) non-external l_.str.10
+00000000000029f9 (__TEXT,__cstring) non-external l_.str.11
+0000000000002a3d (__TEXT,__cstring) non-external l_.str.12
+0000000000002a65 (__TEXT,__cstring) non-external l_.str.14
+0000000000002aa9 (__TEXT,__cstring) non-external l_.str.15
+0000000000002ac5 (__TEXT,__cstring) non-external l_.str.16
+0000000000002b3c (__TEXT,__cstring) non-external l_.str.17
+0000000000002b70 (__TEXT,__cstring) non-external l_.str.18
+0000000000002b9c (__TEXT,__cstring) non-external l_.str.19
+00000000000028dc (__TEXT,__cstring) non-external l_.str.2
+0000000000002ba6 (__TEXT,__cstring) non-external l_.str.20
+0000000000002bf0 (__TEXT,__cstring) non-external l_.str.21
+0000000000002c48 (__TEXT,__cstring) non-external l_.str.22
+0000000000002c9b (__TEXT,__cstring) non-external l_.str.23
+0000000000002ce3 (__TEXT,__cstring) non-external l_.str.24
+0000000000002d2b (__TEXT,__cstring) non-external l_.str.25
+0000000000002d4c (__TEXT,__cstring) non-external l_.str.26
+0000000000002d56 (__TEXT,__cstring) non-external l_.str.27
+0000000000002d64 (__TEXT,__cstring) non-external l_.str.28
+0000000000002d94 (__TEXT,__cstring) non-external l_.str.29
+00000000000028fb (__TEXT,__cstring) non-external l_.str.3
+0000000000002dd8 (__TEXT,__cstring) non-external l_.str.30
+0000000000002e3a (__TEXT,__cstring) non-external l_.str.31
+0000000000002e6c (__TEXT,__cstring) non-external l_.str.32
+0000000000002e90 (__TEXT,__cstring) non-external l_.str.33
+0000000000002eb8 (__TEXT,__cstring) non-external l_.str.34
+0000000000002ef0 (__TEXT,__cstring) non-external l_.str.35
+0000000000002f2f (__TEXT,__cstring) non-external l_.str.36
+0000000000002f65 (__TEXT,__cstring) non-external l_.str.37
+0000000000002faa (__TEXT,__cstring) non-external l_.str.38
+0000000000002fdc (__TEXT,__cstring) non-external l_.str.39
+000000000000290a (__TEXT,__cstring) non-external l_.str.4
+0000000000002fe1 (__TEXT,__cstring) non-external l_.str.40
+0000000000002fe5 (__TEXT,__cstring) non-external l_.str.41
+0000000000002fea (__TEXT,__cstring) non-external l_.str.42
+0000000000002ff0 (__TEXT,__cstring) non-external l_.str.43
+0000000000002ff8 (__TEXT,__cstring) non-external l_.str.44
+0000000000003020 (__TEXT,__cstring) non-external l_.str.45
+000000000000304a (__TEXT,__cstring) non-external l_.str.46
+0000000000003089 (__TEXT,__cstring) non-external l_.str.47
+00000000000030b0 (__TEXT,__cstring) non-external l_.str.48
+00000000000030de (__TEXT,__cstring) non-external l_.str.49
+0000000000002918 (__TEXT,__cstring) non-external l_.str.5
+0000000000003118 (__TEXT,__cstring) non-external l_.str.50
+0000000000003181 (__TEXT,__cstring) non-external l_.str.51
+00000000000031d4 (__TEXT,__cstring) non-external l_.str.52
+00000000000031ff (__TEXT,__cstring) non-external l_.str.53
+0000000000003229 (__TEXT,__cstring) non-external l_.str.54
+000000000000324d (__TEXT,__cstring) non-external l_.str.55
+000000000000327b (__TEXT,__cstring) non-external l_.str.56
+000000000000327e (__TEXT,__cstring) non-external l_.str.57
+0000000000003286 (__TEXT,__cstring) non-external l_.str.58
+000000000000329a (__TEXT,__cstring) non-external l_.str.59
+000000000000297e (__TEXT,__cstring) non-external l_.str.6
+00000000000032b0 (__TEXT,__cstring) non-external l_.str.60
+00000000000032cf (__TEXT,__cstring) non-external l_.str.61
+00000000000032ea (__TEXT,__cstring) non-external l_.str.62
+0000000000003305 (__TEXT,__cstring) non-external l_.str.63
+0000000000003311 (__TEXT,__cstring) non-external l_.str.64
+0000000000003323 (__TEXT,__cstring) non-external l_.str.65
+0000000000003335 (__TEXT,__cstring) non-external l_.str.66
+0000000000003351 (__TEXT,__cstring) non-external l_.str.67
+0000000000003363 (__TEXT,__cstring) non-external l_.str.68
+000000000000336d (__TEXT,__cstring) non-external l_.str.69
+000000000000298b (__TEXT,__cstring) non-external l_.str.7
+0000000000003378 (__TEXT,__cstring) non-external l_.str.70
+0000000000003388 (__TEXT,__cstring) non-external l_.str.71
+0000000000003397 (__TEXT,__cstring) non-external l_.str.72
+00000000000033a8 (__TEXT,__cstring) non-external l_.str.73
+00000000000033b8 (__TEXT,__cstring) non-external l_.str.74
+00000000000029bc (__TEXT,__cstring) non-external l_.str.8
+00000000000029cb (__TEXT,__cstring) non-external l_.str.9
+0000000000002790 (__DATA,__const) non-external l_switch.table.usbhost_thread.75
+0000000000000000 (__TEXT,__text) non-external ltmp0
+00000000000026e0 (__TEXT,__literal8) non-external ltmp1
+00000000000026e8 (__DATA,__const) non-external ltmp2
+00000000000027b0 (__KLDDATA,__const) non-external ltmp3
+0000000000002838 (__BOOTDATA,__init_entry_set) non-external ltmp4
+0000000000002880 (__TEXT,__cstring) non-external ltmp5
+000000000001e648 (__DATA,__bss) non-external ltmp6
+--- size -m
+Segment : 124716
+	Section (__TEXT, __text): 9948
+	Section (__TEXT, __literal8): 8
+	Section (__DATA, __const): 200
+	Section (__KLDDATA, __const): 136
+	Section (__BOOTDATA, __init_entry_set): 72
+	Section (__TEXT, __cstring): 2887
+	Section (__DATA, __bss): 228 (zerofill)
+	Section (__DWARF, __debug_loclists): 6309
+	Section (__DWARF, __debug_abbrev): 1747
+	Section (__DWARF, __debug_info): 32472
+	Section (__DWARF, __debug_rnglists): 2846
+	Section (__DWARF, __debug_str_offs): 8160
+	Section (__DWARF, __debug_str): 32504
+	Section (__DWARF, __debug_addr): 3080
+	Section (__DWARF, __debug_names): 9860
+	Section (__DWARF, __debug_frame): 312
+	Section (__DWARF, __debug_line): 10563
+	Section (__DWARF, __debug_line_str): 3370
+	total 124702
+total 124716
+--- blazer-usbhost strings in the object: 36

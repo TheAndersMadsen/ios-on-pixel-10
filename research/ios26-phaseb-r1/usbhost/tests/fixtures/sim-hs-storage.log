@@ -1,0 +1,19 @@
+com.apple.xpc.launchd|... boot-args = debug=0x8 blazer_usbhost=1 blazer_deadline=300
+blazer-usbhost: survey GSNPSID 33313130 GCTL 2004 DCTL 80000000 DSTS 0 GUSB2PHYCFG 48
+blazer-usbhost: survey GHWPARAMS0 2020400a GUCTL c808010 GFLADJ a00000 glue hc_status 0 host_cfg1 8
+blazer-usbhost: survey TCA clk_rst 1000 intr_sts 1008 gcfg 1010 tcpc 1014 pstate 1050 1054 1058
+blazer-usbhost: survey dp_top cfg1 2028 cfg2 202c dp_config 2010 aux_ctrl 2024
+blazer-usbhost: gadget halted in 3 ms
+blazer-usbhost: host mode, GCTL 1004, glue hc_status 0 host_cfg1 8
+blazer-usbhost: xhci 110 caplen 32 slots 64 ports 2 scratch 2 csz 32 ac64 1 ppc 1 db 1000 rt 800
+blazer-usbhost: root ports usb2 1+1 usb3 2+1
+blazer-usbhost: running, USBSTS 0
+blazer-usbhost: usb2 port 1 PORTSC 200
+blazer-usbhost: port 1 connect after 1500 ms, PORTSC 20e01
+blazer-usbhost: port 1 reset done, enabled 1, speed high, PORTSC 200e03
+blazer-usbhost: slot 1 address device: ok, cc 1, address 5
+blazer-usbhost: ENUM port 1 speed high dev 0781:5581 usb 2.00 class 00/00/00 mps0 64 configs 1
+blazer-usbhost: ENUM port 1 interfaces 1, first 08/06/50, config bytes 32
+blazer-usbhost: ENUM port 1 product "Cruzer ?Blade?"
+blazer-usbhost: PASS, port 1 enumerated 0781:5581, events 5, controller left in host mode until the end of the boot
+panic(cpu 0 caller 0xfffffe0007a1b2c4): blazer-root: deadline 300 s, stage 9

@@ -1,0 +1,39 @@
+cc (GCC) 16.1.1 20260430
+aarch64
+2026-11-03T22:39:30Z
+03d2485cd045ea3c902aa2fbe8d0a7c5603253af7a790e204ee627bdc8289ccb  research/ios26-phaseb-r1/usbhost/xnu-src/blazer_usbhost.c
+f4a0ef90bfe3244ee34c510a0a0a20c0b72800596d3c743371b8c9623ad497f1  research/ios26-phaseb-r1/usbhost/xnu-src/blazer_usbhost_core.inc
+e87ed3d4db3e59078bf9f255bccda961a7bac7c2f947689932e17c0c8df9bdb2  research/ios26-phaseb-r1/usbhost/tests/test_usbhost.c
+5d4275600a945192dd8bb84ce5d57406f1b91f92d1b8608f93170e486e1dbf41  research/ios26-phaseb-r1/usbhost/tests/mutants.sh
+test_usbhost: 48 checks, 0 failed
+--- sample console (HS storage) ---
+blazer-usbhost: survey GSNPSID 33313130 GCTL 2004 DCTL 80000000 DSTS 0 GUSB2PHYCFG 48
+blazer-usbhost: survey GHWPARAMS0 2020400a GUCTL c808010 GFLADJ a00000 glue hc_status 0 host_cfg1 8
+blazer-usbhost: survey TCA clk_rst 1000 intr_sts 1008 gcfg 1010 tcpc 1014 pstate 1050 1054 1058
+blazer-usbhost: survey dp_top cfg1 2028 cfg2 202c dp_config 2010 aux_ctrl 2024
+blazer-usbhost: gadget halted in 3 ms
+blazer-usbhost: host mode, GCTL 1004, glue hc_status 0 host_cfg1 8
+blazer-usbhost: xhci 110 caplen 32 slots 64 ports 2 scratch 2 csz 32 ac64 1 ppc 1 db 1000 rt 800
+blazer-usbhost: root ports usb2 1+1 usb3 2+1
+blazer-usbhost: running, USBSTS 0
+blazer-usbhost: usb2 port 1 PORTSC 200
+blazer-usbhost: port 1 connect after 1500 ms, PORTSC 20e01
+blazer-usbhost: port 1 reset done, enabled 1, speed high, PORTSC 200e03
+blazer-usbhost: slot 1 address device: ok, cc 1, address 5
+blazer-usbhost: ENUM port 1 speed high dev 0781:5581 usb 2.00 class 00/00/00 mps0 64 configs 1
+blazer-usbhost: ENUM port 1 interfaces 1, first 08/06/50, config bytes 32
+blazer-usbhost: ENUM port 1 product "Cruzer ?Blade?"
+blazer-usbhost: PASS, port 1 enumerated 0781:5581, events 5, controller left in host mode until the end of the boot
+killed   event-cycle-no-toggle
+killed   cmd-cycle-no-toggle
+killed   neutral-keeps-ped
+killed   status-stage-in
+killed   no-evaluate-context
+killed   power-usb3-too
+killed   reset-despite-no-halt
+killed   no-id-check
+killed   no-scratchpad-array
+killed   softreset-left-set
+killed   no-event-buffer-retire
+killed   wrong-root-port
+mutants: 12/12 killed

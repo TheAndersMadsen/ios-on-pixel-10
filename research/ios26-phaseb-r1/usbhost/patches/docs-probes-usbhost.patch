@@ -1,0 +1,171 @@
+--- a/docs/probes.yaml
++++ b/docs/probes.yaml
+@@ -753,8 +753,38 @@
+   - id: usb-host
+     phone_only: true
+     row: USB host, video out
+-    owner: 'Out of reach: no host stack in open XNU'
+-    next: {kind: none, minutes: 0, test: 'None'}
++    # research/ios26-phaseb-r1/usbhost/USBHOST.md: XNU hk-usbhost1 (blazer_usbhost=1, no blazer_usbcon in that image). Result in
++    # the ramdump. Video out has no driver yet: works needs the planned blazer-dp line, so the row stops at partial with host only.
++    needs:
++      markers: ['blazer-usbhost: ']
++      boot_args: ['blazer_usbhost=1']
++      image: 'a7-ios-system-usbhost1 (usbhost/tools/mkimg_usbhost.sh); owner swaps the Mac cable for a powered hub + device'
++    works:
++      all:
++        - {re: 'blazer-usbhost: PASS, port \d+ enumerated (?P<vidpid>[0-9a-f]{4}:[0-9a-f]{4})', label: a device enumerated}
++        - {re: 'blazer-dp: video out (?P<mode>\d+x\d+@\d+)', label: 'planned: DP alt mode picture (no driver yet)'}
++      confirm: owner
++      note: 'USB host ({vidpid}) and DP video out {mode} under iOS ({attempt})'
++    partial:
++      all:
++        - {re: 'blazer-usbhost: ENUM port (?P<port>\d+) speed (?P<speed>\w+) dev (?P<vidpid>[0-9a-f]{4}:[0-9a-f]{4})', label: device descriptor read}
++        - {re: 'blazer-usbhost: PASS, port \d+ enumerated', label: enumeration complete}
++      note: 'USB host: {speed}-speed device {vidpid} enumerated on port {port} (kernel only, no iOS USB stack; no video out) ({attempt})'
++    built:
++      all:
++        - {re: 'blazer-usbhost: host mode, GCTL [0-9a-f]+', label: DWC3 in host mode}
++        - {re: 'blazer-usbhost: running, USBSTS [0-9a-f]+', label: xHCI running}
++      note: 'DWC3 switched to host and the xHCI ran; no device enumerated ({attempt})'
++    active:
++      all:
++        - {re: 'blazer-usbhost: survey GSNPSID 33313130', label: 'controller read, survey'}
++      note: 'Host-mode kernel admitted and surveyed the controller ({attempt})'
++    fails:
++      - {re: 'blazer-usbhost: refused: (?P<why>.*)', label: refused before any write}
++      - {re: 'blazer-usbhost: stop: (?P<why>(?!no device).*?), events', label: host bring-up or enumeration failed}
++      - {re: 'blazer-usbhost: stop: no device', label: 'no connect on the USB2 ports (device unpowered? VBUS is not sourced by the phone)'}
++    owner: 'Was the hub (with its charger) and a device plugged in within 90 s of the boot, and which device was it?'
++    next: {kind: attended, minutes: 12, test: 'a7-ios-system-usbhost1: owner swaps the Mac cable for a powered USB-C hub + USB stick within 90 s, re-plugs the Mac after ~5 min for the ramdump (USBHOST.md test plan)'}
+ 
+   # ---------------------------------------------------------------- Audio
+   - id: audio
+@@ -917,11 +947,56 @@
+     next: {kind: unattended, minutes: 10, test: 'int1 with hk_screen=30: status-bar clock in the fb_png screenshot vs the blazer-rtc line'}
+ 
+   # ---------------------------------------------------------------- Cameras, Security, Apple services
++  # research/ios26-camera-r1/CAMERA.md (hk-cam1). Flash = TI LM3644 on CLI7 (i2c@3a301000, 0x63). The flash alone never makes
++  # this row "works": that needs a camera sensor (camera-sensor below) and a capture path.
+   - id: cameras
+     phone_only: true
+     row: Cameras, flash
+-    owner: 'Out of reach: sensor details are not public'
+-    next: {kind: none, minutes: 0, test: 'None'}
++    needs:
++      markers: ['blazer-torch: ']
++      boot_args: ['blazer_torch=[1-4]']
++      image: 'a7-ios-system-cam1 (kernel.cam1 c4c47954, r3 line + blazer_torch=4)'
++    partial:
++      all:
++        - {re: 'blazer-torch: led1 off: standby, (?P<ms>\d+) ms lit, flags 0x0 0x0', label: 'LED1 torch lit and back to standby, no fault'}
++        - {re: 'blazer-torch: led2 off: standby, \d+ ms lit, flags 0x0 0x0', label: 'LED2 torch lit and back to standby, no fault'}
++        - {re: 'blazer-torch: ends: ok, chip answered 1', label: 'clean exit (EN low, pads and CLI7 put back)'}
++      confirm: owner
++      note: 'Flash LED (LM3644) lit under iOS: LED1 then LED2, {ms} ms each at 12 mA, kernel only; no camera sensor ({attempt})'
++    built:
++      all:
++        - {re: 'blazer-torch: chip answered: id register 0x(?P<id>[24]), enable register 0x80', label: LM3644 id read on CLI7}
++      note: 'LM3644 answered on CLI7: id 0x{id}, standby (kernel only, nothing lit) ({attempt})'
++    active:
++      all:
++        - {re: 'blazer-torch: cli select uart -> i2c', label: CLI7 switched from the loader's UART to I2C}
++      note: 'CLI7 selected as I2C under iOS; the chip did not answer ({attempt})'
++    fails:
++      - {re: 'blazer-torch: stop (?P<why>[a-z0-9-]+), detail 0x(?P<detail>[0-9a-f]+)', label: torch probe stopped (first stop wins)}
++      - {re: 'blazer-torch: cleanup failed: (?P<why>[a-z0-9-]+)', label: restoration step failed (EN low still follows)}
++      - {re: 'blazer-torch: cli not i2c; pad inventory only', label: 'CLI7 left in UART: stage 1/2 kernel (needs blazer_torch=3|4 on hk-cam1)'}
++    owner: 'About 45 s after boot, did the rear flash glow twice (two short, dim pulses about 3 s apart)?'
++    next: {kind: attended, minutes: 8, test: 'Boot a7-ios-system-cam1 (research/ios26-camera-r1/PHONE-TEST.md): owner watches the rear flash ~45-55 s after fastboot boot'}
++
++  - id: camera-sensor
++    phone_only: true
++    milestone: true
++    row: Camera sensor ID
++    needs:
++      markers: ['blazer-cam: ']
++    built:
++      all:
++        - {re: 'blazer-cam: pmic slg51002 id 0x(?P<id>[0-9a-f]+)', label: 'planned (F2): camera PMIC id on CLI7'}
++      note: 'Camera PMIC SLG51002 answered: id 0x{id} ({attempt})'
++    works:
++      all:
++        - {re: 'blazer-cam: sensor (?P<name>[a-z-]+) bus (?P<bus>\S+) addr 0x(?P<addr>[0-9a-f]+) id 0x(?P<sid>[0-9a-f]+)', label: 'planned (S2): sensor powered, out of reset, chip id read'}
++        - {re: 'blazer-cam: sensor \S+ powered down, rails off', label: 'planned (S2): power-down sequence completed'}
++      note: 'Camera sensor {name} on {bus} 0x{addr}: id 0x{sid} ({attempt})'
++    fails:
++      - {re: 'blazer-cam: stop (?P<why>[a-z0-9-]+), detail 0x(?P<detail>[0-9a-f]+)', label: 'planned: camera bring-up stopped'}
++    owner: 'No owner check: a log result'
++    next: {kind: build, minutes: 0, test: 'F2 then S1/S2 in research/ios26-camera-r1/CAMERA.md section 4 (PMIC GPIO frames need owner approval)'}
+ 
+   - id: biometrics
+     phone_only: true
+@@ -1029,3 +1104,68 @@
+       - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH MessagesBlastDoo\S* reason ns 2 code 0x5', label: BlastDoor SIGTRAP}
+     owner: 'None'
+     next: {kind: unattended, minutes: 5, test: 'QEMU first with a sandbox stub that reports a real container profile; then any unattended int1 boot'}
++
++  # ---------------------------------------------------------------- USB host / DP alt mode (research/ios26-phaseb-r1/usbhost/USBHOST.md)
++  - id: usb-host-enumerate
++    phone_only: true
++    milestone: true
++    row: USB host enumerates a device (milestone)
++    needs:
++      markers: ['blazer-usbhost: ']
++      boot_args: ['blazer_usbhost=1']
++      image: 'a7-ios-system-usbhost1; the device needs its own power (powered hub): the phone does not source VBUS'
++    works:
++      all:
++        - {re: 'blazer-usbhost: ENUM port (?P<port>\d+) speed (?P<speed>\w+) dev (?P<vidpid>[0-9a-f]{4}:[0-9a-f]{4}) usb [0-9a-f]+\.[0-9a-f]{2} class (?P<class>[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{2})', label: device descriptor}
++        - {re: 'blazer-usbhost: PASS, port \d+ enumerated', label: PASS line}
++        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0, label: no unplanned panic}
++      confirm: owner
++      note: 'Port {port}: {speed}-speed {vidpid} class {class} enumerated by the kernel xHCI ({attempt})'
++    partial:
++      all:
++        - {re: 'blazer-usbhost: port \d+ reset done, enabled 1', label: port reset and enabled}
++      note: 'A device connected and its port was enabled ({attempt}); an ENUM + PASS log stops here until the owner confirms the device'
++    built:
++      all:
++        - {re: 'blazer-usbhost: running, USBSTS [0-9a-f]+', label: xHCI running}
++      note: 'xHCI running in host mode, no device connected ({attempt})'
++    active:
++      all:
++        - {re: 'blazer-usbhost: (mode 1, wait|survey GSNPSID)', label: admitted}
++    fails:
++      - {re: 'blazer-usbhost: refused: (?P<why>.*)', label: refused (no register written)}
++      - {re: 'blazer-usbhost: gadget no halt after', label: 'shim gadget did not halt: nothing reset (by design)'}
++      - {re: 'blazer-usbhost: (core soft reset stuck|host error|port \d+ reset timeout)', label: controller fault}
++      - {re: 'blazer-usbhost: (enable slot|device descriptor|first 8 bytes): ', label: command or transfer failed}
++      - {re: 'blazer-usbhost: stop: no device', label: 'no connect in the window (device unpowered, or not plugged in time)'}
++    owner: 'Which device (VID:PID on its label or `system_profiler SPUSBDataType` on the Mac) was plugged in, via which hub?'
++    next: {kind: attended, minutes: 12, test: 'a7-ios-system-usbhost1 with a powered USB-C hub (charger on its PD input) + a USB stick (USBHOST.md)'}
++
++  - id: dp-video-out
++    phone_only: true
++    milestone: true
++    row: DisplayPort alt-mode picture (milestone)
++    # Stage map in USBHOST.md (DP alt mode). Only stage D0 (read-only TCA/dp_top survey) exists; the rest are planned lines.
++    needs:
++      markers: ['blazer-usbhost: survey TCA|blazer-dp: ']
++    works:
++      all:
++        - {re: 'blazer-dp: video out (?P<mode>\d+x\d+@\d+)', label: 'planned (D5): DPU stream on the DP encoder'}
++      confirm: owner_or_screenshot
++      note: 'External display shows {mode} from iOS ({attempt})'
++    partial:
++      all:
++        - {re: 'blazer-dp: link trained (?P<rate>\w+) x(?P<lanes>\d)', label: 'planned (D4): DPTX link training'}
++      note: 'DP link trained {rate} x{lanes}, no picture ({attempt})'
++    built:
++      all:
++        - {re: 'blazer-dp: sink DPCD rev (?P<rev>[0-9a-f.]+)', label: 'planned (D3): AUX read of the sink DPCD'}
++      any:
++        - {re: 'blazer-dp: altmode entered, pin assignment (?P<pin>[CDE])', label: 'planned (D1/D2): PD Enter Mode + Configure'}
++      note: 'AUX channel up, sink DPCD {rev} ({attempt})'
++    active:
++      all:
++        - {re: 'blazer-usbhost: survey TCA clk_rst [0-9a-f]+ intr_sts [0-9a-f]+ gcfg [0-9a-f]+ tcpc (?P<tcpc>[0-9a-f]+)', label: 'D0: TCA mux state read (read only)'}
++      note: 'USB/DP combo PHY TCA read: TCA_TCPC {tcpc} (mux [2:0]: 1 USB, 2 DP, 3 both) ({attempt})'
++    owner: 'Was a USB-C DisplayPort adapter or monitor plugged in, and did it show anything?'
++    next: {kind: build, minutes: 0, test: 'D1: read-only TCPC registers over SPMI (SID 4: CC_STATUS, TCPC_CONTROL, SBUSW_CTRL 0x94) with the power owner (blazer_gauge transport); then a PD VDM engine (owner decision: PD transmit)'}

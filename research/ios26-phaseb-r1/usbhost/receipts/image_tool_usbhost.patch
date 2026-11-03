@@ -1,0 +1,34 @@
+--- research/ios26-phaseb-r1/int/tools/image_tool_int1.py
++++ research/ios26-phaseb-r1/usbhost/tools/image_tool_usbhost.py
+@@ -11,7 +11,7 @@
+ import argparse, array, hashlib, json, os, re, shutil, struct, subprocess, sys, time
+ from pathlib import Path
+ sys.dont_write_bytecode = True
+-X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # int/tools/image_tool_int1.py: the Mac's acf48b98 + pwr1 + netstack (INT1.md), run from here
++X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # usbhost/tools/image_tool_usbhost.py: int1's 728bdd21 + blazer_usbhost (usbhost/tools/mk_image_tool_usbhost.py)
+ RUN = R/'images'; WORK = RUN/'.work'  # images and scratch stay under research/, which git ignores
+ sys.path[:0] = [str(X)]
+ import adt as ADT, mkadt, mkpayload
+@@ -181,6 +181,9 @@
+ # research/ios26-phaseb-r1/live/NET.md: kernel IPv4 192.168.77.2/24 on en2 over the USB gadget (CDC-ECM 1209:0003), no default route.
+ PHONE_ALLOWED.update({'blazer_usbnet': r'blazer_usbnet=1', 'blazer_usbnet_direct': r'blazer_usbnet_direct=1'})
+ PHONE_ALLOWED.update({'blazer_netstack': r'blazer_netstack=1'})  # research/ios26-phaseb-r1/configd/FIX.md: IONetworkStack alone
++# research/ios26-phaseb-r1/usbhost/USBHOST.md: DWC3 host mode, USB2 root ports, enumerate one device; no console in that boot.
++PHONE_ALLOWED.update({'blazer_usbhost': r'blazer_usbhost=1', 'blazer_usbhost_wait': r'blazer_usbhost_wait=([0-9]|[1-9][0-9]{1,2})',
++                      'blazer_usbhost_window': r'blazer_usbhost_window=[1-9][0-9]{0,2}'})
+ PHONE_EXACT_INT1 = ('blazer_power_key=1', 'blazer_key_delivery=1', 'blazer_haptic_tap=1')  # research/ios26-phaseb-r1/pwr/PLAN.md
+ DROP_DIAG = ('hk_fb_probe=1', 'hk_usertrace=1')  # --drop-diag: base-line diagnostics a full line may give up (pwr/PLAN.md; int/INT1.md)
+ PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
+@@ -437,6 +440,12 @@
+         if any(x.startswith('hk_ustack') for x in extra) and b'HK USTACK: every %u s' not in buf: die('kernel has no hk_ustack (hk-ustack-dbg4)')
+         if any(x.startswith('hk_screen') for x in extra) and b'HK SCREEN: on, record' not in buf: die('kernel has no hk_screen (hk-screen-dbg5)')
+         if 'blazer_usbcon_snap=1' in extra and b'blazer_usbcon_snap' not in buf: die('kernel has no usbcon snapshot (DBG3 0001)')
++        if any(t.startswith('blazer_usbhost') for t in extra):
++            if 'blazer_usbhost=1' not in extra: die('blazer_usbhost_* needs blazer_usbhost=1 (usbhost/USBHOST.md)')
++            if any(t.startswith(('blazer_usbcon', 'blazer_usbnet')) for t in extra): die('blazer_usbhost=1 owns the controller: no blazer_usbcon*/blazer_usbnet* in that image (results come back in the ramdump)')
++            if b'blazer-usbhost: ENUM port %u speed %s dev %04x:%04x' not in buf: die('kernel has no blazer_usbhost (hk-usbhost1)')
++            uw = {t.split('=')[0]: int(t.split('=')[1]) for t in extra if t.startswith(('blazer_usbhost_wait=', 'blazer_usbhost_window='))}
++            if uw.get('blazer_usbhost_wait', 90) + uw.get('blazer_usbhost_window', 150) + 45 > (getattr(a, 'phone_deadline', None) or 900): die('blazer_usbhost: wait + window + 45 s must end before --phone-deadline')
+         if 'blazer_keys=1' in extra and b'blazer-keys: polling pads' not in buf: die('kernel holds keys until keys-probe-r1 passes: handoffs/cpmlock.md')
+         if 'blazer_power_key=1' in extra and 'blazer_keys=1' not in extra: die('blazer_power_key=1 goes with blazer_keys=1')
+         if 'blazer_key_delivery=1' in extra and ('blazer_keys=1' not in extra or 'blazer_power_key=1' not in extra or b'blazer-keys: delivery requires reviewed power lifecycle' not in buf):

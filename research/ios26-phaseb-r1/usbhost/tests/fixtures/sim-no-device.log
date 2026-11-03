@@ -1,0 +1,6 @@
+boot-args = blazer_usbhost=1
+blazer-usbhost: survey GSNPSID 33313130 GCTL 2004 DCTL 0 DSTS 0 GUSB2PHYCFG 48
+blazer-usbhost: host mode, GCTL 1004
+blazer-usbhost: running, USBSTS 0
+blazer-usbhost: no device in 150 s, port 1 PORTSC 2a0
+blazer-usbhost: stop: no device, events 0, controller left in host mode until the end of the boot

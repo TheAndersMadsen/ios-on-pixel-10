@@ -1,0 +1,32 @@
+== test_probe_eval
+Ran 19 tests in 3.810s
+
+OK
+== test_hk
+Ran 31 tests in 23.709s
+
+FAILED (failures=1)
+== test_hklog
+Ran 12 tests in 0.020s
+
+OK
+== probe_eval fixtures
+2 attempt(s):
+  fixtures: console
+  fixtures: console
+
+🟡 USB host, video out: partial [fixtures] (status 🚫 out; out)
+    + device descriptor read: research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-hs-storage.log:15: blazer-usbhost: ENUM port 1 speed high dev 0781:5581 usb 2.00 class 00/00/00 mps0 64 configs 1
+    + enumeration complete: research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-hs-storage.log:18: blazer-usbhost: PASS, port 1 enumerated 0781:5581, events 5, controller left in host mode until the end of the boot
+    - blocker no connect on the USB2 ports (device unpowered? VBUS is not sourced by the phone) (x1, fixtures): research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-no-device.log:6: blazer-usbhost: stop: no device, events 0, controller left in host mode until the end of the boot
+    note: USB host: high-speed device 0781:5581 enumerated on port 1 (kernel only, no iOS USB stack; no video out) (fixtures)
+🟡 USB host enumerates a device (milestone): partial [fixtures]; log reaches works pending confirmation [fixtures]
+    + port reset and enabled: research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-hs-storage.log:13: blazer-usbhost: port 1 reset done, enabled 1, speed high, PORTSC 200e03
+    ? device descriptor: research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-hs-storage.log:15: blazer-usbhost: ENUM port 1 speed high dev 0781:5581 usb 2.00 class 00/00/00 mps0 64 configs 1
+    ? PASS line: research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-hs-storage.log:18: blazer-usbhost: PASS, port 1 enumerated 0781:5581, events 5, controller left in host mode until the end of the boot
+    - blocker no connect in the window (device unpowered, or not plugged in time) (x1, fixtures): research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-no-device.log:6: blazer-usbhost: stop: no device, events 0, controller left in host mode until the end of the boot
+    note: A device connected and its port was enabled (fixtures); an ENUM + PASS log stops here until the owner confirms the device
+⏳ DisplayPort alt-mode picture (milestone): active [fixtures]
+    + D0: TCA mux state read (read only): research/ios26-phaseb-r1/usbhost/tests/fixtures/sim-hs-storage.log:4: blazer-usbhost: survey TCA clk_rst 1000 intr_sts 1008 gcfg 1010 tcpc 1014 pstate 1050 1054 1058
+    note: USB/DP combo PHY TCA read: TCA_TCPC 1014 (mux [2:0]: 1 USB, 2 DP, 3 both) (fixtures)
+note: test_hk's one failure (test_map_subsystems_known: ['nfc']) comes from another owner's concurrent MAP.md 'SUBSYS: nfc' block with no hk.py rule; usbhost is known (hk.SUBSYSTEMS).

@@ -1,0 +1,21 @@
+--- a/docs/debug/MAP.md
++++ b/docs/debug/MAP.md
+@@ -75,6 +75,18 @@
+ DOCS: research/ios26-phaseb-r1/live/UNATTENDED.md
+ OPEN: EP0 requests 0x71+ unassigned (0x60..0x6b HLI1+snapshot, 0x70 hk_ustack)
+ 
++## usbhost
++SUBSYS: usbhost
++SRC: xnu/osfmk/arm64/blazer_usbhost.c, blazer_usbhost_core.inc (branch hk-usbhost1 = hk-obs1 + research/ios26-phaseb-r1/usbhost/patches/0001); host model usbhost/tests/test_usbhost.c
++ARGS: blazer_usbhost=1 (refused with any blazer_usbcon*/blazer_usbnet*: one controller, one owner), blazer_usbhost_wait=S (90), blazer_usbhost_window=S (150); image a7-ios-system-usbhost1
++TAGS: `blazer-usbhost:` (survey, gadget halted, host mode, xhci, root ports, running, port N connect/reset, slot, ENUM, PASS, stop), `blazer-dp:` (planned, DP alt mode)
++SIG: `blazer-usbhost: stop: no device` → no USB2 connect in the window: the phone does not source VBUS, so the device needs a powered hub
++SIG: `blazer-usbhost: gadget no halt after 100 ms` → the shim's gadget kept running; nothing was reset (by design, the result is that line)
++SIG: `blazer-usbhost: refused: blazer_usbcon owns the controller` → image has both; host mode needs a console-free image (ramdump path)
++TOOLS: `hk logs --sub usbhost` (ramdump); `python3 -I tools/probe_eval.py --row usb-host --row usb-host-enumerate --row dp-video-out <attempt>`; host test `usbhost/tests/run.sh`
++DOCS: research/ios26-phaseb-r1/usbhost/USBHOST.md (hardware map, role-switch safety, attended test, DP alt-mode stages D0-D5)
++OPEN: never booted (HOST + ARM64 object only); VBUS sourcing (TCPC + charger OTG over SPMI) and PD/DP alt mode are owner decisions
++
+ ## net
+ SUBSYS: net
+ SRC: xnu/bsd/dev/blazer_usbnet.c, blazer_usbnet_queue.h (UNQ_PHONE_IP/UNQ_MAC_IP), blazer_usbnet_log.h (dbg1-net branch); tools/usbnet_mac.py (Mac plan)

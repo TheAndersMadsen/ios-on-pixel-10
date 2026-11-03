@@ -1,0 +1,10 @@
+--- a/tools/hklog.py
++++ b/tools/hklog.py
+@@ -46,6 +46,7 @@
+     ('net', re.compile(r'^(blazer-usbnet|blazer-netstack|blazer-net)|IONetworkStack|InterfaceNamer'
+                        rf'|^HKL ({DAEMONS_NET})\[|^hk_(env|deny): ({DAEMONS_NET})\b|com\.apple\.(configd|CommCenter)\b')),
+     ('usb', re.compile(r'^(blazer-usbcon|TEGU USB|TGL USB)|^HKOBS \d+ \S+ t=\d+ usb:')),
++    ('usbhost', re.compile(r'^(blazer-usbhost|blazer-dp)')),
+     ('apps', re.compile(rf'^HKL ({DAEMONS_APPS})\[|^HK USTACK|^HKMAIN|^HKSTDERR|^SWEET Sandbox|^usertrap:|^userabort'
+                         rf'|^hk_(env|deny): ({DAEMONS_APPS})\b|\(({DAEMONS_APPS})\)|\b(MobilePhone|Preferences)\[\d+')),
+     ('location', re.compile(r'^HKL (locationd)\[|\blocationd\[\d+')),
