@@ -1,0 +1,15 @@
+RESULT: PASS (10/10 cases)
+ufs route host test: 87 checks, 0 failed
+ufs speed host test: 55 checks, 0 failed
+all-stage host test: 9 checks, 0 failed
+dcs bright host test (quick): 1007 checks, 0 failed
+chooser host test: 30 checks, 0 failed
+lz4 host test: 5 checks, 0 failed
+el2 mmu host test: 12 checks, 0 failed
+chooser-ios host test: 50 checks, 0 failed
+lz4 host test: 68 checks, 0 failed
+chooser host test: 75 checks, 0 failed
+note: stock listing absent; literal checks skipped (research/ is local)
+31 checks, 0 failed
+Ran 5 tests in 0.000s
+chooser-ios tool test: 5 tests, 0 failed

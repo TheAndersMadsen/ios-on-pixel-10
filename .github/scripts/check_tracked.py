@@ -27,6 +27,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-apps-r1/receipts/(m1box-rig|l1-r16|h3-static-r12)/[A-Za-z0-9_.-]+\.md
   | ios26-phaseb-r1/home-budget/(data/)?[A-Za-z0-9_.-]+\.(md|py|json)
   | ios26-phaseb-r1/corebrightness/([a-z]+/)?[A-Za-z0-9_.-]+\.(md|patch|h|c|cpp|py)
+  | ios26-dualboot-r8/chooser-ios/receipts/(r0b?/)?[A-Za-z0-9_.-]+\.(txt|diff|json|sha256)
   | ios26-dualboot-r8/(ios-data-persist|keys|chooser-ios)/[A-Za-z0-9_.-]+\.(md|txt)
 )$''')
 # 15 digits alone is an IMEI's shape. Neighbouring word characters or a dot mean a longer number, hash or decimal.

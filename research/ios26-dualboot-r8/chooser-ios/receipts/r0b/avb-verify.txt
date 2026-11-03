@@ -1,0 +1,1 @@
+stock vbmeta transplanted: 2368 B at 48648192, sha256 36ac3c0c9db8099fac25db6666f11cd2c7104222900d7850269cff41f884f217; hash descriptor intentionally mismatches

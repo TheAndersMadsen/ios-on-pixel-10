@@ -1,0 +1,42 @@
+
+research/images/test-chooser-ios-r0/shim.elf:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+0000000000023b00 <cios_mmu_off>:
+   23b00:      	mov	x4, x3
+   23b04:      	mov	x3, x2
+   23b08:      	mov	x2, x1
+   23b0c:      	adrp	x1, 0x0 <_head>
+   23b10:      	add	x1, x1, #0x0
+   23b14:      	msr	DAIFSet, #0xf
+   23b18:      	mrs	x9, CTR_EL0
+   23b1c:      	ubfx	x9, x9, #16, #4
+   23b20:      	mov	x10, #0x4               // =4
+   23b24:      	lsl	x10, x10, x9
+   23b28:      	sub	x11, x10, #0x1
+   23b2c:      	bic	x5, x1, x11
+   23b30:      	dc	civac, x5
+   23b34:      	add	x5, x5, x10
+   23b38:      	cmp	x5, x2
+   23b3c:      	b.lo	0x23b30 <cios_mmu_off+0x30>
+   23b40:      	dsb	sy
+   23b44:      	msr	SCTLR_EL2, x0
+   23b48:      	isb
+   23b4c:      	bic	x5, x1, x11
+   23b50:      	dc	civac, x5
+   23b54:      	add	x5, x5, x10
+   23b58:      	cmp	x5, x2
+   23b5c:      	b.lo	0x23b50 <cios_mmu_off+0x50>
+   23b60:      	bic	x5, x3, x11
+   23b64:      	cmp	x5, x4
+   23b68:      	b.hs	0x23b78 <cios_mmu_off+0x78>
+   23b6c:      	dc	civac, x5
+   23b70:      	add	x5, x5, x10
+   23b74:      	b	0x23b64 <cios_mmu_off+0x64>
+   23b78:      	dsb	sy
+   23b7c:      	ic	iallu
+   23b80:      	tlbi	alle2
+   23b84:      	dsb	sy
+   23b88:      	isb
+   23b8c:      	ret

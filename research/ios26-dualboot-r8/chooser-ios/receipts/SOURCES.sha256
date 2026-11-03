@@ -1,0 +1,12 @@
+# source in worktree /srv/dev/.t3/worktrees/hackios/t3-06b9b643 (base ios26 b11f5e7), uncommitted
+7e48fb0b00626dd2c8aa1cfe208cf42d277fa31f9f50c4ebe1da29d61ca9a31a  shim/chooser_ios.c
+29ab5f82e20227a7f0896e690f2a622d5d635b8de40b5592df550d99019cdb60  shim/chooser_ios.h
+aa445a1862c4c7e0b230f2a08b3c2252f13956dc2988128f4d577555caff848e  shim/chooser_ios_test.c
+4ea6626bcdfb409d266322d18d704322405e83aae3a35cfb33cc7deafd32894d  shim/tgl_dcs_menu.c
+65cf2a894fd532169a595d3ae413a4e522bd60cae831077010e378efcf07213b  shim/tgl_dcs_menu.h
+6eed276d3909f02ce9d4de38477c268663cd32c477cf64bfaf21169bc424422c  tools/chooser_ios_image.py
+f05e2e3e4debac4bbb57cb8e92f5f473ce6394e10c7fe0feba70a3a69db5b3ba  tools/test_chooser_ios_image.py
+ed1527a826795f4c6326223a367ec9baac15baa948027fe7e1403d7d7d703f90  shim/shim.c
+# host-check images (bootable=false), worktree research/images
+65fd17dbb27a55385f3ad935d3adbbda34ad2316112e7fd2f974b1f0c9c7c8df  test-chooser-ios-r0/boot.img
+6ae6c09ccc745f0c8f82a739779f8343a25226b1c6b637b7d6ba068332af136e  test-chooser-ios-r0b/boot.img

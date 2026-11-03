@@ -1,0 +1,106 @@
+{
+ "avb": "stock vbmeta transplanted: 2368 B at 48648192, sha256 36ac3c0c9db8099fac25db6666f11cd2c7104222900d7850269cff41f884f217; hash descriptor intentionally mismatches",
+ "avb_mode": "stock",
+ "bootable": false,
+ "budget": {
+  "blob": 48642944,
+  "blob_limit": 100663296,
+  "blob_margin": 52020352,
+  "blob_over_proven": 19282816,
+  "boot_image": 48648192,
+  "envelope": 25416272,
+  "image_limit": 66060288,
+  "image_margin": 17409728,
+  "partition": 67108864,
+  "segment": 20437296,
+  "shim": 2789376
+ },
+ "cflags": "-DTGL_UFS_POWER_MODE=1 -DTGL_UFS_PHY_CHECK=1 -DTGL_ALL_STAGES=1 -DTGL_UFS_PWM_FALLBACK=1 -DTGL_UFS_WDT_GUARD=1 -DTGL_ALL_DCS=1 -DTGL_FRAME_RUNG=3 -DTGL_DCS_HANDOFF=1 -DTGL_DCS_BRIGHT=1 -DTGL_FASTCORE=1 -DTGL_CHOOSER=1 -DTGL_CHOOSER_IOS=1 -DTGL_CHOOSER_MMU=1 -DTGL_CHOOSER_UI=1 -DTGL_CHOOSER_DISPLAY=1 -DTGL_CHOOSER_IOS_DEFAULT=1 -DTGL_KEYS_POLL=1",
+ "compiler": "clang version 23.1.4",
+ "default_entry": "ios",
+ "end_off": 2789376,
+ "extra_src": "tgl_all.c tgl_dcs.c tgl_fastcore.c tgl_fastcore_s.S chooser_ios.c lz4.c el2_mmu.c menu_ui.c tgl_dcs_menu.c keys_laguna.c",
+ "header": {
+  "cmdline": "",
+  "ramdisk_size": 0,
+  "version": 4
+ },
+ "image": "65fd17dbb27a55385f3ad935d3adbbda34ad2316112e7fd2f974b1f0c9c7c8df",
+ "image_bytes": 67108864,
+ "installable": false,
+ "ios": {
+  "bootcpu": "0x200",
+  "dir": null,
+  "name": null,
+  "path": "/tmp/claude-1001/-srv-dev--t3-worktrees-hackios-t3-06b9b643/442ed404-9d10-4eb1-bc9f-9d0b50724a0e/scratchpad/payload-nooverlay.bin",
+  "payload": "930ea86a29cdbc563afbd3785346c224c47f1a6c6ac55dddda222964c81ed784",
+  "payload_bytes": 25416256,
+  "plan": {
+   "adt_pa": "0x884d98000",
+   "boot_args_pa": "0x884d9c000",
+   "entry_pa": "0x883987488",
+   "top": "0x884da0000"
+  }
+ },
+ "kernel_blob": "94e3843ba02013705e5814a7ce5986bce2428fc03f6165170e0b4fcd9dfe437b",
+ "kernel_blob_bytes": 48642944,
+ "keys_read": true,
+ "kind": "chooser-ios",
+ "linker": "GNU ld (GNU Binutils) 2.46.0",
+ "name": "test-chooser-ios-r0",
+ "payload_bytes": 25416256,
+ "payload_off": 2789392,
+ "payload_sha256": "930ea86a29cdbc563afbd3785346c224c47f1a6c6ac55dddda222964c81ed784",
+ "segment_bytes": 20437296,
+ "segment_offset": 28205648,
+ "shim_copy": "395a775243875cbb7ca9ab56910ad932f171fb480babc42fffa505833f2483f3",
+ "stamp_nonce": "0x9e2c0aa47ae2f9c0",
+ "stock": {
+  "boot_sha256": "3635317e93f67de2e6e75e38f892fe8604008bccd9717a369a590b7a35ce20f5",
+  "cmdline": "",
+  "csum64": "0x6ac0861243cd1596",
+  "flags": "0xa",
+  "image_len": 42506752,
+  "image_sha256": "65cbc9f8d9fbf8e51f484f64710057ffc102917b2dd6079e729ad512078c1c2d",
+  "image_size": 43253760,
+  "lz4_bytes": 20437225,
+  "lz4_sha256": "a54c3b3df31e6b00a6c844f2de1376ebf9e01314379802a1c1b877dcab30af50",
+  "os_version_raw": 0
+ },
+ "tests": [
+  "A0 admit: payload 25416256 B window 0x882000000+0x100000000 image_size 48642944: ok",
+  "A0 Android placement above a 48642944 B image: ok base 0xc9c00000",
+  "chooser-ios host test: 50 checks, 0 failed",
+  "lz4 host test: 68 checks, 0 failed",
+  "A0 FDT: ram 8 reserved 37 pools 7 alloc 1 total 896033 initrd 86000000-885f6875",
+  "A0 placement for image_size 43253760: ok base 0xc9c00000",
+  "A0 placement with 70 MiB shim: ok base 0xc9c00000",
+  "chooser host test: 75 checks, 0 failed"
+ ],
+ "text_identity": {
+  "ios_alone": {
+   ".rodata": "603d1849d50020e959a6fb43ac04a03c9ba4e40f48b7297f81ffec5b4c761be6",
+   ".text": "c4cb75d617c3a7e03c56116b5aadccefd99af7538bef2fec706d582855d3ab19"
+  },
+  "ios_equal": true,
+  "ios_instance": {
+   ".rodata": "603d1849d50020e959a6fb43ac04a03c9ba4e40f48b7297f81ffec5b4c761be6",
+   ".text": "c4cb75d617c3a7e03c56116b5aadccefd99af7538bef2fec706d582855d3ab19"
+  },
+  "menu_equal": true,
+  "menu_instance": {
+   ".rodata": "a777e7424cd92dda648ecc54a91f57b1f59544fb9156b2dabcdc0fa9f835fbc1",
+   ".text": "ca179987c6a747cc3eb721a8d3eeea736a8351e5e7c71352e784aef48892d3c5"
+  },
+  "menu_r11": {
+   ".rodata": "a777e7424cd92dda648ecc54a91f57b1f59544fb9156b2dabcdc0fa9f835fbc1",
+   ".text": "ca179987c6a747cc3eb721a8d3eeea736a8351e5e7c71352e784aef48892d3c5"
+  }
+ },
+ "tools": {
+  "chooser_image.py": "a3c1b9f272761769ac76e38a542cddf3a8ebf391b36e093f913c21a64111b99c",
+  "chooser_ios_image.py": "6eed276d3909f02ce9d4de38477c268663cd32c477cf64bfaf21169bc424422c",
+  "image_tool.py": "2bdc03e8cf29cd4fa10f994e919b64e1477643949b6b90fa50c580c14d29cb87"
+ },
+ "version": 1
+}

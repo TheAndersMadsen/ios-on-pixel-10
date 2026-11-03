@@ -1,0 +1,33 @@
+diff --git i/shim/shim.c w/shim/shim.c
+index 1bfa515..71359ab 100644
+--- i/shim/shim.c
++++ w/shim/shim.c
+@@ -47,6 +47,9 @@
+ #include "tgl_scanout_takeover.h"
+ #if defined(TGL_CHOOSER) && TGL_CHOOSER
+ #include "chooser.h"
++#if defined(TGL_CHOOSER_IOS) && TGL_CHOOSER_IOS
++#include "chooser_ios.h"
++#endif
+ #endif
+ #if TGL_ALL_STAGES
+ #include "tgl_all.h"
+@@ -345,8 +348,18 @@ void shim_main(uint64_t dtb)
+ 	stage_id = TGL_STAGE_CHOOSER_ENTER;
+ 	if (fdt_error)
+ 		stage_fail(TGL_STAMP_R_REFUSED, fdt_error, dtb);
++#if defined(TGL_CHOOSER_IOS) && TGL_CHOOSER_IOS
++	{
++		/* chooser_ios.c: iOS picked returns with the display off as ABL left it, the EL2 MMU
++		 * and caches off and the watchdogs patted; continue on the direct iOS path below. */
++		const char *chosen = tgl_chooser_run(dtb, &memory, shim_con_tick, 0);
++		if (chosen != TGL_CHOOSER_PICKED_IOS)
++			stage_fail(TGL_STAMP_R_REFUSED, chosen, 0);
++	}
++#else
+ 	stage_fail(TGL_STAMP_R_REFUSED,
+ 	    tgl_chooser_run(dtb, &memory, shim_con_tick, 0), 0);
++#endif
+ #endif
+ 
+ 	stage = "console init";

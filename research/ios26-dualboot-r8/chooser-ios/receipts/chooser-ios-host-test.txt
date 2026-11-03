@@ -1,0 +1,3 @@
+A0 admit: payload 25416256 B window 0x882000000+0x100000000 image_size 48642944: ok
+A0 Android placement above a 48642944 B image: ok base 0xc9c00000
+chooser-ios host test: 50 checks, 0 failed
