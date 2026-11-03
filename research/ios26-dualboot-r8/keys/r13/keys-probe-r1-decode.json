@@ -1,0 +1,178 @@
+{
+ "finished": true,
+ "final": "OK",
+ "last_access": {
+  "kind": "rd_intent",
+  "pa": "0x5272008",
+  "stage": "K_END"
+ },
+ "stages": [
+  "ADMIT",
+  "POWER",
+  "K_FIRST",
+  "K_SETTLE",
+  "K_CHANGE",
+  "K_ALL",
+  "K_SAMPLE",
+  "K_END"
+ ],
+ "rest": {
+  "power": "0x1",
+  "volume_down": "0x1",
+  "volume_up": "0x1"
+ },
+ "regs": {
+  "power": {
+   "0x4": "0x1",
+   "0xc": "0x0"
+  },
+  "volume_down": {
+   "0x4": "0x1",
+   "0xc": "0x0"
+  },
+  "volume_up": {
+   "0x4": "0x1",
+   "0xc": "0x0"
+  }
+ },
+ "events": [
+  {
+   "key": "volume_up",
+   "value": "0x0",
+   "level": 0,
+   "ms": 12478
+  },
+  {
+   "key": "volume_up",
+   "value": "0x1",
+   "level": 1,
+   "ms": 12985
+  },
+  {
+   "key": "volume_down",
+   "value": "0x0",
+   "level": 0,
+   "ms": 13594
+  },
+  {
+   "key": "volume_down",
+   "value": "0x1",
+   "level": 1,
+   "ms": 14152
+  },
+  {
+   "key": "volume_up",
+   "value": "0x0",
+   "level": 0,
+   "ms": 14710
+  },
+  {
+   "key": "volume_up",
+   "value": "0x1",
+   "level": 1,
+   "ms": 15288
+  },
+  {
+   "key": "volume_down",
+   "value": "0x0",
+   "level": 0,
+   "ms": 15755
+  },
+  {
+   "key": "volume_down",
+   "value": "0x1",
+   "level": 1,
+   "ms": 16252
+  },
+  {
+   "key": "volume_up",
+   "value": "0x0",
+   "level": 0,
+   "ms": 16820
+  },
+  {
+   "key": "volume_up",
+   "value": "0x1",
+   "level": 1,
+   "ms": 17338
+  },
+  {
+   "key": "volume_down",
+   "value": "0x0",
+   "level": 0,
+   "ms": 17815
+  },
+  {
+   "key": "volume_down",
+   "value": "0x1",
+   "level": 1,
+   "ms": 18322
+  },
+  {
+   "key": "volume_up",
+   "value": "0x0",
+   "level": 0,
+   "ms": 18860
+  },
+  {
+   "key": "volume_up",
+   "value": "0x1",
+   "level": 1,
+   "ms": 19347
+  },
+  {
+   "key": "volume_down",
+   "value": "0x0",
+   "level": 0,
+   "ms": 19803
+  },
+  {
+   "key": "volume_down",
+   "value": "0x1",
+   "level": 1,
+   "ms": 20270
+  },
+  {
+   "key": "volume_up",
+   "value": "0x0",
+   "level": 0,
+   "ms": 21213
+  }
+ ],
+ "samples": 2169,
+ "stop": null,
+ "faults": [],
+ "frames_ok": [
+  {
+   "stage": "POWER",
+   "word1": "0x1d",
+   "status": "0x2"
+  },
+  {
+   "stage": "POWER",
+   "word1": "0x3130302",
+   "status": "0xbebc200"
+  },
+  {
+   "stage": "POWER",
+   "word1": "0x3140302",
+   "status": "0x11e1a300"
+  },
+  {
+   "stage": "K_CHANGE",
+   "word1": "0x1000401",
+   "status": "0x0"
+  },
+  {
+   "stage": "K_END",
+   "word1": "0x140302",
+   "status": "0x0"
+  }
+ ],
+ "torn_at": null,
+ "pressed": [
+  "volume_down",
+  "volume_up"
+ ],
+ "verdict": "READS_SAFE_KEYS_NOT_ALL_SEEN"
+}

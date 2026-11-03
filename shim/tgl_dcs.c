@@ -1081,7 +1081,13 @@ int tgl_dcs_release(void)
 int tgl_dcs_present(void)
 {
     if (!d.started || d.stop) return DCS_C_REFUSED_PA;
+#ifdef TGL_DCS_PRESENT_QUIET
+    /* chooser-v1-r13 (keys/DIAG-r13.md): a menu redraw logs only its FRAME_STATUS/FE0_STATUS notes (2 entries, r10 logged
+     * ~18 per kick), so redraws cannot use up the record room the release needs. A stop is still recorded in full. */
+    { uint32_t q = d.quiet; int rc; d.quiet = 1; rc = kick(1); d.quiet = q; return rc; }
+#else
     return kick(1);
+#endif
 }
 #endif
 void tgl_dcs_refuse(int s, int code, uint32_t detail) { d.stage = s; (void)stop_with(code, detail); }

@@ -1,0 +1,19 @@
+# Menu timing from older physical chooser runs (same menu loop and menu_ui.o as r12; r12-diff/ctl-vs-r12-objects.txt)
+## chooser-v1-r7-t1
+  11 ui          DONE         8599.8 ms  full draw 4125 ms, cached=1
+  12 display     DONE         8633.4 ms  34 ms, serror=0, dcs code=0
+  13 menu        ENTER        8633.4 ms  0x1388
+  14 pick        DONE        17573.8 ms  after 8940 ms, result=1 why=1
+  DCS entries 978  FRAME_STATUS notes 3 ['0x2000007', '0x2000003', '0x2000003']
+## chooser-v1-r9-t1
+  11 ui          DONE         7719.5 ms  full draw 4125 ms, cached=1
+  12 display     DONE         7755.4 ms  36 ms, serror=0, dcs code=0
+  13 menu        ENTER        7755.4 ms  0x1388
+  14 pick        DONE        16698.4 ms  after 8943 ms, result=1 why=1
+  DCS entries 991  FRAME_STATUS notes 3 ['0x2000007', '0x2000003', '0x2000003']
+## chooser-v1-r10-t1
+  11 ui          DONE         7752.3 ms  full draw 4128 ms, cached=1
+  12 display     DONE         7784.9 ms  32 ms, serror=0, dcs code=0
+  13 menu        ENTER        7784.9 ms  0x1388
+  14 pick        DONE        16733.4 ms  after 8949 ms, result=1 why=1
+  DCS entries 1018  FRAME_STATUS notes 3 ['0x2000007', '0x2000003', '0x2000007']

@@ -1,0 +1,1 @@
+full 20.5 ms band 11.8 ms

@@ -31,6 +31,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-phaseb-r1/accel-wait/build-mac/(receipts/|overlays/)?[A-Za-z0-9_.-]+\.(c|py|sh|txt|json)
   | ios26-phaseb-r1/accel-wait/((src|test)/)?[A-Za-z0-9_.-]+\.(md|py|sh|c|h|tbd)
   | ios26-phaseb-r1/corebrightness/([a-z]+/)?[A-Za-z0-9_.-]+\.(md|patch|h|c|cpp|py)
+  | ios26-dualboot-r8/keys/r1[23]-?(panel|diff)?/[A-Za-z0-9_.-]+\.(c|py|diff|txt|json|md)
   | ios26-dualboot-r8/keys/r12-(panel|diff)/[A-Za-z0-9_.-]+\.(c|py|diff|txt)
   | ios26-dualboot-r8/chooser-ios/receipts/(r0b?/)?[A-Za-z0-9_.-]+\.(txt|diff|json|sha256)
   | ios26-dualboot-r8/(ios-data-persist|keys|chooser-ios)/[A-Za-z0-9_.-]+\.(md|txt)

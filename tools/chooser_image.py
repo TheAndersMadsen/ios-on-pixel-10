@@ -31,6 +31,12 @@ IOS_ROOTS = ('ios_system',)
 KEYS_POLL_FLAGS = ' -DTGL_KEYS_POLL=1 -DTGL_CHOOSER_KEYS_POLL=1'
 KEYS_POLL_SRC = ' keys_laguna.c'
 KEYS_POLL_SYMS = ('keys_init', 'keys_poll', 'keys_raw_levels', 'chooser_keys_db')
+# research/ios26-dualboot-r8/keys/DIAG-r13.md: sample the keys during redraws (menu_ui row hook), render the band in the
+# cached kernel destination and only store to the Normal-NC panel buffer, quiet menu presents with a record-room check.
+KEYS_FIX_FLAGS = ' -DTGL_CHOOSER_KEYS_FIX=1 -DTGL_MENU_ROW_HOOK=1 -DTGL_DCS_PRESENT_QUIET=1'
+KEYS_FIX_SYMS = ('tgl_chooser_menu_feed', 'chooser_menu_tick', 'tgl_menu_row_hook')
+KEYS_DIAG_FLAGS = ' -DTGL_CHOOSER_KEYS_DIAG=1'
+KEYS_DIAG_SYMS = ('diag_sample', 'diag_line')
 
 
 def csum64(b):
@@ -95,9 +101,13 @@ def gates(a):
     if a.display and not a.ui: IT.die('--display shows the menu: it needs --ui')
     if a.quiesce and not a.display: IT.die('--quiesce changes the display release: it needs --display')
     if a.keys_poll and not a.keys: IT.die('--keys-poll debounces the --keys reads: it needs --keys')
+    fix, diag = getattr(a, 'keys_fix', False), getattr(a, 'keys_diag', False)
+    if fix and not (a.keys_poll and a.display and a.mmu): IT.die('--keys-fix changes the --keys-poll menu loop on the panel: it needs --keys-poll, --display and --mmu')
+    if diag and not fix: IT.die('--keys-diag draws over the --keys-fix menu: it needs --keys-fix')
     cflags = CHOOSER_FLAGS + (' -DTGL_CHOOSER_MMU=1' if a.mmu else '') + (' -DTGL_CHOOSER_UI=1' if a.ui else '') + \
         (' -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3' if a.display else '') + (' -DTGL_CHOOSER_KEYS=1' if a.keys else '') + \
-        (' -DTGL_DCS_QUIESCE=1' if a.quiesce else '') + (KEYS_POLL_FLAGS if a.keys_poll else '')
+        (' -DTGL_DCS_QUIESCE=1' if a.quiesce else '') + (KEYS_POLL_FLAGS if a.keys_poll else '') + \
+        (KEYS_FIX_FLAGS if fix else '') + (KEYS_DIAG_FLAGS if diag else '')
     src = CHOOSER_SRC + (' el2_mmu.c' if a.mmu else '') + (' menu_ui.c' if a.ui else '') + (' tgl_dcs.c' if a.display else '') + \
         (KEYS_POLL_SRC if a.keys_poll else '')
     return cflags, src
@@ -140,6 +150,12 @@ def build(a):
     for pat in (r'lz4 host test: \d+ checks, 0 failed', r'chooser host test: \d+ checks, 0 failed', r'el2 mmu host test: \d+ checks, 0 failed', r'band-vs-full differing pixels 0'):
         if not re.search(pat, tests): IT.die(f'host test line missing: {pat}')
     if a.quiesce and not re.search(r'^\d+ checks, 0 failed$', tests, re.M): IT.die('quiesce host test did not pass')
+    if a.keys_fix:  # r13: shadow band equals the direct band, and the row hook fires during a redraw
+        mbs = t / 'out/menu_band_shadow_test'
+        run(['/usr/bin/cc', '-O2', '-w', '-DTGL_MENU_ROW_HOOK=1', '-fsanitize=address,undefined', '-o', str(mbs),
+             str(t / 'menu_ui.c'), str(t / 'menu_band_shadow_test.c')], log)
+        tests += run([str(mbs)], log)
+        if not re.search(r'menu band shadow test: \d+ checks, 0 failed', tests): IT.die('menu band shadow host test did not pass')
     (out / 'host-tests.txt').write_text(tests)
     boot = out / 'boot.img'
     # The stock v4 header page verbatim, kernel_size replaced: every other field
@@ -178,8 +194,12 @@ def build(a):
     if nm('-u').split(): IT.die('undefined symbols in shim')
     syms = nm(); (out / 'arm64-symbols.txt').write_text(syms)
     want = WANT_SYMS + (('tgl_el2_build', 'tgl_el2_mmu_on') if a.mmu else ()) + (('tgl_menu_draw', 'tgl_menu_draw_band') if a.ui else ()) + \
-        (('tgl_dcs_guarded', 'tgl_dcs_present', 'tgl_dcs_run') if a.display else ()) + (KEYS_POLL_SYMS if a.keys_poll else ())
+        (('tgl_dcs_guarded', 'tgl_dcs_present', 'tgl_dcs_run') if a.display else ()) + (KEYS_POLL_SYMS if a.keys_poll else ()) + \
+        (KEYS_FIX_SYMS if a.keys_fix else ()) + (KEYS_DIAG_SYMS if a.keys_diag else ())
     for s in want:
+        if s == 'tgl_menu_row_hook':  # a data symbol
+            if not re.search(rf'^[0-9a-fA-F]+ [BbDd] {s}$', syms, re.M): IT.die(f'shim lacks data symbol {s}')
+            continue
         if not re.search(rf'^[0-9a-fA-F]+ [Tt] {s}$', syms, re.M): IT.die(f'shim lacks text symbol {s}')
     if a.display:
         # The enabled gate must be in the linked code, not only in cflags: the release with the quiesce carries the
@@ -192,7 +212,8 @@ def build(a):
         marks = [m for m in want_marks if m in dis]
         if a.quiesce and len(marks) != len(want_marks): IT.die(f'tgl_dcs_release lacks the quiesce constants (found {marks})')
         if not a.quiesce and '#0xef9, lsl #16' in dis: IT.die('tgl_dcs_release touches GPCSR though --quiesce is off')
-    for s, on in (('tgl_el2_mmu_on', a.mmu), ('tgl_menu_draw', a.ui), ('keys_poll', a.keys_poll), ('chooser_keys_db', a.keys_poll)):
+    for s, on in (('tgl_el2_mmu_on', a.mmu), ('tgl_menu_draw', a.ui), ('keys_poll', a.keys_poll), ('chooser_keys_db', a.keys_poll),
+                  ('tgl_chooser_menu_feed', a.keys_fix), ('tgl_menu_row_hook', a.keys_fix), ('diag_sample', a.keys_diag)):
         if not on and re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present though its gate is off')
     for s, allowed in (('tgl_dcs_guarded', a.display), ('tgl_fc_entry', False)):
         if not allowed and re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present in a chooser image')
@@ -205,6 +226,7 @@ def build(a):
                header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui), display=bool(a.display), quiesce=bool(a.quiesce), keys_read=bool(a.keys),
                compiler=subprocess.run([str(IT.LLVM / 'clang'), '--version'], capture_output=True, text=True).stdout.splitlines()[0],
                stamp_nonce=(t / 'out/stamp-nonce.txt').read_text().strip(), keys=('pads 51/52 RXDATA, keys_laguna debounce' if a.keys_poll else 'pads 51/52 RXDATA (fault-gated reads)') if a.keys else 'off', keys_poll=bool(a.keys_poll),
+               keys_fix=bool(a.keys_fix), keys_diag=bool(a.keys_diag),
                tests=[l for l in tests.splitlines() if 'host test' in l or 'placement' in l],
                avb=v.strip().splitlines()[-1], shim_copy=IT.tree(IT.SHIM),
                tools={n: IT.sha(X / n) for n in ('chooser_image.py', 'image_tool.py')})
@@ -245,6 +267,8 @@ if __name__ == '__main__':
     i.add_argument('--mmu', action='store_true', help='EL2 cached identity map for checksum, menu and decode (TGL_CHOOSER_MMU)')
     i.add_argument('--keys', action='store_true', help='read volume pads 51 (down) and 52 (up) for the menu (TGL_CHOOSER_KEYS)')
     i.add_argument('--keys-poll', action='store_true', help='debounce the --keys reads with shim/keys_laguna.c, 20 ms (TGL_KEYS_POLL, TGL_CHOOSER_KEYS_POLL; keys/KEYS.md)')
+    i.add_argument('--keys-fix', action='store_true', help='r13 menu loop: keys sampled during redraws, cached band render, quiet presents with a record-room check (keys/DIAG-r13.md)')
+    i.add_argument('--keys-diag', action='store_true', help='r13 diagnostic overlay: live pad words, start check, keys_poll state and timing drawn above the menu (needs --keys-fix)')
     i.add_argument('--display', action='store_true', help='show the menu on the panel via the display-frame-r1d ladder, full-panel layer (TGL_CHOOSER_DISPLAY)')
     i.add_argument('--quiesce', action='store_true', help='before the display release, the stock vs_drm.ko quiesce: trigger off, layer/BE idle, BE interrupts reset, isolation on (TGL_DCS_QUIESCE, chooser-v1-r10)')
     i.add_argument('--ui', action='store_true', help='startup menu renderer into the console buffer (TGL_CHOOSER_UI)')

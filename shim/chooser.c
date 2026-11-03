@@ -141,6 +141,21 @@ unsigned tgl_chooser_menu_step(struct tgl_chooser_menu *s, uint64_t now_ms,
 	return s->result;
 }
 
+#if TGL_CHOOSER_KEYS_FIX || defined(TGL_CHOOSER_HOST)
+unsigned tgl_chooser_menu_feed(struct tgl_chooser_menu *s, uint64_t now_ms,
+	unsigned keys, unsigned seen)
+{
+	/* r7/r9/r10 stamps: one redraw took ~3.97 s, so a whole press fitted between two loop samples. The row hook
+	 * samples during the redraw; a press seen there but already released here is fed as a press, then a release. */
+	unsigned missed = seen & ~s->prev_keys & ~keys;
+	if (missed && s->result == TGL_CHOOSE_PENDING) {
+		unsigned r = tgl_chooser_menu_step(s, now_ms, s->prev_keys | missed);
+		if (r) return r;
+	}
+	return tgl_chooser_menu_step(s, now_ms, keys);
+}
+#endif
+
 #ifndef TGL_CHOOSER_HOST
 #include "console.h"
 #include "tgl_stamp.h"
@@ -162,6 +177,9 @@ static struct tgl_el2_tables el2t __attribute__((aligned(4096)));
 #define KEY_PAD_PA(n) (UINT64_C(0x05280000) + (uint64_t)(n) * 0x1000u)
 #define KEY_RXDATA 0x10u
 static int keys_ok;
+#if TGL_CHOOSER_KEYS_FIX
+static int keys_start_rd;	/* both start reads completed and neither read all ones */
+#endif
 static unsigned chooser_keys(void)
 {
 	uint32_t dn = 0, up = 0;
@@ -185,6 +203,9 @@ static const char *chooser_keys_start(uint64_t *arg)
 	*arg = (uint64_t)dn << 32 | up;
 	if (isr & 0x100) return "chooser: key pad read left an SError pending";
 	keys_ok = r1 && r2 && dn != 0xffffffffu && up != 0xffffffffu && (dn & 1u) && (up & 1u);
+#if TGL_CHOOSER_KEYS_FIX
+	keys_start_rd = r1 && r2 && dn != 0xffffffffu && up != 0xffffffffu;
+#endif
 	(void)daif;
 	return 0;
 }
@@ -227,6 +248,154 @@ static unsigned chooser_keys_db(void)
 		    (uint64_t)(chooser_ks.bad & 0xffu) << 32 | chooser_ks.samples);
 	}
 	return r & (KEYS_VOL_UP | KEYS_VOL_DOWN);
+}
+#endif
+
+#if TGL_CHOOSER_KEYS_FIX
+/* chooser-v1-r13, research/ios26-dualboot-r8/keys/DIAG-r13.md. r12's ring never moved: r7/r9/r10 stamps show the 5 s
+ * menu picking after ~8.94 s with only 2 redraws (3 FRAME_STATUS notes), i.e. one band redraw ~3.97 s, and the keys
+ * were sampled only between redraws. The band blends over its own pixels, and the framebuffer is Normal-NC. */
+#if !TGL_CHOOSER_KEYS_POLL || !TGL_CHOOSER_UI || !TGL_CHOOSER_DISPLAY || !TGL_MENU_ROW_HOOK || !defined(TGL_DCS_PRESENT_QUIET)
+#error "TGL_CHOOSER_KEYS_FIX needs TGL_CHOOSER_KEYS_POLL, TGL_CHOOSER_UI, TGL_CHOOSER_DISPLAY, TGL_MENU_ROW_HOOK and TGL_DCS_PRESENT_QUIET"
+#endif
+#define TGL_CHOOSER_MENU_MAX_MS 15000u	/* hard end of the menu: the DCS budget (25 s from the display start) covers the release */
+#define TGL_CHOOSER_DCS_RESERVE 300u	/* record entries kept for the release (187 on the host fake, plus the TOP state polls) */
+#define TGL_CHOOSER_PRESENT_COST 20u	/* a quiet present logs 2; budget it as a loud one (~18 in r10) */
+#define DCS_HDR_ENTRIES 44u		/* struct hdr (tgl_dcs.c): magic 8, stamp_nonce 8, record_nonce 16, epoch 8, pattern 4 */
+
+static unsigned (*chooser_tick_keys)(void);
+static unsigned chooser_tick_seen, chooser_ticks;
+static void chooser_menu_tick(void)
+{
+	chooser_ticks++;
+	if (chooser_tick_keys) chooser_tick_seen |= chooser_tick_keys();
+}
+
+/* Room for one more present and still the release: the record header's live entry count (written after every entry). */
+static unsigned chooser_dcs_entries(void)
+{
+	return *(volatile uint32_t *)(uintptr_t)(TGL_DCS_RECORD_PA + DCS_HDR_ENTRIES);
+}
+static int chooser_dcs_room(void)
+{
+	return chooser_dcs_entries() + 8u + TGL_CHOOSER_PRESENT_COST + TGL_CHOOSER_DCS_RESERVE < TGL_DCS_CAPACITY;
+}
+
+/* Band rows from the cached shadow to the panel buffer: stores only, never a read of Normal-NC. volatile keeps the
+ * compiler from turning the loop into a memcpy call (the shim has none). */
+static void chooser_band_copy(uint32_t *fb, const uint32_t *sh)
+{
+	volatile uint64_t *d = (volatile uint64_t *)(void *)(fb + (uint64_t)TGL_MENU_BAND_Y0 * FB_W);
+	const uint64_t *p = (const uint64_t *)(const void *)(sh + (uint64_t)TGL_MENU_BAND_Y0 * FB_W);
+	for (uint64_t n = (uint64_t)(TGL_MENU_BAND_Y1 - TGL_MENU_BAND_Y0) * FB_W / 2; n; n--) *d++ = *p++;
+}
+#endif
+
+#if TGL_CHOOSER_KEYS_DIAG
+/* Diagnostic overlay above the title: live pad words, start check, keys_poll state, timing. Stores only. */
+#if !TGL_CHOOSER_KEYS_FIX
+#error "TGL_CHOOSER_KEYS_DIAG needs TGL_CHOOSER_KEYS_FIX"
+#endif
+#include "font.h"
+#define DIAG_MS 12000u		/* the diagnostic menu starts at 12 s (pill shows 9 until 9 s are left) */
+#define DIAG_X 32
+#define DIAG_Y 104
+#define DIAG_LH 72		/* 64 px glyphs (8x16 at 4x) plus 8 */
+#define DIAG_SQ_H 176
+#define DIAG_FG 0xffe8e8e8u
+#define DIAG_BG 0xff000000u
+static uint32_t diag_dn = ~0u, diag_up = ~0u, diag_start_dn, diag_start_up;
+static unsigned diag_rd_n, diag_rd_bad;	/* live reads done; 1 once a live read faulted (no more reads) */
+
+static void diag_sample(void)
+{
+	uint32_t a = 0, b = 0;
+	if (diag_rd_bad) return;
+	if (!probe_read32((uintptr_t)(KEY_PAD_PA(51) + KEY_RXDATA), &a) || !probe_read32((uintptr_t)(KEY_PAD_PA(52) + KEY_RXDATA), &b)) {
+		diag_rd_bad = 1;
+		return;
+	}
+	diag_dn = a; diag_up = b; diag_rd_n++;
+}
+
+static void diag_rect(uint32_t *fb, int x0, int y0, int w, int h, uint32_t c)
+{
+	for (int y = y0; y < y0 + h; y++) {
+		volatile uint32_t *row = fb + (unsigned)y * FB_W;
+		for (int x = x0; x < x0 + w; x++) row[x] = c;
+	}
+}
+
+static void diag_line(uint32_t *fb, unsigned line, const char *t)
+{
+	int y0 = DIAG_Y + (int)line * DIAG_LH;
+	diag_rect(fb, 0, y0, FB_W, DIAG_LH, DIAG_BG);
+	for (int i = 0; t[i] && DIAG_X + (i + 1) * 32 <= (int)FB_W; i++) {
+		unsigned ch = (unsigned char)t[i];
+		if (ch < 32 || ch > 126) ch = '?';
+		const unsigned char *g = font8x16[ch - 32];
+		for (int r = 0; r < 16; r++)
+			for (int b = 0; b < 8; b++)
+				if (g[r] & (0x80u >> b)) diag_rect(fb, DIAG_X + i * 32 + b * 4, y0 + 4 + r * 4, 4, 4, DIAG_FG);
+	}
+}
+
+struct diag_buf { char b[48]; unsigned n; };
+static void dput(struct diag_buf *d, const char *s) { while (*s && d->n < sizeof d->b - 1) d->b[d->n++] = *s++; d->b[d->n] = 0; }
+static void dhex(struct diag_buf *d, uint64_t v, unsigned digits)
+{
+	char t[17];
+	for (unsigned i = 0; i < digits; i++) t[i] = "0123456789abcdef"[(v >> (4 * (digits - 1 - i))) & 15];
+	t[digits] = 0;
+	dput(d, t);
+}
+static void ddec(struct diag_buf *d, uint64_t v)
+{
+	char t[21];
+	int i = 20;
+	t[i] = 0;
+	do { t[--i] = (char)('0' + v % 10); v /= 10; } while (v && i);
+	dput(d, t + i);
+}
+static char dlevel(uint32_t w) { return w == ~0u ? 'X' : (w & 1u) ? '1' : '0'; }
+
+/* What the owner reads off the panel. Squares: green = pad high (idle), red = low (pressed), magenta = all ones or
+ * a faulted read, grey = never read. */
+static void diag_draw(uint32_t *fb, const struct tgl_chooser_menu *s, unsigned poll_on, unsigned held, uint64_t draw_ms,
+	unsigned frames, uint64_t ms)
+{
+	struct diag_buf d;
+	char lv[2] = { 0, 0 };
+	d.n = 0; dput(&d, "KEYS DIAG r13  T "); ddec(&d, ms / 1000); dput(&d, "."); ddec(&d, ms / 100 % 10); diag_line(fb, 0, d.b);
+	d.n = 0; dput(&d, "LIVE DN "); lv[0] = diag_rd_n ? dlevel(diag_dn) : '-'; dput(&d, lv);
+	dput(&d, "  UP "); lv[0] = diag_rd_n ? dlevel(diag_up) : '-'; dput(&d, lv);
+	dput(&d, diag_rd_bad ? "  RDFAULT" : "  ok"); diag_line(fb, 1, d.b);
+	d.n = 0; dput(&d, "RAW "); dhex(&d, diag_dn, 8); dput(&d, " "); dhex(&d, diag_up, 8); diag_line(fb, 2, d.b);
+	d.n = 0; dput(&d, "START ");
+	dput(&d, keys_ok ? "OK " : keys_start_rd ? "LOW " : "BAD "); dhex(&d, diag_start_dn, 8); dput(&d, " "); dhex(&d, diag_start_up, 8);
+	diag_line(fb, 3, d.b);
+	d.n = 0; dput(&d, poll_on ? "POLL ON  RES " : "POLL OFF RES "); dhex(&d, chooser_ks_last == ~0u ? 0xfffu : chooser_ks_last, 3);
+	dput(&d, (chooser_ks_last != ~0u && (chooser_ks_last & KEYS_FAULT)) ? " FAULT" : " nofault");
+	dput(&d, " BAD "); ddec(&d, chooser_ks.bad); diag_line(fb, 4, d.b);
+	d.n = 0; dput(&d, "N "); ddec(&d, chooser_ks.samples); dput(&d, " RD "); ddec(&d, diag_rd_n); dput(&d, " TICK "); ddec(&d, chooser_ticks);
+	diag_line(fb, 5, d.b);
+	d.n = 0; dput(&d, "HELD "); dput(&d, (held & TGL_KEY_DOWN) ? "D" : "-"); dput(&d, (held & TGL_KEY_UP) ? "U" : "-");
+	dput(&d, " SEL "); ddec(&d, s->sel); dput(&d, " PRESS "); ddec(&d, s->presses); diag_line(fb, 6, d.b);
+	d.n = 0; dput(&d, "DRAW "); ddec(&d, draw_ms); dput(&d, "ms FR "); ddec(&d, frames); dput(&d, " REC "); ddec(&d, chooser_dcs_entries());
+	diag_line(fb, 7, d.b);
+	uint32_t cd = !diag_rd_n ? 0xff606060u : diag_rd_bad || diag_dn == ~0u ? 0xffff00ffu : (diag_dn & 1u) ? 0xff00b000u : 0xffff2020u;
+	uint32_t cu = !diag_rd_n ? 0xff606060u : diag_rd_bad || diag_up == ~0u ? 0xffff00ffu : (diag_up & 1u) ? 0xff00b000u : 0xffff2020u;
+	int sqy = DIAG_Y + 8 * DIAG_LH + 16;
+	diag_rect(fb, 0, sqy, FB_W, DIAG_SQ_H, DIAG_BG);
+	diag_rect(fb, 160, sqy + 8, 360, DIAG_SQ_H - 16, cd);		/* left: Volume Down */
+	diag_rect(fb, 760, sqy + 8, 360, DIAG_SQ_H - 16, cu);		/* right: Volume Up */
+}
+static unsigned diag_sig(unsigned held, const struct tgl_chooser_menu *s)
+{
+	unsigned r = diag_rd_n ? ((diag_dn & 1u) | (diag_up & 1u) << 1 | (diag_dn == ~0u) << 2 | (diag_up == ~0u) << 3) : 0x10u;
+	r |= diag_rd_bad << 5 | held << 6 | s->sel << 8 | (s->presses & 0xffu) << 9;
+	if (chooser_ks_last != ~0u) r |= (chooser_ks_last & KEYS_FAULT) ? 1u << 17 : 0;
+	return r;
 }
 #endif
 
@@ -418,6 +587,18 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 			keys_init(&chooser_ks, probe_read32, KEYS_VOL_UP | KEYS_VOL_DOWN, now_ms(), TGL_CHOOSER_TIMEOUT_MS);
 			keys = chooser_keys_db;
 		}
+#if TGL_CHOOSER_KEYS_FIX
+		/* r13: a pad low at the start check (a key already held) no longer turns the keys off for the whole boot:
+		 * keys_laguna counts a key only after it has been seen released for 20 ms. Faulted or all-ones reads still do. */
+		else if (keys_start_rd) {
+			keys_init(&chooser_ks, probe_read32, KEYS_VOL_UP | KEYS_VOL_DOWN, now_ms(), TGL_CHOOSER_TIMEOUT_MS);
+			keys = chooser_keys_db;
+		}
+#endif
+#endif
+#if TGL_CHOOSER_KEYS_DIAG
+		diag_start_dn = (uint32_t)(karg >> 32);
+		diag_start_up = (uint32_t)karg;
 #endif
 	}
 #endif
@@ -427,6 +608,81 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	tgl_chooser_menu_init(&s, start, 0);
 	tgl_stamp(TGL_STAGE_CHOOSER_MENU, TGL_STAMP_F_ENTER, TGL_CHOOSER_TIMEOUT_MS);
 	unsigned r, held = 0;
+#if TGL_CHOOSER_KEYS_FIX
+	/* r13 loop: keys sampled by the row hook during every redraw, the band rendered in the cached kernel destination
+	 * (WB, free until the lz4 decode, cleaned by chain_jump_mmu_off) and only stored to the Normal-NC panel buffer, a
+	 * redraw only when the ring or the number changes, quiet presents while the record keeps room for the release. */
+	uint32_t *shadow = cached && seg.image_size >= (uint64_t)FB_STRIDE * TGL_MENU_BAND_Y1 ? (uint32_t *)(uintptr_t)base : 0;
+	unsigned shown_secs = view.seconds, frames = 0;
+	uint64_t draw_ms = 0;
+	chooser_tick_keys = keys;
+	chooser_tick_seen = 0;
+	tgl_menu_row_hook = chooser_menu_tick;
+#if TGL_CHOOSER_KEYS_DIAG
+	s.deadline_ms = start + DIAG_MS;
+	unsigned shown_sig = ~0u;
+	uint64_t last_present = 0;
+#endif
+	for (;;) {
+		uint64_t t = now_ms();
+		unsigned k = keys ? keys() : 0;
+		unsigned seen = chooser_tick_seen;
+		chooser_tick_seen = 0;
+		if ((k | seen) != held) {
+			tgl_stamp(TGL_STAGE_CHOOSER_KEY, TGL_STAMP_F_DONE, (t - start) << 8 | (uint64_t)seen << 4 | k);
+			held = k | seen;
+		}
+		r = tgl_chooser_menu_feed(&s, t, k, seen);
+		if (r) break;
+		if (s.deadline_ms > start + TGL_CHOOSER_MENU_MAX_MS) s.deadline_ms = start + TGL_CHOOSER_MENU_MAX_MS;
+		if (t - last_pat >= 1000) { if (pat) pat(); last_pat = t; }
+		unsigned secs = (unsigned)((s.deadline_ms - t + 999) / 1000);
+		int redraw_band = s.sel != shown_sel || secs != shown_secs, redraw = redraw_band;
+#if TGL_CHOOSER_KEYS_DIAG
+		diag_sample();
+		unsigned sig = diag_sig(k | seen, &s);
+		if (sig != shown_sig && t - last_present >= 80) redraw = 1;
+#endif
+		if (redraw) {
+			if (redraw_band) {
+				uint64_t td = now_ms();
+				view.sel = s.sel;
+				view.seconds = secs;
+				if (shadow) {
+					tgl_menu_draw_band(shadow, FB_W, &view);
+					chooser_band_copy(fb, shadow);
+				} else {
+					tgl_menu_draw_band(fb, FB_W, &view);
+				}
+				draw_ms = now_ms() - td;
+				shown_sel = s.sel;
+				shown_secs = secs;
+			}
+#if TGL_CHOOSER_KEYS_DIAG
+			diag_draw(fb, &s, keys != 0, k | seen, draw_ms, frames, now_ms() - start);
+			shown_sig = sig;
+#endif
+			if (shown && chooser_dcs_room()) {
+				__asm__ volatile("dsb sy" ::: "memory");
+				int prc = tgl_dcs_present();
+				frames++;
+				if (prc) {
+					shown = 0;
+					tgl_stamp(TGL_STAGE_CHOOSER_DISPLAY, TGL_STAMP_F_REFUSED, (uint64_t)1 << 40 | (uint32_t)prc);
+				}
+			}
+#if TGL_CHOOSER_KEYS_DIAG
+			last_present = now_ms();
+#endif
+			last_line = t;
+		}
+		for (volatile unsigned d = 0; d < 20000; d++) { }
+	}
+	tgl_menu_row_hook = 0;
+	chooser_tick_keys = 0;
+	(void)last_line;
+	(void)draw_ms;
+#else
 	for (;;) {
 		uint64_t t = now_ms();
 		unsigned k = keys ? keys() : 0;
@@ -460,6 +716,7 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 		}
 		for (volatile unsigned d = 0; d < 20000; d++) { }
 	}
+#endif
 	tgl_stamp(TGL_STAGE_CHOOSER_PICK, TGL_STAMP_F_DONE,
 	    (now_ms() - start) << 8 | r << 4 | s.why);
 	if (r != TGL_CHOOSE_ANDROID) return "chooser: iOS entry not built in this image";

@@ -1,0 +1,7 @@
+# r11/r12 flags: HEAD (54489ca tree via git archive HEAD) vs working tree, clang 23.1.4 aarch64-none-elf -O2, fixed nonces; .text cmp
+F11 chooser.c .text identical (5000 B)
+F11 menu_ui.c .text identical (3840 B)
+F11 tgl_dcs.c .text identical (26140 B)
+F12 chooser.c .text identical (5500 B)
+F12 menu_ui.c .text identical (3840 B)
+F12 tgl_dcs.c .text identical (26140 B)

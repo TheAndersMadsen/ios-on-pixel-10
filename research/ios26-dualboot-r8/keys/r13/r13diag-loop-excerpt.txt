@@ -1,0 +1,18 @@
+   19ce4:      	mov	x8, #-0x9180            // =-37248
+   19ce8:      	ldr	x9, [sp, #0x20]
+   19cec:      	mov	w10, #0x400             // =1024
+   19cf0:      	movk	x8, #0xfff8, lsl #16
+   19cf4:      	movk	w10, #0xf051, lsl #16
+   19cf8:      	ldr	x11, [x9], #0x8
+   19cfc:      	adds	x8, x8, #0x1
+   19d00:      	str	x11, [x10]
+   19d04:      	add	x10, x10, #0x8
+   19d08:      	b.lo	0x19cf8 <tgl_chooser_run+0xb00>
+   19d9c:      	mov	w8, #0x802c             // =32812
+   19da0:      	movk	w8, #0x9543, lsl #16
+   19da4:      	ldr	w8, [x8]
+   19da8:      	sub	w8, w8, #0x4b4
+   19dac:      	cmn	w8, #0x5fc
+   19db0:      	b.lo	0x19de8 <tgl_chooser_run+0xbf0>
+   19db4:      	dsb	sy
+   19db8:      	bl	0x21128 <tgl_dcs_present>

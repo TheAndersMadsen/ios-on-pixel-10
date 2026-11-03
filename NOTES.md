@@ -31,8 +31,8 @@ recoverable. QEMU and host tools support development; they are not phone results
   Android /data 77.3 GiB, nothing mounts ios_*. Rollback copies: `research/ios26-dualboot-r8/gpt-plan/option-a-ios24+8/`.
   Backup and restore receipt: `research/android-backup-20261103/`.
 - **Dual boot (2026-11-03, PHYSICAL, temporary boot):** `chooser-ios-r1-ios` (one image: menu + iOS payload + stock Android
-  kernel) showed both systems and booted iOS to Home with Settings working (owner). The volume keys don't work yet
-  (chooser-v1-r12: no response); not installed (boot_b untouched). `research/ios26-phaseb-r1/A7.md`.
+  kernel) showed both systems and booted iOS to Home with Settings working (owner). The volume keys didn't respond in
+  chooser-v1-r12: the menu read them only between ~4 s redraws; fix `chooser-v1-r13` built, not booted (`keys/DIAG-r13.md`); not installed (boot_b untouched). `research/ios26-phaseb-r1/A7.md`.
 - **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of the chooser (`shim/chooser.c`, stock boot vbmeta
   transplanted) chain-loads the stock Android kernel at EL2 (r3 x3, r4 in 42 s). **Display handback works:**
   chooser-v1-r11 showed the startup menu on the panel (owner saw it), released the DPU and booted Android in 42 s

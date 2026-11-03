@@ -28,6 +28,14 @@
 #define HINT_BASE (H - 250)
 #define BAND_Y0	(TILE_Y0 - RING_IN - RING_W - GLOW - 4)
 #define BAND_Y1	(PILL_CY + PILL_H / 2 + 8)
+_Static_assert(BAND_Y0 == TGL_MENU_BAND_Y0 && BAND_Y1 == TGL_MENU_BAND_Y1, "menu_ui.h band rows");
+
+#if TGL_MENU_ROW_HOOK
+void (*tgl_menu_row_hook)(void);
+#define ROW_HOOK() do { if (tgl_menu_row_hook) tgl_menu_row_hook(); } while (0)
+#else
+#define ROW_HOOK() do { } while (0)
+#endif
 
 static unsigned isqrt64(uint64_t v)
 {
@@ -94,6 +102,7 @@ static void fill_bg(uint32_t *fb, unsigned stride, int y0, int y1)
 {
 	for (int y = y0; y < y1; y++) {
 		uint32_t *row = fb + (unsigned)y * stride;
+		ROW_HOOK();
 		for (int x = 0; x < (int)W; x++) row[x] = background(x, y);
 	}
 }
@@ -105,6 +114,7 @@ static void mask_at(uint32_t *fb, unsigned stride, int mi, int left, int top,
 	for (int j = 0; j < m->h; j++) {
 		int y = top + j;
 		if (y < 0 || y >= (int)H) continue;
+		ROW_HOOK();
 		uint32_t *row = fb + (unsigned)y * stride;
 		const uint8_t *a = menu_blob + m->off + (unsigned)j * m->w;
 		for (int i = 0; i < m->w; i++) {
@@ -129,6 +139,7 @@ static void tile(uint32_t *fb, unsigned stride, int x0, int selected, int dim)
 	int pad = RING_IN + RING_W + GLOW;
 	for (int y = imax(0, y0 - pad); y < imin((int)H, y1 + pad); y++) {
 		uint32_t *row = fb + (unsigned)y * stride;
+		ROW_HOOK();
 		for (int x = x0 - pad; x < x1 + pad; x++) {
 			int d = rr_dist(x, y, x0, y0, x1, y1, TILE_R);
 			uint32_t c = row[x];
@@ -160,6 +171,7 @@ static void pill(uint32_t *fb, unsigned stride, int cx, int w)
 	int x0 = cx - w / 2, x1 = cx + w / 2, y0 = PILL_CY - PILL_H / 2, y1 = PILL_CY + PILL_H / 2;
 	for (int y = y0 - 2; y < y1 + 2; y++) {
 		uint32_t *row = fb + (unsigned)y * stride;
+		ROW_HOOK();
 		for (int x = x0 - 2; x < x1 + 2; x++) {
 			int d = rr_dist(x, y, x0, y0, x1, y1, PILL_H / 2);
 			row[x] = blend(row[x], 0xffffff, 30 * cov(d) >> 8);

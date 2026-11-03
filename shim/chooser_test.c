@@ -55,6 +55,36 @@ static void menu_tests(void)
 	tgl_chooser_menu_step(&s, 10, TGL_KEY_UP | TGL_KEY_DOWN);
 	CHECK(s.sel == 0 && s.presses == 0, "chord ignored");
 	CHECK(tgl_chooser_menu_step(&s, 5000, 0) == TGL_CHOOSE_ANDROID && s.why == TGL_WHY_TIMEOUT, "chord then timeout");
+
+	/* r13 feed (keys/DIAG-r13.md): a press seen only during a redraw still counts, exactly once */
+	tgl_chooser_menu_init(&s, 0, 0);
+	CHECK(tgl_chooser_menu_feed(&s, 100, 0, 0) == TGL_CHOOSE_PENDING && s.presses == 0, "feed: nothing, nothing");
+	CHECK(tgl_chooser_menu_feed(&s, 1200, 0, TGL_KEY_DOWN) == TGL_CHOOSE_PENDING && s.sel == 1 && s.presses == 1,
+	    "feed: press and release inside a redraw selects iOS");
+	CHECK(s.prev_keys == 0, "feed: released afterwards");
+	CHECK(tgl_chooser_menu_feed(&s, 1300, 0, 0) == TGL_CHOOSE_PENDING && s.presses == 1, "feed: no second press");
+	CHECK(s.deadline_ms == 5000, "feed: early missed press keeps the 5 s deadline");
+	CHECK(tgl_chooser_menu_feed(&s, 3000, 0, TGL_KEY_UP) == TGL_CHOOSE_PENDING && s.sel == 0 && s.presses == 2, "feed: missed up");
+	CHECK(s.deadline_ms == 6000, "feed: later missed press extends to press + 3 s");
+	/* held across the redraw: one edge, not two */
+	tgl_chooser_menu_init(&s, 0, 0);
+	tgl_chooser_menu_feed(&s, 100, TGL_KEY_DOWN, TGL_KEY_DOWN);
+	CHECK(s.sel == 1 && s.presses == 1, "feed: held key seen in both is one press");
+	tgl_chooser_menu_feed(&s, 200, TGL_KEY_DOWN, TGL_KEY_DOWN);
+	CHECK(s.presses == 1, "feed: still held is no new press");
+	tgl_chooser_menu_feed(&s, 300, 0, TGL_KEY_DOWN);
+	CHECK(s.presses == 1 && s.prev_keys == 0, "feed: release after a held press is no press");
+	/* a chord seen during a redraw is still a chord */
+	tgl_chooser_menu_init(&s, 0, 0);
+	tgl_chooser_menu_feed(&s, 100, 0, TGL_KEY_UP | TGL_KEY_DOWN);
+	CHECK(s.sel == 0 && s.presses == 0, "feed: missed chord ignored");
+	/* a decision is final; the deadline still ends the menu */
+	tgl_chooser_menu_init(&s, 0, 0);
+	CHECK(tgl_chooser_menu_feed(&s, 5000, 0, 0) == TGL_CHOOSE_ANDROID, "feed: timeout");
+	CHECK(tgl_chooser_menu_feed(&s, 5100, 0, TGL_KEY_DOWN) == TGL_CHOOSE_ANDROID && s.presses == 0, "feed: final");
+	/* a missed press at the deadline still extends it (as a held one does) */
+	tgl_chooser_menu_init(&s, 0, 0);
+	CHECK(tgl_chooser_menu_feed(&s, 5000, 0, TGL_KEY_DOWN) == TGL_CHOOSE_PENDING && s.sel == 1, "feed: missed press at the deadline counts");
 }
 
 static void seg_tests(void)

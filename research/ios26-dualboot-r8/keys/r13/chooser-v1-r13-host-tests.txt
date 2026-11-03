@@ -1,0 +1,24 @@
+lz4 host test: 68 checks, 0 failed
+A0 FDT: ram 8 reserved 37 pools 7 alloc 1 total 896033 initrd 86000000-885f6875
+A0 placement for image_size 43253760: ok base 0xc9c00000
+A0 placement with 70 MiB shim: ok base 0xc9c00000
+chooser host test: 89 checks, 0 failed
+A0 map: ok wb=32 nc=7 refused=0 l2=2
+el2 mmu host test: 15 checks, 0 failed
+menu preview: band-vs-full differing pixels 0
+gate=off PASS ok rc=0 accesses=96 us=1096
+gate=off PASS layer_off rc=0 accesses=96 us=1096
+gate=off PASS layer_settles rc=0 accesses=96 us=1096
+gate=off PASS layer_busy rc=0 accesses=96 us=1096
+gate=off PASS be_settles rc=0 accesses=96 us=1096
+gate=off PASS be_busy rc=0 accesses=96 us=1096
+gate=off PASS no_fe0 rc=0 accesses=80 us=1080
+gate=on  PASS ok rc=0 accesses=113 us=1113
+gate=on  PASS layer_off rc=0 accesses=113 us=1113
+gate=on  PASS layer_settles rc=0 accesses=193 us=3193
+gate=on  PASS layer_busy rc=29 accesses=3851 us=101051
+gate=on  PASS be_settles rc=0 accesses=133 us=2133
+gate=on  PASS be_busy rc=30 accesses=1966 us=101016
+gate=on  PASS no_fe0 rc=0 accesses=80 us=1080
+62 checks, 0 failed
+menu band shadow test: 41 checks, 0 failed (last band redraw 7171 row ticks)

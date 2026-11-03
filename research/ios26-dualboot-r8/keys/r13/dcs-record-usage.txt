@@ -1,0 +1,4 @@
+# DCS record (0x95438000, 16 B entries, capacity 1532) from the r9/r10 ramdumps: where the init ladder ends, what each menu present costs
+chooser-v1-r9-t1: total 991, END (ladder done, first kick included) at entry 941, quiesce stage at None
+chooser-v1-r10-t1: total 1018, END (ladder done, first kick included) at entry 941, quiesce stage at 978
+  2 menu presents between END and the release: 36 entries (~18.0 per present)

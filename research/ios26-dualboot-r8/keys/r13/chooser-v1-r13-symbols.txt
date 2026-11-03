@@ -1,0 +1,11 @@
+000000000001a110 t chooser_keys_db
+000000000001a048 t chooser_keys_start
+000000000001a1d0 t chooser_menu_tick
+0000000000021eb0 T keys_init
+0000000000021ef4 T keys_poll
+00000000000190c4 T tgl_chooser_menu_feed
+00000000000191f8 T tgl_chooser_run
+000000000001f930 T tgl_dcs_present
+000000000001eae4 T tgl_dcs_release
+000000000028c070 B tgl_menu_row_hook
+undefined: 0

@@ -15,7 +15,7 @@ R11_SRC = 'chooser.c lz4.c el2_mmu.c menu_ui.c tgl_dcs.c'
 
 
 def sw(**k):
-    d = dict(mmu=False, ui=False, display=False, quiesce=False, keys=False, keys_poll=False)
+    d = dict(mmu=False, ui=False, display=False, quiesce=False, keys=False, keys_poll=False, keys_fix=False, keys_diag=False)
     d.update(k); return argparse.Namespace(**d)
 
 
@@ -45,6 +45,18 @@ class Gates(unittest.TestCase):
     def test_existing_refusals_kept(self):
         with self.assertRaises(SystemExit): C.gates(sw(display=True))
         with self.assertRaises(SystemExit): C.gates(sw(ui=True, quiesce=True))
+
+    def test_keys_fix_adds_only_its_gates(self):
+        base, src = C.gates(sw(**R11, keys=True, keys_poll=True))
+        f, s2 = C.gates(sw(**R11, keys=True, keys_poll=True, keys_fix=True))
+        self.assertEqual(f, base + ' -DTGL_CHOOSER_KEYS_FIX=1 -DTGL_MENU_ROW_HOOK=1 -DTGL_DCS_PRESENT_QUIET=1'); self.assertEqual(s2, src)
+        f, s2 = C.gates(sw(**R11, keys=True, keys_poll=True, keys_fix=True, keys_diag=True))
+        self.assertEqual(f, base + ' -DTGL_CHOOSER_KEYS_FIX=1 -DTGL_MENU_ROW_HOOK=1 -DTGL_DCS_PRESENT_QUIET=1 -DTGL_CHOOSER_KEYS_DIAG=1')
+
+    def test_keys_fix_and_diag_refusals(self):
+        with self.assertRaises(SystemExit): C.gates(sw(**R11, keys=True, keys_fix=True))  # no --keys-poll
+        with self.assertRaises(SystemExit): C.gates(sw(ui=True, keys=True, keys_poll=True, keys_fix=True))  # no --display
+        with self.assertRaises(SystemExit): C.gates(sw(**R11, keys=True, keys_poll=True, keys_diag=True))  # diag without fix
 
     def test_symbols_checked_with_the_gate(self):
         for s in ('keys_init', 'keys_poll', 'chooser_keys_db'): self.assertIn(s, C.KEYS_POLL_SYMS)

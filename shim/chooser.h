@@ -73,6 +73,17 @@ void tgl_chooser_menu_init(struct tgl_chooser_menu *s, uint64_t now_ms,
 /* keys = currently-held bits; edges are derived here. Returns result. */
 unsigned tgl_chooser_menu_step(struct tgl_chooser_menu *s, uint64_t now_ms,
 	unsigned keys);
+/* chooser-v1-r13 (keys/DIAG-r13.md): keys = held bits now, seen = bits held at any sample since the last call
+ * (taken while a redraw ran). A key pressed and released between two calls is fed as one press first.
+ * Built with TGL_CHOOSER_KEYS_FIX (and on the host). */
+unsigned tgl_chooser_menu_feed(struct tgl_chooser_menu *s, uint64_t now_ms,
+	unsigned keys, unsigned seen);
+#ifndef TGL_CHOOSER_KEYS_FIX
+#define TGL_CHOOSER_KEYS_FIX 0
+#endif
+#ifndef TGL_CHOOSER_KEYS_DIAG
+#define TGL_CHOOSER_KEYS_DIAG 0
+#endif
 
 /* Device entry. Returns only with a refusal reason; on success the stock
  * kernel owns the CPU. pat() keeps the ABL-armed watchdogs alive (never a
