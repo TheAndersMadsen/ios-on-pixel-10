@@ -1,0 +1,68 @@
+--- a/docs/probes.yaml
++++ b/docs/probes.yaml
+@@ -111,29 +111,57 @@
+     owner: 'None: needs a boot with a higher governor cap'
+     next: {kind: build, minutes: 18, test: 'Build int1 with gov cap above level 16 after checker admission; one unattended 900 s boot, thermal guard on'}
+ 
++  # Topology (research/ios26-dualboot-r8/truth/fdt.dts): one DSU cluster, PSCI for all eight. A520 "hayes" MPIDR 0x0
++  # and 0x100, A725 "hunter" 0x200-0x600, X4 "hunterELP" 0x700. SweetCPU prints MPIDRs with %x: 0x0, 0x100, 0x700.
++  # cpu0 (0x0) runs the shim and stays parked in it under blazer_bootcpu, so PSCI calls it ON: CPU_ON rc=-4.
++  # Why only five today and what each step needs: research/ios26-cpu-smp-r1/SMP.md.
+   - id: a520-cores
+     phone_only: true
+     row: 2 A520 cores
+     needs:
+       markers: ['SWEET CPU: requested=']
+-      boot_args: ['cpus=[67]']
++      boot_args: ['cpus=[78]|blazer_cpu0_audit=2']   # 7-8 cores, or the read-only Errata ABI query image
+     works:
+       all:
+-        - {re: 'SWEET CPU: (?P<cpus>[67])/[67] CPUs initialized'}
++        - {re: 'SWEET CPU: (?P<cpus>[78])/[78] CPUs initialized, SGI1 verified', label: seven or eight cores up}
++        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x0 came alive; SGI1 OK', label: A520 cpu0 (0x0) alive under XNU}
++        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x100 came alive; SGI1 OK', label: A520 cpu1 (0x100) alive under XNU}
+         - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+         - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
+-      note: '{cpus} cores incl. A520 ran {deadline} s under iOS ({attempt})'
++      note: '{cpus} cores incl. both A520s ran {deadline} s under iOS ({attempt})'
+     partial:
++      any:
++        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x(?:0|100) came alive; SGI1 OK', label: an A520 came alive}
++    active:
++      # blazer_cpu0_audit=2 image: the firmware's own Errata ABI answer for the CAS erratum on cpu0 (read only).
+       all:
+-        - {re: 'SWEET CPU: cpu=[56] mpidr=\S+ came alive', label: an A520 came alive}
+-    owner: 'None: host audit (tools/cpu_audit.py) is the current evidence'
+-    next: {kind: build, minutes: 18, test: 'cpus=6 boot after the CAS-workaround (bit9) fix; unattended 900 s'}
++        - {re: 'cpu0-em-erratum\s+DONE\s+0x\S+\s+\S+\s+\(erratum 3685825: \S+\)', src: [reader], label: firmware answered for erratum 3685825}
++    fails:
++      - {re: 'SWEET CPU: cpu=\d+ mpidr=0x(?:0|100) NOT alive', label: an A520 did not start}
++      - {re: 'SWEET CPU: cpu=\d+ NOT alive: PSCI CPU_ON rc=-4', label: 'CPU_ON ALREADY_ON (cpu0 is parked in the shim)'}
++    owner: 'None for the query image; any A520 CPU_ON needs the owner decision in research/ios26-cpu-smp-r1/SMP.md'
++    next: {kind: unattended, minutes: 8, test: 'a7-cpu0-em-r1 (blazer_cpu0_audit=2, 300 s, five A725s): read the Errata ABI answers in stamps-decode.txt'}
+ 
+   - id: x4-core
+     phone_only: true
+     row: X4 core
+-    owner: 'Out of reach for now: errata not fixed'
+-    next: {kind: none, minutes: 0, test: 'No test until the errata work exists'}
++    needs:
++      markers: ['SWEET CPU: requested=']
++      boot_args: ['cpus=[678]']
++    works:
++      all:
++        - {re: 'SWEET CPU: (?P<cpus>[678])/[678] CPUs initialized, SGI1 verified'}
++        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x700 came alive; SGI1 OK', label: X4 (0x700) alive under XNU}
++        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
++        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
++      note: 'X4 ran {deadline} s under iOS with {cpus} cores ({attempt})'
++    partial:
++      all:
++        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x700 came alive; SGI1 OK', label: X4 came alive}
++    fails:
++      - {re: 'SWEET CPU: cpu=\d+ mpidr=0x700 NOT alive', label: X4 did not start}
++    owner: 'Out of reach for now: X4 errata 3076789, 2957258, 4118414 not fixed; image_tool refuses core 7 (research/ios26-cpu-smp-r1/SMP.md)'
++    next: {kind: none, minutes: 0, test: 'No test until the X4 errata are answered (an Errata ABI query must run on the X4 itself)'}
+ 
+   - id: idle-sleep
+     phone_only: true

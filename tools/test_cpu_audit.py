@@ -30,6 +30,10 @@ MANIFEST = dict(cpu_audit=dict(mode=1, core=0, read_only=True, a520_support_acce
                 cmdline='cpus=5 blazer_cpu0_audit=1 blazer_bootcpu=0x200 blazer_deadline=300',
                 cflags='-DTGL_CPU_AUDIT=1', extra_src='tgl_cpu_audit.c')
 
+MANIFEST2 = copy.deepcopy(MANIFEST)
+MANIFEST2['cpu_audit']['mode'] = 2
+MANIFEST2['cmdline'] = MANIFEST['cmdline'].replace('blazer_cpu0_audit=1', 'blazer_cpu0_audit=2')
+
 
 class AuditTests(unittest.TestCase):
     def profile(self, **changes):
@@ -73,6 +77,32 @@ class AuditTests(unittest.TestCase):
             result = C.verify(build_blob(trail), MANIFEST)
             self.assertTrue(result['ok'], result)
             self.assertFalse(result['a520_support_accepted'])
+            # Mode 2: the actual C's Errata ABI records decode, and still accept nothing.
+            records = json.loads(next(line[7:] for line in output.splitlines() if line.startswith('TRACE2 ')))
+            records.append([0x28, 2, 0x40000000])
+            trail = [(i + 1, *record) for i, record in enumerate(records)]
+            result = C.verify(build_blob(trail), MANIFEST2)
+            self.assertTrue(result['ok'], result)
+            self.assertFalse(result['a520_support_accepted'])
+            abi = result['errata_abi']
+            self.assertEqual(abi['version_text'], '1.0')
+            self.assertEqual(abi['errata']['3685825'], 'affected')
+            self.assertEqual(abi['errata']['2630792'], 'not-affected')
+            self.assertEqual(len(abi['errata']), 7)
+            # A mode-2 trail under a mode-1 manifest (and the reverse) is refused.
+            self.assertFalse(C.verify(build_blob(trail), MANIFEST)['ok'])
+            self.assertFalse(C.verify(build_blob(TRAIL), MANIFEST2)['ok'])
+
+    def test_mode2_firmware_without_abi(self):
+        em = [(0xed, 1, 0), (0xed, 2, 0xffffffffffffffff)]
+        trail = [(i + 1, *row) for i, row in enumerate([r[1:] for r in TRAIL[:8]] + em + [r[1:] for r in TRAIL[8:]])]
+        result = C.verify(build_blob(trail), MANIFEST2)
+        self.assertTrue(result['ok'], result)
+        self.assertEqual(result['errata_abi']['version_text'], 'not-supported')
+        self.assertEqual(result['errata_abi']['errata'], {})
+        # A hang inside the SMC leaves only the ENTER: incomplete, never a verdict.
+        trail = [(i + 1, *row) for i, row in enumerate([r[1:] for r in TRAIL[:8]] + em[:1] + [r[1:] for r in TRAIL[8:]])]
+        self.assertFalse(C.verify(build_blob(trail), MANIFEST2)['ok'])
 
     def test_pass_is_only_a_prerequisite(self):
         result = C.verify(build_blob(TRAIL), MANIFEST)
