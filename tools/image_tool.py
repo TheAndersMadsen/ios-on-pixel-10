@@ -365,6 +365,14 @@ def adt_facts(blob):
     fb = ch.get('sweet-fbcon'); f['fb'] = fb and [hex(struct.unpack('<2Q', fb.prop('reg'))[0]), u(fb, 'width'), u(fb, 'height')]
     return f
 
+def fast_start_line(a, c):
+    """--fast-start (research/ios26-phaseb-r1/fast-start/PLAN.md): a normal --phone-root start without the
+    hk_fb_probe=1 colour sequence that holds pid 1 ~4.1 s. Nothing else on the line changes; the shim side is TGL_FAST_START=1."""
+    if not getattr(a, 'fast_start', False): return c
+    if not getattr(a, 'phone_root', False) or getattr(a, 'soak', None) is not None or getattr(a, 'preflight', False): die('--fast-start goes with --phone-root (a normal iOS start)')
+    if c.split().count('hk_fb_probe=1') != 1: die('--fast-start: phone line has no single hk_fb_probe=1 to drop')
+    return ' '.join(t for t in c.split() if t != 'hk_fb_probe=1')
+
 def build(a):
     name = ('test-' + a.name) if a.test_kernel and not a.name.startswith('test-') else a.name
     out = RUN/name
@@ -449,6 +457,7 @@ def build(a):
         if c.count('blazer_deadline=1800') != 1: die('phone line has no single 1800 s deadline')
         c = c.replace('blazer_deadline=1800', f'blazer_deadline={pd}' if pd else FC_DEADLINE if a.bootcpu or order else 'blazer_deadline=1800')
     if audit: c += ' blazer_cpu0_audit=1'
+    c = fast_start_line(a, c)
     if len(c) >= mkpayload.BOOT_LINE_LENGTH: die(f'command line {len(c)} bytes, shim limit {mkpayload.BOOT_LINE_LENGTH - 1}')
     out.mkdir(parents=True)
     if a.fullcheck:
@@ -462,6 +471,7 @@ def build(a):
         rb = PW.choose(a.readback, a.readback_sha)
     env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(LLVM), 'HOSTCC': '/usr/bin/cc', 'TGL_UFS_HANDOFF': '1',
            'EXTRA_CFLAGS': SHIM_FLAGS + (' ' + DPU_FLAGS if a.dpu else '') + (' ' + FC_FLAGS if a.bootcpu else ''), 'TGL_EXTRA_SRC': 'tgl_all.c' + (' tgl_dcs.c' if a.dpu else '') + (' ' + FC_SRC if a.bootcpu else '')}
+    if getattr(a, 'fast_start', False): env['TGL_FAST_START'] = '1'
     if audit:
         env['EXTRA_CFLAGS'] += ' ' + CPU_AUDIT_FLAGS
         env['TGL_EXTRA_SRC'] += ' ' + CPU_AUDIT_SRC
@@ -498,6 +508,9 @@ def build(a):
     if nm('-u').split(): die('undefined symbols in shim')
     syms = nm(); want = ['tgl_ufsh_power_mode', 'tgl_ufs_link_relink', 'tgl_all_mark'] + (['tgl_dcs_guarded'] if a.dpu else []) + (['tgl_fc_entry', 'tgl_fastcore_handoff'] if a.bootcpu else [])
     if audit: want += ['tgl_cpu_audit_configure', 'tgl_cpu_audit_prepare']
+    fast = getattr(a, 'fast_start', False)
+    if fast: want += ['tgl_fast_usb_wait', 'tgl_fast_fdt_reuse', 'tgl_fast_cache_on', 'tgl_fast_mmu_off_asm', 'tgl_el2_mmu_on']
+    if not fast and re.search(r'\stgl_fast_cache_on$', syms, re.M): die('fast-start present though off')
     for sym in want:
         if not re.search(rf'\s{sym}$', syms, re.M): die(f'shim lacks {sym}')
         if health and not re.search(rf'^[0-9a-fA-F]+ [Tt] {sym}$', syms, re.M):
@@ -507,6 +520,7 @@ def build(a):
     if not audit and re.search(r'\stgl_cpu_audit_prepare$', syms, re.M): die('CPU audit present though off')
     log = (out/'build.log').read_text()
     tests = {k: re.search(p, log) for k, p in dict(route=r'ufs route host test: \d+ checks, 0 failed', route_mutants=r'mutants \d+/\d+ caught', speed=r'ufs speed host test: \d+ checks, 0 failed', stages=r'all-stage host test: \d+ checks, 0 failed').items()}
+    if fast: tests['fast_start'] = re.search(r'fast-start host test: \d+ checks, 0 failed', log)
     miss = [k for k, m in tests.items() if not m]
     if miss: die(f'shim test lines missing: {miss}')
     img_b = img.read_bytes(); at = img_b.find(b'TEGUPLD1')
@@ -518,6 +532,7 @@ def build(a):
                tests={k: m.group(0) for k, m in tests.items()}, avb=avbt.strip().splitlines()[-1], decode=f'python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/{name}/manifest.json',
                shim_copy=tree(SHIM), tools={n: sha(X/n) for n in ('adt.py', 'image_tool.py', 'mkadt.py', 'mkbootimg.py', 'mkpayload.py')})
     if window != PHYS: rec['window_base'] = hex(window)
+    if fast: rec['fast_start'] = dict(shim='TGL_FAST_START=1', dropped='hk_fb_probe=1', plan='research/ios26-phaseb-r1/fast-start/PLAN.md')
     if persist: rec['persist_ios_data'] = persist
     if audit: rec['cpu_audit'] = dict(mode=1, core=0, read_only=True, a520_support_accepted=False)
     if many: rec.update(cpus=len(order) if order else a.cpus, **({'cpu_order': order} if order else {}))  # no shape, no new keys
@@ -687,6 +702,7 @@ if __name__ == '__main__':
     i = sub.add_parser('image'); i.add_argument('name'); i.add_argument('--kernel', required=True); i.add_argument('--kernel-sha', required=True)
     i.add_argument('--cpu-audit', action='store_true', help='read-only cpu0 firmware audit on baseline five A725s; docs/CPU.md')
     i.add_argument('--cpu-health', action='store_true', help='frozen p30 cap16 common health acceptance profile; supplies exact phone arguments; docs/CPU.md')
+    i.add_argument('--fast-start', action='store_true', help='with --phone-root: shim TGL_FAST_START=1 and no hk_fb_probe=1, research/ios26-phaseb-r1/fast-start/PLAN.md')
     i.add_argument('--route', choices=['ufs', 'md'], default='ufs'); i.add_argument('--md0'); i.add_argument('--md1'); i.add_argument('--cpus', type=int, default=1); i.add_argument('--cpu-order', help='cores for cpus=N in logical order, e.g. 5,6,2,3,4,1,0. handoffs/smp.md'); i.add_argument('--dpu', action='store_true')
     i.add_argument('--canvas'); i.add_argument('--gamut'); i.add_argument('--args'); i.add_argument('--test-kernel', action='store_true'); i.add_argument('--legacy-base', action='store_true'); i.add_argument('--phone-root', action='store_true', help='PHONE-ROOT.md: --route ufs on ios26-phone-r1'); i.add_argument('--soak', type=int, help='N read-only passes, not a phone-run image; 0: the not-live line'); i.add_argument('--preflight', action='store_true', help='--phone-root line on the old partition content, labelled, not bootable'); i.add_argument('--touch', action='store_true', help='--phone-root plus blazer_touch=1, nothing else'); i.add_argument('--phone-deadline', type=int, help='1800, or 3600 with blazer_thermal=2: handoffs/cpmlock.md'); i.add_argument('--soak-whole', help='whole crc the passes must give, hex'); i.add_argument('--phone-args', help='extra tokens for --phone-root, allow-list only'); i.add_argument('--var-overlay', help='overlay file for hk_overlay=MASK'); i.add_argument('--var-overlay-sha'); i.add_argument('--bootcpu', help='0x200, 0x300 or 0x500: run XNU on that core, ios26-fastcore-r1. Parent only, after speed-probe-r3'); i.add_argument('--qemu-run'); i.add_argument('--phone-route'); i.add_argument('--readback', help='root image: sample its blocks for read-back'); i.add_argument('--readback-sha'); i.add_argument('--fullcheck', help='same root as --readback: read all of it and log CRCs'); i.add_argument('--persist-ios-data', action='store_true', help='admit blazer_persist=1 [blazer_persist_period=15..3600] for the pinned kernel.rootview on ios_system only: ios-data-persist/PHYSICAL-PLAN.md'); i.add_argument('--persist', type=int, choices=[2, 3], help='with --fullcheck: blazer_persist=N, handoffs/persist.md'); i.add_argument('--persist-table', help='table.json: the pass skips its blocks, blazer_ufs_fullcheck=2, and so does the list'); i.add_argument('--expect-test-block', help='TABLE.json:A or :B: the list for a kernel with no mask after blazer_persist=2 wrote that pattern'); i.add_argument('--window-base', choices=(hex(PHYS), '0x882000000'), help='kernel RAM base, handoffs/ram.md'); i.add_argument('--second-boot', action='store_true', help='first-boot contract plus shim DPU stage, disp0 and the scanout arguments'); i.add_argument('--first-boot', action='store_true', help="blazer's first phone boot contract: headless ADT, md0 only, fixed base and command line")
     c = sub.add_parser('check'); c.add_argument('dir')

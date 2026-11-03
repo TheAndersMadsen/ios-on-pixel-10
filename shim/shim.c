@@ -60,6 +60,9 @@
 #if TGL_ALL_TOUCH
 #include "tgl_tp.h"
 #endif
+#if TGL_FAST_START
+#include "tgl_fast_start.h"
+#endif
 
 #define PSCI_SYSTEM_RESET UINT64_C(0x84000009)
 #define TGL_VERSION	"laguna teguload v3.2 noras + USB console + TSHIMST1"
@@ -339,6 +342,12 @@ void shim_main(uint64_t dtb)
 		fdt_error = tgl_fdt_memory((const void *)(uintptr_t)dtb,
 		    TGL_FDT_MAX_SIZE, &memory);
 	if (!fdt_error && memory.psci_method) reset_method = memory.psci_method;
+#if TGL_FAST_START
+	/* F2: loader_boot reuses this admission for the same unchanged tree. */
+	tgl_stamp(TGL_STAGE_FAST, TGL_STAMP_F_DONE, TGL_FAST_STAMP(TGL_FAST_S_PROFILE, TGL_FAST_PROFILE));
+	if (!fdt_error)
+		tgl_fast_fdt_remember(dtb, &memory);
+#endif
 
 #if defined(TGL_CHOOSER) && TGL_CHOOSER
 	/* A2 chooser: the Android branch must run before any console, display
@@ -400,8 +409,11 @@ void shim_main(uint64_t dtb)
 	}
 #else
 	{
+#if !TGL_FAST_START
+		/* Informational only (DTFB line); TGL_FAST_START F3 skips the walk. */
 		const char *which = 0;
 		if (!fdt_error) (void)fdt_find_framebuffer(dtb, &dtfb, &which);
+#endif
 		cand[ncand] = TGL_FB_FALLBACK;
 		csrc[ncand++] = "probe-skipped (DER-safe)";
 	}
@@ -544,7 +556,13 @@ void shim_main(uint64_t dtb)
 		tgl_stamp(stage_id, TGL_STAMP_F_DONE,
 		    (uint64_t)wdt[0].disabled | ((uint64_t)wdt[1].disabled << 1));
 	}
+#if TGL_FAST_START
+	/* F1: no host is expected on a normal start; a host that is still
+	 * mid-request gets its data stage finished (bounded), nothing more. */
+	tgl_fast_usb_wait(TGL_FAST_USB_WAIT_MS, TGL_FAST_USB_DRAIN_MS);
+#else
 	tgl_usb_console_wait(TGL_USB_WAIT_SECONDS);
+#endif
 	bringup_gate("post-usb");
 #else
 	con_str("USB", "disabled at build time");
@@ -771,7 +789,11 @@ void shim_main(uint64_t dtb)
 	tgl_stamp(stage_id, TGL_STAMP_F_ENTER, dtb);
 	bringup_gate("post-usb-wait");
 #ifndef TGL_USB_DISABLE
+#if TGL_FAST_START
+	tgl_fast_usb_wait(0, TGL_FAST_USB_DRAIN_MS); /* F1: drain only */
+#else
 	tgl_usb_console_wait(1);
+#endif
 	if (laguna_usb_transfer_active()) {
 		con_str("USB", "busy; refusing handoff");
 		stage_fail(TGL_STAMP_R_REFUSED, "usb transfer active at handoff", 0);

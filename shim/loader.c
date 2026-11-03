@@ -22,6 +22,9 @@
 #if TGL_FASTCORE
 #include "tgl_fastcore.h"
 #endif
+#if TGL_FAST_START
+#include "tgl_fast_start.h"
+#endif
 
 #define BOOT_LINE_LENGTH	1024	/* xnu-12377 pexpert/arm64/boot.h; was 608 on 8796 */
 #define PAGE_16K		0x4000UL
@@ -85,7 +88,19 @@ const char *loader_boot(uintptr_t dtb)
 		tgl_stamp(TGL_STAGE_PAYLOAD, TGL_STAMP_F_REFUSED, lb_txt); \
 	} while (0)
 	if (!dtb || (dtb & 7)) { LB_FAIL("unaligned/missing FDT"); return "unaligned/missing FDT"; }
+#if TGL_FAST_START
+	/* F2: shim_main's admission of this same tree, else the full parse. */
+	const char *error = 0;
+	{
+		unsigned reuse = tgl_fast_fdt_reuse(dtb, &memory);
+		tgl_stamp(TGL_STAGE_FAST, reuse ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE,
+		    TGL_FAST_STAMP(TGL_FAST_S_FDT, reuse));
+		if (reuse)
+			error = tgl_fdt_memory((const void *)dtb, TGL_FDT_MAX_SIZE, &memory);
+	}
+#else
 	const char *error = tgl_fdt_memory((const void *)dtb, TGL_FDT_MAX_SIZE, &memory);
+#endif
 	if (error) { LB_FAIL(error); return error; }
 	LB_STEP(1);
 	struct tgl_range shim = { (uintptr_t)_head, (uintptr_t)_end - (uintptr_t)_head };
@@ -231,9 +246,32 @@ const char *loader_boot(uintptr_t dtb)
 	con_hex("VIRT", p->virt_base);
 	con_hex("ENTRY", p->entry_va);
 
+#if TGL_FAST_START
+	/* F4: cached window over the shim image (source, stack, BSS) and the
+	 * kernel destination [phys_base, top), whole 2 MiB blocks. Refused when a
+	 * resident input or the stamp/console memory shares a block; then the
+	 * copy below runs uncached exactly as before. While cached the console
+	 * is not serviced: the CPU touches no USB DMA memory. */
+	struct tgl_fast_cache fast_cache;
+	{
+		uint64_t image_size = *(const uint64_t *)(_head + 16);
+		struct tgl_range avoid[4] = {
+			{ dtb, memory.total_size },
+			{ con_fb_pa, con_fb_pa ? (uint64_t)FB_STRIDE * FB_H : 0 },
+			{ UINT64_C(0x95200000), UINT64_C(0x400000) },
+			rd,
+		};
+		if (image_size < (uint64_t)(_end - _head)) image_size = (uint64_t)(_end - _head);
+		tgl_fast_cache_on(&fast_cache, &memory, (uintptr_t)_head, (uintptr_t)_head + image_size,
+		    p->phys_base, view.top, avoid, 4);
+	}
+#endif
 	for (uint32_t i = 0; i < p->nsegs; i++) {
 		const struct payload_seg *s = &p->segs[i];
 		uintptr_t dst = s->vmaddr + pa_of_va_base;
+#if TGL_FAST_START
+		if (!fast_cache.on)
+#endif
 		tgl_usb_console_service();
 		tgl_segment_copy(dst, view.source + s->file_off, s->file_size, s->vmsize);
 	}
@@ -274,6 +312,11 @@ const char *loader_boot(uintptr_t dtb)
 	tgl_display_export(display_record_pa);
 	int display_adt_rc = tgl_display_adt_publish(adt_pa, p->adt_size,
 	    display_record_pa);
+#if TGL_FAST_START
+	/* F4: every write into [phys_base, top) is done; clean to PoC and run
+	 * uncached again before any refusal, the USB drain or the EL1 drop. */
+	tgl_fast_cache_off(&fast_cache);
+#endif
 #ifdef TGL_QEMU_TEST
 	if (display_adt_rc && display_adt_rc != TGL_DISPLAY_ADT_NOT_FOUND)
 		return "display handoff ADT publish failed";

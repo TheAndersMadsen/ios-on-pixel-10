@@ -118,7 +118,43 @@ STAGES = {
     0x00ea: "cpu0-sctlr-el2",
     0x00eb: "cpu0-revidr",
     0x00ec: "cpu0-actlr",
+    0x00f1: "fast-start",  # TGL_FAST_START=1, shim/tgl_fast_start.h
 }
+
+# shim/tgl_fast_start.h: usb-enum-wait args carry "FAST" in the top 32 bits in
+# that profile; fast-start (0x00f1) args are step<<56 | value.
+FAST_USB_TAG = 0x46415354 << 32
+FAST_STEPS = {1: "profile", 2: "fdt-reuse", 3: "cache-on", 4: "cache-off"}
+FAST_FDT = {1: "nothing recorded", 2: "other tree pointer", 3: "bad magic", 4: "size changed"}
+FAST_CACHE = {1: "bad range", 2: "image meets destination", 3: "resident input in a cached block",
+              4: "EL2 map refused", 5: "MMU not switchable", 6: "off at build time"}
+
+
+def arg_note(stage, flags, arg):
+    """Readable meaning of a stamp argument where it is not a plain value."""
+    if stage == 0x0011:
+        if arg >> 32 == FAST_USB_TAG >> 32:
+            low = arg & 0xffffffff
+            if flags & 0x0001:
+                return "fast window %d ms + drain %d ms" % (low >> 16, low & 0xffff)
+            bits = [b for b, m in (("drained", 1 << 31), ("still-active", 1 << 30)) if low & m]
+            return "fast: %d ms%s" % (low & 0xffff, (" " + ",".join(bits)) if bits else "")
+        if flags & 0x0001 and arg < 0x100:
+            return "%d s window" % arg
+        return ""
+    if stage == 0x00f1:
+        step, value = arg >> 56, arg & ((1 << 56) - 1)
+        name = FAST_STEPS.get(step, "step-%d" % step)
+        if step == 2:
+            return name + (": reused" if not flags & 0x0010 else ": " + FAST_FDT.get(value, str(value)) + ", parsed")
+        if step == 3:
+            if flags & 0x0010:
+                return name + " refused: " + FAST_CACHE.get(value, str(value)) + ", uncached copy"
+            return name + ": %d wb blocks, %d left device" % (value >> 16, value & 0xffff)
+        if step == 4:
+            return name + ": cached window %.1f ms" % (value / 1000.0)
+        return name + ": 0x%x" % value
+    return ""
 
 FLAGS = [(0x0001, "ENTER"), (0x0002, "DONE"), (0x0004, "TIMEOUT"),
          (0x0008, "FAULT"), (0x0010, "REFUSED")]
@@ -251,6 +287,7 @@ def decode(buf, dump_base=DEFAULT_DUMP_BASE):
                 "stage_id": "0x%04x" % s["stage"],
                 "flags": flag_names(s["flags"]),
                 "arg": "0x%x" % s["arg"],
+                "note": arg_note(s["stage"], s["flags"], s["arg"]),
                 "ms_since_entry": delta_ms(header, s),
                 "boot": s["boot"],
             }
@@ -285,7 +322,8 @@ def render(decoded):
         ms = s["ms_since_entry"]
         lines.append("  %-3d %-4d %-26s %-14s %-18s %s"
                      % (s["i"], s["seq"], s["stage"], s["flags"], s["arg"],
-                        "%.1f" % ms if ms is not None else "-"))
+                        "%.1f" % ms if ms is not None else "-")
+                     + ("  (%s)" % s["note"] if s.get("note") else ""))
     last = decoded["slots"][-1]
     if decoded["reason"] == "handed-off-to-xnu":
         lines.append("  HANDED OFF: the shim's last stamp is #%d %s [%s]"

@@ -3,6 +3,8 @@
 # with the device handoff admitted (loader.c window policy). The QEMU-only
 # scratch-fb profile stays opt-in: EXTRA_CFLAGS=-DTGL_QEMU_TEST.
 # EXTRA_CFLAGS=-DTGL_WDT_KEEP keeps the firmware watchdogs (lab posture).
+# TGL_FAST_START=1 in the environment: the fast normal-start profile (tgl_fast_start.h,
+# research/ios26-phaseb-r1/fast-start/PLAN.md). Unset or 0 leaves CFLAGS and the source list as before.
 # UFS route gates are in tgl_ufs_route.h. Default: link, post-link and READ on, handoff off. TGL_UFS_HANDOFF=1 in the
 # environment turns the handoff on. EXTRA_CFLAGS=-DTGL_UFS_READ=0 and the like turn one off.
 set -euo pipefail
@@ -61,6 +63,12 @@ PY
 UFS_EPOCH=${UFS_IDS%% *}
 UFS_NONCE16=${UFS_IDS#* }
 CFLAGS="-DTGL_UFS_ROUTE=1 -DTGL_UFS_POST_LINK=1 -DTGL_UFS_HANDOFF=$TGL_UFS_HANDOFF -DTGL_STAMP_UFS_FOCUS=1 -DTGL_UFS_EPOCH=${UFS_EPOCH}ULL -DTGL_UFS_RECORD_NONCE=$UFS_NONCE16 $CFLAGS"
+TGL_FAST_START=${TGL_FAST_START:-0}
+case "$TGL_FAST_START" in 0|1) ;; *) echo "TGL_FAST_START must be 0 or 1" >&2; exit 1 ;; esac
+if [ "$TGL_FAST_START" = 1 ]; then
+	CFLAGS="$CFLAGS -DTGL_FAST_START=1"
+	TGL_EXTRA_SRC="${TGL_EXTRA_SRC:-} el2_mmu.c tgl_fast_start.c tgl_fast_start_s.S"
+fi
 for f in start.S shim.c console.c mmu.c fdt.c loader.c probe.c wdt.c laguna_usb.c laguna_usb_dma.c tgl_cpm.c tgl_display.c tgl_display_power.c tgl_usb_console.c tgl_ufs.c tgl_ufs_link.c tgl_ufs_host.c tgl_ufs_handoff.c tgl_ufs_route.c stamp.c guard.S ${TGL_EXTRA_SRC:-}; do
 	$CC $CFLAGS -c $f -o out/${f%.*}.o
 done
@@ -112,6 +120,10 @@ python3 -I test_ufs_speed.py
 if [ -f test_all_stages.py ]; then python3 -I test_all_stages.py; fi
 # The DPU stage on a fake bus, gate TGL_DCS_BRIGHT off and on. No mutants here: run test_dcs_bright.py itself for those.
 if [ -f test_dcs_bright.py ]; then python3 -I test_dcs_bright.py --quick; fi
+# Fast-start profile: the bounded USB window, FDT reuse and the cached-copy plan on the EL2 map builder.
+if [ -f tgl_fast_start_test.c ]; then
+	$HOSTCC -O1 -Wall -Wextra -DTGL_FAST_HOST -DTGL_CHOOSER_HOST -o out/fast_start_test tgl_fast_start.c el2_mmu.c fdt.c tgl_fast_start_test.c && ./out/fast_start_test
+fi
 # A2 chooser: menu/segment/placement and the lz4 decoder on hand-made inputs.
 # tools/chooser_image.py reruns both binaries on the real A0 kernel and FDT.
 if [ -f chooser_test.c ]; then

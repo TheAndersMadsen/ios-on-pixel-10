@@ -341,6 +341,15 @@ class PhoneRoot(unittest.TestCase):
         A.phone_route = 'md0-mountroot'; m = T.cmdline(A, 1); self.assertIn(' rd=md0 blazer_ufs_mountroot=1 ', m); self.assertNotIn('ufsroot0', m); self.assertLess(len(m), 1024); A.phone_route = 'ufsroot'
         for t in ('rd=ufsroot0', 'varfs=1', 'hk_fb_scanout=1', 'sweetfb_noconsole=1', 'hk_fb_probe=1', 'interrupt-masked-debug-mode=0', 'unentitled_ios_sim_launch=1', 'sweetarm64e=1', 'blazer_deadline=1800'): self.assertIn(t, c)
         for t in ('rootrw', 'blazer_ufs_test', 'mountroot', 'rd=md0', 'sched_preemption', 'wdt=', '-v', 'epoch=', 'blazer_ufs_fake'): self.assertNotIn(t, c)
+    def test_fast_start_drops_only_the_probe(self):
+        class A: phone_root = True; phone_route = 'ufsroot'; fast_start = False; soak = None; preflight = False
+        base = T.cmdline(A, 1); self.assertEqual(T.fast_start_line(A, base), base)
+        A.fast_start = True; c = T.fast_start_line(A, base)
+        self.assertNotIn('hk_fb_probe', c); self.assertEqual(c.split(), [t for t in base.split() if t != 'hk_fb_probe=1'])
+        for t in ('blazer_deadline=1800', 'blazer_panic=1', 'hk_fb_scanout=1', 'varfs=1'): self.assertIn(t, c)
+        with self.assertRaises(SystemExit): T.fast_start_line(A, c)  # nothing to drop: refuse rather than guess
+        A.phone_root = False
+        with self.assertRaises(SystemExit): T.fast_start_line(A, base)
     def test_touch_adds_only_that(self):
         class A: phone_root = True; phone_route = 'md0-mountroot'; touch = False
         base = T.cmdline(A, 1); A.touch = True; c = T.cmdline(A, 1)

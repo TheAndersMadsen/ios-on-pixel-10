@@ -132,6 +132,28 @@ WEDGE_STAMPS = [
     (5, 0x0026, 0x0001, 0x00070ff),  # pre-doorbell marker (id<<8|0xff)
 ]
 
+# TGL_FAST_START=1 (shim/tgl_fast_start.h): profile, 500 ms window, FDT reuse,
+# cached copy on/off, drain-only window before admission.
+FAST = 0x46415354 << 32
+FAST_STAMPS = [
+    (1, 0x00f1, 0x0002, (1 << 56) | 0xf),          # profile: all four parts
+    (2, 0x0011, 0x0001, FAST | (500 << 16) | 1000),  # usb-enum-wait ENTER
+    (3, 0x0011, 0x0002, FAST | 500),                # DONE after 500 ms, idle
+    (4, 0x0011, 0x0001, FAST | 1000),               # drain-only ENTER
+    (5, 0x0011, 0x0002, FAST | (1 << 31) | 37),     # waited 37 ms for a data stage
+    (6, 0x00f1, 0x0002, 2 << 56),                   # fdt reused
+    (7, 0x00f1, 0x0002, (3 << 56) | (55 << 16)),    # cache on: 55 wb blocks
+    (8, 0x00f1, 0x0002, (4 << 56) | 84250),         # cache off: 84.25 ms
+]
+FAST_REFUSED = [
+    (1, 0x00f1, 0x0010, (2 << 56) | 4),             # fdt size changed -> parse
+    (2, 0x00f1, 0x0010, (3 << 56) | 3),             # cache refused: avoid range
+]
+# The flag-off windows as in A7 r1: 8 s, then 1 s.
+SLOW_STAMPS = [
+    (1, 0x0011, 0x0001, 8), (2, 0x0011, 0x0002, 1), (3, 0x0011, 0x0001, 1), (4, 0x0011, 0x0002, 1),
+]
+
 # Shaped like the real v2b dump: saturated v1 ring, refusals dropped.
 V1_STAMPS = [
     (1, 0x0001, 0x0001, 0),
@@ -331,6 +353,42 @@ class DecoderTests(unittest.TestCase):
         slots = [{"t": 1000}, {"t": 2000}]
         self.assertEqual(dec.assign_boots(slots), 1)
         self.assertEqual(dec.delta_ms({"freq": 1000, "t0": 500}, slots[0]), 500.0)
+
+    def test_fast_start_trail(self):
+        decoded = dec.decode(build_blob(FAST_STAMPS, reason=5))
+        notes = [x["note"] for x in decoded["slots"]]
+        self.assertEqual(decoded["slots"][0]["stage"], "fast-start")
+        self.assertEqual(notes[0], "profile: 0xf")
+        self.assertEqual(notes[1], "fast window 500 ms + drain 1000 ms")
+        self.assertEqual(notes[2], "fast: 500 ms")
+        self.assertEqual(notes[4], "fast: 37 ms drained")
+        self.assertEqual(notes[5], "fdt-reuse: reused")
+        self.assertEqual(notes[6], "cache-on: 55 wb blocks, 0 left device")
+        self.assertEqual(notes[7], "cache-off: cached window 84.2 ms")
+        self.assertIn("(fast window 500 ms", dec.render(decoded))
+        refused = dec.decode(build_blob(FAST_REFUSED, reason=5))
+        self.assertEqual([x["note"] for x in refused["slots"]],
+                         ["fdt-reuse: size changed, parsed",
+                          "cache-on refused: resident input in a cached block, uncached copy"])
+
+    def test_flag_off_windows_keep_their_reading(self):
+        decoded = dec.decode(build_blob(SLOW_STAMPS, reason=5))
+        self.assertEqual([x["note"] for x in decoded["slots"]], ["8 s window", "", "1 s window", ""])
+        self.assertEqual([x["arg"] for x in decoded["slots"]], ["0x8", "0x1", "0x1", "0x1"])
+
+    def test_fast_constants_match_the_shim_header(self):
+        h = (TOOLS.parent / "shim" / "tgl_fast_start.h").read_text()
+        self.assertIn("#define TGL_STAGE_FAST\t\t0x00f1u", h)
+        self.assertIn("UINT64_C(0x4641535400000000)", h)
+        self.assertEqual(dec.FAST_USB_TAG, 0x4641535400000000)
+        for line, val in (("TGL_FAST_USB_DRAINED\t(UINT64_C(1) << 31)", 1), ("TGL_FAST_USB_STILL\t(UINT64_C(1) << 30)", 1)):
+            self.assertIn(line, h)
+        self.assertIn("TGL_FAST_S_PROFILE = 1", h)
+        self.assertIn("TGL_FAST_S_CACHE_OFF = 4", h)
+        self.assertIn("TGL_FAST_C_AVOID = 3", h)
+        self.assertIn("TGL_FAST_C_OFF = 6", h)
+        self.assertEqual(dec.FAST_CACHE[6], "off at build time")
+        self.assertIn("TGL_FAST_FDT_SIZE = 4", h)
 
     def test_selftest_cli_matches_module(self):
         out = subprocess.run(
