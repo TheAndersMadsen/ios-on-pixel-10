@@ -5,14 +5,16 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Attended, owner present: chooser-v1-r10 (stock DPU quiesce before the display release) and/or A7 (flash
-   ios_system, read back, boot `a7-ios-system-r1`). Paste-ready commands and stop rules:
-   `research/ios26-dualboot-r8/NEEDS-OWNER.md` sections 4 and A7. Bare `fastboot boot`, ANDROID_SERIAL set.
-2. Apps lane (QEMU): repeat r13's route (`rd=ufsroot0`, `research/ios26-apps-r1/receipts/h3-static-r12/result-r13.json`)
-   with the r11g/r11h os_log mirror for lsd and usermanagerd (one diagnostic change) to read why lsd aborts and
-   whether `usersession.kb` was saved (ios-sweet: HFS has no RENAME_SWAP, errno 45, already seen in dirs_cleaner).
-3. Host: the visible menu (r6 + `tgl_dcs_run` full-screen layer, `menu-ui/SCANOUT-PATH.md`), the volume-key pad
-   read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).
+1. Host: decode a7-ios-system-r1's backboardd SIGSEGV (crash PC and fault address) from the local ramdump
+   (`research/ios26-phaseb-r1/A7.md`), and diff the boot against p32, whose line differs only in
+   `blazer_ufs_root` and which reached Home. One fix, then one attended `fastboot boot` with the owner present.
+2. Physical, attended: chooser volume keys (r8 line) and the iOS entry from the chooser (r11 display handback works).
+3. After a visible A7 boot: a physical ios_data persist test (QEMU negative test PASS,
+   `research/ios26-dualboot-r8/ios-data-persist/NEGATIVE-r1.md`); `image_tool` refuses `blazer_persist` until then.
+4. Apps lane is stopped behind the AKS user-session keybag (owner decision,
+   `research/ios26-apps-r1/receipts/h3-static-r12/VERDICT.md`).
+
+Bare `fastboot boot` only, ANDROID_SERIAL set, disks resolved by-name, return check after every boot.
 
 ## Latest completed maintenance
 

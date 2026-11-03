@@ -1,6 +1,6 @@
 # Current project notes
 
-Updated 2026-11-03 (m1box run). This is the **only default project-state document**. Keep it
+Updated 2026-11-03 (Phase B run, m1box). This is the **only default project-state document**. Keep it
 short and current; do not append a session journal here. The previous full journal
 is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only.
 
@@ -19,35 +19,41 @@ recoverable. QEMU and host tools support development; they are not phone results
   `research/android-backup-20261103/RESTORE.md`). Return check PASS against the new post-restore baseline
   (root sentinel, app count, /data size): `research/ios26-dualboot-r8/attempts/return-after-restore/`.
   Play Integrity passes BASIC only (keybox not revoked); not a dual-boot blocker.
-- **No iOS root is deployed.** `userdata_exp.ai` is a member of Android's multi-device
-  F2FS `/data`; every XNU recipe now binds `blazer_ufs_root=ios_system` and
-  `tools/image_tool.py` refuses `userdata_exp.ai` and `blazer_persist` (b1d2971, ff9261d).
-  XNU dd000c8 (release tree) writes persistence only to the GPT-resolved `ios_data`
-  (type GUID, no overlap, above userdata, sealed guard); host and ARM64 object only.
+- **iOS root on ios_system (2026-11-03, PHYSICAL):** flashed (30/30 OKAY), sha256 on the phone equals the image's
+  padded hash, GPT unchanged, return checks PASS. `a7-ios-system-r1` mounted the HFSX root from ios_system (read only)
+  and ran launchd and SpringBoard, but the panel stayed black: 0 frames, backboardd SIGSEGV every ~30 s (not the
+  NSURL-nil abort), 300 s deadline. `research/ios26-phaseb-r1/A7.md`. LUN letters change between boots: resolve
+  disks by-name. `tools/image_tool.py` still refuses `userdata_exp.ai` and `blazer_persist`; XNU dd000c8 writes only
+  to the GPT-resolved `ios_data` (host, ARM64 object, QEMU negative test; not physical).
 - **Storage (2026-11-03, PHYSICAL):** migrated. After a no-op proof (identical bytes, reboot, return check
   PASS), the owner-approved GPT write made userdata 69.3 GiB (LBA 4,597,990..22,757,375), `ios_system` 24 GiB
   (sda36) and `ios_data` 8 GiB (sda37), project type GUID; `sgdisk --verify` clean; recovery factory reset;
   Android /data 77.3 GiB, nothing mounts ios_*. Rollback copies: `research/ios26-dualboot-r8/gpt-plan/option-a-ios24+8/`.
   Backup and restore receipt: `research/android-backup-20261103/`.
-- **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of chooser-v1-r3 (`shim/chooser.c`, stock boot
-  vbmeta transplanted) chain-loads the stock Android kernel at EL2. Android completed boot 3 times in a row
-  (kernel at 0xc9c00000, /data decrypted, return checks PASS), plain boots follow. r4 (cached decode)
-  reaches Android in 42 s. r7 put the startup menu on the panel (owner saw it), but Linux then panicked:
-  the DPU power domain was left on. r9's attempt to switch it off hung CPM. Volume keys (r8) not run. Receipts:
-  `research/ios26-dualboot-r8/attempts/A3-RESULT.md`.
-  Host fix for the handback (2026-11-03, 69b84d7): the phone's own vs_drm.ko (sha256 92e482be…) always quiesces the
-  DPU before any power-off (trigger off, layer/BE idle, BE interrupts and output clocks reset, isolation 0xf); r9 did
-  none of it. chooser-v1-r10 adds that sequence (host test 58/58, ARM64 code checked); not run on the phone. Receipt:
-  `research/ios26-dualboot-r8/display-handback/SUSPEND-ORDER.md`.
-- **Apps (QEMU, 2026-11-03):** LaunchServices refused every container-requiring app because no user persona
-  exists. Static pass (usermanagerd.otool): only `usermanagerd --init`, a launchd boot task, creates the primary
-  session and the system-session personas; the daemon only loads them. Every apps-lane QEMU boot used `rd=md0`,
-  which launchd treats like a restore boot (spec "ramdisk": only PerformAlways/PerformInRestore tasks run). r13 with
-  `rd=ufsroot0` (one change): boot spec "local", all boot tasks incl. UMD_INIT ran, type-6 persona errors 323 -> 0;
-  but lsd now aborts at launch and the registrar's app enumeration never returns. Registration not accepted.
-  Receipts: `research/ios26-apps-r1/receipts/h3-static-r12/` (incl. PRIOR-ART.md: qemu-t8030, ios-sweet, eshard).
-- **Not complete:** native Metal, stable compositing, strict GPT, a working Android chain
-  and visible menu, higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
+- **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of the chooser (`shim/chooser.c`, stock boot vbmeta
+  transplanted) chain-loads the stock Android kernel at EL2 (r3 x3, r4 in 42 s). **Display handback works:**
+  chooser-v1-r11 showed the startup menu on the panel (owner saw it), released the DPU and booted Android in 42 s
+  (kernel 0xc9c00000, return check PASS). r9/r10 had died on a CPM assert (`lpb.c:676 sswrp_id`) because the release's
+  LPCM off frames put the command in the wrong byte; r11 uses the vendor `send_lpcm_mail` field order and the stock
+  vs_drm.ko quiesce (89d1741, 69b84d7). Volume keys not run yet. Receipts: `research/ios26-dualboot-r8/attempts/`
+  (chooser-v1-r10-t1, r11-t1), `display-handback/SUSPEND-ORDER.md`.
+- **Apps (QEMU, 2026-11-03):** H3 rejected as stated. Booting the root as a normal boot (`rd=ufsroot0`; `rd=md0`
+  is launchd's restore-like "ramdisk" mode) runs the stock creator `usermanagerd --init` and removes the type-6 persona
+  errors, but the user still has no personas and lsd aborts (`INVALID_PERSONA` -> `Could not get user container URL!`).
+  Removing the seeded persona.kb changed nothing (r15b). Lane stopped (two hypotheses); next blocker by static
+  inference: per-user personas wait on `MKBUserSessionLoadKeybagForUser` (AKS user-session keybag), which is
+  SEP-adjacent and needs an owner decision. `research/ios26-apps-r1/receipts/h3-static-r12/VERDICT.md`.
+- **Compositor (2026-11-03):** the physical backboardd NSURL-nil abort is BaseBoard's
+  `BSSystemSharedDirectoryForIdentifier` getting NULL from `container_system_path_for_identifier` (containermanagerd).
+  QEMU never reproduces it (0 respawns in 15 min; the container path resolves), so it is a phone-side timing/
+  availability effect; `research/ios26-apps-r1/receipts/l1-r16/LANE1.md`.
+- **ios_data persist (QEMU, 2026-11-03):** XNU dd000c8 on a GPT-bearing fake LUN (kernel b228c4f) resolved ios_data,
+  saved 12 times and changed only 20 blocks, all inside ios_data's table; nothing else on the medium changed
+  (`research/ios26-dualboot-r8/ios-data-persist/NEGATIVE-r1.md`). Not physical.
+- **QEMU rig:** QEMU runs on m1box (`/data/hackios-qemu`, adopted in `research/ios26-apps-r1/tools/m1box/`): TCG matches
+  the Mac's boot order and is faster; KVM does not boot XNU (`receipts/m1box-rig/CALIBRATION.md`).
+- **Not complete:** native Metal, stable compositing, strict GPT, chooser volume keys and the iOS entry, a
+  visible iOS boot from ios_system (compositor), higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.
 - The README's 47% is a weighted planning checklist, not release readiness.
 
