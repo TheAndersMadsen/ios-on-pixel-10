@@ -1,0 +1,11 @@
+--- a/tools/image_tool.py
++++ b/tools/image_tool.py
+@@ -165,7 +165,7 @@
+ PHONE_ALLOWED.update({'blazer_battery_chg': r'blazer_battery_chg=1', 'blazer_aoc': r'blazer_aoc=1'})  # handoffs/battery.md: the charger's frames, off unless asked; parent, aoc
+ # A7 (GOAL.md): the tokens phone-p32-combined-ui-r1 booted with physically (research/ios26-opt-20261102/combined_p32/image-build.json),
+ # same patterns as research/ios26-bootchain-r1/image_tool.py, which built that image. Persistence stays refused in build().
+-PHONE_ALLOWED.update({'hk_fb_refresh': r'hk_fb_refresh=(60|120)', 'hk_bright': r'hk_bright=[0-9]{2,3}', 'blazer_aks_log': r'blazer_aks_log=1',
++PHONE_ALLOWED.update({'hk_fb_refresh': r'hk_fb_refresh=(60|120)', 'hk_bright': r'hk_bright=[0-9]{2,3}', 'blazer_aks_log': r'blazer_aks_log=1', 'blazer_aks_wrap': r'blazer_aks_wrap=1',
+                       'blazer_gov': r'blazer_gov=1', 'blazer_gov_cap': r'blazer_gov_cap=(18|16|13)', 'blazer_gov_stages': r'blazer_gov_stages=(1|3|5|7|9|11|13|15)',
+                       'blazer_gov_b': r'blazer_gov_b=(3[0-9]|4[0-9]|5[0-5])', 'blazer_thermal_fast': r'blazer_thermal_fast=1',
+                       'blazer_battery_status': r'blazer_battery_status=1', 'blazer_battery_receipt': r'blazer_battery_receipt=1'})

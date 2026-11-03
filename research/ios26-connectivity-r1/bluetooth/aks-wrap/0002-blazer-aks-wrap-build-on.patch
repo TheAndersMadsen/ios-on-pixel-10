@@ -1,0 +1,11 @@
+--- a/makedefs/MakeInc.def
++++ b/makedefs/MakeInc.def
+@@ -97,7 +97,7 @@
+ # Reuse generic non-Apple GIC/PSCI support; keep tegu hardware paths explicit.
+ MACHINE_FLAGS_ARM64_TEGU = -DARM64_BOARD_CONFIG_SWEET -DTEGU=1 -mcpu=cortex-a55 -march=armv8.2-a+crypto
+ # Pixel 10 Pro (Tensor G5): tegu generic port with every G4 hardware site overridden under BLAZER.
+-MACHINE_FLAGS_ARM64_BLAZER = -DARM64_BOARD_CONFIG_SWEET -DTEGU=1 -DBLAZER=1 -mcpu=cortex-a55 -march=armv8.2-a+crypto -DBLAZER_GPU_FW_DIAGNOSTIC=1 -DBLAZER_AKS_TRACE=1 -DBLAZER_AKS_LOG=1
++MACHINE_FLAGS_ARM64_BLAZER = -DARM64_BOARD_CONFIG_SWEET -DTEGU=1 -DBLAZER=1 -mcpu=cortex-a55 -march=armv8.2-a+crypto -DBLAZER_GPU_FW_DIAGNOSTIC=1 -DBLAZER_AKS_TRACE=1 -DBLAZER_AKS_LOG=1 -DBLAZER_AKS_WRAP=1
+ 
+ 
+ #
