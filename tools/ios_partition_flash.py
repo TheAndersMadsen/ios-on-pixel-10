@@ -211,12 +211,13 @@ def commands(rec, a):
         f'fastboot flash {TARGET} {simg}',
         'fastboot reboot',
         '# In Android (read-only):',
-        f"adb shell su -c 'readlink -f /dev/block/by-name/{TARGET}'     # expect /dev/block/sda{rec['entry_index']}",
-        f"adb shell cat /sys/class/block/sda{rec['entry_index']}/start /sys/class/block/sda{rec['entry_index']}/size     # expect {rec['sysfs']['start_512']} and {rec['sysfs']['size_512']} (512-byte units)",
-        f"adb exec-out su -c 'dd if=/dev/block/sda bs={d['bs']} skip={d['skip']} count={d['count']} 2>/dev/null' | python3 -I tools/ios_partition_flash.py verify-stream --receipt {a.out or 'RECEIPT.json'}",
+        '# The LUN letter changes between boots (LUN 0 was sda, then sdb on 2026-11-03): read the disk from by-name, never assume it.',
+        f"P=$(adb shell su -c 'readlink -f /dev/block/by-name/{TARGET}' | tr -d '\\r'); D=${{P%{rec['entry_index']}}}; B=${{P#/dev/block/}}; echo $P $D     # expect /dev/block/sdX{rec['entry_index']}",
+        f"adb shell su -c \"cat /sys/class/block/$B/start /sys/class/block/$B/size\"     # expect {rec['sysfs']['start_512']} and {rec['sysfs']['size_512']} (512-byte units)",
+        f"adb exec-out su -c \"dd if=$D bs={d['bs']} skip={d['skip']} count={d['count']} 2>/dev/null\" | python3 -I tools/ios_partition_flash.py verify-stream --receipt {a.out or 'RECEIPT.json'}",
         f"#   expect PASS, sha256 {rec['padded_sha256']}",
         '# Raw-flash route only (tail not zeroed): compare the root part alone:',
-        f"#   adb exec-out su -c 'dd if=/dev/block/sda bs={r['bs']} skip={r['skip']} count={r['count']} 2>/dev/null' | python3 -I tools/ios_partition_flash.py verify-stream --receipt {a.out or 'RECEIPT.json'} --image-only",
+        f"#   adb exec-out su -c \"dd if=$D bs={r['bs']} skip={r['skip']} count={r['count']} 2>/dev/null\" | python3 -I tools/ios_partition_flash.py verify-stream --receipt {a.out or 'RECEIPT.json'} --image-only",
     ])
 
 

@@ -60,7 +60,7 @@ def main():
     ap.add_argument('--ramdisk-root',action='store_true'); ap.add_argument('--route-md',action='store_true'); ap.add_argument('--var-overlay', type=Path)
     ap.add_argument('--accel', choices=['tcg', 'kvm'], default='tcg'); ap.add_argument('--slots', type=int, default=int(os.environ.get('HACKIOS_QEMU_SLOTS', '1'))); ap.add_argument('--timebase', type=int, default=None); ap.add_argument('--dry', action='store_true')
     # Mac qemu-ufsroot.py names userdata_exp.ai (fake device only); qemu-ufsroot-iossys.py names ios_system. One flag here.
-    ap.add_argument('--ufs-root', default='ios_system')
+    ap.add_argument('--ufs-root', default='ios_system'); ap.add_argument('--root-rw', action='store_true', help='map --root shared and writable (guest stores land in the file); pass a disposable copy')
     ap.add_argument('--dump-window', action='store_true', help='at the end, save the kernel image window (BASE..root) to kernel-window.bin for offline reads of kernel VAs')
     a = ap.parse_args(); out = D/'runs'/a.name; out.mkdir(parents=True)
     SIZE = a.window_gib << 30; epoch = int(time.time())
@@ -104,13 +104,13 @@ def main():
     back = out/'managed.backing'; backc = out/'managed-c.backing'; sock = Path(f'/tmp/i26q-{os.getpid()}.sock')
     cmd = [QEMU, '-machine', mach, '-cpu', cpu, '-smp', '1', '-m', f'{a.ram_gib}G,slots=3,maxmem=80G', *accel,
            '-object', f'memory-backend-file,id=ma,size={ASZ},mem-path={back},share=on,prealloc=off', '-device', f'nvdimm,id=da,memdev=ma,addr={BASE:#x}',
-           '-object', f'memory-backend-file,id=mr,size={rsize},mem-path={a.root.resolve()},share=off,prealloc=off,readonly=on,rom=off', '-device', f'nvdimm,id=dr,memdev=mr,addr={root_pa:#x}',
+           '-object', (f'memory-backend-file,id=mr,size={rsize},mem-path={a.root.resolve()},share=on,prealloc=off' if a.root_rw else f'memory-backend-file,id=mr,size={rsize},mem-path={a.root.resolve()},share=off,prealloc=off,readonly=on,rom=off'), '-device', f'nvdimm,id=dr,memdev=mr,addr={root_pa:#x}',
            '-object', f'memory-backend-file,id=mc,size={CSZ},mem-path={backc},share=on,prealloc=off', '-device', f'nvdimm,id=dc,memdev=mc,addr={root_pa+rsize:#x}',
            '-global', 'virtio-mmio.force-legacy=false', '-device', 'virtio-tablet-device', '-device', 'virtio-keyboard-device',
            '-kernel', str(out/'stub.bin'), '-no-reboot', '-no-shutdown', '-display', 'none', '-monitor', 'none', '-serial', f'file:{out}/uart.log', '-S', '-qmp', f'unix:{sock},server=on,wait=off']
     qv = subprocess.run([QEMU, '--version'], capture_output=True, text=True, env=QENV).stdout.split('\n')[0]
     rec = dict(host=platform.node(), qemu=qv, accel=a.accel, timebase=tb, kernel=str(a.kernel), kernel_sha=sha(a.kernel), root=str(a.root), root_sha=sha(a.root), overlay=str(a.var_overlay) if a.var_overlay else None, overlay_sha=hashlib.sha256(ov).hexdigest() if ov else None,
-               args=ARGS, fixups=nfix, virt_base=hex(vb), entry=hex(m['entry']), root_pa=hex(root_pa), root_size=hex(rsize), adt_pa=hex(adt_pa), ba_pa=hex(ba_pa), top=hex(top), window=SIZE, cpu=cpu, argv=cmd)
+               args=ARGS, root_rw=bool(a.root_rw), fixups=nfix, virt_base=hex(vb), entry=hex(m['entry']), root_pa=hex(root_pa), root_size=hex(rsize), adt_pa=hex(adt_pa), ba_pa=hex(ba_pa), top=hex(top), window=SIZE, cpu=cpu, argv=cmd)
     (out/'intent.json').write_text(json.dumps(rec, indent=1)+'\n')
     if a.dry: print(json.dumps(dict(dry=True, out=str(out), adt_bytes=len(blob), timebase=tb, cpu=cpu, accel=a.accel))); return
     # slot: the lock is held for admission and start only, so --slots N guests can run side by side
