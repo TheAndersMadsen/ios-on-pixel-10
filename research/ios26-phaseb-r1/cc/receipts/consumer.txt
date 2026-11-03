@@ -1,0 +1,1 @@
+pwr_consumer.c: int1-r1 -> cc1-r1 (informational: its fixed expectations are pwr's diff, not this one)

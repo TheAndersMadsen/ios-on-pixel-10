@@ -1,0 +1,2 @@
+OK a7-ios-system-cc1 bootable 0f29e113159585cc79a15670ff73bc6a1e25648420a9b3796022a1f2705ce261
+shared tools/image_tool.py: OK a7-ios-system-cc1 bootable 0f29e113159585cc79a15670ff73bc6a1e25648420a9b3796022a1f2705ce261

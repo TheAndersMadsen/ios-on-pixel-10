@@ -1,0 +1,22 @@
+{
+  "base_sha256": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e",
+  "output_sha256": "34b50aab9aab88335a0618b9069ba825db27b082fa635cfab35c915155d41e35",
+  "bytes": 731104,
+  "records": 53,
+  "mask": "0xa0080081",
+  "replaced": {
+    "39 hk_env": {
+      "old_springboard_rule": "SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome;DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1",
+      "new_springboard_rule": "SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome;DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib:/private/var/hk/hk_flatmat.dylib;HK_BATTERY_TRACE=1;HK_FLATMAT=1",
+      "bytes_with_NUL": 868
+    }
+  },
+  "appended": {
+    "52 /private/var/hk/hk_flatmat.dylib": {
+      "group": 29,
+      "sha256": "66f49f7bf4c456b1f937acae9cfdd281e3ce0b59cb01ff78ae05991f6f0f55c5",
+      "bytes": 69312
+    }
+  },
+  "other_records_byte_identical": 51
+}
