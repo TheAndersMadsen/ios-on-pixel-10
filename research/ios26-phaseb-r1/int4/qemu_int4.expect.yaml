@@ -1,0 +1,57 @@
+# int4 QEMU probes, loaded after tools/qemu_preflight.expect.yaml (replaces rows by id).
+# int4 = int3 (int2-ui debug + obs1 mirror + ABOUT covers + narrow BlastDoor self-check) + fb120 + ram-full + chg1.
+# Run with --keep hk_dbg=0x1e1e1f --keep hk_fb_fast=1 --keep hk_fb_refresh=120 so QEMU boots int4's debug and refresh
+# tokens. blazer_mem=16 and blazer_battery_chg=2 are phone-only in the standard preflight (no phone DRAM map, no SPMI);
+# the mem grow logic is proven by the separate growth-harness run (INT4.md). Root r3 read-only: prune crashes = root r5.
+respawn_allow:
+  # known root-prune prewarm crashers (root r5 scope, out of int3): do not fail the int3 proof on them
+  MobileSMS: 400
+  FaceTime: 400
+  Health: 400
+  Photos: 400
+  Freeform: 400
+  Journal: 400
+  VoiceMemos: 400
+  Magnifier: 400
+  AppleVisionProAp: 400
+  Preferences: 400
+  MobilePhone: 400
+expect:
+  - {id: hk_dbg-parsed, feature: int2-ui debug boot-arg hk_dbg=0x1e1e1f, phone_only: true,
+     need: ['HK DBG: hk_dbg=0x1e1e1f'],
+     note: 'the HK DBG confirmation line is emitted by blazer_usbcon_start, which is phone-only (no DWC3 USB console in TCG); run with --keep hk_dbg=0x1e1e1f so QEMU boots the real int3 line, but the line itself is phone-observable only.'}
+  - {id: overlay-65, feature: int3 overlay (65 entries, 676376 bytes) parsed and applied,
+     need: ['varfs-overlay: .*65 entries, 676376 bytes', 'varfs-overlay: [1-9]\d* applied'],
+     forbid: ['varfs-overlay: bad overlay']}
+  - {id: about-covers, feature: ABOUT covers mounted (ml-en, ax-punct, ax-vopron + int1 coreui),
+     need: ['hkcover: 4 of \d+ covers from the overlay',
+            'hkcover: /System/Library/PrivateFrameworks/MusicLibrary.framework/en.lproj',
+            'hkcover: /System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXSSPunctuationModel.momd',
+            'hkcover: /System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/VOPronunciationModel.momd']}
+  - {id: obs-dyld-merge, feature: obs1 one merged DYLD_INSERT_LIBRARIES per program,
+     need: ["hk_env: SpringBoard: 2 rules' libraries in one DYLD_INSERT_LIBRARIES"]}
+  - {id: obs-hkobs, feature: HKOBS driver-status lines every 10 s,
+     need: ['HKOBS \d+ tick t=\d+ '], values: [{re: 'HKOBS (\d+) tick t=', agg: count, min: 3}]}
+  - {id: obs-mirror, feature: daemon log mirror writes HKL lines (budget drops 0),
+     need: ['HKL (lsd|tccd|configd|SpringBoard)\[\d+\] '], forbid: ['con: .*dropped [1-9]']}
+  - {id: no-blastdoor-sandbox-crash, feature: ABOUT sandbox self-check keeps BlastDoor alive,
+     forbid: ['BlastDoor cannot run unsandboxed', 'CRASH MessagesBlastDoo', 'usertrap: MessagesBlastDoo'],
+     note: 'TCG may not launch BlastDoor; zero-event is not an interactive launch proof.'}
+  - {id: no-ax-crash, feature: AccessibilityUIServer no longer aborts (ax covers restore the .mom models),
+     forbid: ['CRASH AccessibilityUIS', 'Cannot create an NSPersistentStoreCoordinator with a nil model'],
+     note: 'positive if AccessibilityUIServer runs in TCG; else zero-event.'}
+  - {id: hk_dbg-screen, feature: hk_dbg screen bits (hk_screen=30) run the periodic glass capture,
+     need: ['HK SCREEN: on, record 0x[0-9a-f]+ .*every 30 s'], values: [{re: 'HK SCREEN: capture (\d+) periodic', agg: count, min: 3}]}
+  - {id: hk_dbg-ustack, feature: hk_dbg ustack bit arms the stack sampler for Preferences/MobilePhone,
+     need: ['HK USTACK: every \d+ s, .*names Preferences,MobilePhone']}
+  - {id: fb120-running, feature: 120 Hz refresh policy by fast copy (hk-fb120),
+     need: ['SWEET FB: refresh asked 120, running 120, flip 0, interval 35791394',
+            'SWEET FB: refresh 120 by copy: fast 1, waiting poll 250-500 us'],
+     forbid: ['SWEET FB: refresh asked 120, running 60'],
+     note: 'kernel policy only in TCG (no DPU, no panel): swap/kick rates are phone-only.'}
+  - {id: mem-full-map, feature: blazer_mem=16 full map + hw.memsize 16 GiB, phone_only: true,
+     need: ['blazer-mem: full map, installed 0x400000000', 'blazer-mem: vm max_mem 0x[0-9a-f]+, hw.memsize 0x400000000'],
+     note: 'the standard preflight drops blazer_mem (phone DRAM map); the growth-harness run (int4 qg) proves the grow/readback path.'}
+  - {id: charger-report, feature: blazer_battery_chg=2 report-only charger line, phone_only: true,
+     need: ['blazer-battery: mapping 0x53f1000 size 0x300, mode 1, charger reads report only', 'blazer-battery: charger \d+ in='],
+     note: 'no SPMI/charger in QEMU.'}

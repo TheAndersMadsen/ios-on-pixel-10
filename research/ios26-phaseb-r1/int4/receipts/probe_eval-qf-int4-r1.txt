@@ -1,0 +1,5 @@
+1 attempt(s):
+  qf-int4-r1: console
+
+🟡 int4 reaches Home, no unplanned panic: partial [qf-int4-r1]; log reaches works pending confirmation [qf-int4-r1]
+✅ int4 overlay, covers, daemon-log mirror and HKOBS: works [qf-int4-r1]

@@ -1,0 +1,74 @@
+# int4 ARM64 verify (m1box llvm-nm/objdump), 2026-11-03T23:03:03Z
+7b5e63287f2da99f346f634175f81c1fc5d1e68cd23e29ebe551b1fa6ada8c86  build/kernel.int4
+5c896caeff96920daba4e9981ae1e58dfaee406aa16d301cb8742bc5a45ae8be  build/kernel.int4.unstripped
+build/kernel.int4: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
+MH_MAGIC_64   ARM64        ALL  0x00     EXECUTE    25       5936   NOUNDEFS WEAK_DEFINES BINDS_TO_WEAK PIE
+undefined (llvm-nm -u): 0
+## symbols
+fffffe00075684e0 S _hk_dbg
+fffffe00077b7d70 S _hk_dbg_bits
+fffffe00077b7d80 S _hk_dbg_log
+fffffe00077b6200 S _hk_ustack_start
+fffffe00077b1c20 S _hk_top_start
+fffffe0007958fd0 S _user_exception_trace
+fffffe0007db08f0 S _hk_obs_start
+fffffe0007db0170 S _hk_obs_exec
+fffffe0007db03f0 S _hk_obs_exit
+fffffe0007db0510 S _hk_obs_console
+fffffe0007db09e0 S _hk_obs_tick
+fffffe0007db1d30 S _hk_obs_final
+fffffe0007db1e20 S _hk_obs_panic
+fffffe0007982840 S _blazer_usbcon_obs
+fffffe0007d337e0 s _sweet_sandbox_syscall
+fffffe0008722d78 b _sweet_sandbox_self_logged
+fffffe0007604230 S _blazer_usbnet_mode
+fffffe000829e184 S _sweet_fb_fast
+fffffe0008086480 S _blazer_gauge_read
+fffffe00080870e0 s _spmi_frame
+fffffe00073dc180 S _blazer_gauge_frames
+fffffe0008107e98 s _arm_init
+fffffe000824f410 S _max_mem
+fffffe000824f400 S _max_mem_actual
+## C++ (demangled)
+fffffe0008089470 S SweetHIDButtons::liveCancel(unsigned int)
+fffffe00080896a0 S SweetHIDButtons::liveFinish(unsigned int)
+fffffe0008089210 S SweetHIDButtons::liveSubmit(hk_live_command const*)
+fffffe00080897e0 S SweetHIDButtons::liveRelease()
+fffffe000808a3a0 S SweetHIDButtons::liveStopGated(OSObject*, void*, void*, void*, void*)
+fffffe00080899b0 S SweetHIDButtons::liveMove()
+fffffe0008088d90 S SweetHIDButtons::liveFired(OSObject*, IOTimerEventSource*)
+fffffe0008088cb0 S SweetHIDButtons::liveStart()
+## strings (count in stripped kernel)
+  1  HK DBG: hk_dbg=
+  1  HK USTACK: every
+  5  HK SCREEN
+  1  HK LIVE tap gen=
+  1  HKOBS %u %s t=%llu %s: %s
+  1  rules' libraries in one DYLD_INSERT_LIBRARIES
+  1  self-check: sandboxed
+  1  refresh 120 by copy: fast
+  1  fence on for hk_fb_refresh
+  1  refresh asked %u, running %u
+  2  blazer-mem: full map
+  1  blazer-mem: vm max_mem
+  1  blazer-battery: mapping %#llx size %#x, mode %u, charger reads %s   (+ literal 'report only' 1x: the line is a %s format; same in kernel.chg1)
+  1  blazer-battery: charger %u in=
+  1  SWEET BL: calibration
+## disasm: AppleCLCD::paceNextUS (__ZN9AppleCLCD10paceNextUSEv)
+fffffe0008075068:      	cmp	w9, #0x78
+fffffe0008075078:      	cmp	w8, #0xfa
+fffffe000807507c:      	mov	w9, #0xfa       ; =250
+fffffe0008075084:      	mov	w9, #0x1f4      ; =500
+fffffe0008075088:      	cmp	w8, #0x1f4
+fffffe00080750c4:      	cmp	w9, #0x78
+## disasm: sweet_scanout_attach 121/122
+fffffe000807cda4:      	sub	w9, w8, #0x79
+## disasm: _arm_init full-map plan (0xbe0f80000 / 0x400000000)
+fffffe0008108890:      	csel	x11, x11, x9, hi
+fffffe000810889c:      	csel	x10, x11, x9, eq
+fffffe00081088ac:      	csel	x26, x9, x10, lo
+fffffe00081088dc:      	csel	x11, x11, x12, eq
+fffffe00081088e4:      	csel	x10, x12, x10, hi
+fffffe00081088f4:      	csel	x27, x10, x11, hi
+fffffe0008108dac:      	csel	x24, x11, x24, ne
+fffffe0008108ef8:      	csel	x24, x11, x24, ne

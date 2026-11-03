@@ -1,0 +1,182 @@
+# int4: one probe file for every feature merged into a7-ios-system-int4 (research/ios26-phaseb-r1/int4/INT4.md).
+#
+#   python3 -I tools/probe_eval.py --probes research/ios26-phaseb-r1/int4/int4.probes.yaml \
+#       research/laguna-usb-fix/attempts/<fastboot attempt> research/laguna-usb-fix/attempts/live-<...>-a7-int4
+#
+# Pass BOTH the fastboot attempt (ramdump/kernel.log) and the live directory (console.txt): the best verdict per row
+# across them is reported. Every row is milestone: true, so --propose-status never touches docs/status.json; the
+# shared README rows (hz120, ram-rest, charging) stay in docs/probes.yaml. Expected verdict for a good boot: every
+# row "works" except int4-crash-fixes and int4-live-input, which depend on the UI script reaching Settings > About.
+# Patterns come from the phone logs live-20261103-232046-a7-int3 (debug, mirror, covers, BlastDoor) and
+# live-20261103-234014-a7-fb120 (120 Hz, kicks 65.3/s), and from the source of hk-ram-full / hk-chg1 (not yet booted).
+
+version: 1
+
+probes:
+  - id: int4-boot-line
+    phone_only: true
+    milestone: true
+    row: int4 boot line carries all merged tokens
+    needs:
+      markers: ['boot-args = ']
+    works:
+      all:
+        - {re: 'boot-args = .*\bhk_dbg=0x1e1e1f\b|HK DBG: hk_dbg=0x1e1e1f ', label: 'int3 debug (hk_dbg=0x1e1e1f; launchd truncates its boot-args line before this last token, so the kernel HK DBG line counts)'}
+        - {re: 'boot-args = .*\bhk_fb_refresh=120\b', label: 'fb120 (hk_fb_refresh=120)'}
+        - {re: 'boot-args = .*\bhk_fb_fast=1\b', label: 'fb120 needs the fast copy (hk_fb_fast=1)'}
+        - {re: 'boot-args = .*\bblazer_mem=16\b', label: 'ram-full (blazer_mem=16)'}
+        - {re: 'boot-args = .*\bblazer_battery_chg=2\b', label: 'chg1 (blazer_battery_chg=2)'}
+        - {re: 'boot-args = .*\bhk_overlay=0xA0080081\b', label: 'overlay mask (int3 covers + mirror)'}
+      note: 'int4 line booted ({attempt})'
+    owner: 'None'
+
+  - id: int4-home
+    phone_only: false
+    milestone: true
+    row: int4 reaches Home, no unplanned panic
+    needs:
+      markers: ['exec SpringBoard|Successfully spawned \(SpringBoard\)']
+    works:
+      all:
+        - {re: 'SWEET HID: SweetHIDTouch open by', label: touch client}
+        - {re: 'SWEET HID: SweetHIDButtons open by', label: button client}
+        - {re: 'HK TOP: t=\d+ frames\+[1-9]\d*|SWEET FB: rate swaps (?P<swaps>[1-9][\d.]*|0\.[1-9])/s', label: frames}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH (SpringBoard|backboardd)', min: 0, max: 0, label: no SpringBoard/backboardd crash}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline)', min: 0, max: 0, label: no unplanned panic}
+      confirm: owner_or_screenshot
+      note: 'Home with touch, buttons and frames; no SpringBoard/backboardd crash, no unplanned panic ({attempt})'
+    partial:
+      all:
+        - {re: 'exec SpringBoard'}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline)', min: 0, max: 0, label: no unplanned panic}
+    fails:
+      - {re: '^(?:\S+ \[\s*[\d.]+\] )?panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline)', label: unplanned panic}
+      - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH (SpringBoard|backboardd)', label: SpringBoard/backboardd crashed}
+      - {re: 'usertrap: backboardd\[', label: 'backboardd trap (CoreBrightness? hk_bright=140 needs the calibration, present in int4)'}
+    owner: 'Is the Home screen shown, and did Settings open?'
+
+  - id: int4-hk-dbg
+    phone_only: true
+    milestone: true
+    row: int4 debug switches (hk_dbg) armed
+    needs:
+      markers: ['HK DBG: hk_dbg=']
+    works:
+      all:
+        - {re: 'HK DBG: hk_dbg=0x1e1e1f input snap usertrace ustack crashinfo screen 30 top 30', label: 'hk_dbg parsed: input snap usertrace ustack crashinfo, screen 30, top 30'}
+        - {re: 'HK SCREEN: on, record 0x[0-9a-f]+ .*every 30 s', label: hk_screen armed}
+        - {re: 'HK USTACK: every \d+ s, .*names Preferences,MobilePhone', label: stack sampler armed}
+        - {re: 'HK TOP: t=\d+ ', min: 3, label: hk_top every 30 s}
+      note: 'hk_dbg armed: input, snap, usertrace, ustack, crashinfo, hk_screen 30 s, hk_top 30 s ({attempt})'
+    fails:
+      - {re: 'HK DBG: .*(unknown|ignored|bad)', label: hk_dbg rejected}
+    owner: 'None'
+
+  - id: int4-live-input
+    phone_only: true
+    milestone: true
+    row: int4 live input and screenshots over usbcon
+    needs:
+      markers: ['HK LIVE |usbcon: input ']
+    works:
+      all:
+        - {re: 'HK LIVE (tap|swipe) gen=\d+', label: scripted tap/swipe accepted}
+        - {re: 'HK LIVE done gen=\d+ result=0 ', label: a live command completed (result 0)}
+        - {re: 'usbcon: input \{"state":"snapshot"', label: live screenshot snapshot taken}
+      note: 'Live input (tap/swipe) and snapshot worked ({attempt})'
+    fails:
+      - {re: 'HK LIVE done gen=\d+ result=[1-9]', label: a live command failed}
+    owner: 'Did the UI script visibly tap through to Settings > About?'
+
+  - id: int4-obs-mirror
+    phone_only: false
+    milestone: true
+    row: int4 overlay, covers, daemon-log mirror and HKOBS
+    needs:
+      markers: ['varfs-overlay: ']
+    works:
+      all:
+        - {re: 'varfs-overlay: .*65 entries, 676376 bytes', label: 'int3-r1 overlay (65 entries, 676376 B)'}
+        - {re: 'hkcover: 4 of 4 covers from the overlay', label: '4 covers (coreui, ml-en, ax-punct, ax-vopron)'}
+        - {re: 'HKL SpringBoard\[\d+\] -- mirror on: ', label: HKL mirror on in SpringBoard}
+        - {re: 'HKL (configd|lsd|tccd|backboardd)\[\d+\] ', min: 10, label: HKL daemon lines mirrored}
+        - {re: 'HKOBS \d+ tick t=\d+ ', min: 3, label: HKOBS driver status ticks}
+      note: 'Overlay int3-r1, 4 covers, HKL mirror and HKOBS running ({attempt})'
+    fails:
+      - {re: 'varfs-overlay: bad overlay', label: overlay rejected}
+      - {re: 'con: .*dropped [1-9]', label: 'mirror budget dropped lines (over 2048 B/s; informational, seen on the int3 phone boot)'}
+    owner: 'None'
+
+  - id: int4-crash-fixes
+    phone_only: true
+    milestone: true
+    row: int4 BlastDoor and AccessibilityUIServer crash fixes
+    needs:
+      markers: ['exec MessagesBlastDoorService|exec AccessibilityUIServer']
+    works:
+      all:
+        - {re: 'self-check: sandboxed \(profile blastdoor', label: BlastDoor sandbox self-check answered sandboxed}
+        - {re: 'exec AccessibilityUIServer', label: AccessibilityUIServer launched}
+        - {re: 'CRASH MessagesBlastDoo|usertrap: MessagesBlastDoo|BlastDoor cannot run unsandboxed', min: 0, max: 0, label: no BlastDoor crash}
+        - {re: 'CRASH AccessibilityUIS|Cannot create an NSPersistentStoreCoordinator with a nil model', min: 0, max: 0, label: no AccessibilityUIServer crash}
+      note: 'BlastDoor sandboxed and alive, AccessibilityUIServer alive ({attempt})'
+    fails:
+      - {re: 'CRASH MessagesBlastDoo|BlastDoor cannot run unsandboxed', label: BlastDoor crashed}
+      - {re: 'CRASH AccessibilityUIS', label: AccessibilityUIServer crashed}
+    owner: 'None. Expected and NOT int4 scope: Preferences/MobileSMS/FaceTime/Freeform... prewarm SIGABRTs (root r5 prune)'
+
+  - id: int4-hz120
+    phone_only: true
+    milestone: true
+    row: int4 120 Hz (fb120)
+    needs:
+      markers: ['SWEET FB: refresh asked']
+    works:
+      all:
+        - {re: 'SWEET FB: refresh asked 120, running 120, flip 0, interval 35791394', label: kernel runs 120 and publishes the 120 Hz interval}
+        - {re: 'SWEET FB: refresh 120 by copy: fast 1, waiting poll 250-500 us', label: 120 by fast copy}
+        - {re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s', group: kicks, ge: 60.4, label: 'kicks > 60.3/s (frames on consecutive TEs: only possible at 120)'}
+      note: 'Running 120 Hz, peak {kicks} kicks/s ({attempt})'
+    partial:
+      all:
+        - {re: 'SWEET FB: refresh asked 120, running 120'}
+      note: 'Kernel at 120 but no kick rate above 60 seen ({attempt}): CA side'
+    fails:
+      - {re: 'SWEET FB: refresh asked 120, running 60', label: 'fell back to 60 (fast copy off?)'}
+      - {re: 'tensor-dpu: .*(kick failed|latched|no FRM_DONE)', label: DPU regression}
+    owner: 'While scrolling Settings: smooth, no tearing or stale tiles?'
+
+  - id: int4-ram16
+    phone_only: true
+    milestone: true
+    row: int4 full 16 GiB map (ram-full)
+    needs:
+      markers: ['blazer-mem: window']
+    works:
+      all:
+        - {re: 'blazer-mem: window 0x882000000 \+ (?P<window>0x35ef80000), was \+ 0x[0-9a-f]+, hw.memsize 0x400000000', label: 'window 13.48 GiB, hw.memsize 16 GiB'}
+        - {re: 'blazer-mem: full map, installed 0x400000000, managed 0x882000000\.\.0xbe0f80000', label: full map applied}
+        - {re: 'blazer-mem: vm max_mem (?P<max_mem>0x35ef80000), hw.memsize (?P<memsize>0x400000000)', label: VM readback}
+      note: 'Full map: managed {max_mem}, hw.memsize {memsize} ({attempt})'
+    fails:
+      - {re: 'blazer-mem: window 0x882000000 \+ 0x33b000000', label: 'still the 12.92 GiB window (int1/int3 kernel?)'}
+      - {re: 'panic\(cpu .*(arm_vm_init|pmap|blazer-mem)', label: 'panic in the memory setup: the top range is not ours (fallback blazer_mem=13)'}
+    owner: 'None'
+
+  - id: int4-charger
+    phone_only: true
+    milestone: true
+    row: int4 read-only charger line (chg1)
+    needs:
+      markers: ['blazer-battery: ']
+    works:
+      all:
+        - {re: 'blazer-battery: mapping 0x53f1000 size 0x300, mode 1, charger reads report only', label: report-only reader armed}
+        - {re: 'blazer-battery: sample \d+ SOC\(\d+\)', label: gauge sample unchanged}
+        - {re: 'blazer-battery: charger \d+ in=(?P<in>usb|both|wireless|none) chg=(?P<chg>[a-z0-9-]+) mode=(?P<mode>[0-9a-f]) cp=\d wdt=(?P<wdt>\d) cc=(?P<cc>\d+) mA cv=(?P<cv>\d+) mV icl=(?P<icl>\d+) mA', min: 2, label: charger state and programmed limits read}
+      note: 'Charger read only: in={in}, chg={chg}, mode {mode}, CC {cc} mA, CV {cv} mV, input limit {icl} mA, watchdog {wdt} ({attempt})'
+    fails:
+      - {re: 'blazer-battery: charger report \d+ unread', label: charger frame failed}
+      - {re: 'blazer-battery: leaving the controller alone from here on', label: SPMI controller given up (gauge too)}
+      - {re: 'blazer-battery: charger \d+ CHG_CV_PRM [0-9a-f]+ has no voltage', label: CV code outside the vendor table}
+    owner: 'Was the phone on the USB cable for the whole boot? (expect in=usb)'

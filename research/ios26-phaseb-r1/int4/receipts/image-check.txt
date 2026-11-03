@@ -1,0 +1,4 @@
+== image_tool_int4.py check ==
+OK a7-ios-system-int4 bootable 78627bd97fa57c3f62f39eb01efa777c8a5749c3b7c15f1c01247305ddba1b59
+== shared tools/image_tool.py check ==
+shared tools/image_tool.py: OK a7-ios-system-int4 bootable 78627bd97fa57c3f62f39eb01efa777c8a5749c3b7c15f1c01247305ddba1b59

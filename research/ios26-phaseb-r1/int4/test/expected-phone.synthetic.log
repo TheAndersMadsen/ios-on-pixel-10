@@ -1,0 +1,97 @@
+# SYNTHETIC (hand-assembled, NOT phone output): int3 phone lines (live-20261103-232046-a7-int3) for the int3 features,
+# plus the lines the fb120 phone boot printed and the lines the hk-ram-full / hk-chg1 sources print. For int4.probes.yaml tests only.
+00:00:00.100 [    0.05] blazer-mem: window 0x882000000 + 0x35ef80000, was + 0x100000000, hw.memsize 0x400000000
+00:00:00.101 [    0.05] blazer-mem: full map, installed 0x400000000, managed 0x882000000..0xbe0f80000, unmanaged: low bank 0x80000000..0x100000000, high 0x880000000..0x882000000 and 0xbe0f80000..0xc00000000
+00:00:00.120 [    0.07] blazer-mem: vm max_mem 0x35ef80000, hw.memsize 0x400000000
+00:00:00.130 [    0.12] blazer-battery: mapping 0x53f1000 size 0x300, mode 1, charger reads report only
+00:00:00.140 [    0.12] SWEET FB: refresh asked 120, running 120, flip 0, interval 35791394
+00:00:00.141 [    0.12] SWEET FB: refresh 120 by copy: fast 1, waiting poll 250-500 us
+00:00:00.300 [    0.34] com.apple.xpc.launchd|2026-11-04 00:00:00.000000 <Notice>: boot-args = debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 blazer_touch=1 blazer_touch_bars=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 hk_fb_refresh=120 hk_overlay=0xA0080081 blazer_battery=1 blazer_battery_chg=2 blazer_mem=16 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 blazer_gov=1 blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 blazer_usbcon=1 blazer_usbcon_ch9=1 blazer_rtc=1 blazer_rtc_bounds=1 blazer_battery_status=1 hk_bright=140 blazer_aks_wrap=1 blazer_keys=1 blazer_power_key=1 blazer_key_delivery=1 blazer_haptic_tap=1 blazer_netstack=1 hk_dbg=0x1e1e1
+23:21:29.868 [    0.09] HK DBG: hk_dbg=0x1e1e1f input snap usertrace ustack crashinfo screen 30 top 30
+23:21:29.890 [    0.11] HK USTACK: every 5 s, 240 rounds per pid, 12000 lines; names Preferences,MobilePhone; live request on (usbcon 0x70)
+23:21:29.918 [    0.14] HK SCREEN: on, record 0x95550000 (640 KiB), 360 px wide, 2x2 box, at deadline/panic and every 30 s
+23:21:29.966 [    0.19] varfs-overlay: mask 0xa0080081 of groups 0xf8ffffff, 65 entries, 676376 bytes, hash f2cd4bb0169afa58
+23:21:29.985 [    0.21] hkcover: 4 of 4 covers from the overlay
+23:21:31.719 [    1.94] exec SpringBoard
+23:21:32.021 [    2.24] HKL configd[31] -- mirror on: os_log and stderr, 8 lines/s burst 64, 320 B a line
+23:21:32.545 [    2.76] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.CaptiveNetworkSupport
+23:21:32.545 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.EAPOLController
+23:21:32.545 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.IPConfiguration
+23:21:32.545 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.IPMonitor
+23:21:32.545 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.InterfaceNamer
+23:21:32.548 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.KernelEventMonitor
+23:21:32.549 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.LinkConfiguration
+23:21:32.549 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.PPPController not in allow list, ignoring
+23:21:32.552 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.PreferencesMonitor
+23:21:32.552 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.SystemConfiguration.QoSMarking
+23:21:32.552 [    2.77] HKL configd[31] [SCDynamicStore] addPlugin: com.apple.configd.usbdeviceconfig
+23:21:32.926 [    3.14] blazer-battery: sample 1 SOC(95), VCELL(4385), INOW(-25), IAVG(-34), TEMP(3280), raw soc 5fd6 vcell db4c i ffe0 iavg ffd4 t 20cf fstat 0408 dev 5100
+23:21:33.300 [    3.52] HKL SpringBoard[28] -- mirror on: os_log and stderr, 8 lines/s burst 64, 320 B a line
+23:21:34.076 [    4.30] SWEET HID: SweetHIDTouch open by IOHIDEventServiceUserClient -> 1
+23:21:34.098 [    4.32] SWEET HID: SweetHIDButtons open by IOHIDEventServiceUserClient -> 1
+23:21:37.992 [    8.21] HKOBS 1 tick t=10 wifi: off (no blazer_wifi=1)
+23:21:37.992 [    8.21] HKOBS 1 tick t=10 bt: off (no blazer_bt=)
+23:21:37.994 [    8.21] HKOBS 1 tick t=10 usb: console running, configured, host connected, stream 98666 B, served 98458 B, backlog 0, reads 324, restarts 0, stalls 0, fails 0 | net off, rx 0 tx 0 frames, bad 0/0
+23:21:37.994 [    8.22] HKOBS 1 tick t=10 con: budget 2048 B/s burst 32768, ok 279 lines 31665 B (not in the table 0), dropped 0 lines 0 B
+23:21:37.994 [    8.22] HKOBS 1 tick t=10 proc: SpringBoard 1/0 - l2 d0 backboardd 1/0 - configd 1/0 - l86 d0 powerd 1/0 - tccd 1/0 - l74 d0 lsd 1/0 - l117 d0 iconservicesagent 1/0 -
+23:21:39.904 [   10.13] exec AccessibilityUIServer
+23:21:48.309 [   18.53] HKOBS 2 tick t=20 usb: console running, configured, host connected, stream 155414 B, served 155297 B, backlog 0, reads 529, restarts 0, stalls 0, fails 0 | net off, rx 0 tx 0 frames, bad 0/0
+23:21:48.313 [   18.53] HKOBS 2 tick t=20 con: budget 2048 B/s burst 32768, ok 578 lines 64495 B (not in the table 0), dropped 3 lines 684 B
+23:21:48.313 [   18.53] HKOBS 2 tick t=20 proc: SpringBoard 1/0 - l8 d0 backboardd 1/0 - configd 1/0 - l125 d0 powerd 1/0 - tccd 1/0 - l171 d0 lsd 1/0 - l274 d3 iconservicesagent 1/0 -
+23:21:57.939 [   28.16] HK TOP: t=322 frames+3 cpu_ms=61851: lsd[82]=21247 containermanager[52]=3373 launchd[1]=3264 UserEventAgent[26]=3229 backboardd[45]=1632 SpringBoard[28]=1515 kernel_task[0]=1222 audiomxd[80]=1072
+23:21:58.222 [   28.44] HKOBS 3 tick t=30 usb: console running, configured, host connected, stream 182177 B, served 182060 B, backlog 0, reads 632, restarts 0, stalls 0, fails 0 | net off, rx 0 tx 0 frames, bad 0/0
+23:21:58.225 [   28.44] HKOBS 3 tick t=30 con: budget 2048 B/s burst 32768, ok 733 lines 85189 B (not in the table 0), dropped 44 lines 7203 B
+23:21:58.225 [   28.45] HKOBS 3 tick t=30 proc: SpringBoard 1/0 - l8 d0 backboardd 1/0 - configd 1/0 - l125 d0 powerd 1/0 - tccd 1/0 - l184 d26 lsd 1/0 - l416 d18 iconservicesagent 1/0 -
+23:22:01.881 [   32.10] exec MessagesBlastDoorService
+23:22:02.019 [   32.24] SWEET Sandbox: MessagesBlastDoo[156] self-check: sandboxed (profile blastdoor-messages)
+23:22:02.069 [   32.27] SWEET Sandbox: MessagesBlastDoo[156] self-check: sandboxed (profile blastdoor-messages)
+23:22:08.816 [   39.03] HKOBS 4 tick t=40 usb: console running, configured, host connected, stream 263179 B, served 262656 B, backlog 0, reads 922, restarts 0, stalls 0, fails 0 | net off, rx 0 tx 0 frames, bad 0/0
+23:22:27.907 [   58.10] HK TOP: t=352 frames+513 cpu_ms=106492: SpringBoard[28]=36338 iconservicesagen[96]=27621 backboardd[45]=10579 Preferences[191]=4052 linkd[132]=2493 kernel_task[0]=2074 launchd[1]=1730 lsd[82]=1610
+23:22:29.449 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":1,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4735,"t":59.671,"wall":"2026-11-03 23:22:29 +0100","read_s":9.55,"png":"research/laguna-usb-fix/attempts/live-202611
+23:22:32.978 [   63.20] blazer-battery: sample 2 SOC(95), VCELL(4386), INOW(-33), IAVG(-32), TEMP(3303), raw soc 5fd6 vcell db4d i ffd5 iavg ffd7 t 210a fstat 4408 dev 5100
+23:22:44.471 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":2,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4203,"t":74.687,"wall":"2026-11-03 23:22:44 +0100","read_s":9.341,"png":"research/laguna-usb-fix/attempts/live-20261
+23:22:57.951 [   88.14] HK TOP: t=382 frames+330 cpu_ms=61732: iconservicesagen[96]=45518 backboardd[45]=7176 SpringBoard[28]=3196 kernel_task[0]=1423 chronod[79]=1094 launchd[1]=893 runningboardd[27]=801 WidgetRenderer_D[161]=216
+23:22:58.845 [   89.03] HKOBS 9 tick t=90 con: budget 2048 B/s burst 32768, ok 1560 lines 191306 Busbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":3,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4588,"t":89.064,"wall":"2026-11
+23:23:15.170 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":4,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4490,"t":105.39,"wall":"2026-11-03 23:23:15 +0100","read_s":10.699,"png":"research/laguna-usb-fix/attempts/live-2026
+23:23:15.934 [  106.15] HK LIVE swipe gen=2 to x=562 y=1300 ms=300 steps=18
+23:23:16.241 [  106.46] HK LIVE done gen=2 result=0 us=400464806
+23:23:19.721 [  109.94] HK LIVE done gen=3 result=0 us=403950847
+23:23:27.929 [  118.15] HK TOP: t=412 frames+304 cpu_ms=34923: iconservicesagen[96]=23845 backboardd[45]=6012 SpringBoard[28]=1984 kernel_task[0]=1332 runningboardd[27]=761 launchd[1]=406 coreduetd[129]=147 powerexceptionsd[51]=93
+23:23:32.904 [  123.12] blazer-battery: sample 3 SOC(95), VCELL(4386), INOW(-27), IAVG(-30), TEMP(3329), raw soc 5fd3 vcell db4d i ffdd iavg ffd9 t 214b fstat 4408 dev 5100
+23:23:33.696 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":5,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":6047,"t":123.913,"wall":"2026-11-03 23:23:33 +0100","read_s":10.635,"png":"research/laguna-usb-fix/attempts/live-202
+23:23:48.845 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":6,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4266,"t":139.057,"wall":"2026-11-03 23:23:48 +0100","read_s":9.704,"png":"research/laguna-usb-fix/attempts/live-2026
+23:23:57.909 [  148.13] HK TOP: t=442 frames+310 cpu_ms=35410: backboardd[45]=20857 SpringBoard[28]=4876 iconservicesagen[96]=2273 MobileCal[365]=2000 kernel_task[0]=1500 runningboardd[27]=1070 launchd[1]=579 exchangesyncd[373]=357
+23:24:00.170 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":7,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4461,"t":150.39,"wall":"2026-11-03 23:24:00 +0100","read_s":10.486,"png":"research/laguna-usb-fix/attempts/live-2026
+23:24:11.404 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":8,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":5980,"t":161.624,"wall":"2026-11-03 23:24:11 +0100","read_s":10.522,"png":"research/laguna-usb-fix/attempts/live-202
+23:24:22.749 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":9,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4753,"t":172.957,"wall":"2026-11-03 23:24:22 +0100","read_s":10.609,"png":"research/laguna-usb-fix/attempts/live-202
+23:24:23.544 [  173.77] HK LIVE tap gen=4 hold=80 ms
+23:24:23.615 [  173.84] HK LIVE done gen=4 result=0 us=467836945
+23:24:27.920 [  178.14] HK TOP: t=472 frames+315 cpu_ms=9148: backboardd[45]=2719 SpringBoard[28]=2545 kernel_task[0]=1415 runningboardd[27]=1221 launchd[1]=646 audiomxd[80]=138 UserEventAgent[26]=117 thermalmonitord[42]=33
+23:24:32.966 [  183.16] blazer-battery: sample 4 SOC(95), VCELL(4385), INOW(-37), IAVG(-29), TEMP(3333), raw soc 5fd0 vcell db4c i ffd0 iavg ffda t 2155 fstat 4408 dev 5100
+23:24:36.418 [  186.61] HKL SpringBoard[28] [Process] Bootstrapping failed for <FBApplicationProcess: 0x143c96580; ausbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":10,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":5995,"t":186
+23:24:50.341 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":11,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4084,"t":200.562,"wall":"2026-11-03 23:24:50 +0100","read_s":10.473,"png":"research/laguna-usb-fix/attempts/live-20
+23:24:57.912 [  208.13] HK TOP: t=502 frames+300 cpu_ms=8152: backboardd[45]=2443 SpringBoard[28]=2237 kernel_task[0]=1448 runningboardd[27]=1065 launchd[1]=565 UserEventAgent[26]=102 audiomxd[80]=102 thermalmonitord[42]=36
+23:25:04.306 usbcon: input {"state":"snapshot","ui_observed":false,"snapshot":{"magic":826426952,"version":1,"size_of":64,"nonce":943893385161681623,"entry_t":11200233820,"seq":12,"result":0,"width":141,"height":314,"format":1,"step":8,"src_w":1125,"src_h":2511,"size":88548,"took_us":4889,"t":214.526,"wall":"2026-11-03 23:25:04 +0100","read_s":10.483,"png":"research/laguna-usb-fix/attempts/live-20
+23:25:04.889 [  215.11] HK LIVE done gen=5 result=0 us=509102784
+23:25:19.182 [  229.40] HK LIVE tap gen=6 hold=80 ms
+23:25:19.257 [  229.48] HK LIVE done gen=6 result=0 us=523479202
+23:25:27.925 [  238.14] HK TOP: t=532 frames+314 cpu_ms=7285: backboardd[45]=2679 SpringBoard[28]=1800 kernel_task[0]=1423 runningboardd[27]=636 launchd[1]=395 audiomxd[80]=64 UserEventAgent[26]=59 thermalmonitord[42]=34
+23:25:32.938 [  243.16] blazer-battery: sample 5 SOC(95), VCELL(4386), INOW(-20), IAVG(-30), TEMP(3331), raw soc 5fcd vcell db4f i ffe6 iavg ffd9 t 2151 fstat 4608 dev 5100
+23:25:57.917 [  268.14] HK TOP: t=562 frames+300 cpu_ms=6981: backboardd[45]=2433 SpringBoard[28]=1780 kernel_task[0]=1386 runningboardd[27]=662 launchd[1]=406 UserEventAgent[26]=70 audiomxd[80]=68 thermalmonitord[42]=32
+23:26:22.734 [  292.95] HK LIVE swipe gen=7 to x=562 y=800 ms=300 steps=18
+23:26:23.048 [  293.26] HK LIVE done gen=7 usbcon: input {"state":"dispatched","ui_observed":false,"ms":300,"command":{"command":"swipe","x":562,"y":1900,"x2":562,"y2":800,"ms":300},"input":{"magic":826887240,"version":1,"size":72,"nonce":943893385161681623,"entry_t":11200233820,"generation":7,"ticket":949994349,"phase":5,"result":0,"op":107,"x":16946,"y":800,"width":1125,"height":2511,"capabiliti
+23:26:27.936 [  298.15] HK TOP: t=592 frames+301 cpu_ms=7050: backboardd[45]=2432 SpringBoard[28]=1814 kernel_task[0]=1414 runningboardd[27]=643 launchd[1]=393 audiomxd[80]=63 UserEventAgent[26]=59 thermalmonitord[42]=33
+23:26:32.917 [  303.14] blazer-battery: sample 6 SOC(95), VCELL(4386), INOW(-27), IAVG(-27), TEMP(3330), raw soc 5fc9 vcell db4e i ffdd iavg ffdd t 214f fstat 4608 dev 5100
+23:26:57.946 [  328.16] HK TOP: t=622 frames+300 cpu_ms=6914: backboardd[45]=2441 SpringBoard[28]=1732 kernel_task[0]=1435 runningboardd[27]=632 launchd[1]=389 UserEventAgent[26]=66 audiomxd[80]=64 thermalmonitord[42]=36
+23:27:12.420 [  342.64] HK LIVE swipe gen=8 to x=562 y=2000 ms=300 steps=18
+23:27:12.727 [  342.95] HK LIVE done gen=8 result=0 us=636961990
+23:27:27.924 [  358.14] HK TOP: t=652 frames+165 cpu_ms=12403: backboardd[45]=6909 SpringBoard[28]=2352 kernel_task[0]=1120 runningboardd[27]=1003 launchd[1]=521 audiomxd[80]=98 UserEventAgent[26]=94 WidgetRenderer_D[161]=49
+23:27:32.914 [  363.13] blazer-battery: sample 7 SOC(95), VCELL(4386), INOW(-37), IAVG(-28), TEMP(3330), raw soc 5fc6 vcell db4f i ffd0 iavg ffdc t 214e fstat 4608 dev 5100
+23:28:32.989 [  423.21] blazer-battery: sample 8 SOC(95), VCELL(4385), INOW(-28), IAVG(-27), TEMP(3327), raw soc 5fc6 vcell db4c i ffdc iavg ffdd t 2146 fstat 4628 dev 5100
+23:29:32.925 [  483.14] blazer-battery: sample 9 SOC(95), VCELL(4385), INOW(-28), IAVG(-27), TEMP(3323), raw soc 5fc3 vcell db4c i ffdc iavg ffdd t 213c fstat 4628 dev 5100
+23:30:32.942 [  543.16] blazer-battery: sample 10 SOC(95), VCELL(4385), INOW(-36), IAVG(-25), TEMP(3320), raw soc 5fc0 vcell db4c i ffd1 iavg ffdf t 2135 fstat 4628 dev 5100
+23:31:32.947 [  603.14] HKL SpringBoard[28] [Remote View] Spotlight launch failed because of error: Error Domain=RBSRequestErrorDomain Code=5 "Launch failed." UserInfo={NSLocalizedFailureReason=Launch failed., NSUnderlyingError=0x14c597ea0 {Error Domain=NSPOSIXErrorDomain Code=86 "Bad CPU type in executblazer-battery: sample 11 SOC(95), VCELL(4385), INOW(-28), IAVG(-27), TEMP(3317), raw soc 5fbd v
+23:32:32.947 [  663.14] blazer-battery: sample 12 SOC(95), VCELL(4386), INOW(-34), IAVG(-25), TEMP(3316), raw soc 5fbd vcell db4d i ffd4 iavg ffdf t 212a fstat 4628 dev 5100
+00:01:00.000 [   60.00] blazer-battery: charger 1 in=usb chg=cc mode=5 cp=0 wdt=0 cc=3000 mA cv=4400 mV icl=1500 mA wicl=700 mA ichgin=480 mA
+00:02:00.000 [  120.00] blazer-battery: charger 2 in=usb chg=cc mode=5 cp=0 wdt=0 cc=3000 mA cv=4400 mV icl=1500 mA wicl=700 mA ichgin=470 mA
+00:00:47.000 [   46.94] SWEET FB: rate swaps 67.9/s kicks 65.3/s max_gap_us 31000 changed 1,1 1125x2511 unsaid 0

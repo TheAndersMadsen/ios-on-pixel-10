@@ -1,0 +1,12 @@
+1 attempt(s):
+  test: console
+
+✅ int4 boot line carries all merged tokens: works [test]
+🟡 int4 reaches Home, no unplanned panic: partial [test]; log reaches works pending confirmation [test]
+✅ int4 debug switches (hk_dbg) armed: works [test]
+✅ int4 live input and screenshots over usbcon: works [test]
+✅ int4 overlay, covers, daemon-log mirror and HKOBS: works [test]
+✅ int4 BlastDoor and AccessibilityUIServer crash fixes: works [test]
+✅ int4 120 Hz (fb120): works [test]
+✅ int4 full 16 GiB map (ram-full): works [test]
+✅ int4 read-only charger line (chg1): works [test]

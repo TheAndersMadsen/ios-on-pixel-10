@@ -1,0 +1,18 @@
+vs a7-ios-system-int3: cmdline bytes 1000 -> 1022 (len 1022); tokens 56 -> 57
+cmdline DIFFERS: -['blazer_mem=13', 'hk_fb_refresh=60'] +['blazer_battery_chg=2', 'blazer_mem=16', 'hk_fb_refresh=120']
+adt: "db913f9efcc0dc52a016b8cadb43fc7d760dda7746abefe65b96375b92544a17" -> "e2472776f07c82e2d9c232bfa1377bc516d5d3c4044f133bbc17f149e9d9c8a6"
+adt_facts: {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000",  -> {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", 
+cmdline: "debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim -> "debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim
+cmdline_bytes: 1000 -> 1022
+decode: "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-int3/manifest.json" -> "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-int4/manifest.json"
+epoch: 1793743918 -> 1793747041
+ids: {"epoch": "0x2f2c8f00f7", "handoff": 1, "record_nonce": "5f32cfa852a68405433e099367a29073", "stamp_nonce": "0x0d19620868672ad7"} -> {"epoch": "0x2f2c8f1f04", "handoff": 1, "record_nonce": "6810d5d074e3314fa68954411e49ce6d", "stamp_nonce": "0xb36273222be5fc36"}
+image: "eff0ed9ffac0e57512746409d0327711f9b91ac6fa0b25da395ed0504c89e0f5" -> "78627bd97fa57c3f62f39eb01efa777c8a5749c3b7c15f1c01247305ddba1b59"
+mach: "648b9f62c2a6b6b2086add8178fc1f8a7943347604a1bc9e1f2f81e9e1049641" -> "7b5e63287f2da99f346f634175f81c1fc5d1e68cd23e29ebe551b1fa6ada8c86"
+margin_bytes: 39894432 -> 39894128
+name: "a7-ios-system-int3" -> "a7-ios-system-int4"
+payload: "a4e4f8badc06c01f39a1a0a48374ec550b2f3935a08c161a92f7be5b317765fd" -> "11616376e232ffe586de714ffb35aeb0025c1a3bf60afc924185b6bf25377a18"
+payload_bytes: 26165856 -> 26166160
+tools: {"adt.py": "ebb7a858835fc7acf5da1e543a05b9561e70c6fd4f9328f4d52c009465573bdd", "image_tool.py": "91fd06eef9527747457ef15f588769c247a6dd24d7c29ee8df790367455e0d92", "mkadt.py": "ad0f50ed677d0d44f44dddb -> {"adt.py": "ebb7a858835fc7acf5da1e543a05b9561e70c6fd4f9328f4d52c009465573bdd", "image_tool.py": "963599c047fabc53e1f392ce67763d18bddd5e9a35ad51f584dba4236c18b43a", "mkadt.py": "ad0f50ed677d0d44f44dddb
+CMDLINE_BYTES 1022
+CMDLINE debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 blazer_touch=1 blazer_touch_bars=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 hk_fb_refresh=120 hk_overlay=0xA0080081 blazer_battery=1 blazer_battery_chg=2 blazer_mem=16 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 blazer_gov=1 blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 blazer_usbcon=1 blazer_usbcon_ch9=1 blazer_rtc=1 blazer_rtc_bounds=1 blazer_battery_status=1 hk_bright=140 blazer_aks_wrap=1 blazer_keys=1 blazer_power_key=1 blazer_key_delivery=1 blazer_haptic_tap=1 blazer_netstack=1 hk_dbg=0x1e1e1f blazer_bootcpu=0x200

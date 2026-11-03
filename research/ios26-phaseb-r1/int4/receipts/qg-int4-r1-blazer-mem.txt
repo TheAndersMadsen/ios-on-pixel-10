@@ -1,0 +1,6 @@
+blazer-mem: window 0xa00000000 + 0x3c0000000, was + 0x280000000, hw.memsize 0x400000000
+blazer-mem: full map (QEMU fake), installed 0x400000000, managed 0xa00000000..0xdc0000000
+blazer-mem: vm max_mem 0x3c0000000, hw.memsize 0x400000000
+blazer-mem: test start 0xc80000000..0xdc0000000 stride 4096
+blazer-mem: test written
+blazer-mem: test pass

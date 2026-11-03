@@ -1,0 +1,28 @@
+23:58:07 waiting for build slot lock
+23:58:07 lock held
+23:58:07 tree branch p1 HEAD b228c4f
+23:58:07 checked out hk-int4 f6c8a68909fd979104228e8495f5465fd545c5d5
+23:59:19 build int4-build rc 0
+23:59:19 7b5e63287f2da99f346f634175f81c1fc5d1e68cd23e29ebe551b1fa6ada8c86  kernel.int4
+23:59:19 5c896caeff96920daba4e9981ae1e58dfaee406aa16d301cb8742bc5a45ae8be  kernel.int4.unstripped
+23:59:19 b5720f4d8176860e8bec3d773d50883e983b62ea8b4dd6530330a8d6dc15a8de  sweet_amfi.o (/bsd/DEVELOPMENT/sweet_amfi.o)
+23:59:19 ba77495b663ea3406452f6c45b5db09c3899aa0c5e51086f2ac0a154162505e5  blazer_usbnet.o (/bsd/DEVELOPMENT/blazer_usbnet.o)
+23:59:19 74b269b195f3f778fdc86d41ba760a2bd590b63a3f2e075dec84a4570b157581  hk_ustack.o (/osfmk/DEVELOPMENT/hk_ustack.o)
+23:59:19 fcd6d4b2b01a92e25b8a63c5bb25f654433bf97fc617b6bd95adc685fda9eebd  hk_obs.o (/bsd/DEVELOPMENT/hk_obs.o)
+23:59:19 1c00a526dbb6f0a6b38c8ef0dd1219fb6dc0e5e3c1c576b958b4890e75013679  hk_screen.o (/osfmk/DEVELOPMENT/hk_screen.o)
+23:59:19 8cead1719a4d21cd187b1a46488b98e6f307034998a9c4ea6b04ca89e0ba1738  SweetHID.cpo (/iokit/DEVELOPMENT/SweetHID.cpo)
+23:59:19 75aa986fa865a206dcafefff2f5640dc0a698bac6d82e0ffb2c3f5e008b9cece  SweetFramebuffer.cpo (/iokit/DEVELOPMENT/SweetFramebuffer.cpo)
+23:59:19 3b8b6f195fcb2c9f5ef58c1fe0471bc72a4e6939075da5ec406770a8ee83f60b  SweetKeyStore.cpo (/iokit/DEVELOPMENT/SweetKeyStore.cpo)
+23:59:19 14b42cd022c41c5b68c442aaddec070aa48a830ddf925970ad01936c5ca4f15a  ramfs.o (/bsd/DEVELOPMENT/ramfs.o)
+23:59:19 4deac5884c18be915547c7f9e47edd5d4b9d9f978e868db826b6b34b284dae2c  hakios.blazer_ufs.o (/bsd/DEVELOPMENT/hakios.blazer_ufs.o)
+23:59:19 50f6e05b999b7395ef7a0212c86798635e625eddd344466ee3c5d64dd9cafafe  sweet_scanout.cpo (/iokit/DEVELOPMENT/sweet_scanout.cpo)
+23:59:19 524c0512779d5ded8dfe2fd37e38f3ae4deae669a295e7f27d056f7206b6f43a  tensor_dpu.o (/iokit/DEVELOPMENT/tensor_dpu.o)
+23:59:19 1dcdaa1ded9105f969ae9cc2ee047bed21cbddb600142ac9dc018abade5da623  arm_init.o (/osfmk/DEVELOPMENT/arm_init.o)
+23:59:19 da58ef691686ce670fca439bd4a368a9d714cfd236e4bd6ce3a14e94f78ed89a  blazer_gauge.o (/iokit/DEVELOPMENT/blazer_gauge.o)
+23:59:19 restored branch p1 HEAD b228c4f
+00:00:29 build int4-restore-p1-build rc 0
+00:00:29 obj kernel after restore deb7f2bdb67544a597223dedd641ccb036a7031762545072843e48491bf3d167
+00:00:29 restored p1 kernel has 'HK USTACK: every': False
+00:00:29 restored p1 kernel has 'refresh 120 by copy': False
+00:00:29 restored p1 kernel has 'blazer-mem: full map': False
+00:00:29 restored p1 kernel has 'blazer-battery: charger %u in=': False
