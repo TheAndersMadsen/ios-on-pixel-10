@@ -1,0 +1,17 @@
+ls: /vendor/firmware: Permission denied
+sha256sum: /vendor/firmware/fw_bcmdhd.bin_4390_b1: Permission denied
+sha256sum: /vendor/firmware/bcmdhd.cal_USI_G7BB_7311_V11: Permission denied
+sha256sum: /vendor/firmware/bcmdhd_clm.blob_4390_b1: Permission denied
+sha256sum: /vendor/firmware/bcmdhd_txcap.blob_ROW: Permission denied
+[   11.871291] [20:13:08.064741][dhd][wlan]dhd_get_fw_nvram_names: fw path = fw_bcmdhd.bin_4390_b1; nvram path = bcmdhd.cal_USI_G7BB_7311_V11; map path = fw_bcmdhd.map_4390_b1
+[   11.871863] [20:13:08.065315][dhd][wlan]dhd_get_complete_blob_name: blob path = bcmdhd_clm.blob_4390_b1
+[   11.871888] [20:13:08.065340][dhd][wlan]dhd_set_blob_support: ----- blob file exists (bcmdhd_clm.blob_4390_b1) -----
+[   12.230152] aoc: successfully loaded firmware version 16495511-polygon type release
+[   12.947363] aoc: firmware version 16495511-polygon did become online with 99 services
+[   13.239346] cs35l43 spi18.0: DSP1: Firmware version: 3
+[   13.299617] cs35l43 spi18.1: DSP1: Firmware version: 3
+[   13.322839] [20:13:09.516291][dhd][wlan]Firmware version = wl0: Sep 23 2026 12:15:34 version 27.10.1121.57.31 (g4159d38 b1 release2) FWID 01-765a5017
+[   13.332339] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob_MP1.0_ROW failed with error -2
+[   13.332381] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob_MP1.0 failed with error -2
+[   13.332422] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob_ROW failed with error -2
+[   13.332443] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob failed with error -2
