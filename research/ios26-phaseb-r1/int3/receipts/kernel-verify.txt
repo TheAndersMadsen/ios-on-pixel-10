@@ -1,0 +1,44 @@
+kernel.int3.unstripped 8b520f8b6e91ec392c975277af060164946cc73975959ab79bd8a184732f796a
+kernel.int3 (stripped)  648b9f62c2a6b6b2086add8178fc1f8a7943347604a1bc9e1f2f81e9e1049641
+branch hk-int3 3dc7fec3663746ed0390f360c3fa63031b970861 = hk-dbg12 25d3978 + about 48b613b
+arch: mach-o arm64
+undefined symbols: 0
+-- hk_screen / snapshot / live-HID symbols
+fffffe00076de728 s __ZL19SweetHIDButtons_ktv
+fffffe000829e288 S __ZN15SweetHIDButtons10gMetaClassE
+fffffe000808a430 S __ZN15SweetHIDButtons10handleOpenEP9IOServicejPv
+fffffe0008088d80 S __ZN15SweetHIDButtons10liveCancelEj
+fffffe0008088fb0 S __ZN15SweetHIDButtons10liveFinishEj
+fffffe0008088b20 S __ZN15SweetHIDButtons10liveSubmitEPK15hk_live_command
+fffffe00076b6c58 S __ZN15SweetHIDButtons10superClassE
+fffffe000808a4b0 S __ZN15SweetHIDButtons11handleCloseEP9IOServicej
+fffffe00080890f0 S __ZN15SweetHIDButtons11liveReleaseEv
+fffffe000808d7a0 s __ZN15SweetHIDButtons12getProductIDEv
+fffffe0008089e60 S __ZN15SweetHIDButtons12physicalStopEv
+fffffe0008089cb0 S __ZN15SweetHIDButtons13liveStopGatedEP8OSObjectPvS2_S2_S2_
+fffffe000808a1d0 S __ZN15SweetHIDButtons13physicalGatedEP8OSObjectPvS2_S2_S2_
+fffffe000808a020 S __ZN15SweetHIDButtons13physicalResetEv
+fffffe000808a520 S __ZN15SweetHIDButtons13physicalStartEv
+fffffe000808d790 s __ZN15SweetHIDButtons15getPrimaryUsageEv
+fffffe000808a610 S __ZN15SweetHIDButtons15physicalRequestEiiy
+fffffe000808d780 s __ZN15SweetHIDButtons19getPrimaryUsagePageEv
+fffffe000808b970 S __ZN15SweetHIDButtons3keyEjb
+fffffe0008089d10 S __ZN15SweetHIDButtons4stopEP9IOService
+-- feature strings (count)
+HK DBG: hk_dbg=                                      1
+HK USTACK: every                                     1
+HK SCREEN                                            5
+HKOBS %u %s t=%llu %s: %s                            1
+rules' libraries in one DYLD_INSERT_LIBRARIES        1
+HK LIVE tap gen=                                     1
+blastdoor                                            0
+self-check: sandboxed                                1
+SWEET Sandbox                                        4
+-- about op-2 self-query path in _sweet_sandbox_syscall (expect cmp #2 + copyin + IOCurrentTaskGetEntitlement)
+fffffe0007d33860:      	bl	0xfffffe0007972430 <_copyin>
+fffffe0007d338ec:      	cmp	w19, #0x2
+fffffe0007d33924:      	bl	0xfffffe0007972430 <_copyin>
+fffffe0007d33948:      	mov	w0, #0x2        ; =2
+fffffe0007d33970:      	bl	0xfffffe0007972430 <_copyin>
+fffffe0007d339e0:      	bl	0xfffffe0008040e90 <_IOCurrentTaskGetEntitlement>
+fffffe0007d33a00:      	ldrb	w8, [x0, #0x2]

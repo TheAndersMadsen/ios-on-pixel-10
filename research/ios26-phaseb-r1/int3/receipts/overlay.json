@@ -1,0 +1,43 @@
+{
+  "base_sha256": "edbd799a3bc1651b03e3e4eb0bec0024aac69a80a663541104052543a3f795af",
+  "output_sha256": "898740adf222a87498e7331860f47ed9b020ac84d8ff496c4d99e04c616db2f3",
+  "bytes": 676376,
+  "records": 65,
+  "mask": "0xa0080081",
+  "replaced": {
+    "39 hk_env": {
+      "removed_rule": "tccd:DYLD_INSERT_LIBRARIES=/private/var/hk/hk_stderr_console.dylib;HK_STDERR_CONSOLE=1;OS_ACTIVITY_DT_MODE=YES",
+      "appended_rule": "wifid+configd+bluetoothd+WirelessRadioManagerd+CommCenter+locationd+tccd+lsd+SpringBoard+MobilePhone+Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib;HK_LOGMIRROR=1;OS_ACTIVITY_DT_MODE=YES",
+      "bytes_with_NUL": 920,
+      "before_bytes_with_NUL": 822
+    },
+    "50 library": {
+      "from": "/private/var/hk/hk_stderr_console.dylib",
+      "to": "/private/var/hk/hk_logmirror.dylib",
+      "sha256": "0efadc03bf7f86358bda30bfdbea00e5858ef1038d1e6ad8fdbaf93f19139d8a",
+      "bytes": 51040
+    }
+  },
+  "programs": [
+    "wifid",
+    "configd",
+    "bluetoothd",
+    "WirelessRadioManagerd",
+    "CommCenter",
+    "locationd",
+    "tccd",
+    "lsd",
+    "SpringBoard",
+    "MobilePhone",
+    "Preferences"
+  ],
+  "other_records_byte_identical": 63,
+  "input_about_sha256": "edbd799a3bc1651b03e3e4eb0bec0024aac69a80a663541104052543a3f795af",
+  "covers": [
+    "/private/var/hkcover/ax-punct.cover",
+    "/private/var/hkcover/ax-vopron.cover",
+    "/private/var/hkcover/coreui-colour.cover",
+    "/private/var/hkcover/ml-en.cover"
+  ],
+  "output": "research/ios26-phaseb-r1/int3/overlays/int3-r1.ovl"
+}

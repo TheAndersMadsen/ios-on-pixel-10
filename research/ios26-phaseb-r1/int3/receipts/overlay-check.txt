@@ -1,0 +1,5 @@
+== int3-r1.ovl
+hkov_check: ok, 65 entries, 676376 bytes, hash f2cd4bb0169afa58
+groups 0xf8ffffff, mask 0xa0080081, mask & ~groups = 0x0
+hkov_cover_check: ok, covers 4
+rc=0
