@@ -12,16 +12,16 @@
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>47%</b> across 47 reachable features. Updated 2026-11-02.</p>
+<p align="center"><b>47%</b> across 49 reachable features. Updated 2026-11-03.</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
 | | Status | Features | Counts as |
 | --- | --- | ---: | ---: |
 | ✅ | Works on the phone | 12 | 100% |
-| 🟡 | Partly working | 13 | 60% |
+| 🟡 | Partly working | 14 | 60% |
 | 🔧 | Built, not run | 1 | 35% |
-| ⏳ | In progress | 10 | 20% |
+| ⏳ | In progress | 11 | 20% |
 | ❌ | Not started | 11 | 0% |
 | 🚫 | Likely out of reach | 6 | not counted |
 
@@ -50,8 +50,10 @@
 |  | Metal drawing | ⏳ Native GPU rendering remains incomplete; sampler pixel checks pass, while startup crashes confound speed claims |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
-|  | Writing (persistent /var) | 🟡 Saves and restore across reset verified; root unchanged; real-setting test pending |
+|  | Writing (persistent /var) | 🟡 Saves and restore across reset verified on the old root; writer now bound to the GPT-resolved ios_data (host-tested), not yet run there |
 |  | Maximum speed | ⏳ Patches being measured |
+|  | Android/iOS boot chooser | 🟡 Android booted through the chooser 3x in a row (42 s); menu shown on the panel; display handback and iOS entry pending |
+|  | Isolated iOS partitions | ⏳ Partition plan built and verified (ios_system 24 GiB, ios_data 8 GiB); one-time Android migration in progress |
 | **Input** | Touch | ✅ Owner confirmed Home and Settings in the combined p32 phone test; backboardd respawns and UI stability remain unresolved |
 |  | Scripted taps and keys | 🟡 Remote HOME visibly worked; TAP dispatched but required manual app recovery. No automatic retry or clean TAP acceptance |
 |  | Volume keys | 🟡 Read in a probe |
@@ -97,13 +99,20 @@
 
 ## Current checkpoint
 
-Native iOS 26 reached human-confirmed Home and Settings on the Pixel, but the UI
-is unstable and native Metal, radios, stock-app launches and dual boot remain
-incomplete. Android has been restored; the former on-phone iOS root is gone, so
-future deployment requires a fresh storage/recovery plan.
+**Dual boot is under way.** A boot chooser built into the project's shim now starts the phone's own
+Android kernel: Android booted through it three times in a row (42 s with caches on). Plain boots are
+unaffected. The chooser's startup menu has been shown on the panel. Handing the display back to Android
+after the menu, the iOS entry and volume-key selection are still open.
 
-Read [NOTES.md](NOTES.md) for current state and [HANDOFF.md](HANDOFF.md) for next
-actions. The percentage above is a planning checklist, not release readiness.
+iOS storage is being moved off Android's extents for good. A one-time migration gives iOS its own
+`ios_system` and `ios_data` partitions. The kernel's only write path is locked to `ios_data` by GPT
+name, type and position, and checked before every write. No iOS root is deployed until that migration is done.
+
+Native iOS 26 reached human-confirmed Home and Settings earlier; the UI is still unstable, and native
+Metal, radios and stock-app launches remain incomplete.
+
+Read [NOTES.md](NOTES.md) for current state and [HANDOFF.md](HANDOFF.md) for next actions. The
+percentage above is a planning checklist, not release readiness.
 
 <!-- latest-checkpoint:end -->
 
@@ -130,6 +139,7 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
+- Migrate storage to isolated ios_system/ios_data partitions and install the Android/iOS chooser
 - Resolve startup/compositor crashes and measure frame completion before promoting sampler speed
 - Analyze the captured GPU firmware DEBUG_DUMP and complete strict health
 - Qualify native battery/clock presentation and interactive TAP/HOME behavior
@@ -138,7 +148,7 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Next**
 
-- Verify persistent real settings and isolated, recoverable storage for Android/iOS dual boot
+- Verify persistent real settings on ios_data across reboots; finish the on-screen chooser menu
 - Validate volume and power keys, display sleep and wake
 - Verify visible battery percentage, real date/time and brightness control
 - Repair and physically qualify USB ECM networking, then native mux pairing
@@ -166,16 +176,20 @@ serial number, IMEI, MAC address or account name.
 
 ## How it boots
 
-This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5), running XNU 12377 and the iOS 26 userland. Physical development used temporary RAM boots through `fastboot boot`; the boot tool leaves `force-fastboot` on. Before Android recovery, the root image was deployed in `userdata_exp.ai`. That former root was overwritten and reformatted during recovery, so **no iOS root is currently deployed** and future storage placement requires a fresh reviewed plan.
+This project ports Apple's open-source XNU kernel to the Pixel 10 Pro (`laguna`, board `blazer`, Tensor G5), running XNU 12377 and the iOS 26 userland. Development uses temporary RAM boots through `fastboot boot`. The dual-boot design adds a chooser in front of both systems:
 
 ```
 ABL (stock Google bootloader, unlocked)
-  -> fastboot boot <image>                    (temporary; nothing is flashed to boot)
-     -> shim: own MMU setup, reads the live FDT, loads the payload
-        -> XNU Mach-O + generated Apple Device Tree (ADT) + boot-args
-           -> XNU -> small ramdisk, then mounts the UFS root in userdata_exp.ai
-              -> dyld + shared cache -> launchd -> daemons -> UI
+  -> boot image (fastboot boot today; boot_b once installed)
+     -> shim chooser: menu, volume keys, 5 s default to Android        (shim/chooser.c)
+        |- Android: decompress the stock kernel carried in the image,
+        |           jump at EL2 with ABL's own FDT, ramdisk and bootconfig
+        `- iOS:     XNU Mach-O + Apple Device Tree + boot-args
+                    -> root on ios_system, /var persistence on ios_data only
+                       -> dyld + shared cache -> launchd -> daemons -> UI
 ```
+
+Android's partitions are never written by the shim or by XNU. Storage changes are made only by the owner, from a reviewed plan with byte-exact rollback copies ([docs/DUALBOOT.md](docs/DUALBOOT.md)).
 
 There is no serial console. The diagnostics live in reserved RAM at `0x95200000` and are read from fastboot after the phone returns there.
 

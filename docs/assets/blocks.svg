@@ -21,9 +21,9 @@
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="242" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">45%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="302" font-size="23" font-weight="600" fill="#f5f5f7">Storage</text>
 <rect x="250" y="286" width="800" height="16" rx="8" fill="#1c1c1e"/>
-<clipPath id="c4"><rect x="250" y="286" width="480" height="16" rx="8"/></clipPath>
-<g clip-path="url(#c4)"><rect x="250" y="286" width="480" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;480" keyTimes="0;0.167;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.92s" fill="freeze"/></rect><rect x="730" y="286" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;730" dur="3.2s" begin="1.92s" repeatCount="indefinite"/></rect></g>
-<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="302" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">60%</text>
+<clipPath id="c4"><rect x="250" y="286" width="416" height="16" rx="8"/></clipPath>
+<g clip-path="url(#c4)"><rect x="250" y="286" width="416" height="16" fill="url(#g)"><animate attributeName="width" values="0;0;416" keyTimes="0;0.167;1" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1" dur="1.92s" fill="freeze"/></rect><rect x="666" y="286" width="110" height="16" fill="#fff" opacity=".22"><animate attributeName="x" values="140;666" dur="3.2s" begin="1.92s" repeatCount="indefinite"/></rect></g>
+<text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="1152" y="302" text-anchor="end" font-size="23" font-weight="600" fill="#f5f5f7">52%</text>
 <text font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif" x="48" y="362" font-size="23" font-weight="600" fill="#f5f5f7">Input</text>
 <rect x="250" y="346" width="800" height="16" rx="8" fill="#1c1c1e"/>
 <clipPath id="c5"><rect x="250" y="346" width="384" height="16" rx="8"/></clipPath>
