@@ -54,6 +54,8 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-gpu-r1/m2/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log|patch)
   | ios26-gpu-r1/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log)
   | ios26-phaseb-r1/fast-start/[A-Za-z0-9_.-]+\.md
+  | ios26-gpu-native-r1/[A-Za-z0-9_.-]+\.(md|txt|json)
+  | ios26-modem-r1/([A-Za-z0-9_.-]+/){0,3}[A-Za-z0-9_.-]+\.(md|c|h|inc|py|sh|txt|json|yaml|patch|diff|out|log)
   | ios26-nfc-r1/([A-Za-z0-9_.-]+/){0,3}[A-Za-z0-9_.-]+\.(md|c|h|inc|py|sh|txt|json|yaml|patch|diff|out|log)
   | ios26-camera-r1/([A-Za-z0-9_.-]+/){0,3}[A-Za-z0-9_.-]+\.(md|c|h|inc|py|sh|txt|json|yaml|patch|diff|out|log)
   | ios26-ram-r1/([A-Za-z0-9_.-]+/){0,2}[A-Za-z0-9_.-]+\.(md|c|h|py|sh|txt|json|patch|out|log)
