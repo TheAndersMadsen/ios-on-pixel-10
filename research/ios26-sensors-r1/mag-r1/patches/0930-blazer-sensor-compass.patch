@@ -1,0 +1,618 @@
+diff --git c/bsd/conf/files i/bsd/conf/files
+index 6fd905f..ec8b652 100644
+--- c/bsd/conf/files
++++ i/bsd/conf/files
+@@ -127,6 +127,7 @@ bsd/dev/blazer_touch.c			standard
+ bsd/dev/blazer_audio.c			standard
+ bsd/dev/blazer_sensor_hw.c		standard
+ bsd/dev/blazer_sensors.c		standard
++bsd/dev/blazer_mag_hw.c			standard
+ bsd/dev/blazer_haptic_hw.c		standard
+ bsd/dev/blazer_haptic.c			standard
+ bsd/dev/blazer_btuart_hw.c		standard
+diff --git c/bsd/dev/blazer_mag_hw.c i/bsd/dev/blazer_mag_hw.c
+new file mode 100644
+index 0000000..b31bfc1
+--- /dev/null
++++ i/bsd/dev/blazer_mag_hw.c
+@@ -0,0 +1,129 @@
++#if defined(BLAZER)
++/* SPDX-License-Identifier: MIT
++ * MMC5616WA by the AP: on-demand measurements with automatic SET/RESET, pipelined so the 6.6 ms conversion runs between two calls.
++ * Rules this file keeps:
++ *   Writes: only MAG_REG_CTRL0, only DO_SET (once at start) and MAG_MEASURE. No ODR, no continuous mode, no OTP, no self-test, no software reset.
++ *   Reads: the product id, Status1 (logged once), and the nine output bytes. The bus below refuses anything else too.
++ *   Address 0x7e is never sent: that would switch the part to I3C until power is removed (datasheet page 27).
++ *   Any failure stops for good: no retry. The caller then puts its pads back. */
++#include "blazer_hw_port.h"
++#include "blazer_mag_hw.h"
++
++static bool
++mag_halt(struct mag *m, uint32_t code, uint32_t detail)
++{
++	if (m->stop == MAG_OK) {
++		m->stop = code;
++		m->stop_detail = detail;
++		m->bus.log(m->bus.ctx, "mag stopped: %s, detail 0x%x\n", mag_stop_name(code), detail);
++	}
++	return false;
++}
++
++const char *
++mag_stop_name(uint32_t stop)
++{
++	static const char *const names[] = { "ok", "bus", "product id is not 0x11", "output reads all 00 or all ff", "output did not change for 50 samples", "not started" };
++
++	return stop < sizeof(names) / sizeof(names[0]) ? names[stop] : "?";
++}
++
++void
++mag_decode(const uint8_t b[9], int32_t counts[3])
++{
++	for (unsigned i = 0; i < 3; i++) {
++		uint32_t u = (uint32_t)b[2 * i] << 12 | (uint32_t)b[2 * i + 1] << 4 | (uint32_t)b[6 + i] >> 4;
++
++		counts[i] = (int32_t)u - MAG_NULL_COUNT;
++	}
++}
++
++void
++mag_to_ios_nt(const int32_t c[3], uint32_t flip, int32_t nt[3])
++{
++	/* Registry: /dev/mmc5616/0/mag orientation_transform=-2 -1 -3, so Android x = -part y, y = -part x, z = -part z.
++	 * A magnetic field has no gravity-style sign convention between Android and iOS (both report the field in device axes): iOS = Android. Inferred until the phone is turned */
++	const int32_t a[3] = { -c[1], -c[0], -c[2] };
++
++	for (unsigned i = 0; i < 3; i++) {
++		/* 1 count = 1/16384 G = 100000/16384 nT = 3125/512 nT. |c| < 2^19, so the product fits easily in 64 bits */
++		int32_t v = (int32_t)((int64_t)a[i] * 3125 / 512);
++
++		nt[i] = (flip >> i) & 1u ? -v : v;
++	}
++}
++
++int
++mag_start(struct mag *m, const struct mag_bus *bus)
++{
++	uint8_t id = 0, st = 0;
++
++	*m = (struct mag){ .bus = *bus };
++	m->bus.sleep_us(m->bus.ctx, MAG_POWER_ON_US);
++	if (m->bus.read(m->bus.ctx, MAG_REG_PRODUCT_ID, &id, 1)) {
++		return (void)mag_halt(m, MAG_STOP_BUS, MAG_REG_PRODUCT_ID), (int)m->stop;
++	}
++	m->id = id;
++	m->bus.log(m->bus.ctx, "mag product id 0x%02x at 0x%02x\n", id, MAG_ADDR);
++	if (id != MAG_PRODUCT_ID) {
++		return (void)mag_halt(m, MAG_STOP_ID, id), (int)m->stop;
++	}
++	if (m->bus.read(m->bus.ctx, MAG_REG_STATUS1, &st, 1)) {
++		return (void)mag_halt(m, MAG_STOP_BUS, MAG_REG_STATUS1), (int)m->stop;
++	}
++	m->status_first = st;
++	/* Status1's bit names disagree between the table (page 11: bit 6 Meas_m_done, bit 4 OTP_read_done) and the text (page 16: "bit 1"), so nothing is decided on it: logged only */
++	m->bus.log(m->bus.ctx, "mag status1 0x%02x at start (not checked)\n", st);
++	/* One SET clears residual magnetisation from the last power cycle; then measurements use automatic SET/RESET (page 12) */
++	if (m->bus.write(m->bus.ctx, MAG_REG_CTRL0, MAG_CTRL0_DO_SET)) {
++		return (void)mag_halt(m, MAG_STOP_BUS, MAG_CTRL0_DO_SET), (int)m->stop;
++	}
++	m->bus.sleep_us(m->bus.ctx, MAG_SR_GAP_US);
++	if (m->bus.write(m->bus.ctx, MAG_REG_CTRL0, MAG_MEASURE)) {
++		return (void)mag_halt(m, MAG_STOP_BUS, MAG_MEASURE), (int)m->stop;
++	}
++	m->started = m->pending = true;
++	return 0;
++}
++
++bool
++mag_sample(struct mag *m, uint32_t flip, int32_t nt[3])
++{
++	uint8_t b[9];
++	int32_t c[3];
++	bool flat = true, same = m->samples > 0;
++
++	if (m->stop != MAG_OK) {
++		return false;
++	}
++	if (!m->started || !m->pending) {
++		return mag_halt(m, MAG_STOP_NOT_STARTED, 0);
++	}
++	m->pending = false;
++	if (m->bus.read(m->bus.ctx, MAG_REG_XOUT0, b, sizeof(b))) {
++		return mag_halt(m, MAG_STOP_BUS, MAG_REG_XOUT0);
++	}
++	for (unsigned i = 0; i < sizeof(b); i++) {
++		flat = flat && (b[i] == b[0]) && (b[0] == 0x00 || b[0] == 0xff);
++		same = same && b[i] == m->last[i];
++	}
++	if (flat) {
++		return mag_halt(m, MAG_STOP_FLAT, b[0]);
++	}
++	m->same_run = same ? m->same_run + 1 : 0;
++	if (m->same_run >= MAG_STUCK_SAMPLES) {
++		return mag_halt(m, MAG_STOP_STUCK, m->same_run);
++	}
++	memcpy(m->last, b, sizeof(b));
++	/* The next conversion runs while the caller sleeps */
++	if (m->bus.write(m->bus.ctx, MAG_REG_CTRL0, MAG_MEASURE)) {
++		return mag_halt(m, MAG_STOP_BUS, MAG_MEASURE);
++	}
++	m->pending = true;
++	mag_decode(b, c);
++	mag_to_ios_nt(c, flip, nt);
++	m->samples++;
++	return true;
++}
++
++#endif /* BLAZER */
+diff --git c/bsd/dev/blazer_mag_hw.h i/bsd/dev/blazer_mag_hw.h
+new file mode 100644
+index 0000000..e211c4e
+--- /dev/null
++++ i/bsd/dev/blazer_mag_hw.h
+@@ -0,0 +1,54 @@
++/* SPDX-License-Identifier: MIT
++ * MMC5616WA magnetometer (stock registry: mmc5616, i3c0, static I2C address 0x30) by the AP over a register bus.
++ * Hardware-free: every access goes through struct mag_bus, so the host test runs this exact logic.
++ * Register facts: MEMSIC MMC5616WA datasheet v1.7 (2025-12-22) pages 9-17, 27. Plan: research/ios26-sensors-r1/PLAN.md. */
++#ifndef BLAZER_MAG_HW_H
++#define BLAZER_MAG_HW_H
++#include "blazer_hw_port.h"
++
++#define MAG_ADDR                0x30u
++#define MAG_REG_XOUT0           0x00u   /* 9 bytes: X/Y/Z [19:12], [11:4], then X/Y/Z [3:0] in the high nibbles of 0x06..0x08 */
++#define MAG_REG_STATUS1         0x18u
++#define MAG_REG_CTRL0           0x1bu
++#define MAG_REG_PRODUCT_ID      0x39u
++#define MAG_PRODUCT_ID          0x11u   /* reset value, page 15 */
++#define MAG_CTRL0_TM_M          0x01u
++#define MAG_CTRL0_DO_SET        0x08u
++#define MAG_CTRL0_AUTO_SR       0x20u
++#define MAG_MEASURE             (MAG_CTRL0_AUTO_SR | MAG_CTRL0_TM_M)    /* page 16's example: 0b00100001 */
++#define MAG_NULL_COUNT          524288  /* 20-bit null field output, page 2 */
++#define MAG_COUNTS_PER_GAUSS    16384   /* 20-bit, page 2 */
++#define MAG_POWER_ON_US         20000u  /* power on time (Sw_reset text, page 13); tOp is 5 ms (page 27) */
++#define MAG_SR_GAP_US           1000u   /* tSR, page 27 */
++#define MAG_MEASURE_US          10000u  /* tTM at BW=00 is 6.6 ms (page 27): the caller's gap between mag_sample calls must be at least this */
++#define MAG_STUCK_SAMPLES       50u     /* identical 9 bytes this many times in a row: not measuring. Noise alone is about 24 counts RMS at BW=00 */
++
++struct mag_bus {
++	int (*read)(void *ctx, uint32_t reg, uint8_t *out, uint32_t len);       /* 0, or the bus's own stop code */
++	int (*write)(void *ctx, uint32_t reg, uint32_t value);
++	void (*sleep_us)(void *ctx, uint32_t us);
++	void (*log)(void *ctx, const char *format, ...) __attribute__((format(printf, 2, 3)));
++	void *ctx;
++};
++
++enum mag_stop { MAG_OK = 0, MAG_STOP_BUS, MAG_STOP_ID, MAG_STOP_FLAT, MAG_STOP_STUCK, MAG_STOP_NOT_STARTED };
++
++struct mag {
++	struct mag_bus bus;
++	uint32_t stop, stop_detail;
++	uint8_t id, status_first;
++	uint8_t last[9];
++	uint32_t samples, same_run;
++	bool started, pending;
++};
++
++const char *mag_stop_name(uint32_t stop);
++/* ID must be 0x11; one SET, then the first measurement is started. Nothing but MAG_REG_CTRL0 is written, and only MAG_CTRL0_DO_SET or MAG_MEASURE */
++int mag_start(struct mag *m, const struct mag_bus *bus);
++/* Reads the measurement started by the previous call (or by mag_start), then starts the next one. Call no sooner than MAG_MEASURE_US after the last.
++ * nt: nanotesla in iOS's device frame (x right, y up, z out of the screen), from the registry's transform -2 -1 -3; flip bits 0..2 undo the sign per output axis. */
++bool mag_sample(struct mag *m, uint32_t flip, int32_t nt[3]);
++/* Pure helpers, used by the test */
++void mag_decode(const uint8_t b[9], int32_t counts[3]);         /* signed, 0 = null field */
++void mag_to_ios_nt(const int32_t counts[3], uint32_t flip, int32_t nt[3]);
++#endif
+diff --git c/bsd/dev/blazer_sensor_hw.c i/bsd/dev/blazer_sensor_hw.c
+index 549e731..8d0e6a8 100644
+--- c/bsd/dev/blazer_sensor_hw.c
++++ i/bsd/dev/blazer_sensor_hw.c
+@@ -10,6 +10,7 @@
+  *   No polled PMIC frame: the polled channel carries one frame, LPB GET of AoC, under the CPM owner's lock. PMIC goes only through ops.pmic, blazer_cpmq_call: this file has no queue register.
+  *   No read of an unvoted peripheral: a pad register is read only after LPB GET said AoC's domain is on. The pads' node names that domain and no other (FDT).
+  *   Touch's pads, 0x41 and 0x47..0x4a, and the secondary CSR are not in access_allowed: this file cannot reach them. Each mode reaches one bus's two pads.
++ *   STREAM_MAG (research/ios26-sensors-r1/PLAN.md): pads 67, 68 for the MMC5616WA at 0x30, reads and writes by exact allowlist; the part's logic is blazer_mag_hw.c.
+  *   No pad mux write exists: a pad that isn't GPIO at entry stops the run. No I2C clock runs on a line that isn't high. No retry.
+  *   The CPM owner's allowlist decides every PMIC frame. Refused at the first GET: nothing changed, the run stops. */
+ #include "blazer_hw_port.h"
+@@ -90,6 +91,13 @@
+ #define IMU_GYRO_FS_FIELD 0x02u /* 500 dps on the 45605's table, 1000 on the 45686's: gravity picks the table */
+ #define IMU_GYRO_CFG    (IMU_GYRO_FS_FIELD << 4 | IMU_ODR_25HZ)
+ #define IMU_START_US    100000u /* mainline: 60 ms */
++#define MAG_I2C_ADDR    0x30u   /* MMC5616WA static address (datasheet v1.7 p16, p27; registry bus_addr) */
++#define MAG_R_OUT       0x00u   /* nine bytes */
++#define MAG_R_STATUS1   0x18u
++#define MAG_R_CTRL0     0x1bu
++#define MAG_R_ID        0x39u
++#define MAG_W_SET       0x08u
++#define MAG_W_MEASURE   0x21u   /* Auto_SR_en | TM_M */
+ 
+ static int
+ halt(struct sns *s, uint32_t code, uint32_t detail)
+@@ -577,6 +585,9 @@ static const struct {
+ static bool
+ read_allowed_i2c(const struct sns *s, uint32_t addr, uint32_t reg, uint32_t len)
+ {
++	if (s->mode == SNS_MODE_STREAM_MAG) {
++		return addr == MAG_I2C_ADDR && s->bus_ready && (((reg == MAG_R_ID || reg == MAG_R_STATUS1) && len == 1) || (reg == MAG_R_OUT && len == 9));
++	}
+ 	if (addr == IMU_ADDR && s->mode <= SNS_MODE_STREAM) {
+ 		return (reg == IMU_WHO_REG && len == 1) || (s->mode == SNS_MODE_STREAM && reg == IMU_ACCEL_X && len == 12);
+ 	}
+@@ -632,21 +643,54 @@ out:
+ 	return (int)s->stop;
+ }
+ 
+-/* The only register writes in this file, both volatile: a rail off ends them. Not reachable below STREAM. */
+-static int
+-i2c_write_reg(struct sns *s, uint32_t reg, uint32_t value)
++/* The only register writes in this file, all volatile: a rail off ends them. Not reachable below STREAM.
++ * IMU: its three configuration writes, in STREAM only. Compass: control 0 with SET or measure, in STREAM_MAG only, once the bus is ready. */
++static bool
++write_allowed_i2c(const struct sns *s, uint32_t addr, uint32_t reg, uint32_t value)
+ {
+-	if (s->mode != SNS_MODE_STREAM || !((reg == IMU_ACCEL_CFG0 && value == IMU_ACCEL_CFG) || (reg == IMU_GYRO_CFG0 && value == IMU_GYRO_CFG) || (reg == IMU_PWR_MGMT0 && value == IMU_ACCEL_GYRO_LN))) {
++	if (s->mode == SNS_MODE_STREAM) {
++		return addr == IMU_ADDR && ((reg == IMU_ACCEL_CFG0 && value == IMU_ACCEL_CFG) || (reg == IMU_GYRO_CFG0 && value == IMU_GYRO_CFG) || (reg == IMU_PWR_MGMT0 && value == IMU_ACCEL_GYRO_LN));
++	}
++	if (s->mode == SNS_MODE_STREAM_MAG) {
++		return addr == MAG_I2C_ADDR && s->bus_ready && reg == MAG_R_CTRL0 && (value == MAG_W_SET || value == MAG_W_MEASURE);
++	}
++	return false;
++}
++
++static int
++i2c_write_to(struct sns *s, uint32_t addr, uint32_t reg, uint32_t value)
++{
++	if (!write_allowed_i2c(s, addr, reg, value)) {
+ 		return halt(s, SNS_STOP_REFUSED_I2C, reg << 8 | value);
+ 	}
+ 	s->i2c_frames++;
+-	if (!i2c_start(s) && !i2c_byte_out(s, IMU_ADDR << 1, SNS_STOP_NO_ACK_ADDR) && !i2c_byte_out(s, reg, SNS_STOP_NO_ACK_REG)) {
++	if (!i2c_start(s) && !i2c_byte_out(s, addr << 1, SNS_STOP_NO_ACK_ADDR) && !i2c_byte_out(s, reg, SNS_STOP_NO_ACK_REG)) {
+ 		(void)i2c_byte_out(s, value, SNS_STOP_NO_ACK_REG);
+ 	}
+ 	i2c_stop(s);
+ 	return (int)s->stop;
+ }
+ 
++static int i2c_write_reg(struct sns *s, uint32_t reg, uint32_t value) { return i2c_write_to(s, IMU_ADDR, reg, value); }
++
++int
++sns_bus_read(struct sns *s, uint32_t addr, uint32_t reg, uint8_t *out, uint32_t len)
++{
++	if (s->stop != SNS_OK) {
++		return (int)s->stop;
++	}
++	return i2c_read(s, addr, reg, out, len);
++}
++
++int
++sns_bus_write(struct sns *s, uint32_t addr, uint32_t reg, uint32_t value)
++{
++	if (s->stop != SNS_OK) {
++		return (int)s->stop;
++	}
++	return i2c_write_to(s, addr, reg, value);
++}
++
+ void
+ sns_init(struct sns *s, const struct sns_ops *ops, enum sns_mode mode)
+ {
+@@ -654,6 +698,9 @@ sns_init(struct sns *s, const struct sns_ops *ops, enum sns_mode mode)
+ 	if (mode == SNS_MODE_CENSUS_I3C0) {
+ 		s->pad_scl = PAD_I3C0_SCL;
+ 		s->pad_sda = PAD_I3C0_SDA;
++	} else if (mode == SNS_MODE_STREAM_MAG) {
++		s->pad_scl = PAD_I3C0_SCL;
++		s->pad_sda = PAD_I3C0_SDA;
+ 	} else if (mode == SNS_MODE_CENSUS_I2C2) {
+ 		s->pad_scl = PAD_I2C2_SCL;
+ 		s->pad_sda = PAD_I2C2_SDA;
+@@ -709,6 +756,7 @@ sns_down(struct sns *s)
+ 	}
+ 	s->tearing_down = false;
+ 	s->accel_on = false;
++	s->bus_ready = false;
+ 	s->stop = saved_stop != SNS_OK ? saved_stop : s->stop;
+ }
+ 
+@@ -776,7 +824,13 @@ sns_run(struct sns *s)
+ 	if (rails_on(s) || pads_ready(s)) {
+ 		goto down;
+ 	}
+-	if (s->mode >= SNS_MODE_CENSUS_I3C0) {
++	if (s->mode == SNS_MODE_STREAM_MAG) {
++		/* The part's own checks (product id) are blazer_mag_hw.c's; this file only owns the lines */
++		s->bus_ready = true;
++		s->ops.log(s->ops.ctx, "compass bus ready on pads %u, %u\n", s->pad_scl, s->pad_sda);
++		return 0;
++	}
++	if (s->mode == SNS_MODE_CENSUS_I3C0 || s->mode == SNS_MODE_CENSUS_I2C2) {
+ 		(void)census_run(s);
+ 		goto down;
+ 	}
+diff --git c/bsd/dev/blazer_sensor_hw.h i/bsd/dev/blazer_sensor_hw.h
+index 14cb163..f470b2a 100644
+--- c/bsd/dev/blazer_sensor_hw.h
++++ i/bsd/dev/blazer_sensor_hw.h
+@@ -11,6 +11,7 @@ enum sns_mode {
+ 	SNS_MODE_STREAM,                /* accel and gyro on, rails stay on, samples until a stop */
+ 	SNS_MODE_CENSUS_I3C0,           /* rails on, who answers on the compass's pads 67, 68, rails off */
+ 	SNS_MODE_CENSUS_I2C2,           /* the same on pads 33, 34. 34 is in the FDT's gpio-reserved-ranges: its own boot, parent's word */
++	SNS_MODE_STREAM_MAG,            /* the compass's pads 67, 68 as a bus for blazer_mag_hw.c: rails on (or as found), pads ready, then only sns_bus_read and sns_bus_write */
+ };
+ 
+ enum sns_stop {
+@@ -46,7 +47,7 @@ struct sns {
+ 	uint32_t lsb_per_g;
+ 	uint32_t pad_scl, pad_sda;
+ 	uint32_t census_seen;           /* bit per table row that acked */
+-	bool on_18, on_33, pads_changed, have_who, rails_off, pads_restored, accel_on, tearing_down;
++	bool on_18, on_33, pads_changed, have_who, rails_off, pads_restored, accel_on, tearing_down, bus_ready;
+ };
+ 
+ void sns_init(struct sns *s, const struct sns_ops *ops, enum sns_mode mode);
+@@ -54,6 +55,10 @@ int sns_run(struct sns *s);             /* up to the mode. WHO_AM_I and FIRST_RE
+ void sns_down(struct sns *s);           /* pads as found, the rails this code turned on off. Safe after any stop */
+ const char *sns_stop_name(uint32_t stop);
+ 
++/* STREAM_MAG only: the MMC5616WA at 0x30, through this file's allowlists (reads: id, status1, the nine output bytes; writes: control 0 with SET or measure). 0, or the stop */
++int sns_bus_read(struct sns *s, uint32_t addr, uint32_t reg, uint8_t *out, uint32_t len);
++int sns_bus_write(struct sns *s, uint32_t addr, uint32_t reg, uint32_t value);
++
+ /* STREAM only */
+ bool sns_read_imu(struct sns *s, int16_t raw[6]);       /* accel x y z, gyro x y z, one frame. False: this frame failed, s->stop says whether for good */
+ bool sns_gyro_mdps(const struct sns *s, const int16_t raw[6], int32_t mdps[3]);       /* false until the part's table is known from gravity */
+diff --git c/bsd/dev/blazer_sensors.c i/bsd/dev/blazer_sensors.c
+index 097453f..c552971 100644
+--- c/bsd/dev/blazer_sensors.c
++++ i/bsd/dev/blazer_sensors.c
+@@ -6,6 +6,8 @@
+  *                   blazer_sensors_keep=1 lets the boot go on instead.
+  * blazer_sensors=2  accel and gyro on, 10 Hz, SweetHIDAccel, SweetHIDGyro and SweetHIDOrientation fed; rails stay on. Refused until blazer_sensors=1 has passed on the phone (parent's word), by not being on the image tool's list.
+  *                   blazer_sensors_flip=N, bits 0..2: undo the sign on x, y, z, if the turn test says the frame is wrong.
++ *                   blazer_sensors_mag=1 (with =2 only): the MMC5616WA compass on pads 67, 68 too, read in the same loop, SweetHIDCompass fed (blazer_mag_hw.c).
++ *                   A compass stop ends only the compass: its pads go back, the IMU stream goes on. blazer_sensors_mag_flip=N, bits 0..2, as _flip.
+  * blazer_sensors=4  who answers on the compass's pads 67, 68: rails on, addresses and one id byte, rails off, then the panic.
+  * blazer_sensors=5  the same on pads 33, 34 (light, proximity, baro). Pad 34 is gpio-reserved in the FDT: its own boot.
+  * Off without the arg: no thread, no mapping. PMIC goes through blazer_cpmq_call and the polled frame under its lock, so touch, thermal and RTC may share the boot. */
+@@ -17,6 +19,7 @@
+ #include <pexpert/pexpert.h>
+ #include <sys/systm.h>
+ #include "blazer_sensor_hw.h"
++#include "blazer_mag_hw.h"
+ #include "blazer_cpmq_xnu.h"
+ 
+ #define BLAZER_SENSORS_STREAM 1
+@@ -24,6 +27,7 @@
+ extern void sweet_hid_accel(int x_mg, int y_mg, int z_mg);
+ extern void sweet_hid_orientation(unsigned int usage);
+ extern void sweet_hid_gyro(int x_mdps, int y_mdps, int z_mdps);
++extern void sweet_hid_compass(int x_nt, int y_nt, int z_nt);
+ 
+ extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
+ extern kern_return_t thread_terminate(thread_t thread);
+@@ -33,16 +37,19 @@ static struct {
+ 	vm_offset_t va;
+ } windows[] = {
+ 	{ 0x05250000ULL, 0 }, { 0x05272000ULL, 0 }, { 0x0b4c0000ULL, 0 }, { 0x8ee00000ULL, 0 }, { 0x0b423000ULL, 0 }, { 0x0b424000ULL, 0 },
++	{ 0, 0 }, { 0, 0 },
+ };
+-#define PAD_WINDOW 4u    /* the last two: the bus's pads, set by mode */
+-static struct sns sensor;
+-static uint32_t boot_mode, boot_keep, boot_delay_s = 20;
++#define PAD_WINDOW 4u    /* the next two: the bus's pads, set by mode */
++#define MAG_WINDOW 6u    /* the last two: the compass's pads, only with blazer_sensors_mag=1; pa 0 is never mapped */
++static struct sns sensor, compass;
++static struct mag mag;
++static uint32_t boot_mode, boot_keep, boot_delay_s = 20, boot_mag;
+ 
+ static volatile uint32_t *
+ at(uint64_t pa)
+ {
+ 	for (unsigned i = 0; i < sizeof(windows) / sizeof(windows[0]); i++) {
+-		if (windows[i].va != 0 && pa >= windows[i].pa && pa < windows[i].pa + 0x1000) {
++		if (windows[i].va != 0 && windows[i].pa != 0 && pa >= windows[i].pa && pa < windows[i].pa + 0x1000) {
+ 			return (volatile uint32_t *)(windows[i].va + (pa - windows[i].pa));
+ 		}
+ 	}
+@@ -114,6 +121,34 @@ static void k_cpm_exit(__unused void *ctx) { blazer_cpmq_exit(); }
+ 
+ static const struct sns_ops sensor_ops = { .read32 = k_read32, .write32 = k_write32, .sleep_us = k_sleep_us, .spin_us = k_spin_us, .log = k_log, .pmic = k_pmic, .cpm_enter = k_cpm_enter, .cpm_exit = k_cpm_exit };
+ 
++/* The compass's register bus: blazer_sensor_hw.c's allowlisted I2C on the compass's own struct sns */
++static int m_read(void *ctx, uint32_t reg, uint8_t *out, uint32_t len) { return sns_bus_read((struct sns *)ctx, MAG_ADDR, reg, out, len); }
++static int m_write(void *ctx, uint32_t reg, uint32_t value) { return sns_bus_write((struct sns *)ctx, MAG_ADDR, reg, value); }
++static void m_sleep_us(__unused void *ctx, uint32_t us) { delay_for_interval(us, NSEC_PER_USEC); }
++static const struct mag_bus mag_bus_ops = { .read = m_read, .write = m_write, .sleep_us = m_sleep_us, .log = k_log, .ctx = &compass };
++
++/* After the IMU is on: rails already up (not the compass's to turn off), the compass's pads checked and readied, then the part's id. False: nothing of the compass's is left changed */
++static bool
++compass_up(void)
++{
++	(void)sns_run(&compass);
++	if (compass.stop == SNS_OK && mag_start(&mag, &mag_bus_ops) == 0) {
++		printf("blazer-sensors: compass on: id 0x%02x, status1 0x%02x\n", mag.id, mag.status_first);
++		return true;
++	}
++	printf("blazer-sensors: compass not started: bus \"%s\" detail 0x%x, mag \"%s\" detail 0x%x\n", sns_stop_name(compass.stop), compass.stop_detail, mag_stop_name(mag.stop), mag.stop_detail);
++	sns_down(&compass);
++	return false;
++}
++
++static void
++compass_down(uint32_t n)
++{
++	printf("blazer-sensors: compass ends after %u samples: bus \"%s\" detail 0x%x, mag \"%s\" detail 0x%x\n", n, sns_stop_name(compass.stop), compass.stop_detail, mag_stop_name(mag.stop), mag.stop_detail);
++	sns_down(&compass);
++	printf("blazer-sensors: compass pads restored %d\n", compass.pads_restored);
++}
++
+ #define STREAM_PERIOD_US 100000u
+ #define HOLD_SAMPLES 3u
+ #define REPOST_SAMPLES 50u
+@@ -123,11 +158,15 @@ static const struct sns_ops sensor_ops = { .read32 = k_read32, .write32 = k_writ
+ static void
+ blazer_sensors_stream(struct sns *s)
+ {
+-	uint32_t flip = 0, n = 0, current = 0, candidate = 0, held = 0, since_post = 0;
++	uint32_t flip = 0, mag_flip = 0, n = 0, mag_n = 0, current = 0, candidate = 0, held = 0, since_post = 0;
+ 	int32_t f[3] = {0, 0, 0};
+-	bool filled = false;
++	bool filled = false, mag_on = false;
+ 
+ 	(void)PE_parse_boot_argn("blazer_sensors_flip", &flip, sizeof(flip));
++	(void)PE_parse_boot_argn("blazer_sensors_mag_flip", &mag_flip, sizeof(mag_flip));
++	if (boot_mag) {
++		mag_on = compass_up();
++	}
+ 	for (;;) {
+ 		int16_t raw[6];
+ 		int32_t mg[3], mdps[3] = {0, 0, 0};
+@@ -159,12 +198,30 @@ blazer_sensors_stream(struct sns *s)
+ 			sweet_hid_orientation(current);
+ 			since_post = 0;
+ 		}
++		if (mag_on) {
++			int32_t nt[3];
++
++			/* The loop's 100 ms is the gap mag_sample needs (at least MAG_MEASURE_US) */
++			if ((n % 10u == 0 && !sns_still_idle(&compass)) || !mag_sample(&mag, mag_flip, nt)) {
++				compass_down(mag_n);
++				mag_on = false;
++			} else {
++				sweet_hid_compass(nt[0], nt[1], nt[2]);
++				if (mag_n < LOG_FIRST || mag_n % LOG_EVERY == 0) {
++					printf("blazer-sensors: compass %u: %d %d %d nT\n", mag_n, nt[0], nt[1], nt[2]);
++				}
++				mag_n++;
++			}
++		}
+ 		if (n < LOG_FIRST || n % LOG_EVERY == 0) {
+ 			printf("blazer-sensors: sample %u raw %d %d %d, %d %d %d mg, gyro %d %d %d mdps\n", n, raw[0], raw[1], raw[2], mg[0], mg[1], mg[2], mdps[0], mdps[1], mdps[2]);
+ 		}
+ 		n++;
+ 	}
+ 	printf("blazer-sensors: stream ends after %u samples: %s, detail 0x%x\n", n, sns_stop_name(s->stop), s->stop_detail);
++	if (mag_on) {
++		compass_down(mag_n);    /* the compass's pads back before the IMU's sns_down can turn the rails off */
++	}
+ 	sns_down(s);
+ 	printf("blazer-sensors: pads restored %d, rails off %d\n", s->pads_restored, s->rails_off);
+ }
+@@ -180,7 +237,15 @@ sensor_thread(__unused void *parameter, __unused wait_result_t result)
+ 	sns_init(s, &sensor_ops, mode);
+ 	windows[PAD_WINDOW].pa = 0x0b400000ULL + (uint64_t)s->pad_scl * 0x1000;
+ 	windows[PAD_WINDOW + 1].pa = 0x0b400000ULL + (uint64_t)s->pad_sda * 0x1000;
++	if (boot_mag) {
++		sns_init(&compass, &sensor_ops, SNS_MODE_STREAM_MAG);
++		windows[MAG_WINDOW].pa = 0x0b400000ULL + (uint64_t)compass.pad_scl * 0x1000;
++		windows[MAG_WINDOW + 1].pa = 0x0b400000ULL + (uint64_t)compass.pad_sda * 0x1000;
++	}
+ 	for (unsigned i = 0; i < sizeof(windows) / sizeof(windows[0]); i++) {
++		if (windows[i].pa == 0) {
++			continue;
++		}
+ 		windows[i].va = ml_io_map((vm_offset_t)windows[i].pa, 0x1000);
+ 		if (windows[i].va == 0) {
+ 			printf("blazer-sensors: cannot map 0x%llx\n", windows[i].pa);
+@@ -217,6 +282,11 @@ blazer_sensors_init(void)
+ 		return;
+ 	}
+ 	(void)PE_parse_boot_argn("blazer_sensors_keep", &boot_keep, sizeof(boot_keep));
++	(void)PE_parse_boot_argn("blazer_sensors_mag", &boot_mag, sizeof(boot_mag));
++	if (boot_mag && (boot_mag != 1 || boot_mode != 2)) {
++		printf("blazer-sensors: compass refused: blazer_sensors_mag=%u needs blazer_sensors=2 and the value 1\n", boot_mag);
++		boot_mag = 0;
++	}
+ 	(void)PE_parse_boot_argn("blazer_sensors_delay", &boot_delay_s, sizeof(boot_delay_s));
+ 	if (boot_delay_s > 120) {
+ 		boot_delay_s = 20;
+diff --git c/iokit/Kernel/arm/hid/SweetHID.cpp i/iokit/Kernel/arm/hid/SweetHID.cpp
+index c977c6d..9d1a75b 100644
+--- c/iokit/Kernel/arm/hid/SweetHID.cpp
++++ i/iokit/Kernel/arm/hid/SweetHID.cpp
+@@ -947,6 +947,64 @@ private:
+ };
+ OSDefineMetaClassAndStructors(SweetHIDOrientation, IOHIDEventService);
+ 
++/* The compass: Apple vendor page 0xff00 usage 0x0a (AppleHIDUsageTables, IOHIDFamily) and the HID sensor page's Compass 3D 0x83.
++ * Starts only with blazer_sensors=2 and blazer_sensors_mag=1. Units: microtesla in 16.16 (IOHIDEvent::compassEvent's IOFixed); inferred, not yet read from locationd */
++static bool
++sweet_compass_streaming(void)
++{
++	uint32_t mag = 0;
++
++	return sweet_sensors_streaming() && PE_parse_boot_argn("blazer_sensors_mag", &mag, sizeof(mag)) && mag == 1;
++}
++
++class SweetHIDCompass : public IOHIDEventService {
++	OSDeclareDefaultStructors(SweetHIDCompass);
++public:
++	virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
++	void sample(int x_nt, int y_nt, int z_nt);
++protected:
++	virtual UInt32 getPrimaryUsagePage() APPLE_KEXT_OVERRIDE { return 0xff00; }
++	virtual UInt32 getPrimaryUsage() APPLE_KEXT_OVERRIDE { return 0x0a; }
++	virtual UInt32 getProductID() APPLE_KEXT_OVERRIDE { return 6; }
++	virtual UInt32 getReportInterval() APPLE_KEXT_OVERRIDE { return 100000; }
++};
++OSDefineMetaClassAndStructors(SweetHIDCompass, IOHIDEventService);
++
++static SweetHIDCompass *gSweetCompass;
++
++bool
++SweetHIDCompass::start(IOService *provider)
++{
++	if (!sweet_compass_streaming() || !IOHIDEventService::start(provider)) {
++		return false;
++	}
++	sweet_sensor_pairs(this, 0xff00, 0x0a, 0x83);
++	gSweetCompass = this;
++	registerService();
++	IOLog("SWEET HID: compass registered\n");
++	return true;
++}
++
++void
++SweetHIDCompass::sample(int x_nt, int y_nt, int z_nt)
++{
++	/* 16.16 uT: nT * 65536 / 1000. |nT| <= 3.2e6 (30 G), so the 64-bit product fits and the result fits IOFixed */
++	IOHIDEvent *e = IOHIDEvent::compassEvent(mach_absolute_time(), (IOFixed)((int64_t)x_nt * 65536 / 1000), (IOFixed)((int64_t)y_nt * 65536 / 1000), (IOFixed)((int64_t)z_nt * 65536 / 1000));
++
++	if (e) {
++		dispatchEvent(e);
++		e->release();
++	}
++}
++
++extern "C" void
++sweet_hid_compass(int x_nt, int y_nt, int z_nt)
++{
++	if (gSweetCompass) {
++		gSweetCompass->sample(x_nt, y_nt, z_nt);
++	}
++}
++
+ static SweetHIDAccel *gSweetAccel;
+ static SweetHIDGyro *gSweetGyro;
+ static SweetHIDOrientation *gSweetOrientation;
+diff --git c/iokit/KernelConfigTables.cpp i/iokit/KernelConfigTables.cpp
+index 6356add..856147f 100644
+--- c/iokit/KernelConfigTables.cpp
++++ i/iokit/KernelConfigTables.cpp
+@@ -110,6 +110,11 @@ const char * gIOKernelConfigTables =
+     "     'IOMatchCategory' = SweetHIDOrientation;"
+     "   },"
+     "   {"
++    "     'IOClass'         = SweetHIDCompass;"
++    "     'IOProviderClass' = IOResources;"
++    "     'IOMatchCategory' = SweetHIDCompass;"
++    "   },"
++    "   {"
+     "     'IOClass'         = SweetBattery;"
+     "     'IOProviderClass' = IOResources;"
+     "     'IOMatchCategory' = SweetBattery;"

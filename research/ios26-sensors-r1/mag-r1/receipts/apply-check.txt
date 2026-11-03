@@ -1,0 +1,11 @@
+b228c4f
+APPLY-CHECK-OK
+ bsd/conf/files                    |    1 
+ bsd/dev/blazer_mag_hw.c           |  129 +++++++++++++++++++++++++++++++++++++
+ bsd/dev/blazer_mag_hw.h           |   54 +++++++++++++++
+ bsd/dev/blazer_sensor_hw.c        |   66 +++++++++++++++++--
+ bsd/dev/blazer_sensor_hw.h        |    7 ++
+ bsd/dev/blazer_sensors.c          |   82 ++++++++++++++++++++++--
+ iokit/Kernel/arm/hid/SweetHID.cpp |   58 +++++++++++++++++
+ iokit/KernelConfigTables.cpp      |    5 +
+ 8 files changed, 389 insertions(+), 13 deletions(-)

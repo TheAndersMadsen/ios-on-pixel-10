@@ -1,0 +1,111 @@
+OK bsd/dev/blazer_sensors.c -> /tmp/hk-sensors-0930-f/out/obj/blazer_sensors.o sha256 9b8a5e7e878b49690aad147bb8b7f8aa5d21b200b59b8dd2d6ddab9c32664286
+    (undefined) external _PE_parse_boot_argn
+    0000000000000000 (__TEXT,__text) external _blazer_sensors_init
+    00000000000053e8 (__DATA,__bss) non-external _compass
+    (undefined) external _delay_for_interval
+    00000000000012c0 (__DATA,__const) non-external _mag_bus_ops
+    (undefined) external _mag_sample
+    (undefined) external _mag_start
+    (undefined) external _mag_stop_name
+    (undefined) external _sns_bus_read
+    (undefined) external _sns_bus_write
+    (undefined) external _sns_run
+    (undefined) external _sweet_hid_accel
+    (undefined) external _sweet_hid_compass
+    (undefined) external _sweet_hid_gyro
+    (undefined) external _sweet_hid_orientation
+    strings: ['blazer_sensors_mag', 'blazer-sensors: compass refused: blazer_sensors_mag=%u needs blazer_sensors=2 and the value 1', 'blazer_sensors_mag_flip', 'blazer-sensors: compass %u: %d %d %d nT', 'blazer-sensors: compass on: id 0x%02x, status1 0x%02x', 'blazer-sensors: compass not started: bus "%s" detail 0x%x, mag "%s" detail 0x%x', 'blazer-sensors: compass ends after %u samples: bus "%s" detail 0x%x, mag "%s" detail 0x%x', 'blazer-sensors: compass pads restored %d', 'compass', 'compass_up']
+OK bsd/dev/blazer_sensor_hw.c -> /tmp/hk-sensors-0930-f/out/obj/blazer_sensor_hw.o sha256 a21e90a874daa948f3005d288d6aac955baef6fe07710f298a43691d2ac2e5de
+    0000000000000030 (__TEXT,__text) external _sns_bus_read
+    0000000000000560 (__TEXT,__text) external _sns_bus_write
+    0000000000000e20 (__TEXT,__text) external _sns_run
+    strings: ['compass bus ready on pads %u, %u']
+OK bsd/dev/blazer_mag_hw.c -> /tmp/hk-sensors-0930-f/out/obj/blazer_mag_hw.o sha256 8df32ee29887c26d0abb92897e7645839718184460d3181c549933059adf5b95
+    0000000000000030 (__TEXT,__text) external _mag_decode
+    00000000000002f0 (__TEXT,__text) external _mag_sample
+    0000000000000110 (__TEXT,__text) external _mag_start
+    0000000000000000 (__TEXT,__text) external _mag_stop_name
+    0000000000000818 (__DATA,__const) non-external _mag_stop_name.names
+    00000000000000a0 (__TEXT,__text) external _mag_to_ios_nt
+    strings: []
+OK iokit/Kernel/arm/hid/SweetHID.cpp -> /tmp/hk-sensors-0930-f/out/obj/SweetHID.o sha256 fa952cda70982fc10bc976ad659d16cacdceab057e7231a9d8adc040043de0ac
+    (undefined) external _PE_parse_boot_argn
+    0000000000069bf0 (__DATA,__bss) non-external __ZL13gSweetCompass
+    000000000000b380 (__DATA_CONST,__kalloc_type) non-external [no dead strip] __ZL19SweetHIDCompass_ktv
+    (undefined) external __ZN10IOHIDEvent12compassEventEyiiijjjj
+    00000000000054e0 (__TEXT,__text) external __ZN13SweetHIDAccel5startEP9IOService
+    0000000000069ba8 (__DATA,__common) external __ZN15SweetHIDCompass10gMetaClassE
+    000000000000a008 (__DATA,__const) external __ZN15SweetHIDCompass10superClassE
+    0000000000005da0 (__TEXT,__text) non-external __ZN15SweetHIDCompass12getProductIDEv
+    0000000000005d90 (__TEXT,__text) non-external __ZN15SweetHIDCompass15getPrimaryUsageEv
+    0000000000005db0 (__TEXT,__text) non-external __ZN15SweetHIDCompass17getReportIntervalEv
+    0000000000005d80 (__TEXT,__text) non-external __ZN15SweetHIDCompass19getPrimaryUsagePageEv
+    0000000000005050 (__TEXT,__text) external __ZN15SweetHIDCompass5startEP9IOService
+    0000000000005330 (__TEXT,__text) external __ZN15SweetHIDCompass6sampleEiii
+    0000000000004e00 (__TEXT,__text) external __ZN15SweetHIDCompass9MetaClassC1Ev
+    0000000000004f00 (__TEXT,__text) external __ZN15SweetHIDCompass9MetaClassC2Ev
+    0000000000005dd0 (__TEXT,__text) non-external __ZN15SweetHIDCompass9MetaClassD0Ev
+    0000000000005dc0 (__TEXT,__text) non-external __ZN15SweetHIDCompass9MetaClassD1Ev
+    000000000000a000 (__DATA,__const) external __ZN15SweetHIDCompass9metaClassE
+    0000000000004e60 (__TEXT,__text) external __ZN15SweetHIDCompassC1EPK11OSMetaClass
+    0000000000004fb0 (__TEXT,__text) external __ZN15SweetHIDCompassC1Ev
+    0000000000004e40 (__TEXT,__text) external __ZN15SweetHIDCompassC2EPK11OSMetaClass
+    0000000000005000 (__TEXT,__text) external __ZN15SweetHIDCompassC2Ev
+    0000000000004ea0 (__TEXT,__text) external __ZN15SweetHIDCompassD0Ev
+    0000000000004e90 (__TEXT,__text) external __ZN15SweetHIDCompassD1Ev
+    0000000000004e80 (__TEXT,__text) external __ZN15SweetHIDCompassD2Ev
+    0000000000004ed0 (__TEXT,__text) external __ZN15SweetHIDCompassdlEPvm
+    0000000000004fa0 (__TEXT,__text) external __ZN15SweetHIDCompassnwEm
+    0000000000004ef0 (__TEXT,__text) external __ZNK15SweetHIDCompass12getMetaClassEv
+    0000000000004f40 (__TEXT,__text) external __ZNK15SweetHIDCompass9MetaClass5allocEv
+    000000000000a010 (__DATA,__const) external __ZTV15SweetHIDCompass
+    000000000000a908 (__DATA,__const) external __ZTVN15SweetHIDCompass9MetaClassE
+    000000000000b3c8 (__TEXT,__const) non-external __ZZ13sweet_hid_keyE6usages
+    00000000000059a0 (__TEXT,__text) external _sweet_hid_accel
+    0000000000005400 (__TEXT,__text) external _sweet_hid_compass
+    0000000000005a80 (__TEXT,__text) external _sweet_hid_gyro
+    0000000000004610 (__TEXT,__text) external _sweet_hid_key
+    0000000000001bf0 (__TEXT,__text) external _sweet_hid_live_cancel
+    0000000000001c50 (__TEXT,__text) external _sweet_hid_live_query
+    0000000000001b60 (__TEXT,__text) external _sweet_hid_live_submit
+    0000000000005b60 (__TEXT,__text) external _sweet_hid_orientation
+    0000000000003bb0 (__TEXT,__text) external _sweet_hid_touch
+    strings: ['SweetHIDCompass', 'site.SweetHIDCompass', 'SWEET HID: compass registered', 'blazer_sensors_mag', '_ZN10IOHIDEvent12compassEventEyiiijjjj', 'compassEvent', 'SweetHIDCompass', '_ZN15SweetHIDCompass9MetaClassC4Ev', '_ZNK15SweetHIDCompass9MetaClass5allocEv', '_ZNK15SweetHIDCompass12getMetaClassEv']
+OK iokit/KernelConfigTables.cpp -> /tmp/hk-sensors-0930-f/out/obj/KernelConfigTables.o sha256 670847b135f0d8df968e8495e8d2d2772ccfefc202648ec03915d194342cb805
+    strings: ["(   {     'IOClass'         = SweetPlatformExpert;     'IOProviderClass' = IOPlatformExpertDevice;     'IONameMatch'     = ('google,lga-blazer', 'D421AP');     'IOProbeScore'    = 10000:32;   },   {     'IOClass'         = SweetCPU;     'IOProviderClass' = IOPlatformDevice;     'IONameMatch'     = ('blazer,cpu', 'apple,thunder', 'tegu,cpu');     'IOProbeScore'    = 10000:32;   },   {     'IOClass'         = AppleKeyStore;     'IOProviderClass' = IOResources;     'IOMatchCategory' = AppleKeyStore;   },   {     'IOClass'         = AppleMobileFileIntegrity;     'IOProviderClass' = IOResources;     'IOMatchCategory' = AppleMobileFileIntegrity;   },   {     'IOClass'         = IOWatchdog;     'IOProviderClass' = IOResources;     'IOMatchCategory' = IOWatchdog;   },   {     'IOClass'         = IOCoreSurfaceRoot;     'IOProviderClass' = IOResources;     'IOMatchCategory' = IOCoreSurfaceRoot;   },   {     'IOClass'         = AppleCLCD;     'IOProviderClass' = IOPlatformDevice;     'IONameMatch'     = 'sweet,display';   },   {     'IOClass'         = SweetHIDButtons;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetHIDButtons;   },   {     'IOClass'         = SweetHIDTouch;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetHIDTouch;   },   {     'IOClass'         = SweetHIDAccel;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetHIDAccel;   },   {     'IOClass'         = SweetHIDGyro;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetHIDGyro;   },   {     'IOClass'         = SweetHIDOrientation;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetHIDOrientation;   },   {     'IOClass'         = SweetHIDCompass;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetHIDCompass;   },   {     'IOClass'         = SweetBattery;     'IOProviderClass' = IOResources;     'IOMatchCategory' = SweetBattery;   },   {     'IOClass'         = IOPanicPlatform;     'IOProviderClass' = IOPlatformExpertDevice;     'IOProbeScore'    = 0:32;   },   {     'IOClass'         = IOExclaveProxy;     'IOProviderClass' = IOService;     'IOExclaveProxy'  = 1:32;   })"]
+670847b135f0d8df968e8495e8d2d2772ccfefc202648ec03915d194342cb805  KernelConfigTables.o
+fa952cda70982fc10bc976ad659d16cacdceab057e7231a9d8adc040043de0ac  SweetHID.o
+8df32ee29887c26d0abb92897e7645839718184460d3181c549933059adf5b95  blazer_mag_hw.o
+a21e90a874daa948f3005d288d6aac955baef6fe07710f298a43691d2ac2e5de  blazer_sensor_hw.o
+9b8a5e7e878b49690aad147bb8b7f8aa5d21b200b59b8dd2d6ddab9c32664286  blazer_sensors.o
+0000000000069bf0 (__DATA,__bss) non-external __ZL13gSweetCompass
+000000000000b380 (__DATA_CONST,__kalloc_type) non-external [no dead strip] __ZL19SweetHIDCompass_ktv
+                 (undefined) external __ZN10IOHIDEvent12compassEventEyiiijjjj
+00000000000054e0 (__TEXT,__text) external __ZN13SweetHIDAccel5startEP9IOService
+0000000000069ba8 (__DATA,__common) external __ZN15SweetHIDCompass10gMetaClassE
+000000000000a008 (__DATA,__const) external __ZN15SweetHIDCompass10superClassE
+0000000000005da0 (__TEXT,__text) non-external __ZN15SweetHIDCompass12getProductIDEv
+0000000000005d90 (__TEXT,__text) non-external __ZN15SweetHIDCompass15getPrimaryUsageEv
+0000000000005db0 (__TEXT,__text) non-external __ZN15SweetHIDCompass17getReportIntervalEv
+0000000000005d80 (__TEXT,__text) non-external __ZN15SweetHIDCompass19getPrimaryUsagePageEv
+0000000000005050 (__TEXT,__text) external __ZN15SweetHIDCompass5startEP9IOService
+0000000000005330 (__TEXT,__text) external __ZN15SweetHIDCompass6sampleEiii
+0000000000004e00 (__TEXT,__text) external __ZN15SweetHIDCompass9MetaClassC1Ev
+0000000000004f00 (__TEXT,__text) external __ZN15SweetHIDCompass9MetaClassC2Ev
+0000000000005dd0 (__TEXT,__text) non-external __ZN15SweetHIDCompass9MetaClassD0Ev
+0000000000005dc0 (__TEXT,__text) non-external __ZN15SweetHIDCompass9MetaClassD1Ev
+000000000000a000 (__DATA,__const) external __ZN15SweetHIDCompass9metaClassE
+0000000000004e60 (__TEXT,__text) external __ZN15SweetHIDCompassC1EPK11OSMetaClass
+0000000000004fb0 (__TEXT,__text) external __ZN15SweetHIDCompassC1Ev
+0000000000004e40 (__TEXT,__text) external __ZN15SweetHIDCompassC2EPK11OSMetaClass
+0000000000005000 (__TEXT,__text) external __ZN15SweetHIDCompassC2Ev
+0000000000004ea0 (__TEXT,__text) external __ZN15SweetHIDCompassD0Ev
+0000000000004e90 (__TEXT,__text) external __ZN15SweetHIDCompassD1Ev
+0000000000004e80 (__TEXT,__text) external __ZN15SweetHIDCompassD2Ev
+0000000000004ed0 (__TEXT,__text) external __ZN15SweetHIDCompassdlEPvm
+0000000000004fa0 (__TEXT,__text) external __ZN15SweetHIDCompassnwEm
+0000000000004ef0 (__TEXT,__text) external __ZNK15SweetHIDCompass12getMetaClassEv
+0000000000004f40 (__TEXT,__text) external __ZNK15SweetHIDCompass9MetaClass5allocEv
+000000000000a010 (__DATA,__const) external __ZTV15SweetHIDCompass
+000000000000a908 (__DATA,__const) external __ZTVN15SweetHIDCompass9MetaClassE
+0000000000005400 (__TEXT,__text) external _sweet_hid_compass
