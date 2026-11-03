@@ -32,7 +32,7 @@ recoverable. QEMU and host tools support development; they are not phone results
   Backup and restore receipt: `research/android-backup-20261103/`.
 - **Dual boot (2026-11-03, PHYSICAL, temporary boot):** `chooser-ios-r2` (cab9d96e…; one image: menu + iOS payload + stock
   Android kernel, default Android) shows both systems; the owner picked iOS with the volume keys and iOS booted (C3a PASS).
-  Keys fixed in r13 (sampling during redraws). Not installed (boot_b untouched); C1/C3b pending. `research/ios26-phaseb-r1/A7.md`.
+  Keys fixed in r13 (sampling during redraws). C1 (timeout → Android) and C3b PASS. Not installed (boot_b untouched). `research/ios26-phaseb-r1/A7.md`.
 - **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of the chooser (`shim/chooser.c`, stock boot vbmeta
   transplanted) chain-loads the stock Android kernel at EL2 (r3 x3, r4 in 42 s). **Display handback works:**
   chooser-v1-r11 showed the startup menu on the panel (owner saw it), released the DPU and booted Android in 42 s

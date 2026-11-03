@@ -28,3 +28,8 @@ One line per run: time (CET), lane, run id, the one variable, result, next varia
 | 17:11 | touch | a7-ios-system-r7-touch (PHYSICAL) | IsDisplayIntegrated=1 | Settings still frozen (taps, scroll); blocked on missing services (wifi.manager ×8) | agent SET |
 | 17:13 | dual boot | chooser-v1-r13-diag (PHYSICAL) | keys sampled per row | **PASS: owner switches the ring with Vol Up/Down** | chooser-ios-r2 |
 | 17:15 | dual boot | chooser-ios-r2 C3a (PHYSICAL) | menu + iOS + keys, default Android | **PASS: owner picked iOS with Vol Down, iOS booted** | C1 (timeout → Android), C3b, then the boot_b install decision |
+| 18:34 | dual boot | chooser-ios-r2 C1 (PHYSICAL) | hands off | PASS: timeout → Android, return 0xc9c00000 | C3b |
+| 18:35 | dual boot | chooser-ios-r2 C3b (PHYSICAL) | Down then Up | PASS (outcome): Android, return 0xc9c00000; ring movement not recalled by owner (seen in r13-diag/C3a) | install decision |
+| 18:42 | settings | a7-ios-system-r8-settings (PHYSICAL) | bluetoothd disabled in launchd | Settings still frozen; Control Center black; Spotlight ~31 s and launchd ~28 s CPU per 30 s | agent PERF |
+| 18:49 | wifi | a7-wifi-join-r2 (PHYSICAL) | passphrase then PMK | still status 4 reason 14 (firmware never answers M1); image wiped | agent W3 |
+| 18:56 | apps | a7-ios-system-r9-apps-ufs (PHYSICAL) | varfs RENAME_SWAP + rd=ufsroot0 | Home reached on ufsroot0 (first time on the phone); INVALID_PERSONA 0, UMD_INIT ran; Phone app on Home but traps (exc 6 at MobilePhone+0x1e2bc0); return PASS | agent CRASH |
