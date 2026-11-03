@@ -7,7 +7,7 @@ IMG=artifacts/apps-umdinit-r12.img
 while [ ! -s $IMG ] || ls artifacts/.apps-umdinit-r12.img.* >/dev/null 2>&1; do sleep 20; done
 echo "image present $(date +%T): $(stat -c %s $IMG) bytes"
 T=$(cat /data/hackios-qemu/ref-r12d/args-tail.txt)
-export HACKIOS_QEMU_SLOTS=2
+export HACKIOS_QEMU_SLOTS=4
 COMMON="--kernel ../ios26-release-r1/artifacts/kernel.ios26-p29 --root $IMG --window-gib 28 --ramdisk-root --var-overlay artifacts/hgltrack-rebuilt.ovl --args"
 python3 -I tools/qemu-ufsroot.py cal-r12d-kvm --accel kvm --runtime ${KVM_RUNTIME:-600} --idle 0 $COMMON "$T" > /data/hackios-qemu/cal-kvm.out 2>&1 &
 sleep 30

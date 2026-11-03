@@ -37,7 +37,7 @@ HARNESS = RIG/'research/ios26-apps-r1/tools/qemu-ufsroot.py'
 RUNS = RIG/'research/ios26-apps-r1/runs'
 DEFAULT_ROOT = RIG/'research/ios26-root-r1/build-r3/ios26-phone-r3.img'
 DEFAULT_EXPECT = REPO/'tools/qemu_preflight.expect.yaml'
-SLOTS_CAP = 3
+SLOTS_CAP = 6
 
 # Tokens the harness writes itself (qemu-ufsroot.py ARGS): replaced, the phone value is reported.
 HARNESS_OWNED = {'debug', 'serial', 'cpus', 'rd', 'blazer_ufs', 'blazer_ufs_live', 'blazer_ufs_root', 'blazer_ufs_lun',
@@ -287,13 +287,26 @@ def analyze(run, overlay=None, mask=None, expect=(), deadline=None, args=''):
 
 
 def shared_evaluator():
-    """The shared verdict schema: VERIFY's tools/probe_eval.py when it exists, else HARNESS's tools/hk_cycle.py evaluate()
-    (the same row format). Returns (name, evaluate)."""
+    """Return an evaluator accepting the pre-flight's (doc, sources, markers, ui) call.
+
+    VERIFY's newer probe_eval.evaluate(paths, rows, ...) is a public attempt-file API, not the old in-memory
+    hk_cycle API. Do not select it merely by name: its two-positional-argument signature raises after a guest has
+    already run. A future probe_eval implementation is usable here only if it accepts the same four arguments.
+    """
     import importlib.util
+    import inspect
     for name, p in (('probe_eval', REPO/'tools/probe_eval.py'), ('hk_cycle', REPO/'tools/hk_cycle.py')):
-        if p.exists():
-            s = importlib.util.spec_from_file_location(f'qp_{name}', p); m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
-            if hasattr(m, 'evaluate'): return f'{p.relative_to(REPO)} evaluate (sha {sha(p)[:16]})', m.evaluate
+        if not p.exists():
+            continue
+        s = importlib.util.spec_from_file_location(f'qp_{name}', p); m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
+        if not hasattr(m, 'evaluate'):
+            continue
+        fn = m.evaluate
+        params = list(inspect.signature(fn).parameters.values())
+        positional = [x for x in params if x.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)]
+        if len(positional) < 4 and not any(x.kind == inspect.Parameter.VAR_POSITIONAL for x in params):
+            continue
+        return f'{p.relative_to(REPO)} evaluate (sha {sha(p)[:16]})', fn
     return None, None
 
 
