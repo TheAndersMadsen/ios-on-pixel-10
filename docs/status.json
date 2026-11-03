@@ -49,20 +49,18 @@
     {
       "stage": "Now",
       "items": [
-        "Start iOS from the installed chooser on a cold boot (usb-warm fix)",
-        "Resolve startup/compositor crashes and measure frame completion before promoting sampler speed",
-        "Analyze the captured GPU firmware DEBUG_DUMP and complete strict health",
-        "Qualify native battery/clock presentation and interactive TAP/HOME behavior",
-        "Finish native Wi-Fi scan delivery and the Bluetooth keychain prerequisite on existing transports",
-        "Complete stock-app registration (the Phone app now appears on Home but crashes), readbacks and representative foreground launches"
+                "Resolve startup/compositor crashes and measure frame completion before promoting sampler speed",
+        "Send the first real GPU command stream through the healthy firmware (M3)",
+        "Qualify interactive scripted TAP/HOME behavior; screenshots already run unattended",
+        "Get the Wi-Fi WPA2 handshake through (the firmware never answers M1) and attach Bluetooth HCI natively",
+        "Make the Phone app (now opens, partly) and Settings > About fully usable, then more stock-app launches"
       ]
     },
     {
       "stage": "Next",
       "items": [
         "Verify persistent real settings on ios_data across reboots",
-        "Validate the volume keys under iOS, the power key, display sleep and wake",
-        "Verify visible battery percentage, real date/time and brightness control",
+        "Validate display sleep and wake",
         "Repair and physically qualify USB ECM networking, then native mux pairing",
         "Complete CPU health and thermal step-down before higher clocks or A520 admission"
       ]
@@ -70,8 +68,8 @@
     {
       "stage": "Later",
       "items": [
-        "Complete native GPU firmware execution, shader compilation and Metal rendering",
-        "Integrate audio and haptics with actual transport and physical acceptance",
+        "Complete GPU command execution, shader compilation and Metal rendering",
+        "Integrate audio (speakers, microphones) with actual transport and physical acceptance",
         "Establish ownership of RAM beyond the working 12.92 GiB",
         "Complete Wi-Fi association, Bluetooth, cellular and GPS",
         "Validate sleep, standby and remaining peripherals"
@@ -159,8 +157,8 @@
         ],
         [
           "Brightness",
-          "partial",
-          "Calibrated backlight: 0 backboardd crashes and brightness requests reach the kernel, but the slider is not applied to the panel"
+          "works",
+          "Owner: the Settings slider visibly changes the panel brightness (pwr1)"
         ],
         [
           "HDR, peak brightness, colour calibration",
@@ -184,8 +182,8 @@
         ],
         [
           "GPU firmware through Trusty",
-          "partial",
-          "A725 diagnostic reached SEND/START and captured a 112-byte firmware DEBUG_DUMP; strict health still fails"
+          "works",
+          "Health PASS (gpu2): STATEFLAGS_CTRL executed, HEALTH_CHECK consumed, 0 firmware faults, empty assert (log). First real command stream is next"
         ],
         [
           "Metal drawing",
@@ -219,8 +217,8 @@
         ],
         [
           "Android/iOS boot chooser",
-          "partial",
-          "Installed on boot_b: Android by timeout; iOS picked with the volume keys via fastboot boot (C3a). iOS from the installed menu still crashes at usb-warm; fix in progress"
+          "works",
+          "Installed on boot_b (int1, readback verified): Android by timeout PASS; owner booted iOS from a real power-on through the installed menu (r3)"
         ],
         [
           "Isolated iOS partitions",
@@ -235,7 +233,7 @@
         [
           "Touch",
           "works",
-          "Home from ios_system: owner taps open Settings (r3); direct-touch events registered (r7), but taps inside Settings still get no response"
+          "Owner taps open apps from Home; Settings responds at once (configd fix, int1)"
         ],
         [
           "Scripted taps and keys",
@@ -244,13 +242,13 @@
         ],
         [
           "Volume keys",
-          "partial",
-          "Owner switched the chooser menu with Vol Up/Down (r13-diag); not yet checked under iOS"
+          "works",
+          "Owner: volume keys work under iOS (pwr1) and switch the chooser menu"
         ],
         [
           "Power key",
-          "active",
-          "Retry needs someone at the phone"
+          "works",
+          "Owner: locks and wakes the phone under iOS (pwr1)"
         ],
         [
           "Tap to wake, palm rejection",
@@ -339,8 +337,8 @@
         ],
         [
           "Haptics",
-          "partial",
-          "Chip found; one effect commanded; felt buzz unconfirmed"
+          "works",
+          "Owner: a buzz on touch under iOS (pwr1)"
         ]
       ]
     },
@@ -369,8 +367,8 @@
         ],
         [
           "Battery gauge",
-          "partial",
-          "Native powerd consumed five fresh samples at 89% / 4332 mV and posted percentage notifications; visible percentage unverified"
+          "works",
+          "Owner: 95% shown in the status bar and Control Center (pwr1)"
         ],
         [
           "Charging control",
@@ -384,8 +382,8 @@
         ],
         [
           "Real date and time",
-          "partial",
-          "Physical RTC GET_TIME and OS calendar publication succeeded; visible date/time acceptance remains pending"
+          "works",
+          "Owner: correct local time shown (8.20 at 20:20, pwr1)"
         ]
       ]
     },

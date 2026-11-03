@@ -1,19 +1,19 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 48% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 56% of reachable hardware" width="100%"></p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 48%"> <img src="docs/assets/badge-target.svg" alt="device: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377 · iOS 26"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 56%"> <img src="docs/assets/badge-target.svg" alt="device: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377 · iOS 26"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>48%</b> of 49 reachable features · updated 2026-11-03</p>
+<p align="center"><b>56%</b> of 49 reachable features · updated 2026-11-03</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
-<p align="center"><sub>✅ Works on the phone 13 · 🟡 Partly working 14 · 🔧 Built, not run 1 · ⏳ In progress 10 · ❌ Not started 11 · 🚫 Likely out of reach 6</sub></p>
+<p align="center"><sub>✅ Works on the phone 21 · 🟡 Partly working 7 · 🔧 Built, not run 1 · ⏳ In progress 9 · ❌ Not started 11 · 🚫 Likely out of reach 6</sub></p>
 
 <details><summary><b>Every feature</b></summary>
 
@@ -32,22 +32,22 @@
 |  | 120 Hz | 🟡 120 Hz panel mode observed; completed iOS frame rate remains unmeasured |
 |  | 60 Hz mode and frame sync | 🔧 Latest phone profile uses 60 Hz; actual frame cadence and completed-frame timing remain unmeasured |
 |  | Variable refresh down to low rates | ❌ Automatic idle rate isn't built |
-|  | Brightness | 🟡 Calibrated backlight: 0 backboardd crashes and brightness requests reach the kernel, but the slider is not applied to the panel |
+|  | Brightness | ✅ Owner: the Settings slider visibly changes the panel brightness (pwr1) |
 |  | HDR, peak brightness, colour calibration | ❌ Not assigned |
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
-|  | GPU firmware through Trusty | 🟡 A725 diagnostic reached SEND/START and captured a 112-byte firmware DEBUG_DUMP; strict health still fails |
+|  | GPU firmware through Trusty | ✅ Health PASS (gpu2): STATEFLAGS_CTRL executed, HEALTH_CHECK consumed, 0 firmware faults, empty assert (log). First real command stream is next |
 |  | Metal drawing | ⏳ Native GPU rendering remains incomplete. Startup's 30 s GPU wait removed: first frames at 68 s, was 136 s (r5-accel) |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified on the old root; writer now bound to the GPT-resolved ios_data (host-tested), not yet run there |
 |  | Maximum speed | ⏳ Patches being measured |
-|  | Android/iOS boot chooser | 🟡 Installed on boot_b: Android by timeout; iOS picked with the volume keys via fastboot boot (C3a). iOS from the installed menu still crashes at usb-warm; fix in progress |
+|  | Android/iOS boot chooser | ✅ Installed on boot_b (int1, readback verified): Android by timeout PASS; owner booted iOS from a real power-on through the installed menu (r3) |
 |  | Isolated iOS partitions | ✅ ios_system 24 GiB and ios_data 8 GiB on the phone; ios_system flashed, read back on the phone (hash match) and booted to Home (r3) |
-| **Input** | Touch | ✅ Home from ios_system: owner taps open Settings (r3); direct-touch events registered (r7), but taps inside Settings still get no response |
+| **Input** | Touch | ✅ Owner taps open apps from Home; Settings responds at once (configd fix, int1) |
 |  | Scripted taps and keys | 🟡 Remote HOME visibly worked; TAP dispatched but required manual app recovery. No automatic retry or clean TAP acceptance |
-|  | Volume keys | 🟡 Owner switched the chooser menu with Vol Up/Down (r13-diag); not yet checked under iOS |
-|  | Power key | ⏳ Retry needs someone at the phone |
+|  | Volume keys | ✅ Owner: volume keys work under iOS (pwr1) and switch the chooser menu |
+|  | Power key | ✅ Owner: locks and wakes the phone under iOS (pwr1) |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
 | **Connectivity** | Wi-Fi | 🟡 BCM4390 under iOS: scan found 26 networks, authentication and association OK; the WPA2 4-way handshake fails. No packet traffic yet |
 |  | Bluetooth | 🟡 Firmware/H4 proven; keychain wrap/unwrap PASS on the phone (B1). Native HCI attachment, Settings pairing and profiles unproved |
@@ -62,14 +62,14 @@
 |  | Network over USB | ⏳ ECM source integrated and host-tested; review and physical binding/traffic gates remain open |
 |  | USB host, video out | 🚫 No host stack in open XNU |
 | **Audio** | Speakers, microphones | ⏳ QEMU test queued; depends on always-on chip |
-|  | Haptics | 🟡 Chip found; one effect commanded; felt buzz unconfirmed |
+|  | Haptics | ✅ Owner: a buzz on touch under iOS (pwr1) |
 | **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved |
 |  | Always-on chip | ⏳ First test built |
 | **Power** | Temperature and thermal guard | ✅ Live temperatures; guard panic verified at a test limit |
-|  | Battery gauge | 🟡 Native powerd consumed five fresh samples at 89% / 4332 mV and posted percentage notifications; visible percentage unverified |
+|  | Battery gauge | ✅ Owner: 95% shown in the status bar and Control Center (pwr1) |
 |  | Charging control | ❌ Left at the bootloader's settings |
 |  | Wireless charging | ❌ Not assigned |
-|  | Real date and time | 🟡 Physical RTC GET_TIME and OS calendar publication succeeded; visible date/time acceptance remains pending |
+|  | Real date and time | ✅ Owner: correct local time shown (8.20 at 20:20, pwr1) |
 | **Cameras** | Cameras, flash | 🚫 Likely months: sensor details aren't public |
 | **Security** | Fingerprint, Face ID | 🚫 Tied to Apple's security chip |
 |  | Secure enclave | 🚫 Apple SEP is absent; a software key store now wraps and unwraps keys on the phone (B1). Native data-protection support remains incomplete |
@@ -89,17 +89,19 @@
 
 ## Current checkpoint
 
-**Dual boot is under way.** A boot chooser built into the project's shim now starts the phone's own
-Android kernel: Android booted through it three times in a row (42 s with caches on). Plain boots are
-unaffected. The chooser's startup menu has been shown on the panel. Handing the display back to Android
-after the menu, the iOS entry and volume-key selection are still open.
+**Dual boot is installed, and iOS is usable by hand.** The boot chooser lives on `boot_b`: it falls
+through to Android on timeout, and the owner started iOS from a real power-on through its menu.
 
-iOS storage is being moved off Android's extents for good. A one-time migration gives iOS its own
-`ios_system` and `ios_data` partitions. The kernel's only write path is locked to `ios_data` by GPT
-name, type and position, and checked before every write. No iOS root is deployed until that migration is done.
+With the owner holding the phone, iOS 26 now responds to the volume keys, the power key locks and
+wakes it, touch gives a haptic buzz, the brightness slider changes the panel, and the status bar shows
+the real battery level (95%) and the correct local time. After a configd fix, Settings responds at once
+and the Phone app opens, though only partly. Settings > About still doesn't open.
 
-Native iOS 26 reached human-confirmed Home and Settings earlier; the UI is still unstable, and native
-Metal, radios and stock-app launches remain incomplete.
+The GPU firmware, started through Trusty, passes its health check: it executed a state command
+without faults. Real drawing commands come next. Screenshots can now be taken unattended from the
+RAM dump, at about 0.29 s each. They are a debug tool and add nothing to the percentage.
+
+Native Metal, Wi-Fi traffic, cellular and audio are still incomplete.
 
 Read [NOTES.md](NOTES.md) for current state and [HANDOFF.md](HANDOFF.md) for next actions. The
 percentage above is a planning checklist, not release readiness.
@@ -129,25 +131,23 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
-- Start iOS from the installed chooser on a cold boot (usb-warm fix)
 - Resolve startup/compositor crashes and measure frame completion before promoting sampler speed
-- Analyze the captured GPU firmware DEBUG_DUMP and complete strict health
-- Qualify native battery/clock presentation and interactive TAP/HOME behavior
-- Finish native Wi-Fi scan delivery and the Bluetooth keychain prerequisite on existing transports
-- Complete stock-app registration (the Phone app now appears on Home but crashes), readbacks and representative foreground launches
+- Send the first real GPU command stream through the healthy firmware (M3)
+- Qualify interactive scripted TAP/HOME behavior; screenshots already run unattended
+- Get the Wi-Fi WPA2 handshake through (the firmware never answers M1) and attach Bluetooth HCI natively
+- Make the Phone app (now opens, partly) and Settings > About fully usable, then more stock-app launches
 
 **Next**
 
 - Verify persistent real settings on ios_data across reboots
-- Validate the volume keys under iOS, the power key, display sleep and wake
-- Verify visible battery percentage, real date/time and brightness control
+- Validate display sleep and wake
 - Repair and physically qualify USB ECM networking, then native mux pairing
 - Complete CPU health and thermal step-down before higher clocks or A520 admission
 
 **Later**
 
-- Complete native GPU firmware execution, shader compilation and Metal rendering
-- Integrate audio and haptics with actual transport and physical acceptance
+- Complete GPU command execution, shader compilation and Metal rendering
+- Integrate audio (speakers, microphones) with actual transport and physical acceptance
 - Establish ownership of RAM beyond the working 12.92 GiB
 - Complete Wi-Fi association, Bluetooth, cellular and GPS
 - Validate sleep, standby and remaining peripherals
