@@ -1,0 +1,70 @@
+{
+ "scope": "HOST check of a GPT dump; nothing was written to any device",
+ "target": "ios_system",
+ "lun": 0,
+ "block_bytes": 4096,
+ "first_lba": 22757376,
+ "last_lba": 29048831,
+ "blocks": 6291456,
+ "unique_guid": "393504a0-64a8-4159-bb75-6243e3f63812",
+ "type_guid": "364eb72d-8d24-5ee6-9658-db13e5e7b10a",
+ "entry_index": 36,
+ "userdata": {
+  "first": 4597990,
+  "last": 22757375
+ },
+ "entries": 37,
+ "pad_policy": "entry-prefix",
+ "root": "/data/hackios-qemu/research/ios26-apps-r1/root-r4/out/ios26-phone-r4.img",
+ "root_sha256": "a6574777105ffd3ec6083cdac519e9b584f78092cab1aed4240ab81822e96abc",
+ "root_blocks": 6291456,
+ "tail_blocks": 0,
+ "padded_sha256": "a6574777105ffd3ec6083cdac519e9b584f78092cab1aed4240ab81822e96abc",
+ "dd": {
+  "bs": 1048576,
+  "skip": 88896,
+  "count": 24576
+ },
+ "dd_root": {
+  "bs": 1048576,
+  "skip": 88896,
+  "count": 24576
+ },
+ "sysfs": {
+  "start_512": 182059008,
+  "size_512": 50331648
+ },
+ "ios_data": {
+  "first": 29048832,
+  "last": 31147002,
+  "hackios_type": true
+ },
+ "plan": "research/ios26-dualboot-r8/gpt-plan/option-a-ios24+8",
+ "backup_variant": "media",
+ "simg": {
+  "path": "/data/hackios-qemu/research/ios26-apps-r1/root-r4/out/ios_system-phone-r4.simg",
+  "simg_sha256": "00be36b117381ec8111a06591efd85ea216fb29429bdd1a91434e78542de21a1",
+  "chunks": 21927,
+  "kinds": {
+   "0xcac1": 2180101,
+   "0xcac2": 4111355
+  },
+  "expands_to": "a6574777105ffd3ec6083cdac519e9b584f78092cab1aed4240ab81822e96abc"
+ }
+}
+OK
+# Preflight, in fastboot (read-only getvars):
+fastboot getvar partition-size:ios_system     # expect 0x600000000
+fastboot getvar has-slot:ios_system           # expect no
+fastboot getvar partition-type:ios_system     # any answer; record it
+# ATTENDED write, the only one (sparse: the root then zeros to the end of the partition):
+fastboot flash ios_system /data/hackios-qemu/research/ios26-apps-r1/root-r4/out/ios_system-phone-r4.simg
+fastboot reboot
+# In Android (read-only):
+# The LUN letter changes between boots (LUN 0 was sda, then sdb on 2026-11-03): read the disk from by-name, never assume it.
+P=$(adb shell su -c 'readlink -f /dev/block/by-name/ios_system' | tr -d '\r'); D=${P%36}; B=${P#/dev/block/}; echo $P $D     # expect /dev/block/sdX36
+adb shell su -c "cat /sys/class/block/$B/start /sys/class/block/$B/size"     # expect 182059008 and 50331648 (512-byte units)
+adb exec-out su -c "dd if=$D bs=1048576 skip=88896 count=24576 2>/dev/null" | python3 -I tools/ios_partition_flash.py verify-stream --receipt /data/hackios-qemu/research/ios26-apps-r1/root-r4/receipts/receipt-host-a6dump.json
+#   expect PASS, sha256 a6574777105ffd3ec6083cdac519e9b584f78092cab1aed4240ab81822e96abc
+# Raw-flash route only (tail not zeroed): compare the root part alone:
+#   adb exec-out su -c "dd if=$D bs=1048576 skip=88896 count=24576 2>/dev/null" | python3 -I tools/ios_partition_flash.py verify-stream --receipt /data/hackios-qemu/research/ios26-apps-r1/root-r4/receipts/receipt-host-a6dump.json --image-only

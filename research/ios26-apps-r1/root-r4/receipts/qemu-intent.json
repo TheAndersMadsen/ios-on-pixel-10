@@ -1,0 +1,24 @@
+{
+ "runs": [
+  "root-r4-q-r3ctl",
+  "root-r4-q-r4q20"
+ ],
+ "scope": "QEMU only (m1box TCG, 2 slots in parallel); not phone evidence",
+ "route": "r23/r26 (rd=ufsroot0, blazer_ufs_root=ios_system, r26 tail + blazer_persona_log=1) at r24's length (1800 s, blazer_deadline=1800)",
+ "kernel": "app2/kernel.rootview-bl-app2 b875e3e30d643b5b82965e6a6470dd9a4017a6e57a33e73a859b6e594dcb0d13 (app2 fixes: persona/varfs + sandbox op 5)",
+ "overlay": "app2/qemu-app2-r1.ovl f56038494bbfc47efda397bcc7187ee9a33ca63c5893c8a75786f007a7beaf7c (app2 TCC dir + tccd mirror)",
+ "roots": {
+  "r3ctl": "qemu/r3-logmirror.img 36382b3b... = phone r3 205cb0e2 + edits/logmirror_lsd_umd.py (r14's edit)",
+  "r4": "qemu/r4-logmirror.img 45fcabab... = phone r4 a6574777 + the same edit",
+  "r4q20": "qemu/r4q20-logmirror.img f44614ff..."
+ },
+ "window_gib": 32,
+ "the one variable": "the 49 staged bundles in /Applications (+ volume 8 -> 24 GiB)",
+ "expect": [
+  "r4: lsd 'Scanned N apps in /Applications' with N = r3ctl's N + 49 (minus bundles lsd skips)",
+  "r4: Home grid shows more icons than r3ctl",
+  "both: no panic before the deadline, usertrap/userabort no worse than r3ctl, root unchanged"
+ ],
+ "stop": "guest abnormal exit or root changed; no retry with the same inputs",
+ "amendment_2026-11-03T20:40": "root-r4-q-r4 (24 GiB fake LUN) panicked before userland: \"blazer-ufs: DMA at 10073b0000 is not usable\" -> live handoff failed 12 (QEMU layout: the fake root in guest RAM pushes the DMA arena past what n882_ctx_bind accepts; on the phone the arena is at 0x889e6c000). Replacement r4 guest: qemu/ios26-phone-r4q20.img e7d8c319 = the same build steps with the volume grown to 5242880 blocks (20 GiB, the size rootview-iossys-r1 ran); census identical to phone r4 (292551 entries, 0 differ); + logmirror edit -> qemu/r4q20-logmirror.img f44614ff."
+}

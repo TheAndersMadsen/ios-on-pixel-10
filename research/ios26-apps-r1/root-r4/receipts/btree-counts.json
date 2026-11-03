@@ -1,0 +1,50 @@
+{
+ "research/ios26-apps-r1/root-r4/src/ios26-phone-r3.img": {
+  "catalog": {
+   "leafRecords": 552496,
+   "totalNodes": 9152,
+   "freeNodes": 749,
+   "depth": 3
+  },
+  "attributes": {
+   "leafRecords": 259471,
+   "totalNodes": 4224,
+   "freeNodes": 1501,
+   "depth": 3
+  },
+  "extents": {
+   "leafRecords": 16,
+   "totalNodes": 1280,
+   "freeNodes": 1278,
+   "depth": 1
+  },
+  "fileCount": 57083,
+  "folderCount": 219164,
+  "totalBlocks": 2097152,
+  "freeBlocks": 135215
+ },
+ "research/ios26-apps-r1/root-r4/out/ios26-phone-r4.img": {
+  "catalog": {
+   "leafRecords": 589372,
+   "totalNodes": 10560,
+   "freeNodes": 1292,
+   "depth": 3
+  },
+  "attributes": {
+   "leafRecords": 259471,
+   "totalNodes": 4224,
+   "freeNodes": 1501,
+   "depth": 3
+  },
+  "extents": {
+   "leafRecords": 337,
+   "totalNodes": 1280,
+   "freeNodes": 1266,
+   "depth": 2
+  },
+  "fileCount": 63023,
+  "folderCount": 231662,
+  "totalBlocks": 6291456,
+  "freeBlocks": 4039114
+ }
+}

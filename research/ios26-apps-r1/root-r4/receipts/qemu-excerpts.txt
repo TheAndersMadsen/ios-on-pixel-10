@@ -1,0 +1,15 @@
+== root-r4-q-r3ctl
+blazer-ufs: "ios_system" on LUN 0: first block 2628e6, 8192 MiB, read only, DMA at c0b108000
+1969-12-31 16:10:42.932257-0800 lsd[75:471] 0x16b78b000 -[MIFilesystemScanner _scanAppsDirectory:withError:]: Scanned 204 apps in /Applications
+1969-12-31 16:11:00.815788-0800 lsd[75:471] 0x16b78b000 -[MIFilesystemScanner _scanAppsDirectory:withError:]: Scanned 23 apps in /System/Library/CoreServices
+1969-12-31 16:11:01.113776-0800 lsd[75:471] 0x16b78b000 -[MIFilesystemScanner _scanAppsDirectory:withError:]: Scanned 0 apps in /System/Library/AppPlaceholders
+1969-12-31 16:11:14.005011-0800 lsd[75:471] 0x16b78b000 -[MIFilesystemScanner _scanFrameworkDirectory:withError:]: Scanned 34 items in frameworks dir /System/Library/Frameworks
+1969-12-31 16:12:25.551837-0800 lsd[75:471] 0x16b78b000 -[MIFilesystemScanner _scanFrameworkDirectory:withError:]: Scanned 164 items in frameworks dir /System/Library/PrivateFrameworks
+== root-r4-q-r4q20
+blazer-ufs: "ios_system" on LUN 0: first block 2628e6, 20480 MiB, read only, DMA at f08624000
+1969-12-31 16:11:45.673620-0800 lsd[75:375] 0x16d65f000 -[MIFilesystemScanner _scanAppsDirectory:withError:]: Scanned 253 apps in /Applications
+1969-12-31 16:12:06.082491-0800 lsd[75:375] 0x16d65f000 -[MIFilesystemScanner _scanAppsDirectory:withError:]: Scanned 23 apps in /System/Library/CoreServices
+1969-12-31 16:12:06.428174-0800 lsd[75:375] 0x16d65f000 -[MIFilesystemScanner _scanAppsDirectory:withError:]: Scanned 0 apps in /System/Library/AppPlaceholders
+== root-r4-q-r4
+blazer-ufs: DMA at 10073b0000 is not usable
+panic(cpu 0 caller 0xfffffe00079fc8c8): blazer-ufs: live handoff failed: 12 @hakios.blazer_ufs.c:1286
