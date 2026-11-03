@@ -1,0 +1,3 @@
+live == pinned kern/hk_exec_rules.h
+live == pinned miscfs/ramfs/varfs_overlay.h
+live == pinned miscfs/ramfs/varfs_tsv.h

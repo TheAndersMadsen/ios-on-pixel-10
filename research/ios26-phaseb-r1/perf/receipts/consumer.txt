@@ -1,0 +1,20 @@
+CHANGED [14] f group 7 /private/var/db/com.apple.xpc.launchd/disabled.plist: 7484 -> 7442 B, written under mask
+CHANGED [39] c group 29 hk_env: 660 -> 710 B, written under mask
+CHANGED [42] c group 31 hk_deny: 10 -> 20 B, written under mask
+APPENDED [47] f group 29 755 0:0 /private/var/hk/hk_mainwatch.dylib 69024 B, written under mask
+APPENDED [48] f group 0 600 501:501 /private/var/mobile/Library/Preferences/com.apple.Accessibility.plist 158 B, written under mask
+PASS records: 44 identical, 3 replaced, 2 appended; hk_deny: bluetoothd -> bluetoothd,Spotlight
+EXEC backboardd DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib
+EXEC backboardd HK_CONTAINER_READY=probe
+EXEC backboardd HK_ACCEL_ONCE=skip
+EXEC SpringBoard FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome
+EXEC SpringBoard DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC SpringBoard HK_BATTERY_TRACE=1
+EXEC Preferences DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib
+EXEC Preferences HK_SETTINGS_ARTWORK=1
+EXEC Preferences HK_MAINWATCH=1
+EXEC iconservicesagent DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+EXEC iconservicesagent HK_SETTINGS_ARTWORK=1
+EXEC powerd DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC powerd HK_BATTERY_TRACE=1
+PASS: release consumers; hk_env 711 B with NUL (max 1024); only Preferences' environment changed; 291 checks

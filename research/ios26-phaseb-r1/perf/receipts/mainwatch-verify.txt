@@ -1,0 +1,2 @@
+research/ios26-phaseb-r1/perf/src/hk_mainwatch.c: OK
+research/ios26-phaseb-r1/perf/out/hk_mainwatch.dylib: OK

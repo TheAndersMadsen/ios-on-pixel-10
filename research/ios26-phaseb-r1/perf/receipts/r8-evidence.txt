@@ -1,0 +1,24 @@
+r8 first boot copy (lines 1..23700) of research/laguna-usb-fix/attempts/20261103-183626-a7-ios-system-r8-settings/ramdump/kernel.log
+failed lookups, logged + "Last log repeated" right after them, top 8:
+  com.apple.BTAudioHALPlugin.xpc <- audiomxd: 2236 lines + 483635 repeats = 485871
+  com.apple.nfcd.hwmanager <- passd: 283 lines + 0 repeats = 283
+  com.apple.bluetooth.xpc <- audiomxd: 249 lines + 0 repeats = 249
+  com.apple.locationd.synchronous <- SpringBoard: 76 lines + 0 repeats = 76
+  com.apple.biome.access.user <- coreduetd: 64 lines + 0 repeats = 64
+  com.apple.nearbyd.xpc.nearbyinteraction <- sharingd: 41 lines + 2 repeats = 43
+  com.apple.wifi.manager <- SpringBoard: 33 lines + 5 repeats = 38
+  com.apple.biome.access.user <- SpringBoard: 35 lines + 1 repeats = 36
+HK TOP:
+  HK TOP: t=74 frames+114 cpu_ms=104857: launchd[1]=25469 SpringBoard[5]=14767 lsd[55]=11010 audiomxd[60]=5543 backboardd[22]=3544 UserEventAgent[3]=2899 iconservicesagen[78]=2082 callservicesd[80]=1621
+  HK TOP: t=104 frames+142 cpu_ms=84675: launchd[1]=31155 SpringBoard[5]=17815 backboardd[22]=7464 audiomxd[60]=6418 iconservicesagen[78]=6418 Preferences[141]=2706 Spotlight[136]=2503 nehelper[66]=1187
+  HK TOP: t=134 frames+86 cpu_ms=55150: launchd[1]=28332 backboardd[22]=10632 audiomxd[60]=6935 Spotlight[136]=5809 SpringBoard[5]=1768 kernel_task[0]=523 runningboardd[4]=229 mediaremoted[6]=81
+  HK TOP: t=164 frames+106 cpu_ms=71748: Spotlight[136]=30979 launchd[1]=28305 audiomxd[60]=6905 backboardd[22]=3313 SpringBoard[5]=1046 kernel_task[0]=458 runningboardd[4]=233 powerexceptionsd[28]=89
+  HK TOP: t=194 frames+0 cpu_ms=66640: Spotlight[136]=30967 launchd[1]=28281 audiomxd[60]=6933 kernel_task[0]=219 backboardd[22]=32 sharingd[26]=25 thermalmonitord[19]=21 containermanager[29]=12
+  HK TOP: t=224 frames+0 cpu_ms=68139: Spotlight[136]=30941 launchd[1]=28356 audiomxd[60]=6918 spindump[178]=1426 kernel_task[0]=191 osanalyticshelpe[179]=79 backboardd[22]=32 thermalmonitord[19]=20
+  HK TOP: t=254 frames+174 cpu_ms=82326: Spotlight[136]=30937 launchd[1]=27890 backboardd[22]=13359 audiomxd[60]=6996 SpringBoard[5]=1915 kernel_task[0]=735 runningboardd[4]=59 mediaremoted[6]=40
+  HK TOP: t=284 frames+0 cpu_ms=66421: Spotlight[136]=30892 launchd[1]=28361 audiomxd[60]=6798 kernel_task[0]=166 SpringBoard[5]=50 backboardd[22]=33 sharingd[26]=24 thermalmonitord[19]=20
+  HK TOP: t=314 frames+0 cpu_ms=66478: Spotlight[136]=30931 launchd[1]=28229 audiomxd[60]=6904 kernel_task[0]=203 backboardd[22]=33 akd[86]=28 thermalmonitord[19]=20 featureaccessd[90]=11
+  process Spotlight [136] crossed memory high watermark (300 MB); EXC_RESOURCE 
+  process Spotlight[136] thread 1458 caught burning CPU! It used more than 50% CPU over 180 seconds
+  last HKAKSLOG: counted=33234 eligible=32768 suppressed=32748 legacy_retained=486 stop=no after-stop=logged-uncounted
+Preferences bluetooth lookups: 0

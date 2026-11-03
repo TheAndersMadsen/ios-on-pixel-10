@@ -1,0 +1,34 @@
+{
+  "base_sha256": "ee7554b9aba04d437992e3dbea73a9bdd5c444273b6cecd6fa3d9cfbf950a3ca",
+  "output_sha256": "95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55",
+  "bytes": 611168,
+  "records": 49,
+  "mask": "0xa0080081",
+  "replaced": {
+    "14 disabled.plist": "160 -> 159 labels (-com.apple.bluetoothd), 7484 -> 7442 B, == r7-touch record 14 (6930d06f689d6872)",
+    "42 hk_deny": "bluetoothd -> bluetoothd,Spotlight",
+    "39 hk_env": {
+      "old_preferences_rule": "Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib;HK_SETTINGS_ARTWORK=1",
+      "new_preferences_rule": "Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib;HK_SETTINGS_ARTWORK=1;HK_MAINWATCH=1",
+      "bytes_with_NUL": 711
+    }
+  },
+  "appended": {
+    "/private/var/hk/hk_mainwatch.dylib": {
+      "group": 29,
+      "sha256": "f06b9a008632a890c88443275dec64b2d3e846f1eba745b810579d38583f3fa9",
+      "bytes": 69024
+    },
+    "/private/var/mobile/Library/Preferences/com.apple.Accessibility.plist": {
+      "group": 0,
+      "sha256": "84d7c6fb12805d832b4bfe3ae5fb898c453c0c0b2ab70eda4dfc3a93acf8e00b",
+      "bytes": 158,
+      "keys": {
+        "EnhancedBackgroundContrastEnabled": true,
+        "ReduceMotionEnabled": true,
+        "ReduceMotionReduceSlideTransitionsPreference": true
+      }
+    }
+  },
+  "other_records_byte_identical": 44
+}

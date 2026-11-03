@@ -1,0 +1,16 @@
+cmdline bytes 1015 -> 1015; tokens 57 -> 57
+cmdline identical
+adt: "4b359cec962401660da1faec501adcb8b19296532459f22af05ed727426deb16" -> "f83c9c430a924bcc769355f0ad7153c3d71b0a76e044d5c980294550a4750113"
+adt_facts: {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "5e9f0733f9 -> {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "c250c1c9a1
+avb: "boot: Successfully verified sha256 hash of boot.img for image of 28516352 bytes" -> "boot: Successfully verified sha256 hash of boot.img for image of 28585984 bytes"
+decode: "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r9-apps-ufs/manifest.json" -> "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r10-perf/manifest.json"
+epoch: 1793726038 -> 1793730673
+ids: {"epoch": "0x2f2c8eff05", "handoff": 1, "record_nonce": "9cd74d32be325962b7bd8fdc756e744e", "stamp_nonce": "0xcf23b5900f71b71d"} -> {"epoch": "0x2f2c8eff7b", "handoff": 1, "record_nonce": "55f595b2405cf237dbb9d650bb0c273a", "stamp_nonce": "0x5090b7f19a1adefa"}
+image: "06514cdd044f8d5404c770dbc6045e8275e2b28bebb2ad04dcdf615e81611dc5" -> "b851cd25e20a1885a5262746a39cb05a0af23d669556b7d204eeabcc85de061d"
+kernel_end: "0xfffffe0008e28000" -> "0xfffffe0008e38000"
+margin_bytes: 40068720 -> 39999328
+name: "a7-ios-system-r9-apps-ufs" -> "a7-ios-system-r10-perf"
+payload: "d8f63271499d007a39132dd191aa0e8f9c78d54c0d030a0597c68e333c221076" -> "8a800cd7b18da867ab108e65bd224c90a81dc0447334d2a99417ad95ef9694bb"
+payload_bytes: 25991568 -> 26060960
+plan: {"adt_pa": "0x884e28000", "boot_args_pa": "0x884e2c000", "entry_pa": "0x88398b488", "top": "0x884e30000"} -> {"adt_pa": "0x884e38000", "boot_args_pa": "0x884e3c000", "entry_pa": "0x88398b488", "top": "0x884e40000"}
+var_overlay: {"bytes": 541768, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/accel-wait/build-mac/overlays/artwork-container-battery-observe-accel-skip-r1.ovl", "placed": ["0x884da0000",  -> {"bytes": 611168, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/perf/overlays/perf-r1.ovl", "placed": ["0x884da0000", "0x98000"], "sha256": "95701ed9bf56e7e7b13d9b50af02d05da

@@ -1,0 +1,13 @@
+base ee7554b9aba04d437992e3dbea73a9bdd5c444273b6cecd6fa3d9cfbf950a3ca 541808 B 47 records
+new  95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55 611168 B 49 records
+- [14] f group=7 mode=644 uid=0 gid=0 /private/var/db/com.apple.xpc.launchd/disabled.plist: 7484 B sha256 0524b78c670afc7ef9b095e75ae5708aff69dc09873a7c025209fd91e3714ff7
++ [14] f group=7 mode=644 uid=0 gid=0 /private/var/db/com.apple.xpc.launchd/disabled.plist: 7442 B sha256 6930d06f689d6872c658421d9da24eec5e6ba280ae8b93f4dd003d87777be131
+- [39] c group=29 mode=0 uid=0 gid=0 hk_env: backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib;HK_CONTAINER_READY=probe;HK_ACCEL_ONCE=skip,Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib;HK_SETTINGS_ARTWORK=1,iconservicesagent:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib;HK_SETTINGS_ARTWORK=1,powerd:DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1,SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome;DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1
++ [39] c group=29 mode=0 uid=0 gid=0 hk_env: backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib;HK_CONTAINER_READY=probe;HK_ACCEL_ONCE=skip,Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib;HK_SETTINGS_ARTWORK=1;HK_MAINWATCH=1,iconservicesagent:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib;HK_SETTINGS_ARTWORK=1,powerd:DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1,SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome;DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1
+- [42] c group=31 mode=0 uid=0 gid=0 hk_deny: bluetoothd
++ [42] c group=31 mode=0 uid=0 gid=0 hk_deny: bluetoothd,Spotlight
+- [47] (absent)
++ [47] f group=29 mode=755 uid=0 gid=0 /private/var/hk/hk_mainwatch.dylib: 69024 B sha256 f06b9a008632a890c88443275dec64b2d3e846f1eba745b810579d38583f3fa9
+- [48] (absent)
++ [48] f group=0 mode=600 uid=501 gid=501 /private/var/mobile/Library/Preferences/com.apple.Accessibility.plist: 158 B sha256 84d7c6fb12805d832b4bfe3ae5fb898c453c0c0b2ab70eda4dfc3a93acf8e00b
+identical raw records: 44; differing: 5
