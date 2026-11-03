@@ -1,0 +1,40 @@
+# app2-r26 (QEMU m1box TCG) vs usersession-swap-r23; bounded excerpts of runs/*/console.log
+{
+ "elapsed": 600.3402565920001,
+ "exit": 0,
+ "root_unchanged": true
+}
+{'kernel': 'app2/kernel.rootview-bl-app2', 'kernel_sha': 'b875e3e30d643b5b82965e6a6470dd9a4017a6e57a33e73a859b6e594dcb0d13', 'root': 'artifacts/apps-logmirror-r14.img', 'root_sha': 'f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55', 'overlay': 'app2/qemu-app2-r1.ovl', 'overlay_sha': 'f56038494bbfc47efda397bcc7187ee9a33ca63c5893c8a75786f007a7beaf7c', 'args': 'debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793731904 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_persona_log=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480'}
+usersession-swap-r23: persona_alloc_uid501=3 persona_alloc_total=5 INVALID_PERSONA=0 lsd_abort=0 no_personas=0 session_notfound=3 swapfail=0 us_sel=0 us_refused=0 type6_err=0 registered=0
+app2-r26: persona_alloc_uid501=3 persona_alloc_total=5 INVALID_PERSONA=0 lsd_abort=0 no_personas=0 session_notfound=3 swapfail=0 us_sel=0 us_refused=0 type6_err=0 registered=0
+usersession-swap-r23: Scanned 253 apps in /Applications; usertrap 0 userabort 0 panic 0; SWEET Sandbox: containermanager op 5
+app2-r26: Scanned 253 apps in /Applications; usertrap 0 userabort 0 panic 0; SWEET Sandbox: containermanager op 5
+hk_env: tccd gets DYLD_INSERT_LIBRARIES=/private/var/hk/hk_stderr_console.dylib
+hk_env: tccd gets HK_STDERR_CONSOLE=1
+hk_env: tccd gets OS_ACTIVITY_DT_MODE=YES
+HKSTDERR: tccd[33] stderr -> /dev/console
+1969-12-31 16:02:03.933641-0800 tccd[33:730] [access] TCCDMainDatabase created for path: /private/var/mobile/Library/TCC/TCC.db
+1969-12-31 16:02:05.259161-0800 tccd[33:730] [access] _sqlite3_integrity_check for /private/var/mobile/Library/TCC returned (0)
+1969-12-31 16:02:05.313216-0800 tccd[33:730] [access] using database: /private/var/mobile/Library/TCC/TCC.db
+1969-12-31 16:02:05.314309-0800 tccd[33:730] [access] using database version: 32
+AUTHREQ_RESULT by authValue:
+      1 AUTHREQ_RESULT: authValue=0
+     20 AUTHREQ_RESULT: authValue=2
+services:
+     12 kTCCServiceAddressBook
+      1 kTCCServiceBluetoothAlways
+      2 kTCCServiceCalendar
+      3 kTCCServiceLiverpool
+      1 kTCCServiceReminders
+      2 kTCCServiceWillow
+AddressBook grants:
+      1 identifier=com.apple.contactsd
+      2 identifier=com.apple.contacts.donation
+      2 identifier=com.apple.donotdisturbd
+      2 identifier=com.apple.rapportd
+      4 identifier=com.apple.sharingd
+      1 identifier=com.apple.TelephonyUtilities
+the one denial:
+1969-12-31 16:03:13.621949-0800 tccd[33:992] [access] AUTHREQ_RESULT: msgID=99.1, authValue=0, authReason=1, authVersion=1, desired_auth=0, error=Error Domain=kTCCErrorDomain Code=2 "Unable to construct an identity to kTCCServiceBluetoothAlways, Resp:{TCCDProcess: identifier=com.apple.deviceaccessd,
+Failed to issue generic sandbox extension lines: 9 (STATIC: logged when the reply's generic_extension slot is empty; see FIX.md 4)
+Failed to issue sandbox extension (the NULL-token message): 0

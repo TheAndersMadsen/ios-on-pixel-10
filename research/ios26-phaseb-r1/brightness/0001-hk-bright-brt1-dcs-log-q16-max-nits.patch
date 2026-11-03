@@ -1,0 +1,125 @@
+diff --git i/iokit/Kernel/arm/SweetFramebuffer.cpp w/iokit/Kernel/arm/SweetFramebuffer.cpp
+index f7049c8..685cbed 100644
+--- i/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ w/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -267,11 +267,32 @@ sweet_bl_result(const char *route, uint32_t value, IOReturn rc)
+ 	if (slot < 80) {
+ 		char name[32] = {};
+ 		proc_selfname(name, sizeof(name));
+-		IOLog("SWEET BL: request %s route %s raw %u rc %#x (queue only)\n", name, route, value, rc);
++		/* rc 0: the target is set for the scanout thread, which sends DCS 0x51 between frames (tensor-dpu: bright transport). */
++		IOLog("SWEET BL: request %s route %s raw %u rc %#x (%s)\n", name, route, value, rc, rc == kIOReturnSuccess ? "queued for DCS" : "refused");
+ 	}
+ 	return rc;
+ }
+ 
++/* The top-level key names of a request no route accepts (r4-bl..r9: a third of backboardd's calls). Names only, at most 4 per
++ * call and 8 calls a boot, no values and no nested walk; the request stays refused. */
++static unsigned sweet_bl_unknown_logs;
++
++static void
++sweet_bl_unknown(OSDictionary *d)
++{
++	if (__atomic_fetch_add(&sweet_bl_unknown_logs, 1, __ATOMIC_RELAXED) >= 8) return;
++	OSCollectionIterator *it = OSCollectionIterator::withCollection(d);
++	if (!it) return;
++	const char *k[4] = {"", "", "", ""};
++	unsigned n = 0;
++	for (OSObject *o; n < 4 && (o = it->getNextObject()) != NULL; n++) {
++		OSSymbol *sym = OSDynamicCast(OSSymbol, o);
++		k[n] = sym ? sym->getCStringNoCopy() : "?";
++	}
++	IOLog("SWEET BL: unknown request keys %u: %s %s %s %s\n", d->getCount(), k[0], k[1], k[2], k[3]);
++	it->release();
++}
++
+ static void
+ sweet_bl_param(OSDictionary *params, const char *key, uint32_t min, uint32_t max, uint32_t value)
+ {
+@@ -363,7 +384,10 @@ sweet_bl_set(AppleCLCD *fb, OSObject *properties)
+ 			count++;
+ 		}
+ 	}
+-	if (!count || count != d->getCount()) return sweet_bl_result("unknown", 0, kIOReturnUnsupported);
++	if (!count || count != d->getCount()) {
++		sweet_bl_unknown(d);
++		return sweet_bl_result("unknown", 0, kIOReturnUnsupported);
++	}
+ 	/* Conflicting aliases cannot depend on collection iteration order. */
+ 	if (seen[0] && seen[1] && v[0] && v[1] && v[0] != v[1]) return sweet_bl_result("conflict", 0, kIOReturnBadArgument);
+ 	uint32_t nits = seen[0] && v[0] ? v[0] : v[1];
+@@ -443,8 +467,9 @@ AppleCLCD::publishBacklight(void)
+ 		}
+ 		sweet_bl_calibration(bl, cap);
+ 		bl->setProperty("backlight-control", kOSBooleanTrue);
+-		bl->setProperty("user-accessible-max-nits", cap, 32);
+-		bl->setProperty("edr-max-nits", cap, 32);
++		/* CoreBrightness loads both with loadFixedFloat: (int / 65536, corebrightness/FINDINGS.md): 16.16 nits, like brightness-nits. */
++		bl->setProperty("user-accessible-max-nits", (uint64_t)cap << 16, 32);
++		bl->setProperty("edr-max-nits", (uint64_t)cap << 16, 32);
+ 		setProperty("IOMFBBrightnessLevel", (uint64_t)cap << 16, 32);
+ 		if (bl->start(this)) {
+ 			fBacklight = bl;
+diff --git i/iokit/Kernel/arm/hk_bright_map.h w/iokit/Kernel/arm/hk_bright_map.h
+index 1e7ba3f..9a936fe 100644
+--- i/iokit/Kernel/arm/hk_bright_map.h
++++ w/iokit/Kernel/arm/hk_bright_map.h
+@@ -56,6 +56,30 @@ static inline uint32_t hkb_wait_us(struct hkb_state *s, uint64_t now)
+ 	if (s->last_us == 0 || now - s->last_us >= HKB_PERIOD_US) return 1;
+ 	return (uint32_t)(HKB_PERIOD_US - (now - s->last_us));
+ }
++/* The curve's nits for a DBV, in tenths, for the log only (the inverse of hkb_dbv_q16 between the same points). */
++static inline uint32_t hkb_dbv_nits_x10(uint32_t dbv)
++{
++	if (dbv <= hkb_curve[0].dbv) return (uint32_t)hkb_curve[0].nits * 10u;
++	for (unsigned i = 1; i < HKB_N; i++) {
++		uint32_t a = hkb_curve[i - 1].dbv, b = hkb_curve[i].dbv;
++		if (dbv <= b) return hkb_curve[i - 1].nits * 10u + (dbv - a) * (uint32_t)(hkb_curve[i].nits - hkb_curve[i - 1].nits) * 10u / (b - a);
++	}
++	return (uint32_t)hkb_curve[HKB_N - 1].nits * 10u;
++}
++/*
++ * Transport log policy. Every failure; the first HKB_LOG_FIRST sends (the boot ramp); after that, a send HKB_LOG_STEP DBV or more
++ * away from the last one logged, up to HKB_LOG_MAX lines. A full slider sweep (10..140 nits, DBV 1397..4636) is about 25 lines,
++ * so a user's slider shows in the ramdump instead of vanishing after the boot ramp, as it did on r4-bl..r9 (64 lines, all boot ramp).
++ */
++#define HKB_LOG_FIRST 64u
++#define HKB_LOG_MAX   1024u
++#define HKB_LOG_STEP  128u
++static inline int hkb_log_due(uint32_t logs, uint32_t last_logged, uint32_t sent, int rc)
++{
++	uint32_t d = sent > last_logged ? sent - last_logged : last_logged - sent;
++	if (rc != 0 || logs < HKB_LOG_FIRST) return 1;
++	return logs < HKB_LOG_MAX && d >= HKB_LOG_STEP;
++}
+ /* 1: a result to log in *rc. 0: nothing happened. */
+ static inline int hkb_step(struct hkb_state *s, uint64_t now, int (*acl_off)(void), int (*dbv)(uint16_t), int *rc)
+ {
+diff --git i/iokit/Kernel/arm/sweet_scanout.cpp w/iokit/Kernel/arm/sweet_scanout.cpp
+index b433f9e..1d58690 100644
+--- i/iokit/Kernel/arm/sweet_scanout.cpp
++++ w/iokit/Kernel/arm/sweet_scanout.cpp
+@@ -98,7 +98,7 @@ void sweet_scanout_panel_power(int on)
+ #include "hk_bright_map.h"
+ /* hk_bright: one writer of the panel, the thread that kicks. Off without the arg. */
+ static struct hkb_state s_bright;
+-static uint32_t s_bright_logs;
++static uint32_t s_bright_logs, s_bright_logged;
+ 
+ uint32_t sweet_scanout_bright_cap(void)
+ {
+@@ -129,9 +129,12 @@ uint32_t sweet_scanout_bright_wait_us(void) { return s_on ? hkb_wait_us(&s_brigh
+ void sweet_scanout_bright_service(void)
+ {
+ 	int rc = 0;
+-	if (s_on && hkb_step(&s_bright, k_now_us(), tdpu_panel_acl_off, tdpu_panel_dbv, &rc) && (s_bright_logs < 64 || rc != 0)) {
++	if (s_on && hkb_step(&s_bright, k_now_us(), tdpu_panel_acl_off, tdpu_panel_dbv, &rc) && hkb_log_due(s_bright_logs, s_bright_logged, s_bright.sent, rc)) {
++		uint32_t n10 = hkb_dbv_nits_x10(s_bright.sent);
+ 		s_bright_logs++;
+-		IOLog("tensor-dpu: bright transport sent_dbv %u cap %u acl_off %d rc %d (no panel readback)\n", s_bright.sent, s_bright.cap, s_bright.acl_off, rc);
++		s_bright_logged = s_bright.sent;
++		IOLog("tensor-dpu: bright transport sent_dbv %u (~%u.%u nits) cap %u acl_off %d rc %d n %u (no panel readback)\n",
++		    s_bright.sent, n10 / 10, n10 % 10, s_bright.cap, s_bright.acl_off, rc, s_bright_logs);
+ 	}
+ }
+ 

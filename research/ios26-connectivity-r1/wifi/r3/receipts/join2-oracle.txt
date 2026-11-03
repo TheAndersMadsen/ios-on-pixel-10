@@ -1,0 +1,28 @@
+join2 oracle: PASSED, 24 cases, 0 failures
+mutant Android's wpa_auth: caught
+mutant Android's wsec: caught
+mutant Android's algos: caught
+mutant no roam step: caught
+mutant action byte: caught
+mutant passphrase offset: caught
+mutant no padding to 4: caught
+mutant tuple order: caught
+mutant targeted dwell in method 1: caught
+mutant no wildcard: caught
+mutant method 2 keeps r2's mfp: caught
+mutant method 2 ignores pairwise TKIP: caught
+mutant no disassociation: caught
+mutant no forget after method 1 keyed: caught
+mutant method 2's failure doesn't stop: caught
+mutant method 1's events count against 2: caught
+mutant no sup_wpa before up: caught
+mutant keyed line names the wrong method: caught
+mutant channel order: caught
+mutant wsec_info buffers left: caught
+mutant no delete of method 1's entry: caught
+mutant method 1 refusal ignored: caught
+mutant gate: disassociation in a dry run: caught
+mutant gate: 5 probes: caught
+mutant gate: 3 channels: caught
+mutant gate: any flags: caught
+join2 mutants: 26/26 caught

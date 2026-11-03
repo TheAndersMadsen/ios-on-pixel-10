@@ -1,0 +1,18 @@
+cmdline bytes 1015 -> 1015; tokens 57 -> 57
+cmdline identical (same tokens, same order)
+adt: "f83c9c430a924bcc769355f0ad7153c3d71b0a76e044d5c980294550a4750113" -> "ec2b2e1d908544eac03b4ee812a0e6192598e5dbc5e6488e349ff1eea9a4b4a2"
+adt_facts: {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "c250c1c9a1 -> {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "e49c811e0e
+avb: "boot: Successfully verified sha256 hash of boot.img for image of 28585984 bytes" -> "boot: Successfully verified sha256 hash of boot.img for image of 28635136 bytes"
+decode: "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r10-perf/manifest.json" -> "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-app2/manifest.json"
+epoch: 1793730673 -> 1793731728
+ids: {"epoch": "0x2f2c8eff7b", "handoff": 1, "record_nonce": "55f595b2405cf237dbb9d650bb0c273a", "stamp_nonce": "0x5090b7f19a1adefa"} -> {"epoch": "0x2f2c8eff8c", "handoff": 1, "record_nonce": "3a58638aa37c2656ac1c65682d41295e", "stamp_nonce": "0x4c9c89548db1694c"}
+image: "b851cd25e20a1885a5262746a39cb05a0af23d669556b7d204eeabcc85de061d" -> "b06e271fa74cae684e43efecf7d3861f770d27acbe5d039fef7b38619212a3d9"
+kernel_end: "0xfffffe0008e38000" -> "0xfffffe0008e44000"
+mach: "d7f47431164650c96cbab32dde384a288c321f67adcaf69f37eccc3116133186" -> "b875e3e30d643b5b82965e6a6470dd9a4017a6e57a33e73a859b6e594dcb0d13"
+margin_bytes: 39999328 -> 39948864
+name: "a7-ios-system-r10-perf" -> "a7-ios-system-app2"
+payload: "8a800cd7b18da867ab108e65bd224c90a81dc0447334d2a99417ad95ef9694bb" -> "347808dac7aed1f993855465ef681df7127a130b191ba8bc0f9f75fc8f3f06e5"
+payload_bytes: 26060960 -> 26111424
+plan: {"adt_pa": "0x884e38000", "boot_args_pa": "0x884e3c000", "entry_pa": "0x88398b488", "top": "0x884e40000"} -> {"adt_pa": "0x884e44000", "boot_args_pa": "0x884e48000", "entry_pa": "0x88398b488", "top": "0x884e4c000"}
+tools: {"adt.py": "ebb7a858835fc7acf5da1e543a05b9561e70c6fd4f9328f4d52c009465573bdd", "image_tool.py": "45eadfe3cda13395f030a6abe256a31f1b4907cb3465bedf504b3b6a1bb633a3", "mkadt.py": "ad0f50ed677d0d44f44dddbef62fb74ab8b062def51611bd34cebfc352f42619", "mkbootimg.py": "2a8d05d34110f66c463668f43fc812ce2e46e66 -> {"adt.py": "ebb7a858835fc7acf5da1e543a05b9561e70c6fd4f9328f4d52c009465573bdd", "image_tool.py": "b4909202ef59daaf9c8d953ed9d5bb2dc7f690b9cb49c9eb6920559f0642b41c", "mkadt.py": "ad0f50ed677d0d44f44dddbef62fb74ab8b062def51611bd34cebfc352f42619", "mkbootimg.py": "2a8d05d34110f66c463668f43fc812ce2e46e66
+var_overlay: {"bytes": 611168, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/perf/overlays/perf-r1.ovl", "placed": ["0x884da0000", "0x98000"], "sha256": "95701ed9bf56e7e7b13d9b50af02d05da -> {"bytes": 661592, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-apps-r1/app2/overlays/app2-r1.ovl", "placed": ["0x884da0000", "0xa4000"], "sha256": "0eb06481d31376b95684dbc6bc53a005adf

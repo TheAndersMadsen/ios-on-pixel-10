@@ -1,0 +1,4 @@
+research/ios26-apps-r1/app2/build/kernel.rootview-bl-app2: OK
+research/ios26-apps-r1/app2/overlays/app2-r1.ovl: OK
+research/ios26-phaseb-r1/perf/overlays/perf-r1.ovl: OK
+research/ios26-apps-r1/app2/out/hk_stderr_console.dylib: OK

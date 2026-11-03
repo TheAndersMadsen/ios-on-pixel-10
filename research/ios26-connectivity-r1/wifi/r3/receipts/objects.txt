@@ -1,0 +1,24 @@
+== blazer_bcm4390_join.arm64e.o
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        696 SUBSECTIONS_VIA_SYMBOLS
+== blazer_bcm4390_scan.arm64e.o
+MH_MAGIC_64   ARM64          E PAC00      OBJECT     5        616 SUBSECTIONS_VIA_SYMBOLS
+join defines _b4_net_parse
+join defines _b4_join_run
+join defines _b4_join_heard
+join defines _b4_join_event
+join defines _b4_net_rx
+join defines _b4_on_flow_created
+join defines _b4_join_pre_up
+join defines _b4_join_pre_clm
+scan defines _b4_ioctl_allowed
+scan defines _b4_gate_level
+scan defines _b4_scan
+join string: join: method 1: Android
+join string: join: keyed by method %u
+join string: join: method 1 over: disassociate
+join string: wsec_info
+join string: join_pref
+join string: sup_wpa to 1 before the interface is up
+scan (gate) string: wsec_info
+scan (gate) string: join_pref
+scan (gate) string: chanspec

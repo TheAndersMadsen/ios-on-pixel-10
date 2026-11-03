@@ -1,0 +1,21 @@
+CHANGED [39] c group 29 hk_env: 710 -> 821 B (one rule appended)
+APPENDED [49] d group 0 755 501:501 /private/var/mobile/Library/TCC 0 B, written under mask
+APPENDED [50] f group 29 755 0:0 /private/var/hk/hk_stderr_console.dylib 50192 B, written under mask
+PASS records: 48 identical, 1 replaced, 2 appended; hk_deny unchanged: bluetoothd,Spotlight
+EXEC tccd DYLD_INSERT_LIBRARIES=/private/var/hk/hk_stderr_console.dylib
+EXEC tccd HK_STDERR_CONSOLE=1
+EXEC tccd OS_ACTIVITY_DT_MODE=YES
+EXEC backboardd DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib
+EXEC backboardd HK_CONTAINER_READY=probe
+EXEC backboardd HK_ACCEL_ONCE=skip
+EXEC SpringBoard FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome
+EXEC SpringBoard DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC SpringBoard HK_BATTERY_TRACE=1
+EXEC Preferences DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib
+EXEC Preferences HK_SETTINGS_ARTWORK=1
+EXEC Preferences HK_MAINWATCH=1
+EXEC iconservicesagent DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+EXEC iconservicesagent HK_SETTINGS_ARTWORK=1
+EXEC powerd DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC powerd HK_BATTERY_TRACE=1
+PASS: release consumers; hk_env 822 B with NUL (max 1024); only tccd's environment changed; 292 checks

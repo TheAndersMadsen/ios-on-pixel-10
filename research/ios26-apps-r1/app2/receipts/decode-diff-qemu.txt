@@ -1,0 +1,9 @@
+base 61c38161efd809bdac15f9f167e5431a4f116b54bf42c7280411480fa37bea2a 267872 B 43 records
+new  f56038494bbfc47efda397bcc7187ee9a33ca63c5893c8a75786f007a7beaf7c 318296 B 45 records
+- [39] c group=29 mode=0 uid=0 gid=0 hk_env: SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome,backbo
++ [39] c group=29 mode=0 uid=0 gid=0 hk_env: SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome,backbo
+- [43] (absent)
++ [43] d group=0 mode=755 uid=501 gid=501 /private/var/mobile/Library/TCC: 0 B sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- [44] (absent)
++ [44] f group=29 mode=755 uid=0 gid=0 /private/var/hk/hk_stderr_console.dylib: 50192 B sha256 a630a41b80d15a2726105217d1c81d66d9348ccc0198bc7ec5b93f34e62d5837
+identical raw records: 42; differing: 3

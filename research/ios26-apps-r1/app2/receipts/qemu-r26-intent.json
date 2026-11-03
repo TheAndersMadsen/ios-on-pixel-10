@@ -1,0 +1,4 @@
+{"run": "app2-r26", "scope": "QEMU only (m1box TCG)", "compare": "usersession-swap-r23 (same root apps-logmirror-r14 f67e3bc9, tail, persona log, 600 s)",
+ "changes": ["kernel kernel.rootview-bl-app2 b875e3e3 (d7f47431 + sandbox op 5 token)", "overlay qemu-app2-r1 f5603849 = hgltrack-rebuilt 61c38161 + TCC dir + tccd hk_env + hk_stderr_console.dylib"],
+ "expect": ["SWEET Sandbox: containermanager op 5 once, no usertrap/userabort new vs r23", "HKSTDERR: tccd[N] line and tccd os_log lines on the console", "r23 counters unchanged: INVALID_PERSONA 0, lsd aborts 0, Scanned 253 apps"],
+ "stop": "guest abnormal exit or root changed; no retry with the same inputs"}

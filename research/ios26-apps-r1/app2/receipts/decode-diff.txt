@@ -1,0 +1,9 @@
+base 95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55 611168 B 49 records
+new  0eb06481d31376b95684dbc6bc53a005adff7ae3e03e967a983f46e41605755e 661592 B 51 records
+- [39] c group=29 mode=0 uid=0 gid=0 hk_env: backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib;HK_CONTAINER_READY=probe;HK_ACCEL_ONCE=skip,Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib;HK_SETTINGS_ARTWORK=1;HK_MAINWATCH=1,iconservicesagent:DYLD_INSERT_LIBRAR
++ [39] c group=29 mode=0 uid=0 gid=0 hk_env: backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib;HK_CONTAINER_READY=probe;HK_ACCEL_ONCE=skip,Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib;HK_SETTINGS_ARTWORK=1;HK_MAINWATCH=1,iconservicesagent:DYLD_INSERT_LIBRAR
+- [49] (absent)
++ [49] d group=0 mode=755 uid=501 gid=501 /private/var/mobile/Library/TCC: 0 B sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- [50] (absent)
++ [50] f group=29 mode=755 uid=0 gid=0 /private/var/hk/hk_stderr_console.dylib: 50192 B sha256 a630a41b80d15a2726105217d1c81d66d9348ccc0198bc7ec5b93f34e62d5837
+identical raw records: 48; differing: 3

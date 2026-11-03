@@ -1,0 +1,3 @@
+hk-sandbox-token == pinned kern/hk_exec_rules.h
+hk-sandbox-token == pinned miscfs/ramfs/varfs_overlay.h
+hk-sandbox-token == pinned miscfs/ramfs/varfs_tsv.h

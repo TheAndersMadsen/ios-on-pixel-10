@@ -1,0 +1,961 @@
+From 3da6bcc16870ebbfc1805bc71752310de718dce9 Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 20:02:30 +0100
+Subject: [PATCH] blazer wifi join: two methods in one boot (Android's order,
+ then r2's without mfp)
+
+a7-wifi-join-r1 (PMK only) and -r2 (passphrase, then PMK) both authenticated
+and associated, then the firmware supplicant sat in WLC_SUP_KEYXCHANGE_WAIT_M1
+(status 4, reason 14) until the network deauthenticated with reason 15. The
+firmware never logged an M1 and the host saw no EAPOL. Stock Android on this
+phone keys on the same network 40 ms after association.
+
+sup_wpa 1 now goes before WLC_UP (b4_join_pre_up), as stock's preinit.
+
+Method 1 mirrors Android's connect (physical dmesg, wl_cfg80211.c): roam on;
+wl_cfg80211_clear_security; wpa_auth 0xc0; auth 0; multi-AKM wpa_auth
+0x2048080; mfp 1; wsec 6; wsec_info BSS_ALGOS 0x14014/0x1c010; join_pref with
+5 WPA AKM tuples; the passphrase by wsec_info PMK_PASSPHRASE with the SSID;
+sae_pwe (value inferred); the PMK by WSEC_PMK; then a join to the wildcard
+BSSID on the two best channels heard, with stock's untargeted join-scan
+parameters. A refusal or a failed handshake ends method 1 (WLC_DISASSOC,
+1.5 s of events, firmware console), and method 2 follows.
+
+Method 2 is r2's order after a clear and deletion of method 1's passphrase
+entry: wpa_auth 0xc0, auth 0, sup_wpa 1, wsec from the network's RSN IE
+(TKIP if group or pairwise TKIP), wpa_auth, mfp 0 (2 if the network requires
+it), passphrase (flags 1), PMK, roam_off 1, r2's targeted passive join. Its
+failures stop the boot with r2's codes.
+
+The log names the method that keyed ("join: keyed by method N"). The
+passphrase and PMK stay in cfg.net until the last method has given them and
+are wiped on every way out of b4_join_run.
+
+Gate (blazer_bcm4390_scan.c): wsec_info, join_pref and GET chanspec at the dry
+level; WLC_DISASSOC and Android's join form (wildcard BSSID, 1-2 chanspecs,
+default join-scan type, <=4 probes in <=80 ms, 400 ms passive, no flags) only
+when armed.
+
+Host: research/ios26-connectivity-r1/wifi/r3/tests (join2_oracle 24 cases,
+26/26 mutants, r2's reader/composer tests on these sources).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ bsd/dev/blazer_bcm4390_join.c | 582 ++++++++++++++++++++++++++++++----
+ bsd/dev/blazer_bcm4390_scan.c |  60 +++-
+ bsd/dev/blazer_pcie1.h        |   5 +
+ 3 files changed, 575 insertions(+), 72 deletions(-)
+
+diff --git a/bsd/dev/blazer_bcm4390_join.c b/bsd/dev/blazer_bcm4390_join.c
+index 85abb57..2c5d7d6 100644
+--- a/bsd/dev/blazer_bcm4390_join.c
++++ b/bsd/dev/blazer_bcm4390_join.c
+@@ -4,10 +4,12 @@
+  * One thread, polled, as blazer_bcm4390_ring.c. Own code; values and order are from Broadcom's DHD and its headers (GPL, facts only). Sources: bcm4390/wl_cfg80211.c wl_config_assoc_security, wl_set_wpa_version, wl_set_auth_type, wl_set_set_cipher, wl_set_key_mgmt, wl_cfg80211_set_mfp, wl_fillup_assoc_params, wl_handle_join, wl_cfg80211_sup_event_handler; dhd_linux.c dhd_optimised_preinit_ioctls; wldev_common.c wldev_set_country.
+  *
+  * What goes on the air, and only with cfg.join_armed, which only blazer_wifi_join=1 sets, and only with a network in the image (research/ios26-fleet/handoffs/wifi.md, "Exact frames"):
+- *   the firmware's auth and association requests to one address on one channel, found by listening, the join's own scan being passive; EAPOL 2 and 4 from its supplicant; then what the stack sends, and for blazer_wifi_net=1 DHCP, ARP and ICMP built here.
+- * Without it stage JOIN is a dry run: every setting goes to the firmware and it says what it thinks of them, and the join and every frame are refused by the gate (b4_ioctl_allowed, b4_tx_post). No probe request anywhere: no active scan can be expressed, so a hidden network can't be joined.
++ *   r3 method 1 (Android's): the join's own scan, stock's for a join that isn't targeted: probe requests for the one name on at most the two channels it was heard on; then the firmware's auth and association requests to the address it picks there; EAPOL 2 and 4 from its supplicant; if it doesn't key, a disassociation.
++ *   r3 method 2 (r2's): auth and association requests to one address on one channel, found by listening, the join's own scan being passive; EAPOL 2 and 4.
++ *   Then what the stack sends, and for blazer_wifi_net=1 DHCP, ARP and ICMP built here.
++ * Without it stage JOIN is a dry run: every setting of both methods goes to the firmware and it says what it thinks of them, and the join, the disassociation and every frame are refused by the gate (b4_ioctl_allowed, b4_tx_post). The escan itself stays passive; a hidden network still can't be joined.
+  *
+- * The secret: the network's name and key reach here in cfg.net. The name is never logged, nor anything that would tell which of the networks heard it is. The key goes to the firmware as the passphrase (BWN2), which its supplicant needs, then as the 32-byte PMK made on the host; every copy here is wiped as soon as the firmware has it. An old BWN1 blob holds only the PMK. WPA3-only networks still aren't joined: no SAE settings are made. */
++ * The secret: the network's name and key reach here in cfg.net. The name is never logged, nor anything that would tell which of the networks heard it is. The key goes to the firmware as the passphrase (BWN2), which its supplicant needs, then as the 32-byte PMK made on the host: method 1 by wsec_info with the name, method 2 by WSEC_PMK; each ioctl copy is wiped at once, cfg.net's when the last method has them. An old BWN1 blob holds only the PMK. WPA3-only networks still aren't joined (the scan takes only PSK networks), but method 1 offers the firmware SAE as Android does, so on a transition network it may choose it. */
+ #include "blazer_hw_port.h"
+ #include "blazer_pcie1.h"
+ 
+@@ -51,6 +53,34 @@
+ #define PMK_IOCTL_BYTES 263u            /* sizeof(wsec_pmk_t) + 1, as stock's array */
+ #define PMK_KEY_AT      4u
+ 
++/* r3, method 1: what Android sent on this phone (physical dmesg ios26-dualboot-r8/attempts/return-after-restore, 13.62-13.69 s) */
++#define WPA_ANDROID     0x2048080u      /* "Set Multi AKMs wpa_auth 0x2048080": PSK 0x80 | PSK_SHA256 0x8000 | SAE 0x40000 | SAE_EXT 0x2000000 */
++#define WSEC_ANDROID    0x0006u         /* wl_set_multi_cipher: AES_ENABLED | TKIP_ENABLED, "wsec configured. 0x6" */
++#define ALGOS_ANDROID   0x14014u        /* KEY_ALGO_MASK of TKIP, AES_CCM, AES_GCM, AES_GCM256: "bss_algo:0x14014" */
++#define ALGOS_MASK_AES  0x1c010u        /* KEY_ALGO_MASK_AES: "mask:0x1c010" */
++#define WSI_VERSION     1u              /* WL_WSEC_INFO_VERSION_1 */
++#define WSI_HDR         4u              /* wl_wsec_info_t: version, pad[2], num_tlvs */
++#define WSI_TLV_HDR     4u              /* WL_WSEC_INFO_TLV_HDR_LEN: type, len */
++#define WSI_BSS_ALGOS   0x0106u         /* WL_WSEC_INFO_BSS_ALGOS */
++#define WSI_BSS_PMK_PASS 0x0108u        /* WL_WSEC_INFO_BSS_PMK_PASSPHRASE */
++#define WSI_BSS_SAE_PWE 0x0109u         /* WL_WSEC_INFO_BSS_SAE_PWE */
++#define PI_VERSION      0x0100u         /* WL_WSEC_PMK_INFO_VERSION */
++#define PI_ACTION_AT    13u             /* wl_wsec_info_pmk_info_t: version 0, len 2, next_offset 4, flags 6, pmk_lifetime 8, akm_mask 12, action 13, rsvd 14 */
++#define PI_SSID_AT      16u             /* bcm_xlo_t ssid {len, off}; then bssid 20, pass_id 24, pmk 28, passphrase 32 */
++#define PI_PASS_AT      32u
++#define PI_FIXED        36u             /* sizeof(wl_wsec_info_pmk_info_t) */
++#define PI_ADD          0u              /* WL_WSEC_PMK_INFO_ADD */
++#define PI_DEL          1u              /* WL_WSEC_PMK_INFO_DEL */
++#define SAE_PWE_BOTH    3u              /* SAE_PWE_LOOP | SAE_PWE_H2E. Android's value isn't in its log (WL_DBG_MEM): inference */
++#define JPREF_WPA       2u              /* WL_JOIN_PREF_WPA */
++#define JPREF_TUPLES    5u              /* "num_tuples 5": SAE_EXT, SAE, PSK, WPA1 PSK, PSK_SHA256 (wl_update_join_pref_tuple) */
++#define JPREF_BYTES     (4u + 12u * JPREF_TUPLES)
++#define RC_LEAVING      3u              /* DOT11_RC_DEAUTH_LEAVING */
++#define PART_WAIT_MS    1500u
++#define JS_DEFAULT      0u              /* wl_join_scan_params_t.scan_type: "0 use default". Android's WL_JOIN_DEFAULT_SCAN_TYPE: inference */
++#define JOIN_BCAST_ACTIVE_MS 80u        /* WL_BCAST_SCAN_JOIN_ACTIVE_DWELL_TIME_MS: not a targeted join */
++#define JOIN_PROBE_EVERY_MS 20u         /* WL_SCAN_JOIN_PROBE_INTERVAL_MS */
++
+ /* wl_extjoin_params_v1, _v2, _v3 */
+ #define JP_SSID_LEN     4u
+ #define JP_SSID         8u
+@@ -414,6 +444,17 @@ b4_join_pre_up(struct p1 *p)
+ 		p->country[1] = (char)b[9];
+ 		p->country[2] = 0;
+ 	}
++	/* r3: the in-dongle supplicant on before WLC_UP, as stock's preinit does it (dhd_preinit_ioctls BCMSUP_4WAY_HANDSHAKE, and the STA
++	 * role's init iovars, wl_is_4way_hs_offld_enabled). r1 and r2 set it only at the join, after the interface was up. Stock goes on
++	 * whatever it answers (BCME_NOTREADY counts as on), so this only says it */
++	if (net == NULL || !net->open) {
++		int32_t st = 0;
++
++		if (set_int(p, "sup_wpa", 1, &st)) {
++			return (int)p->stop;
++		}
++		p->ops.log(p->ops.ctx, "join: sup_wpa to 1 before the interface is up: status %d\n", st);
++	}
+ 	if (p->cfg.net_mode != 0 && p->ops.net_ready != NULL) {
+ 		p->ops.net_ready(p->ops.ctx, p->mac);
+ 	}
+@@ -424,7 +465,7 @@ b4_join_pre_up(struct p1 *p)
+ 
+ /* RSN: version, group suite, pairwise suites, AKM suites, capabilities. Lengths from the air: nothing past end is read. 0: not joinable */
+ static uint32_t
+-parse_rsn(const uint8_t *e, uint32_t len, uint8_t *group_tkip, uint8_t *akm, uint8_t *mfp)
++parse_rsn(const uint8_t *e, uint32_t len, uint8_t *group_tkip, uint8_t *pair_tkip, uint8_t *akm, uint8_t *mfp)
+ {
+ 	static const uint8_t oui[3] = { 0x00, 0x0f, 0xac };
+ 	uint32_t at = 2, count;
+@@ -448,6 +489,9 @@ parse_rsn(const uint8_t *e, uint32_t len, uint8_t *group_tkip, uint8_t *akm, uin
+ 		if (jn_same(e + at, oui, 3) && e[at + 3] == SUITE_CCMP) {
+ 			ccmp = true;
+ 		}
++		if (jn_same(e + at, oui, 3) && e[at + 3] == SUITE_TKIP) {
++			*pair_tkip = 1;
++		}
+ 	}
+ 	if (len - at < 2) {
+ 		return 0;
+@@ -488,8 +532,9 @@ b4_join_heard(struct p1 *p, const uint8_t *bi, uint32_t bytes)
+ 	uint32_t ie_off, ie_len, at, ssid_len = bi[BI_SSID_LEN];
+ 	uint16_t cap;
+ 	int16_t rssi = (int16_t)jn_get16(bi, BI_RSSI);
+-	uint8_t tkip = 0, akm = 0, mfp = 0;
++	uint8_t tkip = 0, ptkip = 0, akm = 0, mfp = 0;
+ 	bool rsn = false, ok = false;
++	uint16_t cs;
+ 
+ 	if (net == NULL || bytes < BI_FIXED || ssid_len != net->ssid_len || ssid_len > sizeof(net->ssid) || !jn_same(bi + BI_SSID, net->ssid, ssid_len)) {
+ 		return;
+@@ -510,7 +555,7 @@ b4_join_heard(struct p1 *p, const uint8_t *bi, uint32_t bytes)
+ 		}
+ 		if (id == IE_RSN) {
+ 			rsn = true;
+-			ok = parse_rsn(bi + at + 2, len, &tkip, &akm, &mfp) != 0;
++			ok = parse_rsn(bi + at + 2, len, &tkip, &ptkip, &akm, &mfp) != 0;
+ 			break;
+ 		}
+ 		at += 2 + len;
+@@ -531,9 +576,37 @@ b4_join_heard(struct p1 *p, const uint8_t *bi, uint32_t bytes)
+ 		p->jn_chanspec = jn_get16(bi, BI_CHANSPEC);
+ 		p->jn_ctl = bi[BI_CTL_CH] != 0 ? bi[BI_CTL_CH] : (uint8_t)p->jn_chanspec;
+ 		p->jn_group_tkip = tkip;
++		p->jn_pair_tkip = ptkip;
+ 		p->jn_akm = akm;
+ 		p->jn_mfp = mfp;
+ 	}
++	/* Method 1's channel list: the two best channels it was heard on, each once, best first. Stock's is wpa_supplicant's channel hint plus its roam cache */
++	cs = (uint16_t)((jn_get16(bi, BI_CHANSPEC) & CS_BAND_MASK) | CS_BW_20 | (bi[BI_CTL_CH] != 0 ? bi[BI_CTL_CH] : (uint8_t)jn_get16(bi, BI_CHANSPEC)));
++	for (uint32_t i = 0; i < p->jn_nchans; i++) {
++		if (p->jn_chans[i] == cs) {
++			if (rssi > p->jn_chan_rssi[i]) {
++				p->jn_chan_rssi[i] = rssi;
++				if (i == 1 && rssi > p->jn_chan_rssi[0]) {
++					p->jn_chans[1] = p->jn_chans[0];
++					p->jn_chan_rssi[1] = p->jn_chan_rssi[0];
++					p->jn_chans[0] = cs;
++					p->jn_chan_rssi[0] = rssi;
++				}
++			}
++			return;
++		}
++	}
++	if (p->jn_nchans == 0 || rssi > p->jn_chan_rssi[0]) {
++		p->jn_chans[1] = p->jn_chans[0];
++		p->jn_chan_rssi[1] = p->jn_chan_rssi[0];
++		p->jn_chans[0] = cs;
++		p->jn_chan_rssi[0] = rssi;
++		p->jn_nchans = p->jn_nchans < 2 ? (uint8_t)(p->jn_nchans + 1) : 2;
++	} else if (p->jn_nchans == 1 || rssi > p->jn_chan_rssi[1]) {
++		p->jn_chans[1] = cs;
++		p->jn_chan_rssi[1] = rssi;
++		p->jn_nchans = 2;
++	}
+ }
+ 
+ static char jn_lower(char c) { return c >= 'A' && c <= 'Z' ? (char)(c + 32) : c; }
+@@ -677,7 +750,21 @@ b4_join_event(struct p1 *p, uint32_t type, uint32_t status, uint32_t reason, uin
+ 	return true;
+ }
+ 
+-/* ---- Security and the join: wl_config_assoc_security, wl_handle_join ---- */
++/* ---- Security and the join: wl_config_assoc_security, wl_handle_join. r3: two methods in one boot ---- */
++
++/*
++ * r1 (a PMK) and r2 (the passphrase, then the PMK) both authenticated and associated, then sat in WLC_SUP_KEYXCHANGE_WAIT_M1 (status 4,
++ * reason 14) until the network gave up: the firmware never logged an M1 and the host got no EAPOL. Android, on this phone and network,
++ * keyed 40 ms after its association. So r3 first does what Android did, then, if that doesn't key, r2's way with two changes:
++ *   method 1, Android's order (physical dmesg 13.62-13.69 s and bcm4390/wl_cfg80211.c): roam on; wl_cfg80211_clear_security; wpa_auth 0xc0;
++ *     auth 0; the multi-AKM wpa_auth 0x2048080; mfp 1; wsec 6; wsec_info algos 0x14014/0x1c010; join_pref with its 5 WPA tuples; the passphrase by
++ *     wsec_info PMK_PASSPHRASE with the SSID (wl_cfg80211_config_passphrase); sae_pwe; the PMK (WL_PSK_OFFLOAD); the join to the wildcard
++ *     address on up to 2 channels, the join's own scan stock's (wl_fillup_assoc_params, not targeted).
++ *   method 2, r2's order: clear first, then wpa_auth 0xc0, auth 0, sup_wpa 1, wsec from the network's RSN IE, wpa_auth, mfp 0 (r2 sent 1),
++ *     the passphrase (WSEC_PMK flags 1), the PMK, roam_off 1, and r2's targeted join.
++ * Both run after sup_wpa 1 before WLC_UP (b4_join_pre_up), as Android's preinit. The log says which one keyed.
++ * The passphrase and the PMK stay in cfg.net until the last method has given them (b4_join_run wipes them on every way out).
++ */
+ 
+ /* A dry run: the same settings, a key that opens nothing, and the firmware's answers logged. Never a stop: finding out is the point */
+ static int
+@@ -695,6 +782,36 @@ security_step(struct p1 *p, const char *name, uint32_t value)
+ 	return 0;
+ }
+ 
++/* Only said, whatever the answer: stock logs these and goes on (wl_cfg80211_clear_security, wl_roam_off_config) */
++static int
++note_step(struct p1 *p, const char *name, uint32_t value)
++{
++	int32_t st = 0;
++
++	if (set_int(p, name, value, &st)) {
++		return (int)p->stop;
++	}
++	p->ops.log(p->ops.ctx, "join: %s to 0x%x: status %d\n", name, value, st);
++	return 0;
++}
++
++/* Method 1's: a refusal ends method 1 and method 2 follows. It never stops the boot */
++static int
++m1_step(struct p1 *p, const char *name, uint32_t value, bool *refused)
++{
++	int32_t st = 0;
++
++	if (set_int(p, name, value, &st)) {
++		return (int)p->stop;
++	}
++	p->ops.log(p->ops.ctx, "join: %s to 0x%x: status %d\n", name, value, st);
++	if (st != 0) {
++		p->ops.log(p->ops.ctx, "join: method 1 refused at %s: status %d. Next: method 2\n", name, st);
++		*refused = true;
++	}
++	return 0;
++}
++
+ /* One wsec_pmk_t (key_len, flags, key[256], opt_len 0) by WLC_SET_WSEC_PMK. The copy on this stack and what went through the ioctl buffers are wiped either way */
+ static int
+ give_key(struct p1 *p, const uint8_t *key, uint32_t len, uint16_t flags, int32_t *status)
+@@ -718,76 +835,238 @@ give_key(struct p1 *p, const uint8_t *key, uint32_t len, uint16_t flags, int32_t
+ 	return 0;
+ }
+ 
+-/*
+- * Android's order (wl_config_assoc_security, physical dmesg of 2026-11-03: "Passphrase set", then "pmk added"): the passphrase, then the PMK.
+- * The passphrase, flags WSEC_PASSPHRASE, is what this firmware's supplicant runs on: wlc_keymgmt_set_wsec_pmk keeps it in its list
+- * (wlc_pmk_add_passphrase), and at the join wlc_join_infra says "Start PSK to PMK conversion", wlc_sup_set_ssid hashes it with the
+- * join's SSID on a timer and the M1 that came meanwhile is kept and answered (wlc_sup_pmk_notif_cb). A PMK alone, flags 0, goes to
+- * wlc_sup_set_pmk and the join finds no passphrase: physical a7-wifi-join-r1 waited for M1 (status 4) until the network gave up (reason 15).
+- * Stock's fallback when wsec_info is missing (wl_cfg80211_config_passphrase) is this same ioctl, so no new iovar.
+- */
++/* wl_cfg80211_set_wsec_info: a wl_wsec_info_t (version 1, one TLV). It can hold the passphrase, so this stack and the ioctl buffers are wiped either way */
+ static int
+-set_key(struct p1 *p)
++wsec_info(struct p1 *p, uint16_t type, const uint8_t *data, uint32_t len, int32_t *status)
+ {
+-	struct b4_network *net = p->cfg.net;
+-	int32_t st = 0;
++	uint8_t b[16 + WSI_HDR + WSI_TLV_HDR + PI_FIXED + 32 + PASS_MAX + 1];
++	uint32_t n = jn_iov(b, sizeof(b), "wsec_info");
++	int rc = 0;
++
++	if (n + WSI_HDR + WSI_TLV_HDR + len > sizeof(b)) {
++		return p1_halt(p, P1_STOP_SECURITY, 0xb10u);
++	}
++	b[n] = WSI_VERSION;
++	b[n + 3] = 1;
++	jn_put16(b, n + WSI_HDR, type);
++	jn_put16(b, n + WSI_HDR + 2, (uint16_t)len);
++	memcpy(b + n + WSI_HDR + WSI_TLV_HDR, data, len);
++	if (b4_ioctl(p, WLC_SET_VAR, b, (uint16_t)(n + WSI_HDR + WSI_TLV_HDR + len))) {
++		rc = (int)p->stop;
++	} else {
++		*status = p->ioc_status;
++	}
++	jn_wipe(b, sizeof(b));
++	b4_wipe_ioctl(p);
++	return rc;
++}
++
++/* wl_cfg80211_set_wsec_info_algos */
++static int
++wsec_algos(struct p1 *p, uint32_t algos, uint32_t mask, int32_t *status)
++{
++	uint8_t d[8];
++
++	jn_put32(d, 0, algos);
++	jn_put32(d, 4, mask);
++	if (wsec_info(p, WSI_BSS_ALGOS, d, sizeof(d), status)) {
++		return (int)p->stop;
++	}
++	p->ops.log(p->ops.ctx, "join: wsec_info algos 0x%x, mask 0x%x: status %d\n", algos, mask, *status);
++	return 0;
++}
++
++/* wl_cfg80211_config_passphrase -> wl_cfg80211_wsec_info_pmk: a wl_wsec_info_pmk_info_t with the SSID and the passphrase, no BSSID, len and
++ * flags 0 as stock leaves them, padded to 4. The firmware keys its passphrase list by that SSID. Never logged: not its length either */
++static int
++pass_info(struct p1 *p, uint8_t action, int32_t *status)
++{
++	const struct b4_network *net = p->cfg.net;
++	uint8_t pi[PI_FIXED + 32 + PASS_MAX + 1];
++	uint32_t size = (PI_FIXED + net->ssid_len + net->pass_len + 3u) & ~3u;
+ 	int rc;
+ 
++	memset(pi, 0, sizeof(pi));
++	jn_put16(pi, 0, PI_VERSION);
++	pi[PI_ACTION_AT] = action;
++	jn_put16(pi, PI_SSID_AT, net->ssid_len);
++	jn_put16(pi, PI_SSID_AT + 2, PI_FIXED);
++	memcpy(pi + PI_FIXED, net->ssid, net->ssid_len);
++	jn_put16(pi, PI_PASS_AT, net->pass_len);
++	jn_put16(pi, PI_PASS_AT + 2, (uint16_t)(PI_FIXED + net->ssid_len));
++	memcpy(pi + PI_FIXED + net->ssid_len, net->pass, net->pass_len);
++	rc = wsec_info(p, WSI_BSS_PMK_PASS, pi, size, status);
++	jn_wipe(pi, sizeof(pi));
++	return rc;
++}
++
++/* wl_set_multi_akm's join_pref: WL_JOIN_PREF_WPA, AKM tuples in wl_update_join_pref_tuple's order, ciphers 0 (the firmware's choice by wsec_info).
++ * clear: no data at all, as wl_cfg80211_clear_security */
++static int
++join_pref(struct p1 *p, bool clear, int32_t *status)
++{
++	static const uint32_t akm[JPREF_TUPLES] = { 0x000fac18u, 0x000fac08u, 0x000fac02u, 0x0050f202u, 0x000fac06u };
++	uint8_t b[16 + JPREF_BYTES];
++	uint32_t n = jn_iov(b, sizeof(b), "join_pref"), len = 0;
++
++	if (!clear) {
++		b[n] = JPREF_WPA;
++		b[n + 1] = (uint8_t)(12u * JPREF_TUPLES + 2u);
++		b[n + 2] = 0;
++		b[n + 3] = JPREF_TUPLES;
++		for (uint32_t i = 0; i < JPREF_TUPLES; i++) {
++			jn_pb32(b, n + 4 + 12 * i, akm[i]);     /* bcmswap32: the suite's bytes in air order */
++		}
++		len = JPREF_BYTES;
++	}
++	if (b4_ioctl(p, WLC_SET_VAR, b, (uint16_t)(n + len))) {
++		return (int)p->stop;
++	}
++	*status = p->ioc_status;
++	p->ops.log(p->ops.ctx, "join: join_pref %s: status %d\n", clear ? "cleared" : "WPA, 5 AKM tuples", *status);
++	return 0;
++}
++
++/* wl_cfg80211_clear_security: wsec, auth, wpa_auth to 0, no join_pref, AES ciphers out of wsec_info. Each only said */
++static int
++clear_security(struct p1 *p)
++{
++	int32_t st = 0;
++
++	if (note_step(p, "wsec", 0) || note_step(p, "auth", 0) || note_step(p, "wpa_auth", WPA_AUTH_OFF) || join_pref(p, true, &st) || wsec_algos(p, 0, ALGOS_MASK_AES, &st)) {
++		return (int)p->stop;
++	}
++	return 0;
++}
++
++/* Method 1. *refused: the firmware said no to a step that stock can't go on without; method 2 follows */
++static int
++method1(struct p1 *p, bool *refused)
++{
++	const struct b4_network *net = p->cfg.net;
++	int32_t st = 0;
++
++	*refused = false;
++	p->jn_method = 1;
++	if (net != NULL && net->open) {
++		p->ops.log(p->ops.ctx, "join: method 1 is for a network with a password. Next: method 2\n");
++		*refused = true;
++		return 0;
++	}
++	p->ops.log(p->ops.ctx, "join: method 1: Android's order\n");
++	/* wl_roam_off_config, "roam enabled for wlan0", before the connect */
++	if (note_step(p, "roam_off", 0) || clear_security(p)) {
++		return (int)p->stop;
++	}
++	if (m1_step(p, "wpa_auth", WPA2_PSK | WPA2_UNSPEC, refused) || *refused || m1_step(p, "auth", 0, refused) || *refused ||
++	    m1_step(p, "wpa_auth", WPA_ANDROID, refused) || *refused || m1_step(p, "mfp", MFP_CAPABLE, refused) || *refused ||
++	    m1_step(p, "wsec", WSEC_ANDROID, refused) || *refused) {
++		return (int)p->stop;
++	}
++	if (wsec_algos(p, ALGOS_ANDROID, ALGOS_MASK_AES, &st)) {
++		return (int)p->stop;
++	}
++	if (st != 0) {
++		p->ops.log(p->ops.ctx, "join: method 1 refused at wsec_info algos: status %d. Next: method 2\n", st);
++		*refused = true;
++		return 0;
++	}
++	if (join_pref(p, false, &st)) {
++		return (int)p->stop;
++	}
++	if (st != 0) {
++		p->ops.log(p->ops.ctx, "join: method 1 refused at join_pref: status %d. Next: method 2\n", st);
++		*refused = true;
++		return 0;
++	}
+ 	if (net != NULL && net->pass_len != 0) {
+-		rc = give_key(p, net->pass, net->pass_len, WSEC_PASSPHRASE, &st);
+-		jn_wipe(net->pass, sizeof(net->pass));
+-		net->pass_len = 0;
+-		if (rc) {
+-			jn_wipe(net->pmk, sizeof(net->pmk));
+-			return rc;
++		if (pass_info(p, PI_ADD, &st)) {
++			return (int)p->stop;
+ 		}
+-		/* Never its length: that says something about it */
+-		p->ops.log(p->ops.ctx, "join: passphrase given to the firmware: status %d\n", st);
+-		if (st != 0 && p->cfg.join_armed) {
+-			jn_wipe(net->pmk, sizeof(net->pmk));
+-			return p1_halt(p, P1_STOP_SECURITY, (uint32_t)st);
++		p->ops.log(p->ops.ctx, "join: passphrase given to the firmware by wsec_info, with the name: status %d\n", st);
++		if (st != 0) {
++			p->ops.log(p->ops.ctx, "join: method 1 refused at the passphrase: status %d. Next: method 2\n", st);
++			*refused = true;
++			return 0;
+ 		}
++	} else {
++		p->ops.log(p->ops.ctx, "join: no passphrase in the image: method 1 gives the PMK alone\n");
+ 	}
+-	/* With no network in the image: all ones, which opens nothing */
+-	rc = give_key(p, net != NULL ? net->pmk : NULL, PMK_BYTES, 0, &st);
+-	if (net != NULL) {
+-		jn_wipe(net->pmk, sizeof(net->pmk));
++	{
++		uint8_t d[4];
++
++		jn_put32(d, 0, SAE_PWE_BOTH);
++		if (wsec_info(p, WSI_BSS_SAE_PWE, d, sizeof(d), &st)) {
++			return (int)p->stop;
++		}
++		/* Only said: Android's value is a guess, and the network keys by PSK */
++		p->ops.log(p->ops.ctx, "join: wsec_info sae_pwe 0x%x: status %d\n", SAE_PWE_BOTH, st);
+ 	}
+-	if (rc) {
+-		return rc;
++	/* With no network in the image: all ones, which opens nothing */
++	if (give_key(p, net != NULL ? net->pmk : NULL, PMK_BYTES, 0, &st)) {
++		return (int)p->stop;
+ 	}
+ 	p->ops.log(p->ops.ctx, "join: key given to the firmware, %u bytes: status %d\n", PMK_BYTES, st);
+-	if (st != 0 && p->cfg.join_armed) {
+-		return p1_halt(p, P1_STOP_SECURITY, (uint32_t)st);
++	if (st != 0) {
++		p->ops.log(p->ops.ctx, "join: method 1 refused at the PMK: status %d. Next: method 2\n", st);
++		*refused = true;
+ 	}
+ 	return 0;
+ }
+ 
++/* Method 2: r2's order (its set_key, configure), with mfp 0 and wsec from the network's RSN IE */
+ static int
+-configure(struct p1 *p)
++method2(struct p1 *p)
+ {
+-	const struct b4_network *net = p->cfg.net;
++	struct b4_network *net = p->cfg.net;
+ 	bool open = net != NULL && net->open;
+ 	uint32_t wpa = p->jn_akm == AKM_PSK_SHA256 ? WPA2_PSK_SHA256 : WPA2_PSK;
++	/* r2 had 1 here, from the network's MFPC. A network that requires it gets 2: without, it can't associate */
++	uint32_t mfp = p->jn_mfp == MFP_REQUIRED ? MFP_REQUIRED : 0;
+ 	int32_t st = 0;
+ 
++	p->jn_method = 2;
++	p->ops.log(p->ops.ctx, "join: method 2: r2's order, mfp %u, wsec from the network's RSN IE\n", mfp);
++	if (clear_security(p)) {
++		return (int)p->stop;
++	}
++	/* Method 1's passphrase entry out of the firmware's list, so the only one is method 2's. Only said */
++	if (net != NULL && net->pass_len != 0) {
++		if (pass_info(p, PI_DEL, &st)) {
++			return (int)p->stop;
++		}
++		p->ops.log(p->ops.ctx, "join: method 1's passphrase entry deleted: status %d\n", st);
++	}
+ 	if (security_step(p, "wpa_auth", open ? WPA_AUTH_OFF : (WPA2_PSK | WPA2_UNSPEC)) || security_step(p, "auth", 0)) {
+ 		return (int)p->stop;
+ 	}
+ 	if (!open) {
+-		if (security_step(p, "sup_wpa", 1) || security_step(p, "wsec", WSEC_AES | (p->jn_group_tkip ? WSEC_TKIP : 0u)) || security_step(p, "wpa_auth", wpa)) {
++		uint32_t wsec = WSEC_AES | (p->jn_group_tkip || p->jn_pair_tkip ? WSEC_TKIP : 0u);
++
++		if (security_step(p, "sup_wpa", 1) || security_step(p, "wsec", wsec) || security_step(p, "wpa_auth", wpa) || security_step(p, "mfp", mfp)) {
+ 			return (int)p->stop;
+ 		}
+-		if (p->jn_mfp != 0 && security_step(p, "mfp", p->jn_mfp)) {
+-			return (int)p->stop;
++		if (net != NULL && net->pass_len != 0) {
++			if (give_key(p, net->pass, net->pass_len, WSEC_PASSPHRASE, &st)) {
++				return (int)p->stop;
++			}
++			/* Never its length: that says something about it */
++			p->ops.log(p->ops.ctx, "join: passphrase given to the firmware: status %d\n", st);
++			if (st != 0 && p->cfg.join_armed) {
++				return p1_halt(p, P1_STOP_SECURITY, (uint32_t)st);
++			}
+ 		}
+-		if (set_key(p)) {
++		if (give_key(p, net != NULL ? net->pmk : NULL, PMK_BYTES, 0, &st)) {
+ 			return (int)p->stop;
+ 		}
++		p->ops.log(p->ops.ctx, "join: key given to the firmware, %u bytes: status %d\n", PMK_BYTES, st);
++		if (st != 0 && p->cfg.join_armed) {
++			return p1_halt(p, P1_STOP_SECURITY, (uint32_t)st);
++		}
+ 	} else if (security_step(p, "wsec", 0)) {
+ 		return (int)p->stop;
+ 	}
+-	/* Roaming's scans would be active ones, on its own say. Stock leaves it on; here it's off for the first joins. A failure is only said */
++	/* Roaming's scans would be active ones, on its own say. Stock leaves it on; here it's off for method 2, as r2. A failure is only said */
+ 	if (set_int(p, "roam_off", 1, &st)) {
+ 		return (int)p->stop;
+ 	}
+@@ -795,6 +1074,19 @@ configure(struct p1 *p)
+ 	return 0;
+ }
+ 
++/* The name, the passphrase and the PMK, gone from cfg.net. Every way out of b4_join_run comes here */
++static void
++net_forget(struct p1 *p)
++{
++	struct b4_network *net = p->cfg.net;
++
++	if (net != NULL) {
++		jn_wipe(net->pass, sizeof(net->pass));
++		net->pass_len = 0;
++		jn_wipe(net->pmk, sizeof(net->pmk));
++	}
++}
++
+ static int
+ read_join_ver(struct p1 *p)
+ {
+@@ -816,50 +1108,104 @@ read_join_ver(struct p1 *p)
+ 	return 0;
+ }
+ 
+-/* wl_fillup_assoc_params, for a known address on a known channel. No scan of its own beyond listening there */
++static const char *
++band_of(uint16_t chanspec)
++{
++	return (chanspec & CS_BAND_MASK) == CS_BAND_2G ? "2.4" : (chanspec & CS_BAND_MASK) == CS_BAND_6G ? "6" : "5";
++}
++
++/*
++ * wl_fillup_assoc_params. wild (method 1): as Android's "Connecting with ff:ff:ff:ff:ff:ff ... chan_cnt:2": the wildcard address, up to two
++ * channels, and the join's own scan as stock fills it in for a join that isn't targeted (default type, 80 ms active, 4 probes, 400 ms passive).
++ * Otherwise (method 2, r2): one address on one channel, found by listening. *refused: method 1's join said no; method 2's stops
++ */
+ static int
+-send_join(struct p1 *p)
++send_join(struct p1 *p, bool wild, bool *refused)
+ {
+ 	const struct b4_network *net = p->cfg.net;
+ 	uint8_t b[128];
+ 	uint32_t n = jn_iov(b, sizeof(b), "join");
+ 	uint8_t *j = b + n;
+ 	uint32_t ver = p->join_ver, num_at = JP_ASSOC + (ver == 1 ? JA_V1_NUM : ver == 2 ? JA_V2_NUM : JA_V3_NUM);
++	uint32_t nch = wild ? p->jn_nchans : 1u;
+ 	uint16_t chanspec = (uint16_t)((p->jn_chanspec & CS_BAND_MASK) | CS_BW_20 | p->jn_ctl);
+ 
++	*refused = false;
+ 	jn_put16(j, 0, (uint16_t)ver);
+ 	jn_put32(j, JP_SSID_LEN, net->ssid_len);
+ 	memcpy(j + JP_SSID, net->ssid, net->ssid_len);
+-	j[JP_SCAN] = JS_PASSIVE;
+-	jn_put32(j, JP_SCAN_NPROBES, 0xffffffffu);
+-	jn_put32(j, JP_SCAN_ACTIVE, 0xffffffffu);
+-	jn_put32(j, JP_SCAN_PASSIVE, JOIN_DWELL_MS);
+-	jn_put32(j, JP_SCAN_HOME, 0xffffffffu);
+ 	jn_put16(j, JP_ASSOC + JA_VERSION, (uint16_t)ver);
+-	memcpy(j + JP_ASSOC + JA_BSSID, p->jn_bssid, 6);
+-	jn_put32(j, num_at, 1);
+-	jn_put16(j, num_at + 4, chanspec);
++	jn_put32(j, num_at, nch);
++	if (wild) {
++		j[JP_SCAN] = JS_DEFAULT;
++		jn_put32(j, JP_SCAN_NPROBES, JOIN_BCAST_ACTIVE_MS / JOIN_PROBE_EVERY_MS);
++		jn_put32(j, JP_SCAN_ACTIVE, JOIN_BCAST_ACTIVE_MS);
++		jn_put32(j, JP_SCAN_PASSIVE, JOIN_DWELL_MS);
++		jn_put32(j, JP_SCAN_HOME, 0xffffffffu);
++		memset(j + JP_ASSOC + JA_BSSID, 0xff, 6);
++		for (uint32_t i = 0; i < nch; i++) {
++			jn_put16(j, num_at + 4 + 2 * i, p->jn_chans[i]);
++		}
++	} else {
++		j[JP_SCAN] = JS_PASSIVE;
++		jn_put32(j, JP_SCAN_NPROBES, 0xffffffffu);
++		jn_put32(j, JP_SCAN_ACTIVE, 0xffffffffu);
++		jn_put32(j, JP_SCAN_PASSIVE, JOIN_DWELL_MS);
++		jn_put32(j, JP_SCAN_HOME, 0xffffffffu);
++		memcpy(j + JP_ASSOC + JA_BSSID, p->jn_bssid, 6);
++		jn_put16(j, num_at + 4, chanspec);
++	}
+ 	p->jn_set_ssid_seen = false;
+ 	p->jn_fail_type = 0;
+ 	p->jn_tries++;
+-	/* The band, not the channel: stage 4's log lists the neighbours by channel, and the channel would say which of them this is */
+-	p->ops.log(p->ops.ctx, "join: next: try %u, %s GHz, RSSI %d, join version %u\n", p->jn_tries, (chanspec & CS_BAND_MASK) == CS_BAND_2G ? "2.4" : (chanspec & CS_BAND_MASK) == CS_BAND_6G ? "6" : "5", p->jn_rssi, ver);
+-	if (b4_ioctl(p, WLC_SET_VAR, b, (uint16_t)(n + num_at + 4 + 2))) {
++	/* Bands, not channels: stage 4's log lists the neighbours by channel, and a channel would say which of them this is */
++	if (wild) {
++		p->ops.log(p->ops.ctx, "join: next: try %u, method 1, any address, %u channels: %s GHz%s%s%s, RSSI %d, join version %u\n", p->jn_tries, nch, band_of(p->jn_chans[0]),
++		    nch > 1 ? " and " : "", nch > 1 ? band_of(p->jn_chans[1]) : "", nch > 1 ? " GHz" : "", p->jn_chan_rssi[0], ver);
++	} else {
++		p->ops.log(p->ops.ctx, "join: next: try %u, method 2, %s GHz, RSSI %d, join version %u\n", p->jn_tries, band_of(chanspec), p->jn_rssi, ver);
++	}
++	if (b4_ioctl(p, WLC_SET_VAR, b, (uint16_t)(n + num_at + 4 + 2 * nch))) {
+ 		return (int)p->stop;
+ 	}
+ 	if (p->ioc_status != 0) {
+ 		p->ops.log(p->ops.ctx, "join: refused: status %d\n", p->ioc_status);
++		if (wild) {
++			*refused = true;
++			return 0;
++		}
+ 		return p1_halt(p, P1_STOP_JOIN_REFUSED, (uint32_t)p->ioc_status);
+ 	}
+ 	return 0;
+ }
+ 
++/* The band it ended up on, for the log: method 1 let the firmware choose. Only said */
++static int
++say_band(struct p1 *p)
++{
++	uint8_t b[32];
++
++	(void)jn_iov(b, sizeof(b), "chanspec");
++	if (b4_ioctl(p, WLC_GET_VAR, b, sizeof(b))) {
++		return (int)p->stop;
++	}
++	if (p->ioc_status == 0) {
++		p->ops.log(p->ops.ctx, "join: on %s GHz\n", band_of(jn_get16(b, 0)));
++	} else {
++		p->ops.log(p->ops.ctx, "join: chanspec: status %d\n", p->ioc_status);
++	}
++	return 0;
++}
++
++/* last: the failure stops the boot, with r2's codes. Otherwise *failed says so and method 2 follows */
+ static int
+-join_wait(struct p1 *p)
++join_wait(struct p1 *p, bool last, bool *failed)
+ {
+ 	const struct b4_network *net = p->cfg.net;
+ 	uint64_t t0 = p->ops.now_us(p->ops.ctx);
++	uint32_t code = 0, detail = 0;
+ 
++	*failed = false;
+ 	for (;;) {
+ 		uint32_t ms = (uint32_t)((p->ops.now_us(p->ops.ctx) - t0) / 1000);
+ 
+@@ -868,30 +1214,121 @@ join_wait(struct p1 *p)
+ 		}
+ 		if (p->jn_set_ssid_seen && p->jn_set_ssid != 0) {
+ 			p->ops.log(p->ops.ctx, "join: failed: result %u. Auth or association: type %u, status %u, reason %u\n", p->jn_set_ssid, p->jn_fail_type, p->jn_fail_status, p->jn_fail_reason);
+-			return p1_halt(p, P1_STOP_JOIN_FAILED, p->jn_set_ssid);
++			code = P1_STOP_JOIN_FAILED;
++			detail = p->jn_set_ssid;
++			break;
+ 		}
+-		/* No retries on a key that didn't work: the chip goes off, which ends the attempt on the air */
++		/* No retries of one method on a key that didn't work */
+ 		if (p->jn_sup_failed || p->jn_sup_status == SUP_TIMEOUT) {
+ 			/* WLC_SUP_KEYXCHANGE_WAIT_M1 (4): M1 never answered, so the firmware had no key to answer with. Past it (8 and on): M2 went out, most often with a wrong password's PMK */
+ 			p->ops.log(p->ops.ctx, "join: the 4-way handshake failed: status %u, reason %u: %s\n", p->jn_sup_status, p->jn_sup_reason,
+ 			    p->jn_sup_status == SUP_WAIT_M1 ? "the firmware never answered M1: it had no key it could use" : "most often a wrong password");
+-			return p1_halt(p, P1_STOP_JOIN_FAILED, 0x100u | p->jn_sup_reason);
++			code = P1_STOP_JOIN_FAILED;
++			detail = 0x100u | p->jn_sup_reason;
++			break;
+ 		}
+ 		if (p->jn_was_up && !p->jn_link && !p->jn_keyed) {
+ 			p->ops.log(p->ops.ctx, "join: link went down before the keys, reason %u: most often a wrong password\n", p->jn_lost_reason);
+-			return p1_halt(p, P1_STOP_JOIN_FAILED, 0x200u | p->jn_lost_reason);
++			code = P1_STOP_JOIN_FAILED;
++			detail = 0x200u | p->jn_lost_reason;
++			break;
+ 		}
+ 		if (p->jn_link && p->jn_set_ssid_seen && (net->open || p->jn_keyed)) {
+ 			p->jn_ms = ms;
+ 			p->ops.log(p->ops.ctx, "join: joined in %u ms\n", ms);
+-			return 0;
++			p->ops.log(p->ops.ctx, "join: keyed by method %u: %s\n", p->jn_method,
++			    p->jn_method == 1 ? "Android's order (wsec_info passphrase, multi-AKM, any address)" : "r2's order, no mfp, wsec from the RSN IE");
++			return say_band(p);
+ 		}
+ 		if (ms >= JOIN_WAIT_MS) {
+ 			p->ops.log(p->ops.ctx, "join: no end in %u ms: result seen %d, link %d, handshake %u/%u\n", ms, p->jn_set_ssid_seen, p->jn_link, p->jn_sup_status, p->jn_sup_reason);
+-			return p1_halt(p, P1_STOP_JOIN_TIMEOUT, ms);
++			code = P1_STOP_JOIN_TIMEOUT;
++			detail = ms;
++			break;
+ 		}
+ 		p->ops.delay_us(p->ops.ctx, 1000);
+ 	}
++	if (last) {
++		return p1_halt(p, code, detail);
++	}
++	p->ops.log(p->ops.ctx, "join: method %u did not key (stop it would have been %u, detail 0x%x). Next: method 2\n", p->jn_method, code, detail);
++	*failed = true;
++	return 0;
++}
++
++/* Between the methods: leave the network (wl_cfg80211_disconnect's WLC_DISASSOC, reason 3), let its events come in, and forget them */
++static int
++part(struct p1 *p)
++{
++	uint8_t b[10];
++	uint64_t t0;
++
++	memset(b, 0, sizeof(b));
++	jn_put32(b, 0, RC_LEAVING);
++	if (b4_ioctl(p, WLC_DISASSOC, b, sizeof(b))) {
++		return (int)p->stop;
++	}
++	p->ops.log(p->ops.ctx, "join: method 1 over: disassociate: status %d. Next: %u ms of its events\n", p->ioc_status, PART_WAIT_MS);
++	t0 = p->ops.now_us(p->ops.ctx);
++	while ((p->ops.now_us(p->ops.ctx) - t0) / 1000 < PART_WAIT_MS) {
++		if (b4_poll(p)) {
++			return (int)p->stop;
++		}
++		p->ops.delay_us(p->ops.ctx, 1000);
++	}
++	/* What the firmware said of method 1 (an "EAPOL M1" line or not), before method 2 adds to it. Scrubbed as all its text */
++	if (b4_console(p)) {
++		return (int)p->stop;
++	}
++	p->jn_set_ssid_seen = false;
++	p->jn_set_ssid = 0;
++	p->jn_link = false;
++	p->jn_keyed = false;
++	p->jn_sup_failed = false;
++	p->jn_was_up = false;
++	p->jn_sup_status = 0;
++	p->jn_sup_reason = 0;
++	p->jn_fail_type = 0;
++	p->jn_fail_status = 0;
++	p->jn_fail_reason = 0;
++	p->jn_lost_reason = 0;
++	return 0;
++}
++
++/* Method 1, then method 2 if 1 didn't key. 0: keyed (and the log says by which) */
++static int
++join_tries(struct p1 *p)
++{
++	bool refused = false, failed = false;
++
++	if (method1(p, &refused)) {
++		return (int)p->stop;
++	}
++	if (!refused) {
++		if (send_join(p, true, &refused)) {
++			return (int)p->stop;
++		}
++		if (!refused) {
++			if (join_wait(p, false, &failed)) {
++				return (int)p->stop;
++			}
++			if (!failed) {
++				return 0;
++			}
++			if (part(p)) {
++				return (int)p->stop;
++			}
++		}
++	}
++	if (method2(p)) {
++		return (int)p->stop;
++	}
++	/* Nothing after this needs them */
++	net_forget(p);
++	if (send_join(p, false, &refused)) {
++		return (int)p->stop;
++	}
++	return join_wait(p, true, &failed);
+ }
+ 
+ /* ---- blazer_wifi_net=1: an address, and proof that a frame gets to the gateway and back. Then en0 has it too ---- */
+@@ -1318,9 +1755,15 @@ net_run(struct p1 *p)
+ int
+ b4_join_run(struct p1 *p)
+ {
++	int rc;
++
+ 	if (!p->cfg.join_armed) {
+-		/* Everything but the join. A key that opens nothing, and the gate would refuse the join if asked. Then the firmware's own word that the settings sent nothing either */
+-		if (read_join_ver(p) || configure(p) || b4_read_counters(p, 2) || b4_console(p)) {
++		bool refused = false;
++
++		/* Everything but the join: both methods' settings. A key that opens nothing, and the gate would refuse the join if asked. Then the firmware's own word that the settings sent nothing either */
++		rc = read_join_ver(p) || method1(p, &refused) || method2(p);
++		net_forget(p);
++		if (rc || b4_read_counters(p, 2) || b4_console(p)) {
+ 			return (int)p->stop;
+ 		}
+ 		if (p->cnt_known[1] && p->cnt_known[2] && (p->cnt_frames[2] != p->cnt_frames[1] || p->cnt_probereq[2] != p->cnt_probereq[1] || p->cnt_probersp[2] != p->cnt_probersp[1])) {
+@@ -1338,11 +1781,14 @@ b4_join_run(struct p1 *p)
+ 		return p1_halt(p, P1_STOP_NO_NETWORK, 1);
+ 	}
+ 	/* Counts only: which of the networks in the log it is stays unsaid */
+-	p->ops.log(p->ops.ctx, "join: the network was heard on %u records, %u of them not of the kind it should be\n", p->jn_seen, p->jn_refused_security);
++	p->ops.log(p->ops.ctx, "join: the network was heard on %u records, %u of them not of the kind it should be, on %u channels\n", p->jn_seen, p->jn_refused_security, p->jn_nchans);
+ 	if (!p->jn_found) {
++		net_forget(p);
+ 		return p1_halt(p, p->jn_seen != 0 ? P1_STOP_NET_SECURITY : P1_STOP_NOT_HEARD, p->jn_seen);
+ 	}
+-	if (read_join_ver(p) || configure(p) || send_join(p) || join_wait(p)) {
++	rc = read_join_ver(p) || join_tries(p);
++	net_forget(p);
++	if (rc) {
+ 		return (int)p->stop;
+ 	}
+ 	return net_run(p);
+diff --git a/bsd/dev/blazer_bcm4390_scan.c b/bsd/dev/blazer_bcm4390_scan.c
+index 90f2c20..1b9a198 100644
+--- a/bsd/dev/blazer_bcm4390_scan.c
++++ b/bsd/dev/blazer_bcm4390_scan.c
+@@ -7,7 +7,8 @@
+  * Physical facts it stands on, Android on this phone, 20261027-112139-loop: "preinit_status IOVAR present", "RxBuf Post : 2048", "This FW is not included CLM data" then "CLM download succeeded" then WLC_E_COUNTRY_CODE_CHANGED to US, "txcap blob file : bcmdhd_txcap.blob_ROW", "axierror_logbuf_addr : 0x54f094", "CLM version = Google.BJ5".
+  *
+  * What it's for: the radio listens once. Nothing here joins, carries a key or asks for a frame to be sent.
+- * - b4_ioctl_allowed is the one gate: an ioctl not on its list doesn't go, and an active scan can't be expressed. Going further than this file means changing that list.
++ * - b4_ioctl_allowed is the one gate: an ioctl not on its list doesn't go, and an active escan can't be expressed. Going further than this file means changing that list.
++ *   r3: armed, the join may also be Android's (wildcard address, 1-2 channels, its join scan's few probes for the one name), and a disassociation may follow it.
+  * - The scan is passive by its flag, and its two flags against follow-up active scans are set: 6 GHz channels learned from RNR or FILS, and multi-link. No SSID, no channel list, no RNR request.
+  * - The firmware's transmit counters are read either side, as a witness on the phone.
+  *
+@@ -78,6 +79,15 @@
+ #define JA_V2_NUM       16u
+ #define JA_V3_NUM       20u
+ #define JS_PASSIVE      1u              /* DOT11_SCANTYPE_PASSIVE */
++#define JS_DEFAULT      0u              /* "0 use default": r3 method 1, stock's join that isn't targeted */
++#define JP_SCAN_NPROBES 44u
++#define JP_SCAN_ACTIVE  48u
++#define JP_SCAN_PASSIVE 52u
++#define JP_SCAN_HOME    56u
++#define JW_MAX_CHANS    2u              /* Android's chan_cnt:2 */
++#define JW_ACTIVE_MS    80u             /* WL_BCAST_SCAN_JOIN_ACTIVE_DWELL_TIME_MS */
++#define JW_NPROBES      4u              /* 80 / WL_SCAN_JOIN_PROBE_INTERVAL_MS */
++#define JW_PASSIVE_MS   400u            /* WL_SCAN_JOIN_PASSIVE_DWELL_TIME_MS */
+ 
+ /* The frame in an event buffer: ether_header, bcmeth_hdr_t, wl_event_msg_t, data. The event's own fields are big endian */
+ #define ETHER_TYPE_AT   12u
+@@ -174,8 +184,10 @@ static const struct {
+ 	/* Settings: none of these sends anything by itself */
+ 	{ WLC_GET_VAR, "cap", B4_GATE_DRY }, { WLC_GET_VAR, "join_ver", B4_GATE_DRY }, { WLC_SET_VAR, "country", B4_GATE_DRY }, { WLC_SET_VAR, "cur_etheraddr", B4_GATE_DRY }, { WLC_SET_VAR, "roam_off", B4_GATE_DRY },
+ 	{ WLC_SET_VAR, "wpa_auth", B4_GATE_DRY }, { WLC_SET_VAR, "auth", B4_GATE_DRY }, { WLC_SET_VAR, "sup_wpa", B4_GATE_DRY }, { WLC_SET_VAR, "wsec", B4_GATE_DRY }, { WLC_SET_VAR, "mfp", B4_GATE_DRY }, { WLC_SET_WSEC_PMK, NULL, B4_GATE_DRY },
+-	/* The one that goes on the air */
+-	{ WLC_SET_VAR, "join", B4_GATE_ARMED, false, true },
++	/* r3 method 1, Android's: wsec_info (algos, the passphrase with the SSID, sae_pwe), join_pref, and the band it joined on. Settings too */
++	{ WLC_SET_VAR, "wsec_info", B4_GATE_DRY }, { WLC_SET_VAR, "join_pref", B4_GATE_DRY }, { WLC_GET_VAR, "chanspec", B4_GATE_DRY },
++	/* The ones that go on the air: the join, and between r3's two methods the disassociation */
++	{ WLC_SET_VAR, "join", B4_GATE_ARMED, false, true }, { WLC_DISASSOC, NULL, B4_GATE_ARMED },
+ };
+ 
+ static bool
+@@ -212,6 +224,46 @@ escan_passive(const uint8_t *e, uint32_t len)
+ 	return sc_get32(sp, SP3_CHANNEL_NUM) == 0;
+ }
+ 
++/* r3 method 1, only as wl_fillup_assoc_params fills a join that isn't targeted: one named network, the wildcard address, one or two channels,
++ * the join scan's default type, at most 4 probes in 80 ms per channel, 400 ms passive, home time default. No flags, no BSSID list */
++static bool
++join_wildcard(const uint8_t *j, uint32_t len)
++{
++	uint32_t ver, num_at, num;
++	const uint8_t *b = j + JP_ASSOC + JA_BSSID;
++
++	if (len < JP_ASSOC + JA_V1_NUM + 6) {
++		return false;
++	}
++	ver = sc_get16(j, 0);
++	if (ver < 1 || ver > 3) {
++		return false;
++	}
++	num_at = JP_ASSOC + (ver == 1 ? JA_V1_NUM : ver == 2 ? JA_V2_NUM : JA_V3_NUM);
++	if (len < num_at + 4) {
++		return false;
++	}
++	num = sc_get32(j, num_at);
++	if (num < 1 || num > JW_MAX_CHANS || len != num_at + 4 + 2 * num || sc_get32(j, JP_SSID_LEN) == 0 || sc_get32(j, JP_SSID_LEN) > SSID_MAX) {
++		return false;
++	}
++	if (j[JP_SCAN] != JS_DEFAULT || sc_get32(j, JP_SCAN_NPROBES) > JW_NPROBES || sc_get32(j, JP_SCAN_ACTIVE) > JW_ACTIVE_MS || sc_get32(j, JP_SCAN_PASSIVE) != JW_PASSIVE_MS ||
++	    sc_get32(j, JP_SCAN_HOME) != 0xffffffffu) {
++		return false;
++	}
++	for (unsigned i = 0; i < 6; i++) {
++		if (b[i] != 0xff) {
++			return false;
++		}
++	}
++	for (uint32_t i = 0; i < num; i++) {
++		if (sc_get16(j, num_at + 4 + 2 * i) == 0) {
++			return false;
++		}
++	}
++	return sc_get16(j, JP_ASSOC + JA_FLAGS) == 0 && sc_get16(j, JP_ASSOC + JA_BSSID_CNT) == 0;
++}
++
+ /* Only a join for one named network at one address on one channel, finding it by listening. wl_extjoin_params_v1..3: all but the last fields the same */
+ static bool
+ join_targeted(const uint8_t *j, uint32_t len)
+@@ -259,7 +311,7 @@ b4_ioctl_allowed(uint32_t cmd, const uint8_t *buf, uint32_t len, int level)
+ 		}
+ 		if (same_name(buf, len, ioc_list[i].name)) {
+ 			if (ioc_list[i].is_join) {
+-				return join_targeted(buf + sizeof("join"), len - (uint32_t)sizeof("join"));
++				return join_targeted(buf + sizeof("join"), len - (uint32_t)sizeof("join")) || join_wildcard(buf + sizeof("join"), len - (uint32_t)sizeof("join"));
+ 			}
+ 			return !ioc_list[i].is_scan || escan_passive(buf + sizeof(ESCAN_IOVAR), len - (uint32_t)sizeof(ESCAN_IOVAR));
+ 		}
+diff --git a/bsd/dev/blazer_pcie1.h b/bsd/dev/blazer_pcie1.h
+index b628f0c..cfdd1bc 100644
+--- a/bsd/dev/blazer_pcie1.h
++++ b/bsd/dev/blazer_pcie1.h
+@@ -210,6 +210,10 @@ struct p1 {
+ 	uint16_t jn_chanspec;
+ 	int16_t jn_rssi;
+ 	uint8_t jn_ctl, jn_group_tkip, jn_akm, jn_mfp;
++	/* r3: the pairwise TKIP the network offers (method 2's wsec), and the two best channels it was heard on, by RSSI (method 1's join, as Android's chan_cnt 2) */
++	uint8_t jn_pair_tkip, jn_nchans, jn_method;
++	uint16_t jn_chans[2];
++	int16_t jn_chan_rssi[2];
+ 	uint32_t join_ver, jn_tries;
+ 	/* What the firmware has said about the join */
+ 	bool jn_set_ssid_seen, jn_link, jn_keyed, jn_sup_failed, jn_was_up, net_on, console_told;
+@@ -240,6 +244,7 @@ struct p1 {
+ #define WLC_GET_VAR     262u
+ #define WLC_SET_VAR     263u
+ #define WLC_SET_WSEC_PMK 268u
++#define WLC_DISASSOC    52u
+ 
+ /* The guarded accesses, for blazer_bcm4390.c too. All stop the run on a refused address */
+ int p1_rd(struct p1 *p, uint64_t pa, uint32_t *v);
+-- 
+2.54.0 (Apple Git-157)
+

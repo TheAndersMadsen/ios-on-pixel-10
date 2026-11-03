@@ -1,0 +1,20 @@
+root: research/ios26-root-r1/build-r3/ios26-phone-r3.img (canonical phone root = ios_system), read-only mount /private/tmp/hk-live-root (attached by another session, left attached)
+/dev/disk18 on /private/tmp/hk-live-root (hfs, local, nodev, nosuid, read-only, noowners, nobrowse, mounted by andersmadsen)
+Applications/*.app:      206
+AppPlaceholders/*.app:       49, with a top-level Info.plist:        0
+Calculator: /Applications absent, placeholder present
+MobileSafari: /Applications absent, placeholder present
+MobileSMS: /Applications absent, placeholder present
+MobileTimer: /Applications absent, placeholder present
+MobileNotes: /Applications absent, placeholder present
+Camera: /Applications absent, placeholder present
+Photos: /Applications absent, placeholder present
+MobileMail: /Applications absent, placeholder present
+private/var/staged_system_apps: absent; private/var.skel/staged_system_apps: absent
+var.skel.tsv TCC rows: 0
+197:d	711	501	501	/private/var/mobile/Library
+Preferences SBAppTags: /private/tmp/hk-live-root/Applications/Preferences.app/Info.plist: Could not extract value, error: No value at that key path or invalid key path: SBAppTags
+MobilePhone SBAppTags: 1
+b6e6238c3d287cf454bee0dd8f1c2b1a40c211950f4e153541abe9eec14389f4  /private/tmp/hk-live-root/System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+4d2c45ade66dbba2c22745d79a609308344d9aa4b72460fac23399ec4069077f  /private/tmp/hk-live-root/System/Library/LaunchDaemons/com.apple.tccd.plist
+hdiutil info: image-path /Users/andersmadsen/Developer/personal/hackios/research/ios26-root-r1/build-r3/ios26-phone-r3.img -> /dev/disk18 /private/tmp/hk-live-root (verified 2026-11-03)

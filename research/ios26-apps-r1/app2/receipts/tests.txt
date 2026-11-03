@@ -1,0 +1,6 @@
+PASS test_sandbox_issue
+killed: s/#define SSI_OUT_WORD    4/#define SSI_OUT_WORD    5/
+killed: s/if (args\[SSI_OUT_WORD\] == 0) {/if (0) {/
+killed: s/ssi_token\[\] = "invalid"/ssi_token[] = "invalix"/
+killed: s/ssi_token\[\] = "invalid"/ssi_token[] = "invalid\\0\\1"/
+PASS

@@ -1,0 +1,28 @@
+{
+  "base_sha256": "61c38161efd809bdac15f9f167e5431a4f116b54bf42c7280411480fa37bea2a",
+  "output_sha256": "f56038494bbfc47efda397bcc7187ee9a33ca63c5893c8a75786f007a7beaf7c",
+  "bytes": 318296,
+  "records": 45,
+  "mask": "0xa0080081",
+  "replaced": {
+    "39 hk_env": {
+      "appended_rule": "tccd:DYLD_INSERT_LIBRARIES=/private/var/hk/hk_stderr_console.dylib;HK_STDERR_CONSOLE=1;OS_ACTIVITY_DT_MODE=YES",
+      "bytes_with_NUL": 324
+    }
+  },
+  "appended": {
+    "/private/var/mobile/Library/TCC": {
+      "kind": "d",
+      "group": 0,
+      "mode": "0755",
+      "uid": 501,
+      "gid": 501
+    },
+    "/private/var/hk/hk_stderr_console.dylib": {
+      "group": 29,
+      "sha256": "a630a41b80d15a2726105217d1c81d66d9348ccc0198bc7ec5b93f34e62d5837",
+      "bytes": 50192
+    }
+  },
+  "other_records_byte_identical": 42
+}

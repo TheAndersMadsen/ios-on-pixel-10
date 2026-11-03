@@ -1,0 +1,27 @@
+== hk-wifi-join2 3da6bcc16870ebbfc1805bc71752310de718dce9, parent eef94c6fbb3cb4a40933d470387627ae186b56bf
+6ebd1a64686859d3a885a5e7b35c42e625ed7adbdedcc3df59a0df091b81356c  research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r3
+6453951d87c571081a6f627c1dc08f2b7eb6b08d9fce9d47cf9e7ea67e257909  research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r3.unstripped
+research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r3: Mach-O 64-bit executable arm64
+CC blazer_pcie1.o
+CC blazer_bcm4390_scan.o
+CC blazer_bcm4390_join.o
+CC blazer_wifi_net.o
+CC blazer_wifi.o
+kernel has _b4_net_parse
+kernel has _b4_join_run
+kernel has _b4_ioctl_allowed
+kernel has _b4_join_pre_up
+kernel has _blazer_wifi_net_secret
+kernel has _b4_img_fw
+kernel string: join: method 1: Android
+kernel string: join: keyed by method %u
+kernel string: join: method 2: r2
+kernel string: join: method 1 over: disassociate
+kernel string: sup_wpa to 1 before the interface is up
+kernel string: join: passphrase given to the firmware by wsec_info
+kernel string: join: method 1 refused at
+kernel string: join: on %s GHz
+kernel string: wsec_info
+kernel string: join_pref
+kernel string: the image holds a network
+kernel string: blazer_wifi_join
