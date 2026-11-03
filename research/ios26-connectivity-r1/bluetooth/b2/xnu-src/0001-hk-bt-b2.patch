@@ -1,0 +1,432 @@
+--- a/bsd/dev/blazer_bt_bridge.c	2026-11-03 20:23:08.041012229 +0100
++++ b/bsd/dev/blazer_bt_bridge.c	2026-11-03 20:23:56.946006179 +0100
+@@ -16,6 +16,11 @@
+  * by ctl_enqueuedata, for a test client.
+  *
+  * Nothing about addresses or payloads is logged: opcodes held, counts.
++ *
++ * B2 (research/ios26-connectivity-r1/bluetooth/B2.md): the control and the nexus are registered only once the chip is
++ * serving (blazer_btuart.c calls blazer_bt_bridge_start from the link's ready hook), so bluetoothd can never connect,
++ * time out and end the one session before the firmware is in. The first opcodes sent and the first Command Complete /
++ * Command Status opcodes and statuses that come back are logged, bounded; no parameters, no addresses.
+  */
+ #include <sys/param.h>
+ #include <sys/systm.h>
+@@ -44,6 +49,7 @@
+ #define UP_RING         32768u
+ #define DOWN_RING       16384u
+ #define HELD_LOGGED     64u
++#define FLOW_LOGGED     64u
+ 
+ static LCK_GRP_DECLARE(bb_grp, "blazer_bt_bridge");
+ static LCK_MTX_DECLARE(bb_lock, &bb_grp);
+@@ -56,7 +62,7 @@
+ static volatile int bb_connected, bb_started;
+ /* One diagnostic session per boot: a disconnect cannot safely inherit in-flight HCI. */
+ static bool bb_stopped = true;
+-static uint32_t held[BG_WHY_COUNT], up_lost, down_lost, held_ops_n, chip_pkts, host_pkts;
++static uint32_t held[BG_WHY_COUNT], up_lost, down_lost, held_ops_n, chip_pkts, host_pkts, flow_said, cmds_sent, completes, statuses;
+ static uint16_t held_ops[HELD_LOGGED];
+ 
+ /* Lock held. Whole packets only: all of it or none */
+@@ -103,7 +109,8 @@
+ 	if (held_ops_n < HELD_LOGGED) {
+ 		held_ops[held_ops_n++] = op;
+ 		printf("blazer-bt-bridge: held 0x%04x (%s), needs level %d, at %d\n", op,
+-		    why == BG_WHY_VENDOR ? "vendor, answered here" : why == BG_WHY_UNSUPPORTED ? "unsupported, never" :
++		    why == BG_WHY_VENDOR ? "vendor, answered here" : why == BG_WHY_VPARAM ? "listed vendor, parameters refused" :
++		    why == BG_WHY_UNSUPPORTED ? "unsupported, never" :
+ 		    why == BG_WHY_MALFORMED ? "parameters not passive" : "above the gate", bg_level_needed(op), bb_level);
+ 	}
+ }
+@@ -159,6 +166,13 @@
+ 		switch (bg_check(from_host.pkt, len, bb_level, reply, &rlen, &op, &why)) {
+ 		case BG_SEND:
+ 			down_put(from_host.pkt, len);
++			if (op != 0) {
++				cmds_sent++;
++				if (flow_said < FLOW_LOGGED) {
++					flow_said++;
++					printf("blazer-bt-bridge: to chip 0x%04x%s\n", op, (op >> 10) == 0x3f ? " (listed vendor)" : "");
++				}
++			}
+ 			break;
+ 		case BG_LOCAL:
+ 			note_held(op, why);
+@@ -232,7 +246,25 @@
+ 		uint32_t len = bg_feed(&from_chip, bytes[i]);
+ 
+ 		if (len != 0) {
++			const uint8_t *e = from_chip.pkt;
++
+ 			chip_pkts++;
++			if (e[0] == 4 && e[1] == 0x0e && len >= 7) {
++				completes++;
++				if (flow_said < FLOW_LOGGED) {
++					flow_said++;
++					printf("blazer-bt-bridge: from chip: complete 0x%04x status 0x%02x\n", e[4] | e[5] << 8, e[6]);
++				}
++			} else if (e[0] == 4 && e[1] == 0x0f && len >= 7) {
++				statuses++;
++				if (flow_said < FLOW_LOGGED) {
++					flow_said++;
++					printf("blazer-bt-bridge: from chip: status 0x%02x for 0x%04x\n", e[3], e[5] | e[6] << 8);
++				}
++			} else if (e[0] == 4 && flow_said < FLOW_LOGGED) {
++				flow_said++;
++				printf("blazer-bt-bridge: from chip: event 0x%02x\n", e[1]);
++			}
+ 			any |= up_put(from_chip.pkt, len);
+ 		}
+ 	}
+@@ -256,10 +288,11 @@
+ blazer_bt_bridge_summary(void)
+ {
+ 	lck_mtx_lock(&bb_lock);
+-	printf("blazer-bt-bridge: from bluetoothd %u packets, from the chip %u; held: vendor %u, unsupported %u, above level %u, data %u, malformed %u; "
+-	    "lost up %u, down %u; junk from bluetoothd %u, from the chip %u, oversize %u/%u\n", host_pkts, chip_pkts, held[BG_WHY_VENDOR],
+-	    held[BG_WHY_UNSUPPORTED], held[BG_WHY_LEVEL], held[BG_WHY_DATA], held[BG_WHY_MALFORMED], up_lost, down_lost, from_host.junk,
+-	    from_chip.junk, from_host.oversize, from_chip.oversize);
++	printf("blazer-bt-bridge: from bluetoothd %u packets (%u commands to the chip), from the chip %u (%u complete, %u status); "
++	    "held: vendor %u, vendor parameters %u, unsupported %u, above level %u, data %u, malformed %u; "
++	    "lost up %u, down %u; junk from bluetoothd %u, from the chip %u, oversize %u/%u\n", host_pkts, cmds_sent, chip_pkts, completes, statuses,
++	    held[BG_WHY_VENDOR], held[BG_WHY_VPARAM], held[BG_WHY_UNSUPPORTED], held[BG_WHY_LEVEL], held[BG_WHY_DATA], held[BG_WHY_MALFORMED],
++	    up_lost, down_lost, from_host.junk, from_chip.junk, from_host.oversize, from_chip.oversize);
+ 	lck_mtx_unlock(&bb_lock);
+ }
+ 
+--- a/bsd/dev/blazer_bt_gate.c	2026-11-03 20:23:08.034619969 +0100
++++ b/bsd/dev/blazer_bt_gate.c	2026-11-03 20:23:29.355789981 +0100
+@@ -2,6 +2,17 @@
+ /* SPDX-License-Identifier: MIT
+  * H4 framing and the transmit gate, blazer_bt_gate.h. Own code. Opcodes and event layouts from the Bluetooth Core Specification 5.4,
+  * Vol 4 Part E, sections 5.4 (packets) and 7 (commands). The table is bt.md's proposed gate.
++ *
++ * Broadcom vendor commands (B2, research/ios26-connectivity-r1/bluetooth/B2.md): five reach the chip, at level 0, each with its
++ * parameters checked. Two are reads, three are local settings; none starts a radio operation. Their numbers are the ones the
++ * kernel itself already sends to this chip (0xfc18, 0xfc79 in blazer_btuart_hw.c) or Broadcom's public HCI vendor set:
++ *   0xfc01 Write BD_ADDR        exactly 6 parameter bytes. Sets the address the chip would use; nothing is sent at level 0
++ *   0xfc18 Update UART Baud     exactly 00 00 + le32 4,000,000: the rate the kernel already set, so the line stays as it is
++ *   0xfc27 Write Sleep Mode     only mode 0 (no sleep): LPM would need dev/host wake, which nothing here drives
++ *   0xfc6e Read Controller Features   no parameters
++ *   0xfc79 Read Verbose Config Version Info   no parameters
++ * Every other vendor opcode (firmware download 0xfc2e/0xfc4c/0xfc4e, UART clock 0xfc45, Apple's own set) is answered here
++ * with Unknown HCI Command and never reaches the UART; a listed opcode with other parameters gets Command Disallowed.
+  */
+ #include "blazer_bt_gate.h"
+ 
+@@ -18,6 +29,7 @@
+ #define OGF_LINK_CTL    0x01u
+ #define OGF_VENDOR      0x3fu
+ #define NEVER           (BG_LEVEL_MAX + 1)
++#define FAST_BAUD       4000000u
+ 
+ void
+ bg_frame_init(struct bg_frame *f)
+@@ -141,10 +153,37 @@
+ 	return false;
+ }
+ 
++/* The Broadcom vendor commands that may reach the chip, all at level 0. Parameters are checked in vendor_ok */
++static const uint16_t vendor_allowed[] = { 0xfc01, 0xfc18, 0xfc27, 0xfc6e, 0xfc79 };
++
++static bool
++vendor_ok(uint16_t op, const uint8_t *p, uint32_t plen)
++{
++	switch (op) {
++	case 0xfc01:
++		return plen == 6;
++	case 0xfc18:
++		return plen == 6 && p[0] == 0 && p[1] == 0 &&
++		       ((uint32_t)p[2] | (uint32_t)p[3] << 8 | (uint32_t)p[4] << 16 | (uint32_t)p[5] << 24) == FAST_BAUD;
++	case 0xfc27:
++		return plen >= 1 && p[0] == 0;
++	case 0xfc6e:
++	case 0xfc79:
++		return plen == 0;
++	default:
++		return false;
++	}
++}
++
+ int
+ bg_level_needed(uint16_t op)
+ {
+ 	if (OGF(op) == OGF_VENDOR) {
++		for (uint32_t i = 0; i < sizeof(vendor_allowed) / sizeof(vendor_allowed[0]); i++) {
++			if (vendor_allowed[i] == op) {
++				return 0;
++			}
++		}
+ 		return NEVER;
+ 	}
+ 	for (uint32_t i = 0; i < sizeof(levels) / sizeof(levels[0]); i++) {
+@@ -245,10 +284,18 @@
+ 	plen = pkt[3];
+ 	*op = o;
+ 	if (OGF(o) == OGF_VENDOR) {
+-		/* Unknown vendor operations have no implemented effect. Never claim success. */
+-		*reply_len = answer(reply, o, ST_UNKNOWN, false);
+-		*why = BG_WHY_VENDOR;
+-		return BG_LOCAL;
++		if (bg_level_needed(o) == NEVER) {
++			/* Not on the list: never sent. Never claim success. */
++			*reply_len = answer(reply, o, ST_UNKNOWN, false);
++			*why = BG_WHY_VENDOR;
++			return BG_LOCAL;
++		}
++		if (!vendor_ok(o, pkt + 4, plen)) {
++			*reply_len = answer(reply, o, ST_DISALLOWED, false);
++			*why = BG_WHY_VPARAM;
++			return BG_LOCAL;
++		}
++		return BG_SEND;         /* listed vendor commands are all level 0 */
+ 	}
+ 	need = bg_level_needed(o);
+ 	if (need == NEVER) {
+--- a/bsd/dev/blazer_bt_gate.h	2026-11-03 20:23:08.038399901 +0100
++++ b/bsd/dev/blazer_bt_gate.h	2026-11-03 20:23:29.356177849 +0100
+@@ -7,7 +7,8 @@
+  *   1  + passive LE scan (active parameters refused). Receive only
+  *   2  + LE advertising, LE connections, ACL/ISO data. TRANSMITS. Owner's word needed
+  *   3  + classic inquiry, page, page and inquiry scan, connections. TRANSMITS. Owner's word needed
+- * Test-mode commands are never sent at any level. Vendor and unknown commands return Unknown HCI Command and never reach the UART.
++ * Test-mode commands are never sent at any level. Unknown commands, and vendor commands off blazer_bt_gate.c's five-entry
++ * Broadcom list, return Unknown HCI Command and never reach the UART. A listed vendor command with other parameters: Command Disallowed.
+  */
+ #ifndef BLAZER_BT_GATE_H
+ #define BLAZER_BT_GATE_H
+@@ -25,7 +26,7 @@
+ 
+ /* Why a packet wasn't sent, for the counters. BG_WHY_NONE with BG_SEND */
+ enum bg_why {
+-	BG_WHY_NONE = 0, BG_WHY_UNSUPPORTED, BG_WHY_VENDOR, BG_WHY_LEVEL, BG_WHY_DATA, BG_WHY_MALFORMED, BG_WHY_COUNT
++	BG_WHY_NONE = 0, BG_WHY_UNSUPPORTED, BG_WHY_VENDOR, BG_WHY_LEVEL, BG_WHY_DATA, BG_WHY_MALFORMED, BG_WHY_VPARAM, BG_WHY_COUNT
+ };
+ 
+ /* A byte stream cut into whole H4 packets. Bytes that can't start a packet are counted and dropped */
+--- a/bsd/dev/blazer_btuart.c	2026-11-03 20:23:08.042826697 +0100
++++ b/bsd/dev/blazer_btuart.c	2026-11-03 20:25:12.069957998 +0100
+@@ -3,6 +3,10 @@
+  * XNU's part of the BT UART test. Off unless blazer_bt=1, 2 to load the firmware too, 3 and a 20 s passive LE scan, 4 the same at 4 Mbaud with RTS/CTS, 5 firmware, 4 Mbaud, then the UART is bluetoothd's (blazer_bt_bridge.c; blazer_bt_tx=0..3, default 0). Waits for blazer_wifi's GO in this boot, or does nothing to the hardware:
+  * without Wi-Fi's firmware first, no reply would prove nothing (handoffs/wifi.md).
+  * blazer_bt_end=N: N seconds after the result, panic with it, so blazer_panic=1 ends the boot and the log survives. 10..600.
++ * B2 (research/ios26-connectivity-r1/bluetooth/B2.md): with blazer_bt=5 the bridge (control + nexus) starts only when serving
++ * starts, from the link's ready hook, not a second into the boot. blazer_bt_qfake=N (1..600, QEMU only, never on the phone's
++ * token list): no hardware at all and no Wi-Fi wait; after N seconds a fake controller answers what the gate passes, for the
++ * same 120 s bound, so bluetoothd's side can be tested where there is no chip.
+  */
+ #include <kern/clock.h>
+ #include <kern/sched_prim.h>
+@@ -10,6 +14,7 @@
+ #include <mach/mach_types.h>
+ #include <pexpert/pexpert.h>
+ #include <sys/systm.h>
++#include <libkern/libkern.h>
+ #include "blazer_btuart_hw.h"
+ #include "blazer_cpmq_xnu.h"
+ #include "blazer_bt_gate.h"
+@@ -21,7 +26,15 @@
+ extern void blazer_bt_bridge_summary(void);
+ extern void blazer_bt_bridge_stop(void);
+ static uint32_t boot_tx;        /* blazer_bt_tx: the gate's level for blazer_bt=5 */
+-static struct bu_link bridge_link = { .next = blazer_bt_bridge_next, .rx = blazer_bt_bridge_rx, .quit = blazer_bt_bridge_quit };
++static uint32_t boot_qfake;     /* blazer_bt_qfake: QEMU only, seconds before the fake controller is up. 0: off */
++
++static void
++bridge_ready(__unused void *ctx)
++{
++	blazer_bt_bridge_start((int)boot_tx);
++}
++
++static struct bu_link bridge_link = { .next = blazer_bt_bridge_next, .rx = blazer_bt_bridge_rx, .quit = blazer_bt_bridge_quit, .ready = bridge_ready };
+ 
+ extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
+ extern kern_return_t thread_terminate(thread_t thread);
+@@ -126,6 +139,126 @@
+ static void k_cpm_enter(__unused void *ctx) { blazer_cpmq_enter(); }
+ static void k_cpm_exit(__unused void *ctx) { blazer_cpmq_exit(); }
+ 
++/* ---- blazer_bt_qfake: a fake controller for QEMU. No register, PMIC, SMC or pad is touched ---- */
++
++/* Return parameters after the status. The version is what the BCM4390B1 answered after its firmware on the phone (bt-stream-r1);
++ * the address is a locally administered placeholder, never a device's */
++static const uint8_t qf_ver[] = { 0x0e, 0xda, 0x01, 0x0e, 0x0f, 0x00, 0x08, 0x42 };
++static const uint8_t qf_feat[] = { 0xff, 0xfe, 0x8f, 0xfe, 0xd8, 0x3f, 0x5b, 0x87 };
++static const uint8_t qf_bdaddr[] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x02 };
++static const uint8_t qf_bufsize[] = { 0xfd, 0x03, 0x40, 0x08, 0x00, 0x04, 0x00 };
++static const uint8_t qf_lebuf[] = { 0xfb, 0x00, 0x08 };
++static const uint8_t qf_lefeat[] = { 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
++static const uint8_t qf_lestates[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0x00 };
++static const uint8_t qf_lemax[] = { 0xfb, 0x00, 0x48, 0x08, 0xfb, 0x00, 0x48, 0x08 };
++static const uint8_t qf_ledef[] = { 0xfb, 0x00, 0x48, 0x08 };
++static const uint8_t qf_one16[] = { 0x10 };
++static const uint8_t qf_zero1[] = { 0x00 };
++static const uint8_t qf_zero2[] = { 0x00, 0x00 };
++static const uint8_t qf_zero3[] = { 0x00, 0x00, 0x00 };
++static const uint8_t qf_verbose[] = { 0xc8, 0xfe, 0x08, 0x00, 0x00, 0x00 };     /* the ROM's 0xfc79 answer on the phone */
++static const uint8_t qf_zero8[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
++static const struct { uint16_t op; uint8_t len; const uint8_t *p; } qf_answers[] = {
++	{ 0x1001, sizeof(qf_ver), qf_ver }, { 0x1003, sizeof(qf_feat), qf_feat }, { 0x1009, sizeof(qf_bdaddr), qf_bdaddr },
++	{ 0x1005, sizeof(qf_bufsize), qf_bufsize }, { 0x100b, sizeof(qf_zero2), qf_zero2 }, { 0x0c23, sizeof(qf_zero3), qf_zero3 },
++	{ 0x0c5a, sizeof(qf_zero1), qf_zero1 }, { 0x2002, sizeof(qf_lebuf), qf_lebuf }, { 0x2003, sizeof(qf_lefeat), qf_lefeat },
++	{ 0x200f, sizeof(qf_one16), qf_one16 }, { 0x201c, sizeof(qf_lestates), qf_lestates }, { 0x202f, sizeof(qf_lemax), qf_lemax },
++	{ 0x2023, sizeof(qf_ledef), qf_ledef }, { 0x2007, sizeof(qf_zero1), qf_zero1 }, { 0x202a, sizeof(qf_one16), qf_one16 },
++	{ 0x2018, sizeof(qf_zero8), qf_zero8 }, { 0xfc79, sizeof(qf_verbose), qf_verbose }, { 0xfc6e, sizeof(qf_zero8), qf_zero8 },
++	{ 0xfc01, 0, NULL }, { 0xfc18, 0, NULL }, { 0xfc27, 0, NULL }, { 0x0c03, 0, NULL },
++};
++
++/* Command Complete, status 0, for one whole command. Returns the event's length */
++static uint32_t
++qf_answer(const uint8_t *cmd, uint8_t *out, uint32_t most)
++{
++	uint16_t op = (uint16_t)(cmd[1] | cmd[2] << 8);
++	const uint8_t *p = qf_zero8;
++	uint32_t n = 8, fill = 0;
++
++	for (unsigned i = 0; i < sizeof(qf_answers) / sizeof(qf_answers[0]); i++) {
++		if (qf_answers[i].op == op) {
++			p = qf_answers[i].p;
++			n = qf_answers[i].len;
++			break;
++		}
++	}
++	if (op == 0x1002) {             /* Read Local Supported Commands: 64 bytes */
++		n = 0;
++		fill = 64;
++	} else if (op == 0x0c14) {      /* Read Local Name: 248 bytes */
++		static const uint8_t name[] = "BCM4390B1 QEMU FAKE";
++
++		p = name;
++		n = sizeof(name);
++		fill = 248 - (uint32_t)sizeof(name);
++	} else if (op == 0x1004) {      /* Read Local Extended Features: page, max page, 8 bytes */
++		static uint8_t ext[10];
++
++		ext[0] = cmd[3] > 0 ? cmd[4] : 0;
++		ext[1] = 2;
++		memcpy(ext + 2, qf_feat, 8);
++		p = ext;
++		n = 10;
++	}
++	if (7 + n + fill > most) {
++		return 0;
++	}
++	out[0] = 4; out[1] = 0x0e; out[2] = (uint8_t)(4 + n + fill); out[3] = 1; out[4] = (uint8_t)op; out[5] = (uint8_t)(op >> 8); out[6] = 0;
++	if (n != 0) {
++		memcpy(out + 7, p, n);
++	}
++	if (op == 0x1002) {
++		memset(out + 7, 0xff, fill);
++	} else {
++		memset(out + 7 + n, 0, fill);
++	}
++	return 7 + n + fill;
++}
++
++static void
++qfake_serve(void)
++{
++	static uint8_t pkt[BG_MAX], out[300];
++	uint64_t start, now;
++	uint32_t answered = 0;
++
++	printf("blazer-bt: QEMU fake controller (blazer_bt_qfake=%u): no hardware is touched; up in %u s\n", boot_qfake, boot_qfake);
++	delay_for_interval(boot_qfake * 1000, NSEC_PER_MSEC);
++	bridge_ready(NULL);
++	printf("blazer-bt: serve: the fake controller is bluetoothd's now, gate level %u\n", boot_tx);
++	absolutetime_to_nanoseconds(mach_absolute_time(), &start);
++	for (;;) {
++		uint32_t n;
++
++		absolutetime_to_nanoseconds(mach_absolute_time(), &now);
++		if (blazer_bt_bridge_quit(NULL) || now - start >= 120ULL * NSEC_PER_SEC) {
++			break;
++		}
++		n = blazer_bt_bridge_next(NULL, pkt, sizeof(pkt));
++		if (n == 0) {
++			delay_for_interval(2, NSEC_PER_MSEC);
++			continue;
++		}
++		{
++			uint8_t reply[16];
++			uint32_t rlen, m;
++			uint16_t op;
++			enum bg_why why;
++
++			if (bg_check(pkt, n, (int)boot_tx, reply, &rlen, &op, &why) != BG_SEND) {
++				printf("blazer-bt: fake: the bridge passed 0x%04x, which the gate refuses: a bug. Stops\n", op);
++				break;
++			}
++			if (pkt[0] == 1 && (m = qf_answer(pkt, out, sizeof(out))) != 0) {
++				blazer_bt_bridge_rx(NULL, out, m);
++				answered++;
++			}
++		}
++	}
++	printf("blazer-bt: fake controller ends: %u commands answered\n", answered);
++}
++
+ static void
+ bt_thread(__unused void *parameter, __unused wait_result_t result)
+ {
+@@ -133,21 +266,17 @@
+ 		                           .cpm_enter = k_cpm_enter, .cpm_exit = k_cpm_exit };
+ 	unsigned waited = 0;
+ 
+-	if (boot_level == 5) {
+-		/* As hk_bt_fake: a second in, so Skywalk and the control domain are up. From then bluetoothd can connect while Wi-Fi's firmware comes up; its commands wait */
+-		delay_for_interval(1000, NSEC_PER_MSEC);
+-		blazer_bt_bridge_start((int)boot_tx);
++	if (boot_level == 5 && boot_qfake != 0) {
++		qfake_serve();
++		blazer_bt_bridge_summary();
++		goto end;
+ 	}
++	/* blazer_bt=5: bluetoothd's endpoint is registered by bridge_ready once the chip serves, never before */
+ 	printf("blazer-bt: waiting for Wi-Fi firmware\n");
+-	while (blazer_wifi_state == 0 && waited < 420 &&
+-	    (boot_level != 5 || !blazer_bt_bridge_quit(NULL))) {
++	while (blazer_wifi_state == 0 && waited < 420) {
+ 		delay_for_interval(1000, NSEC_PER_MSEC);
+ 		waited++;
+ 	}
+-	if (boot_level == 5 && blazer_bt_bridge_quit(NULL)) {
+-		printf("blazer-bt: bridge stopped before hardware start\n");
+-		goto end;
+-	}
+ 	if (blazer_wifi_state != 1) {
+ 		printf("blazer-bt: not run: Wi-Fi state %u after %u s. No hardware touched\n", blazer_wifi_state, waited);
+ 		goto end;
+@@ -201,6 +330,9 @@
+ 		if (!PE_parse_boot_argn("blazer_bt_tx", &boot_tx, sizeof(boot_tx)) || boot_tx > BG_LEVEL_MAX) {
+ 			boot_tx = 0;
+ 		}
++		if (!PE_parse_boot_argn("blazer_bt_qfake", &boot_qfake, sizeof(boot_qfake)) || boot_qfake > 600) {
++			boot_qfake = 0;
++		}
+ 	}
+ 	(void)PE_parse_boot_argn("blazer_bt_end", &boot_end_s, sizeof(boot_end_s));
+ 	if (boot_end_s != 0 && (boot_end_s < 10 || boot_end_s > 600)) {
+--- a/bsd/dev/blazer_btuart_hw.c	2026-11-03 20:23:08.043988759 +0100
++++ b/bsd/dev/blazer_btuart_hw.c	2026-11-03 20:24:04.661205506 +0100
+@@ -881,6 +881,9 @@
+ 	uint64_t quiet_us = 0;
+ 	uint64_t start = b->ops.now_us(b->ops.ctx);
+ 
++	if (l->ready != NULL) {
++		l->ready(l->ctx);       /* bluetoothd's endpoint appears only now: the chip is up and at 4 Mbaud */
++	}
+ 	b->ops.log(b->ops.ctx, "serve: the UART is bluetoothd's now, gate level %d\n", l->level);
+ 	while (b->stop == BU_OK && !l->quit(l->ctx) &&
+ 	    b->ops.now_us(b->ops.ctx) - start < (uint64_t)b->serve_ms * 1000) {
+--- a/bsd/dev/blazer_btuart_hw.h	2026-11-03 20:23:08.044012176 +0100
++++ b/bsd/dev/blazer_btuart_hw.h	2026-11-03 20:24:04.660486186 +0100
+@@ -28,6 +28,7 @@
+ 	uint32_t (*next)(void *ctx, uint8_t *pkt, uint32_t most);      /* one whole H4 packet for the chip, already gated, or 0 */
+ 	void (*rx)(void *ctx, const uint8_t *bytes, uint32_t n);        /* what the chip sent, as it came */
+ 	bool (*quit)(void *ctx);                                        /* true: stop serving, tidy up */
++	void (*ready)(void *ctx);                                       /* optional: once, when serving starts, before the first quit() */
+ 	void *ctx;
+ 	int level;              /* blazer_bt_tx: checked again here before every packet */
+ };

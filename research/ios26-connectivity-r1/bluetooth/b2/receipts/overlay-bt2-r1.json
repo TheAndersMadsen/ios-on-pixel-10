@@ -1,0 +1,18 @@
+{
+  "base_sha256": "95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55",
+  "output_sha256": "ea452c37999941e88b19efc312a79fe30d7b4a107025a288f4d66e204dc40115",
+  "bytes": 611216,
+  "records": 49,
+  "mask": "0xa0080081",
+  "replaced": {
+    "42 hk_deny (group 31)": "bluetoothd,Spotlight -> Spotlight",
+    "39 hk_env (group 29)": {
+      "added_rules": [
+        "bluetoothd:BT_HCI_TRANSPORT=H4:POSIX;BT_CHIP=ACI~BT"
+      ],
+      "bytes_with_NUL": 763
+    }
+  },
+  "appended": {},
+  "other_records_byte_identical": 47
+}

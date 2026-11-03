@@ -1,0 +1,35 @@
+kernel.bt2 4cf8224f75767c6f65510de77bf5a8287a897703f234c0fbe5eb9297ef84eb6e, unstripped 55123833fc758c4b9025d5e416a3c63b372aa4b0f0a397949f46b0cce26454be, XNU hk-bt-b2 9aa76a93 (parent cc42295), DEVELOPMENT_ARM64_BLAZER, Apple clang full build on the Mac
+fffffe0007a28010 S _bg_check
+fffffe0007a294d0 S _blazer_bt_bridge_start
+fffffe00086f9720 b _boot_qfake
+fffffe0007a27c40 s _bridge_ready
+fffffe000729cdb4 S _bt_img_hcd
+fffffe000736612c S _bt_img_hcd_end
+fffffe0007608640 s _qf_answers
+fffffe00086f9790 b _qfake_serve.pkt
+fffffe0007a28320 s _vendor_ok
+vendor_ok disassembly (opcode compares):
+fffffe0007a28328:      	mov	w9, #0xfc26     ; =64550
+fffffe0007a2832c:      	cmp	w8, w9
+fffffe0007a28334:      	mov	w9, #0xfc27     ; =64551
+fffffe0007a28338:      	cmp	w8, w9
+fffffe0007a28340:      	mov	w9, #0xfc6e     ; =64622
+fffffe0007a28344:      	cmp	w8, w9
+fffffe0007a2834c:      	mov	w9, #0xfc79     ; =64633
+fffffe0007a28350:      	cmp	w8, w9
+fffffe0007a28358:      	cmp	w2, #0x0
+fffffe0007a28360:      	mov	w9, #0xfc01     ; =64513
+fffffe0007a28364:      	cmp	w8, w9
+fffffe0007a2836c:      	mov	w9, #0xfc18     ; =64536
+fffffe0007a28370:      	cmp	w8, w9
+fffffe0007a28378:      	cmp	w2, #0x6
+fffffe0007a28398:      	cmp	w8, #0x900
+fffffe0007a283a8:      	cmp	w8, #0x0
+fffffe0007a283b8:      	cmp	w2, #0x6
+strings:
+blazer_bt_qfake
+blazer-bt: QEMU fake controller (blazer_bt_qfake=%u): no hardware is touched; up in %u s
+blazer-bt-bridge: to chip 0x%04x%s
+blazer-bt-bridge: from chip: complete 0x%04x status 0x%02x
+blazer-bt-bridge: kernel control %s (%d), gate level %d%s
+listed vendor, parameters refused

@@ -1,0 +1,6 @@
+candidate blazer_bt_gate.c 420ba9a66ca00df84712d08189d7e6d2c6200b5540f1f39ba3165edcf376163e
+PASS: 16909 checks, 0 failed
+mutation 1 baud unchecked: FAIL: 16909 checks, 12 failed
+mutation 2 sleep mode unchecked: FAIL: 16909 checks, 12 failed
+mutation 3 all vendor sent: FAIL: 16909 checks, 16512 failed
+mutation 4 firmware listed: FAIL: 16909 checks, 36 failed

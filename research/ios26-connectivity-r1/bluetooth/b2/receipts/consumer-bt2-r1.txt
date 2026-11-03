@@ -1,0 +1,1 @@
+PASS: 181 checks; bluetoothd allowed, env BT_HCI_TRANSPORT=H4:POSIX;BT_CHIP=ACI~BT
