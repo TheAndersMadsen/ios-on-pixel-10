@@ -4,7 +4,7 @@ Date: 2026-11-04. Owner: agent 5 (completion/synchronization). **READ-ONLY resea
 
 Evidence labels: **PHYSICAL** is the named gpu2 phone receipt; **SOURCE** is exact source/layout inspection; **HOST** is an existing host-only implementation/model; **EXTERNAL** is linked prior art; **DESIGN** is a proposed implementation, not a physical result.
 
-Cross-references: agent 10's [PLAN](PLAN.md) and [LIVE-EVIDENCE](LIVE-EVIDENCE.md), agent 1's [COREMEM-INIT](COREMEM-INIT.md), agent 2's [FIRMWARE](FIRMWARE.md), agent 3's [MMU](MMU.md), agent 4's [CCB-KICK](CCB-KICK.md), agent 6's [IOACCEL](IOACCEL.md), agent 8's [COMPOSITOR](COMPOSITOR.md), and agent 9's [PRIORART](PRIORART.md). Agent 4 owns the CCB/KICK implementation; this document fixes its completion contract. The interrupt route remains gated on agent 10's real GIC/IOKit integration.
+Cross-references: agent 10's [PLAN](PLAN.md) and [LIVE-EVIDENCE](LIVE-EVIDENCE.md), agent 1's [COREMEM-INIT](COREMEM-INIT.md), agent 2's [FIRMWARE](FIRMWARE.md), agent 3's [MMU](MMU.md), agent 4's [CCB-KICK](CCB-KICK.md), agent 6's [IOACCEL](IOACCEL.md), agent 7's [METAL](METAL.md), agent 8's [COMPOSITOR](COMPOSITOR.md), and agent 9's [PRIORART](PRIORART.md). Agent 4 owns the CCB/KICK implementation; this document fixes its completion contract. The interrupt route remains gated on agent 10's real GIC/IOKit integration.
 
 Two cross-document corrections are explicit. First, stock advances a **host-local** client write offset and carries it in KICK; normal submission does not store it to shared `CCCB_CTL.ui32WriteOffset`. Second, [CCB-KICK §4](CCB-KICK.md) labels its UPDATE headers at `0x30/0x70`, but its own FENCE/NULL positions and correct final offsets `0x40/0x80` prove the labels should be **`0x28/0x68`**. This document uses the corrected labels and the stock host-local-write rule.
 
@@ -169,13 +169,13 @@ HK GPUTA: M3 S3 FW command complete cmd=1 epoch=1 recovery=0 source=POLL_UFO ufo
 HK GPUTA: M3 S4 submit cmd=2 epoch=1 recovery=0 kccb_slot=3 ctx=0x4023e000 host_write=0x80 wrap=0x1fff ext=0x1002 int=2 ufo_fw=0x40242000 before=0xc0de0001 want=0xc0de0002
 HK GPUTA: M3 S4 admitted cmd=2 epoch=1 recovery=0 kccb_r=4 rtn=<raw> read_ms=<N> ccb_w=<W> ccb_r=<R> ccb_d=<D>
 HK GPUTA: M3 S4 FW command complete cmd=2 epoch=1 recovery=0 source=POLL_UFO ufo=0xc0de0002 poll_ms=<N> ccb_w=0x80 ccb_r=0x80 ccb_d=0x80 fw_faults=0
-HK GPUTA: M3 S4 PASS: two ordered firmware KickSync commands; no GPU engine job
+HK GPUTA: M3 S4 PASS: epoch=1 recovery=0 two ordered firmware KickSync commands; no GPU engine job
 ```
 
 A timeout uses an explicit negative record, never a DONE/PASS line:
 
 ```text
-HK GPUTA: M3 TIMEOUT cmd=<N> ufo=<actual> want=<expected> ccb_w=<W> ccb_r=<R> ccb_d=<D> kccb_w=<W> kccb_r=<R> rtn=<raw> last_failed_ufo=<addr/value> resources=RETAINED
+HK GPUTA: M3 TIMEOUT cmd=<N> epoch=<E> recovery=<R> ufo=<actual> want=<expected> ccb_w=<W> ccb_r=<R> ccb_d=<D> kccb_w=<W> kccb_r=<R> rtn=<raw> last_failed_ufo=<addr/value> resources=RETAINED
 ```
 
 ### 4.2 Firmware-log records required in the same boot
@@ -193,7 +193,7 @@ UFO Checks succeeded                                      [RGXFW_SF_MAIN_UFO_CHE
 UFO Update: [0x40242000] = 0xc0de0002                     [RGXFW_SF_MAIN_UFO_UPDATE, id 0x70021017]
 ```
 
-`cCCB Woff update = 64` and later `= 128` with DM 0/context `0x4023e000`, plus NULL and MTS client-header records when present, are supporting evidence. The acceptance wrapper should parse trace IDs and parameter counts, not rely only on text matching. Preserve raw trace indices/timestamps; firmware and host clocks need not share an epoch, so ordering is the join.
+`cCCB Woff update = 64` and later `= 128` with DM 0/context `0x4023e000` (trace `0x7003100e`), plus NULL task `0x70021053` and MTS client-header records when present, are supporting evidence. The acceptance wrapper should parse trace IDs and parameter counts, not rely only on text matching. A strict sequential acceptance pass must reject malformed/truncated records and unknown gaps; the current scan-forward decoder is useful navigation but cannot turn an invalid trace into a zero-fault PASS. Preserve raw trace indices/timestamps; firmware and host clocks need not share an epoch, so ordering is the join.
 
 The proof matrix is:
 

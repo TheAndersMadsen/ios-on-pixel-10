@@ -14,6 +14,12 @@ Integration snapshot: 2026-11-04. Evidence reviewed: the named physical boots fr
 
 The int3 image has **no** `blazer_gpu` or `blazer_gpu_tipc` argument and its console has zero `HK GPUTA` / `blazer-gpu` records. It therefore supplies a userland/scanout baseline, not another firmware-health result.
 
+### Current gpuprobe recheck (in progress)
+
+The coordinator's fresh attempt is `research/laguna-usb-fix/attempts/live-20261104-001321-a7-int3-gpuprobe/console.txt`. Its line 4 confirms the **existing, unchanged** `research/images/a7-ios-system-int3/boot.img` and `research/ios26-phaseb-r1/int3/build/kernel.int3.unstripped`; this is not a new native-driver image. At the reviewed snapshot it is 121556 bytes / 1227 newline-delimited records, SHA-256 `9107097334fa04aca7fbe45ff3a211ec98a93b618b421b6a4f1b251d5cfebbbc`, and ends at XNU 6.47 s.
+
+The new capture already reconfirms `hk_dbg=0x1e1e1f`, default Preferences/MobilePhone USTACK, AppleCLCD, IOCoreSurfaceRoot, `HGLTRACK: SWContext slot wrapped` at line 833, and `HKACCEL: ... wait skipped` at line 844. It has **not yet reached** the earlier boot's AGX/IOAcceleratorES queries at ~9.5 s or SpringBoard Metal attempt at ~31.7 s. Therefore those signals must be read from the completed int3 baseline below, not declared absent from this in-progress recheck. The snapshot hash is intentionally not treated as a final-attempt hash.
+
 ## 2. gpu2: firmware transport and post-recovery health are PHYSICAL PASS
 
 Attempt: `research/laguna-usb-fix/attempts/20261103-205316-a7-ios-system-gpu2/`.

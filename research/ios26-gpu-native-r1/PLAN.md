@@ -164,7 +164,7 @@ Required precise spec before coding:
 | **6 — IOAccelerator publish** | [IOACCEL.md](IOACCEL.md) specifies one platform-root derived object, same-ID HMGU/readiness, no legacy `sgx`, and no `HK_ACCEL_ONCE=skip` for the proof. Its reference to an S1-S4 next boot is superseded by agent 1/3's coremem-only S1 decision. |
 | **7 — Metal device** | [METAL.md](METAL.md) verifies the custom loader in the iOS 26 cache and separates compiler/signing/entitlement/OPEN/capability failures. Production provider and render/transfer/IOSurface paths remain absent; compute must not auto-advertise render, and default-device count must be one. |
 | **8 — compositor/Liquid Glass** | [COMPOSITOR.md](COMPOSITOR.md) sets C1 offscreen CARenderer → C2 known panel frame → C3 real backdrop → C4 MaterialKit/glass. It also requests an independent software-capture diagnostic after the firmware boot. `hk_flatmat`/Inferno forced software must stay off for native acceptance. |
-| **9 — prior art** | [PRIORART.md](PRIORART.md) confirms the matched `5940a317` DDK as authoritative, mainline's lack of DXT support, foreign-Metal proof patterns, and no second/virtio backend. Preserve licence boundaries; external success is never our physical evidence. |
+| **9 — prior art** | [PRIORART.md](PRIORART.md) confirms the matched `5940a317` DDK as authoritative, mainline's lack of DXT support, foreign-Metal proof patterns, and no second/virtio backend. The user-supplied `ios-tegu` archive (`8e2d75bb…`) is Pixel 9a/Tensor G4 **Mali G715-class CSF**, not DXT: exclude its GPU packets/constants and reuse only externally reported iOS 26 lessons (plain-BGRA policy, larger shader bounds, NoPerspective/base-instance handling, persistent VM/lifetime, and the need for RGBA16F/MSAA/CA selector coverage). Preserve licence boundaries; external success is never our physical evidence. |
 | **10 — integration/live** | Maintain this plan and LIVE-EVIDENCE; decode first-copy fwlog, correlate registry→device→context→engine→surface→DPU, name missing evidence. No relevant backboardd/SpringBoard stacks exist in int3. |
 
 ## 4. Cross-cutting stop rules and biggest risks
@@ -178,6 +178,82 @@ Required precise spec before coding:
 7. **Evidence risk:** int3 has no relevant USTACK samples and its IOK/HKL budgets drop messages. Add native correlated lines and explicit USTACK targets; never infer success from missing errors.
 8. **Android/recovery risk:** coordinator-only temporary boot; no flash/erase/slot/firmware changes. Preserve backups/no-map carve-out and run return-check after every physical attempt; gpu2 has no located attempt-specific return receipt.
 
-## 5. Immediate next action
+## 5. Prioritized physical boot queue
 
-Use the **single coremem-only gpu3/rung-7 S1 recipe in LIVE-EVIDENCE §6** after agent 1 supplies the reviewed runnable implementation and host/ARM64 receipts. It tests only clean coremem/init and existing M2 health, with no client KICK. Agents 3/4/5 may design the separate S2-S4 KickSync boot only after S1 passes physically. Do not build or boot the current partial M3 unchanged, do not add CA/Metal instrumentation to this pre-launchd rung, and do not call S1 native Metal.
+Status labels: **EXISTING** means the named image already exists; **NEW KERNEL** means XNU work is still required; **NEW OVERLAY** means the int3 kernel can stay but the RAM overlay/probe must change; **NEW STACK** means a new kernel plus signed native runtime/probe composition. No later row authorizes skipping an earlier physical gate.
+
+### 0. Current userland baseline — EXISTING, already running; do not duplicate
+
+- **Image:** `research/images/a7-ios-system-int3/boot.img`, being run as `a7-int3-gpuprobe`; exact stock int3 manifest args (`cpus=5`, `rd=ufsroot0`, `hk_dbg=0x1e1e1f`, no GPU/native-publication args).
+- **Facets:** 6/7/8/10.
+- **Look for:** the established AGX/IOAcceleratorES misses, SUICOrbView Metal failure, SWContext, AppleCLCD/IOSurface/DPU baseline. Current capture `live-20261104-001321-a7-int3-gpuprobe` is only at 6.47 s and has not reached those later events yet.
+- **Other existing images:** gpu2/rung6 and r6-gpu already have sufficient baseline receipts. **Do not rerun gpu2's known-faulty rung6 unchanged.** Rung8 is only a later negative control if coremem S1 regresses.
+
+### 1. Coremem-only S1 — NEW KERNEL; next boot after the current one
+
+- **Image:** planned `research/images/a7-ios-system-gpu3`; gpu2 manifest with exactly `blazer_gpu_tipc=6` → `blazer_gpu_tipc=7`, `cpus=1`, no `hk_dbg`, every other arg unchanged. Full recipe: LIVE-EVIDENCE §6.
+- **Facets:** 1/2/10; prerequisite for 3/4/5.
+- **Look for:** pre-SMC coremem `0xE1C013C000` readback, valid strict pre-health/final traces with zero MMU/lockup/failed-poll/HWR-reset/DEBUG_DUMP, HEALTH consumption, STATEFLAGS return 1, 18-register survey, deliberate `rung 7 S1 PASS`, **no KICK**, Android return PASS.
+
+### 2. Read-only MMU range/SMMU diagnostic — NEW KERNEL; after clean S1
+
+- **Image:** planned `a7-ios-system-gpu3-mmuru-r1`; same coremem-fixed rung-7/cpus=1/no-KICK args, with agent 3's read-only instrumentation. Do not use the existing 18-register survey as a substitute.
+- **Facet:** 3, with 2/9.
+- **Look for:** two samples of `0xe350/0xe358/0xe360/0xe368` and SMMU CR0/GBPA/GERROR; effective 16 KiB across GENERAL/PDSCODEDATA/USCCODE and every interior boundary; route identity evidence. Do not read unknown USC/PDS MMIO or issue mappings/KICKs. Execution-base admission remains closed without a legitimate observation path.
+
+### 3. Polled KickSync S2-S4 — NEW KERNEL + dispatcher; after S1 and fixture review
+
+- **Image:** planned `a7-ios-system-gpu4-kicksync-r1`; same gpu2-derived args with `blazer_gpu_tipc=7`, `cpus=1`, no `hk_dbg`, no IRQ writes. Agent 2's real FWCCB dispatcher and agents 3/4/5's fixtures/tests are mandatory.
+- **Facets:** 2/3/4/5/9.
+- **Look for:** catalogue `pc_dma=0xba139000` (not `0xe1…`), common `0x4023e000`, CCB `0x40240000`, `ccb_dma=0xe1c0240000`, UFO `0x40242000`; host-local write offsets in KICK (not normal-path shared-W stores); KCCB slots 2/3; `0xdead0000` → `0xc0de0001` → `0xc0de0002`; CCB `R=D=W=0x40` then `0x80`; independent KICK/UFO_CHECK/UFO_UPDATE trace; no faults. This is not engine compute or a temporal-stall proof.
+
+### 4. Software backdrop/capture diagnosis — NEW OVERLAY, int3 kernel reusable; independent of rows 2-3 but after row 0
+
+- **Images:** `a7-ios-system-int3-swbackdrops-r1` and `...-nocache-r1`; int3 args with `blazer_haptic_tap=1` replaced by `hk_ustack=backboardd,SpringBoard` and `hk_dbg=0x1e1e17` (1013-byte command line, 1014 including NUL). No native accelerator.
+- **Overlay/env:** agent 8's read-only capture/filter observers, `hk_flatmat` off. Case A `CA_PRINT_BACKDROPS=1`; case B `CA_BACKDROP_SCALE=1 CA_DISABLE_BACKDROP_CACHE=1`.
+- **Facet:** 8, with 10. **Not runnable on the unmodified int3 overlay** because the new observers/env are absent; the current gpuprobe already covers the unchanged baseline.
+- **Look for:** whether `capture_backdrop` returns a current valid parent surface and whether `SWContext::blur_surface` / Gaussian/vibrant/glass filters execute, with bounds/format/result. This locates capture/lifetime versus filter/blend failure; it is not native acceptance.
+
+### 5. Owned backend COMPUTE — NEW STACK, controlled/headless; after rows 1-3 and real-VM gates
+
+- **Image:** planned `a7-ios-system-native-compute-r1`; int3-derived args with the USTACK replacement/hk_dbg change, `blazer_aks_wrap=1` and `blazer_key_delivery=1` removed for automated headless probing, and `blazer_hmgu=1 blazer_native_metal=1` added (1009-byte command line, 1010 including NUL). No `hk_accel`; overlay prevents backboardd/SpringBoard from consuming the service and removes `HK_ACCEL_ONCE=skip`.
+- **Facets:** 3/4/5/7; 6 prepares but does not CA-publish.
+- **Look for:** real secure VM/contexts, MMUCACHE sync, owned CDM work, actual engine completion + SLC/CPU handback, exact output/sentinel/guards, stale/timeout/teardown controls. KickSync alone never reaches this row.
+
+### 6. Registry + owned Metal compute — NEW STACK, controlled/headless; after row 5
+
+- **Image:** planned `a7-ios-system-native-metal-compute-r1`; same 1009-byte native-compute args, one derived AGX/IOAcceleratorES object, trusted signed bundle/compiler provider, process entitlement. No duplicate bare `sgx`, no CA consumer, normal non-skipped accelerator poll.
+- **Facets:** 6/7/10.
+- **Look for:** both class matches at one registry ID and exact plugin properties; explicit HMGU OPEN then `MTLCreateSystemDefaultDevice()` with exactly one device; `HMNativeMetalDevice headless=1`; same registry/epoch/ctx/seq through guarded compute and transfer readback. Separate compiler/codesign/sandbox/OPEN/capability failures.
+
+### 7. Owned render + IOSurface — NEW STACK; after row 6
+
+- **Image:** planned `a7-ios-system-native-render-r1`; start from row 6 args and add `hk_gpumem=2` (1021-byte command line, 1022 including NUL). Require the surface-native authority/block/sync path and signed render-capable runtime.
+- **Facets:** 3/4/5/7/8.
+- **Look for:** exact clear/zero-count/triangle/quad pixels and guards; real render+transfer completion; 64x64 plain BGRA first, then the 1125x2511/bpr4608/11583488-byte (707-page) import; authorized registered surface reference; cross-engine `wait_ctx_seq`; no CPU production renderer. Only now may CA-facing registration be enabled.
+
+### 8. CA offscreen C1, then on-screen C2 — NEW STACK; after row 7
+
+- **Images:** planned `a7-ios-system-native-ca-c1-r1` and `...-c2-r1`; same 1021-byte native-render args, `hk_flatmat` off, no Inferno/forced-software patches, no `HK_ACCEL_ONCE=skip`.
+- **Facet:** 8, with 6/7/10.
+- **Look for:** C1 exact owned CARenderer pixels/guards after actual completion (not just `endFrame`); C2 destination F → submit S → engine/cache done S → `IOMFBDisplay::finish_update`/`swap_set_layer` → `SWEET FB: swap` present P, exact raw BGRA plus `hk shot`, 100 alternating presents and stale/timeout controls. C2 is the minimum GPU-compositor milestone.
+
+### 9. Real backdrop C3, then MaterialKit/C4 — NEW STACK; after row 8
+
+- **Images:** planned `a7-ios-system-native-ca-c3-r1` and `...-c4-r1`; same args and clean native overlay.
+- **Facet:** 8, with 7/10.
+- **Look for:** disabled/radius-zero/nonzero CABackdropLayer controls, current-parent capture, far-field/edge/guard correctness; variable/vibrant/glass variants one at a time; Control Center over two colourful backgrounds with background-dependent blur, stable sharp foreground, and the C2 chain. A Gaussian or pretty screenshot alone is not Liquid Glass.
+
+### 10. IRQ-driven completion — NEW STACK; only after polling completion is solid
+
+- **Image:** planned `a7-ios-system-native-irq-r1`; native-render args, real external-GIC controller/provider route, and the probe's completion polling disabled in code. No extra legacy GPU boot arg is admitted today; the implementation must freeze any new opt-in before image creation.
+- **Facets:** 2/5/10.
+- **Look for:** native INTID/vectorData 162 (not raw FDT tuple), level/route/mask/synchronize readback, OS0 `+0xbd0/+0xbe0` mask `0x3`, OSDATA counter `+0x230`, LISR→MISR, strict `IRQ_UFO`, SLC/cache→HMGU done, independent firmware UPDATE. Counter/IRQ activity alone completes nothing.
+
+### 11. Lifecycle/recovery soak — NEW STACK; last before any performance claim
+
+- **Image:** planned `a7-ios-system-native-lifecycle-r1`; native-render args, repeated controlled reset/teardown/CA present cycles.
+- **Facets:** 2/5/6/7/8/10.
+- **Look for:** closed admission, drained FWCCB, POW_OFF then STOP=2/gate/domain-off; one SEND per boot, new epoch/recovery generation on restart, coremem preserved, stale waits rejected, resources retained until actual quiescence, no second backend or cached-device use-after-free, Android return PASS after every attempt.
+
+**Immediate coordinator action:** let row 0 finish and capture its later GPU signals; do not boot a second copy. Row 1 is next only when agent 1 supplies the built/tested gpu3 kernel. Rows 2+ are not runnable on existing images as their required instrumentation/backend does not exist yet; row 4 reuses the int3 kernel but still needs agent 8's new overlay. Every temporary boot ends with the normal Android return check.
