@@ -1,6 +1,6 @@
 # Current project notes
 
-Updated 2026-11-02. This is the **only default project-state document**. Keep it
+Updated 2026-11-03. This is the **only default project-state document**. Keep it
 short and current; do not append a session journal here. The previous full journal
 is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only.
 
@@ -14,9 +14,11 @@ recoverable. QEMU and host tools support development; they are not phone results
   display/touch, UFS reads, RTC publication and native battery samples have
   physical evidence. Backboardd respawns and queued presentations mean the UI is
   interactive but unstable; there is no clean-compositor, FPS or speed acceptance.
-- **Android:** restored on slot b (exceptions: `research/factory-alias-restore-r1/HANDOFF.md`).
-  After chooser t1 the owner returned it via recovery "Try again" (2026-11-03, return check PASS,
-  `research/ios26-dualboot-r8/attempts/return-after-t1/`); force-fastboot off. A1 backup: `research/android-backup-20261102/`.
+- **Android (2026-11-03, PHYSICAL):** slot b, Magisk 31.1 with its 7 modules active, owner data restored
+  after the migration (files, apps, app data; exceptions and Keystore-bound apps in
+  `research/android-backup-20261103/RESTORE.md`). Return check PASS against the new post-restore baseline
+  (root sentinel, app count, /data size): `research/ios26-dualboot-r8/attempts/return-after-restore/`.
+  Play Integrity passes BASIC only (keybox not revoked); not a dual-boot blocker.
 - **No iOS root is deployed.** `userdata_exp.ai` is a member of Android's multi-device
   F2FS `/data`; every XNU recipe now binds `blazer_ufs_root=ios_system` and
   `tools/image_tool.py` refuses `userdata_exp.ai` and `blazer_persist` (b1d2971, ff9261d).
@@ -26,7 +28,7 @@ recoverable. QEMU and host tools support development; they are not phone results
   PASS), the owner-approved GPT write made userdata 69.3 GiB (LBA 4,597,990..22,757,375), `ios_system` 24 GiB
   (sda36) and `ios_data` 8 GiB (sda37), project type GUID; `sgdisk --verify` clean; recovery factory reset;
   Android /data 77.3 GiB, nothing mounts ios_*. Rollback copies: `research/ios26-dualboot-r8/gpt-plan/option-a-ios24+8/`.
-  Backup: `research/android-backup-20261103/`. Root (Magisk app) and the owner's data restore pending.
+  Backup and restore receipt: `research/android-backup-20261103/`.
 - **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of chooser-v1-r3 (`shim/chooser.c`, stock boot
   vbmeta transplanted) chain-loads the stock Android kernel at EL2. Android completed boot 3 times in a row
   (kernel at 0xc9c00000, /data decrypted, return checks PASS), plain boots follow. r4 (cached decode)

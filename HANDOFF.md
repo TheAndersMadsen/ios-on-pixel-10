@@ -5,7 +5,9 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Done: phone back in Android, return check PASS (2026-11-03). pKVM prints "hVHE" on this kernel.
+1. Done: storage migrated and the owner's Android restored on slot b with Magisk (2026-11-03); return check PASS
+   against the post-restore baseline (`research/android-backup-20261103/RESTORE.md`). The phone may be used
+   normally; every boot test still uses bare `fastboot boot` with ANDROID_SERIAL set.
 2. A3 accepted (r3 x3, r4 in 42 s). Menu visible on the panel (r7), but the display handback to Linux
    fails (r7 panic, r9 CPM hang on FE0 off). Next run, host first: take the vs_dc suspend order
    (BE idle, `dc_hw_do_reset`, clock-domain isolation on; vs_dc.c:201-230) with register values from the
@@ -21,8 +23,8 @@ it is not a second project journal.
 
 ## Latest completed maintenance
 
-- Android restoration and its documented exceptions:
-  `research/factory-alias-restore-r1/HANDOFF.md`.
+- Android restore after the migration, exceptions and the new return-check baseline:
+  `research/android-backup-20261103/RESTORE.md`.
 - Research cleanup and current archive index: `research/README.md`.
 - Removed paths, hashes and reasons: `research/CLEANUP-20261102.json`.
 
