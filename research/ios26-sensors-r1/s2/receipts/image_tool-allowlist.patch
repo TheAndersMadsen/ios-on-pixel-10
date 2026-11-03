@@ -1,0 +1,11 @@
+--- /tmp/s2-image_tool.before.py	2026-11-03 21:27:59.271398398 +0100
++++ tools/image_tool.py	2026-11-03 21:27:59.295318446 +0100
+@@ -152,6 +152,8 @@
+                  # handoffs/cpmlock.md. Each its own boot, in that order. The panic limit is the kernel's own range, 30..102
+                  'blazer_thermal': r'blazer_thermal=[12]', 'blazer_thermal_panic_c': r'blazer_thermal_panic_c=(3[0-9]|[4-9][0-9]|10[0-2])', 'blazer_keys': r'blazer_keys=1',
+                  'blazer_sensors': r'blazer_sensors=[123]', 'blazer_sensors_flip': r'blazer_sensors_flip=[0-7]',
++                 # research/ios26-sensors-r1/PLAN.md S2: compass (patch 0930); the kernel refuses it without blazer_sensors=2
++                 'blazer_sensors_mag': r'blazer_sensors_mag=1', 'blazer_sensors_mag_flip': r'blazer_sensors_mag_flip=[0-7]',
+                  'hk_clk': r'hk_clk=([6-9]|[1-9][0-9]|[1-5][0-9][0-9]|600)',  # handoffs/dramclk.md
+                  'hk_top': r'hk_top=([5-9]|[1-9][0-9]|[1-5][0-9][0-9]|600)', 'hk_ui': r'hk_ui=[0-9]+:[a-z0-9.,]+',
+                  # handoffs/overlay.md. hk_overlay: nonzero, and only once the image carries an overlay (build() checks), or the kernel panics by design.

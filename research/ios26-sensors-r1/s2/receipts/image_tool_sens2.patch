@@ -1,0 +1,20 @@
+--- research/ios26-phaseb-r1/int/tools/image_tool_int1.py	2026-11-03 20:33:51.865449137 +0100
++++ research/ios26-sensors-r1/s2/tools/image_tool_sens2.py	2026-11-03 21:28:47.500050885 +0100
+@@ -11,7 +11,7 @@
+ import argparse, array, hashlib, json, os, re, shutil, struct, subprocess, sys, time
+ from pathlib import Path
+ sys.dont_write_bytecode = True
+-X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # int/tools/image_tool_int1.py: the Mac's acf48b98 + pwr1 + netstack (INT1.md), run from here
++X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # s2/tools/image_tool_sens2.py: research/ios26-phaseb-r1/int/tools/image_tool_int1.py + the compass allow-list hunk (S2.md), run from here
+ RUN = R/'images'; WORK = RUN/'.work'  # images and scratch stay under research/, which git ignores
+ sys.path[:0] = [str(X)]
+ import adt as ADT, mkadt, mkpayload
+@@ -152,6 +152,8 @@
+                  # handoffs/cpmlock.md. Each its own boot, in that order. The panic limit is the kernel's own range, 30..102
+                  'blazer_thermal': r'blazer_thermal=[12]', 'blazer_thermal_panic_c': r'blazer_thermal_panic_c=(3[0-9]|[4-9][0-9]|10[0-2])', 'blazer_keys': r'blazer_keys=1',
+                  'blazer_sensors': r'blazer_sensors=[123]', 'blazer_sensors_flip': r'blazer_sensors_flip=[0-7]',
++                 # research/ios26-sensors-r1/PLAN.md S2: compass (patch 0930); the kernel refuses it without blazer_sensors=2
++                 'blazer_sensors_mag': r'blazer_sensors_mag=1', 'blazer_sensors_mag_flip': r'blazer_sensors_mag_flip=[0-7]',
+                  'hk_clk': r'hk_clk=([6-9]|[1-9][0-9]|[1-5][0-9][0-9]|600)',  # handoffs/dramclk.md
+                  'hk_top': r'hk_top=([5-9]|[1-9][0-9]|[1-5][0-9][0-9]|600)', 'hk_ui': r'hk_ui=[0-9]+:[a-z0-9.,]+',
+                  # handoffs/overlay.md. hk_overlay: nonzero, and only once the image carries an overlay (build() checks), or the kernel panics by design.

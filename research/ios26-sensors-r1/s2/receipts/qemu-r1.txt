@@ -1,0 +1,26 @@
+run /data/hackios-qemu/research/ios26-apps-r1/runs/s2-sens2-smoke-r1
+{
+ "ended": "guest stopped",
+ "elapsed": 21.47780772299984,
+ "exit": 0,
+ "root_unchanged": true
+}
+kernel /data/hackios-qemu/research/ios26-sensors-r1/s2/kernel.sens2
+kernel_sha 17cd597484b6d5bea4eb741ce97e404025f9eb6fae979530ee37e3dbdb959956
+root artifacts/apps-bblog-r16.img
+root_sha 3a0f9debacf755a01fd888f85bdeb9a26b36be6cd0d3a178972c1e4d62bd630c
+overlay artifacts/a7-retry-l1.ovl
+overlay_sha f107cf6364d42c7813517e3b158e8cf75481718a94052c8bc37b0ab88dd209b9
+accel tcg
+args debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793737673 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_sensors=2 blazer_sensors_mag=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480
+console lines 521, panics 1
+89:SWEET HID: buttons registered (test every 0 s)
+90:SWEET HID: touch registered, canvas 1125x2436, centred at 77,210, direct touches
+91:SWEET HID: accel registered
+92:SWEET HID: gyro registered
+93:SWEET HID: orientation registered
+94:SWEET HID: compass registered
+117:blazer-sensors: mode 2, starts in 20 s
+519:blazer-sensors: stopped: mailbox magic, detail 0x0
+520:blazer-sensors: result stop "mailbox magic" detail 0x0, who am i none 0x00, i2c frames 0, pads restored 0, rails off 0 (at entry 1v8 0 3v3 0)
+521:panic(cpu 0 caller 0xfffffe0008109720): blazer-sensors: end of probe: stop "mailbox magic" detail 0x0, who am i none 0x00, pads restored 0, rails off 0 @blazer_sensors.c:265

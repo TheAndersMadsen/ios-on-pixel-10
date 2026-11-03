@@ -1,0 +1,2 @@
+OK a7-ios-system-sens2 bootable 85664fb34b87430d7da406b393f971499ee2982a9a134b181ccc5be7f63b4ce8
+shared tools/image_tool.py: OK a7-ios-system-sens2 bootable 85664fb34b87430d7da406b393f971499ee2982a9a134b181ccc5be7f63b4ce8

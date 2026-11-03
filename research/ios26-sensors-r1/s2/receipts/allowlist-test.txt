@@ -1,0 +1,5 @@
+blazer_sensors=2 blazer_sensors_mag=1                          after (tools/image_tool.py): ADMIT; before: REFUSE
+blazer_sensors=2 blazer_sensors_mag=1 blazer_sensors_mag_flip=3 after (tools/image_tool.py): ADMIT; before: REFUSE
+blazer_sensors=2 blazer_sensors_mag=2                          after (tools/image_tool.py): REFUSE; before: REFUSE
+blazer_sensors=2 blazer_sensors_mag_flip=8                     after (tools/image_tool.py): REFUSE; before: REFUSE
+blazer_sensors=4                                               after (tools/image_tool.py): REFUSE; before: REFUSE

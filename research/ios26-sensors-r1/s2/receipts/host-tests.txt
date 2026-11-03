@@ -1,0 +1,26 @@
+host_mag: rc 0: host_mag: 301 checks, 0 failed
+bench: rc 0: bench ok
+bench_mag: rc 0: bench_mag ok
+mutant id unchecked: caught
+mutant x sign: caught
+mutant axes not swapped: caught
+mutant units: caught
+mutant low nibble: caught
+mutant middle byte: caught
+mutant stuck ignored: caught
+mutant flat ignored: caught
+mutant unstarted read: caught
+mutant no tSR gap: caught
+mutant no SET: caught
+mutant no auto SR: caught
+mutant no next measure flag: caught
+mutant write allowlist widened: caught
+mutant read length widened: caught
+mutant read register widened: caught
+mutant imu reachable in mag mode: caught
+mutant write any address: caught
+mutant bus stays ready after down: caught
+mutant mag on the imu pads: caught
+mutant mag mode falls to the imu path: caught
+mutant imu writes in mag mode: caught
+mutants 22/22 caught

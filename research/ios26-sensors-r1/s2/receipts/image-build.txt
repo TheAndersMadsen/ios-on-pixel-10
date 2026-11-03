@@ -1,0 +1,2 @@
+a7-ios-system-sens2 bootable 85664fb34b87430d7da406b393f971499ee2982a9a134b181ccc5be7f63b4ce8 payload 26135376 margin 39924912
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-sens2/manifest.json

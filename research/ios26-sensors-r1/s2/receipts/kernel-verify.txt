@@ -1,0 +1,137 @@
+llvm-nm, compatible with GNU nm
+Homebrew LLVM version 23.1.4
+undefined symbols:        0
+fffffe00076df278 s __ZL19SweetHIDCompass_ktv
+fffffe00080890c0 S __ZN12SweetHIDGyro5startEP9IOService
+fffffe0008088f40 S __ZN13SweetHIDAccel5startEP9IOService
+fffffe000829a350 S __ZN15SweetHIDCompass10gMetaClassE
+fffffe00076b9ea8 S __ZN15SweetHIDCompass10superClassE
+fffffe0008089800 s __ZN15SweetHIDCompass12getProductIDEv
+fffffe00080897f0 s __ZN15SweetHIDCompass15getPrimaryUsageEv
+fffffe0008089810 s __ZN15SweetHIDCompass17getReportIntervalEv
+fffffe00080897e0 s __ZN15SweetHIDCompass19getPrimaryUsagePageEv
+fffffe0008088ab0 S __ZN15SweetHIDCompass5startEP9IOService
+fffffe0008088d90 S __ZN15SweetHIDCompass6sampleEiii
+fffffe0008088860 S __ZN15SweetHIDCompass9MetaClassC1Ev
+fffffe0008088960 S __ZN15SweetHIDCompass9MetaClassC2Ev
+fffffe0008089830 s __ZN15SweetHIDCompass9MetaClassD0Ev
+fffffe0008089820 s __ZN15SweetHIDCompass9MetaClassD1Ev
+fffffe00076b9ea0 S __ZN15SweetHIDCompass9metaClassE
+fffffe00080888c0 S __ZN15SweetHIDCompassC1EPK11OSMetaClass
+fffffe0008088a10 S __ZN15SweetHIDCompassC1Ev
+fffffe00080888a0 S __ZN15SweetHIDCompassC2EPK11OSMetaClass
+fffffe0008088a60 S __ZN15SweetHIDCompassC2Ev
+fffffe0008088900 S __ZN15SweetHIDCompassD0Ev
+fffffe00080888f0 S __ZN15SweetHIDCompassD1Ev
+fffffe00080888e0 S __ZN15SweetHIDCompassD2Ev
+fffffe0008088930 S __ZN15SweetHIDCompassdlEPvm
+fffffe0008088a00 S __ZN15SweetHIDCompassnwEm
+fffffe0008089250 S __ZN19SweetHIDOrientation5startEP9IOService
+fffffe0008088950 S __ZNK15SweetHIDCompass12getMetaClassEv
+fffffe00080889a0 S __ZNK15SweetHIDCompass9MetaClass5allocEv
+fffffe00076b9eb0 S __ZTV15SweetHIDCompass
+fffffe00076ba7a8 S __ZTVN15SweetHIDCompass9MetaClassE
+fffffe0007a21d80 S _blazer_sensors_init
+fffffe0008705768 b _compass
+fffffe0007608440 s _mag_bus_ops
+fffffe0007a22a90 S _mag_decode
+fffffe0007a22d50 S _mag_sample
+fffffe0007a22b70 S _mag_start
+fffffe0007a22a60 S _mag_stop_name
+fffffe0007608468 s _mag_stop_name.names
+fffffe0007a22b00 S _mag_to_ios_nt
+fffffe0007a1f490 S _sns_bus_read
+fffffe0007a1f9c0 S _sns_bus_write
+fffffe0007a20280 S _sns_run
+fffffe0008089400 S _sweet_hid_accel
+fffffe0008088e60 S _sweet_hid_compass
+fffffe00080894e0 S _sweet_hid_gyro
+fffffe00080895c0 S _sweet_hid_orientation
+--- compassEvent caller
+fffffe000808aa40 S __ZN10IOHIDEvent12compassEventEyiiijjjj
+--- strings
+blazer-sensors: mode %u, starts in %u s                      1
+who am i: 0x%02x                                             1
+accel and gyro on                                            1
+orientation 0x%x                                             1
+blazer_sensors_mag                                           2
+blazer_sensors_mag_flip                                      1
+compass bus ready on pads %u, %u                             1
+compass on: id 0x%02x, status1 0x%02x                        1
+compass %u: %d %d %d nT                                      1
+compass not started                                          1
+compass pads restored %d                                     1
+compass refused                                              1
+SWEET HID: %s registered                                     0
+SweetHIDCompass                                              3
+blazer-netstack: published alone                             1
+HK USTACK: every                                             1
+blazer-haptic: tap feedback on                               1
+native ROM service ready                                     1
+blazer-keys: polling pads                                    1
+blazer-keys: delivery requires reviewed power lifecycle      1
+SWEET AKS: wrap/unwrap on                                    1
+SWEET BL: calibration                                        1
+queued for DCS                                               1
+--- all blazer-sensors / SWEET HID strings
+SWEET HID: %s open by %s -> %d
+SWEET HID: %s user client init refused
+SWEET HID: %s user client type 0x%x unsupported
+SWEET HID: accel registered
+SWEET HID: buttons registered (test every %u s)
+SWEET HID: compass registered
+SWEET HID: gyro registered
+SWEET HID: key 0x%x %s (%u clients)
+SWEET HID: orientation registered
+SWEET HID: queue full, event %u dropped, type %u
+SWEET HID: touch %d %s at %d,%d%s (%u clients)
+SWEET HID: touch %d dropped in bar at %d,%d
+SWEET HID: touch registered, canvas %ux%u, centred at %d,%d, %s touches
+blazer-sensors: 
+blazer-sensors: cannot map 0x%llx
+blazer-sensors: compass %u: %d %d %d nT
+blazer-sensors: compass ends after %u samples: bus "%s" detail 0x%x, mag "%s" detail 0x%x
+blazer-sensors: compass not started: bus "%s" detail 0x%x, mag "%s" detail 0x%x
+blazer-sensors: compass on: id 0x%02x, status1 0x%02x
+blazer-sensors: compass pads restored %d
+blazer-sensors: compass refused: blazer_sensors_mag=%u needs blazer_sensors=2 and the value 1
+blazer-sensors: end of probe: stop "%s" detail 0x%x, who am i %s0x%02x, pads restored %d, rails off %d @%s:%d
+blazer-sensors: mode %u, starts in %u s
+blazer-sensors: orientation 0x%x, filtered %d %d %d mg
+blazer-sensors: pads restored %d, rails off %d
+blazer-sensors: refused: mode %u
+blazer-sensors: result stop "%s" detail 0x%x, who am i %s0x%02x, i2c frames %u, pads restored %d, rails off %d (at entry 1v8 %u 3v3 %u)
+blazer-sensors: sample %u raw %d %d %d, %d %d %d mg, gyro %d %d %d mdps
+blazer-sensors: stream ends after %u samples: %s, detail 0x%x
+--- string set diff int1 -> sens2
+>  7`r@9,W
+< (   {     'IOClass' … (IOResources match table, elided; only SweetHIDCompass added)
+> (   {     'IOClass' … (IOResources match table, elided; only SweetHIDCompass added)
+< Q@9(%(6q9
+> Q@9h*(6+B
+> R_A#9lI#9
+> SWEET HID: compass registered
+> SweetHIDCompass
+> blazer-sensors: compass %u: %d %d %d nT
+> blazer-sensors: compass ends after %u samples: bus "%s" detail 0x%x, mag "%s" detail 0x%x
+> blazer-sensors: compass not started: bus "%s" detail 0x%x, mag "%s" detail 0x%x
+> blazer-sensors: compass on: id 0x%02x, status1 0x%02x
+> blazer-sensors: compass pads restored %d
+> blazer-sensors: compass refused: blazer_sensors_mag=%u needs blazer_sensors=2 and the value 1
+> blazer_sensors_mag
+> blazer_sensors_mag_flip
+> compass bus ready on pads %u, %u
+< i"I)JSf9
+> mag product id 0x%02x at 0x%02x
+> mag status1 0x%02x at start (not checked)
+> mag stopped: %s, detail 0x%x
+> not started
+> output did not change for 50 samples
+> output reads all 00 or all ff
+> product id is not 0x11
+> site.SweetHIDCompass
+< wBM9vFM9|F
+> wBM9vFM9$C
+17cd597484b6d5bea4eb741ce97e404025f9eb6fae979530ee37e3dbdb959956  research/ios26-sensors-r1/s2/build/kernel.sens2
+90dbe876c825956ebd65da11919ef8b507ecd63c1f18b2161fa9fc880e03ac04  research/ios26-sensors-r1/s2/build/kernel.sens2.unstripped
+0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf  research/ios26-phaseb-r1/int/build/kernel.int1
