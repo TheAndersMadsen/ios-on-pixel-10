@@ -64,7 +64,7 @@ recoverable. QEMU and host tools support development; they are not phone results
 - **Not complete:** native Metal, stable compositing, strict GPT, chooser volume keys and the iOS entry, a
   visible iOS boot from ios_system (compositor), higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.
-- The README's 47% is a weighted planning checklist, not release readiness.
+- The README's 48% is a weighted planning checklist, not release readiness.
 
 ## Read only what the task needs
 

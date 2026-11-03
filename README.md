@@ -1,19 +1,19 @@
 <!-- status:begin -->
 
-<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 47% of reachable hardware" width="100%"></p>
+<p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 48% of reachable hardware" width="100%"></p>
 
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 47%"> <img src="docs/assets/badge-target.svg" alt="device: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377 · iOS 26"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 48%"> <img src="docs/assets/badge-target.svg" alt="device: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377 · iOS 26"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>47%</b> of 49 reachable features · updated 2026-11-03</p>
+<p align="center"><b>48%</b> of 49 reachable features · updated 2026-11-03</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
-<p align="center"><sub>✅ Works on the phone 12 · 🟡 Partly working 14 · 🔧 Built, not run 1 · ⏳ In progress 11 · ❌ Not started 11 · 🚫 Likely out of reach 6</sub></p>
+<p align="center"><sub>✅ Works on the phone 13 · 🟡 Partly working 14 · 🔧 Built, not run 1 · ⏳ In progress 10 · ❌ Not started 11 · 🚫 Likely out of reach 6</sub></p>
 
 <details><summary><b>Every feature</b></summary>
 
@@ -32,25 +32,25 @@
 |  | 120 Hz | 🟡 120 Hz panel mode observed; completed iOS frame rate remains unmeasured |
 |  | 60 Hz mode and frame sync | 🔧 Latest phone profile uses 60 Hz; actual frame cadence and completed-frame timing remain unmeasured |
 |  | Variable refresh down to low rates | ❌ Automatic idle rate isn't built |
-|  | Brightness | 🟡 140-nit cap retained; brightness source integrated, slider/transport acceptance still unproved |
+|  | Brightness | 🟡 Calibrated backlight: 0 backboardd crashes and brightness requests reach the kernel, but the slider is not applied to the panel |
 |  | HDR, peak brightness, colour calibration | ❌ Not assigned |
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
 |  | GPU firmware through Trusty | 🟡 A725 diagnostic reached SEND/START and captured a 112-byte firmware DEBUG_DUMP; strict health still fails |
-|  | Metal drawing | ⏳ Native GPU rendering remains incomplete; sampler pixel checks pass, while startup crashes confound speed claims |
+|  | Metal drawing | ⏳ Native GPU rendering remains incomplete. Startup's 30 s GPU wait removed: first frames at 68 s, was 136 s (r5-accel) |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified on the old root; writer now bound to the GPT-resolved ios_data (host-tested), not yet run there |
 |  | Maximum speed | ⏳ Patches being measured |
-|  | Android/iOS boot chooser | 🟡 Android booted through the chooser 3x in a row (42 s); menu shown on the panel; display handback and iOS entry pending |
-|  | Isolated iOS partitions | ⏳ Partition plan built and verified (ios_system 24 GiB, ios_data 8 GiB); one-time Android migration in progress |
-| **Input** | Touch | ✅ Owner confirmed Home and Settings in the combined p32 phone test; backboardd respawns and UI stability remain unresolved |
+|  | Android/iOS boot chooser | 🟡 Installed on boot_b: Android by timeout; iOS picked with the volume keys via fastboot boot (C3a). iOS from the installed menu still crashes at usb-warm; fix in progress |
+|  | Isolated iOS partitions | ✅ ios_system 24 GiB and ios_data 8 GiB on the phone; ios_system flashed, read back on the phone (hash match) and booted to Home (r3) |
+| **Input** | Touch | ✅ Home from ios_system: owner taps open Settings (r3); direct-touch events registered (r7), but taps inside Settings still get no response |
 |  | Scripted taps and keys | 🟡 Remote HOME visibly worked; TAP dispatched but required manual app recovery. No automatic retry or clean TAP acceptance |
-|  | Volume keys | 🟡 Read in a probe |
+|  | Volume keys | 🟡 Owner switched the chooser menu with Vol Up/Down (r13-diag); not yet checked under iOS |
 |  | Power key | ⏳ Retry needs someone at the phone |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
-| **Connectivity** | Wi-Fi | 🟡 BCM4390 passive scan proven; native discovery source integrated and iOS 26 scan ABI checked. Settings join and packet traffic unproved |
-|  | Bluetooth | 🟡 Firmware/H4 proven; QEMU daemon capture shows keychain errors. Native HCI attachment, Settings pairing and profiles unproved |
+| **Connectivity** | Wi-Fi | 🟡 BCM4390 under iOS: scan found 26 networks, authentication and association OK; the WPA2 4-way handshake fails. No packet traffic yet |
+|  | Bluetooth | 🟡 Firmware/H4 proven; keychain wrap/unwrap PASS on the phone (B1). Native HCI attachment, Settings pairing and profiles unproved |
 |  | Cellular | ⏳ S5400 identified; pad probe only. PCIe0, modem boot and native CommCenter service remain unfinished |
 |  | SIM, eSIM | ⏳ No qualified SIM access or native cellular service yet; depends on modem transport and boot |
 |  | GPS | ❌ Not assigned |
@@ -72,7 +72,7 @@
 |  | Real date and time | 🟡 Physical RTC GET_TIME and OS calendar publication succeeded; visible date/time acceptance remains pending |
 | **Cameras** | Cameras, flash | 🚫 Likely months: sensor details aren't public |
 | **Security** | Fingerprint, Face ID | 🚫 Tied to Apple's security chip |
-|  | Secure enclave | 🚫 Apple SEP is absent; the current key-store provider cannot wrap keys. Native data-protection support remains incomplete |
+|  | Secure enclave | 🚫 Apple SEP is absent; a software key store now wraps and unwraps keys on the phone (B1). Native data-protection support remains incomplete |
 | **Apple services** | Activation, iMessage, App Store purchases | 🚫 Need a real iPhone's identity |
 
 <sub>Scores: works on the phone 100%, partly working 60%, built, not run 35%, in progress 20%, not started 0%. A planning estimate, not a benchmark. Rebuild with `python3 -I tools/readme_status.py` after editing `docs/status.json`.</sub>
@@ -129,17 +129,17 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
-- Migrate storage to isolated ios_system/ios_data partitions and install the Android/iOS chooser
+- Start iOS from the installed chooser on a cold boot (usb-warm fix)
 - Resolve startup/compositor crashes and measure frame completion before promoting sampler speed
 - Analyze the captured GPU firmware DEBUG_DUMP and complete strict health
 - Qualify native battery/clock presentation and interactive TAP/HOME behavior
 - Finish native Wi-Fi scan delivery and the Bluetooth keychain prerequisite on existing transports
-- Complete stock-app registration, readbacks and representative foreground launches
+- Complete stock-app registration (the Phone app now appears on Home but crashes), readbacks and representative foreground launches
 
 **Next**
 
-- Verify persistent real settings on ios_data across reboots; finish the on-screen chooser menu
-- Validate volume and power keys, display sleep and wake
+- Verify persistent real settings on ios_data across reboots
+- Validate the volume keys under iOS, the power key, display sleep and wake
 - Verify visible battery percentage, real date/time and brightness control
 - Repair and physically qualify USB ECM networking, then native mux pairing
 - Complete CPU health and thermal step-down before higher clocks or A520 admission
