@@ -1,0 +1,3 @@
+#!/bin/sh
+# hk: the hackios debug CLI. Implementation and docs: tools/hk.py, research/ios26-phaseb-r1/hub/HUB.md.
+exec python3 -I "$(dirname "$0")/hk.py" "$@"

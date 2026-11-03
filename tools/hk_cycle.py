@@ -831,8 +831,9 @@ class Cycle:
         runner = ROOT / 'tools/ui_run.py'
         if not runner.is_file():
             raise Refused('UI_RUNNER_MISSING', 'tools/ui_run.py (agent UIDRV) is not in this checkout; pass --ui-cmd '
-                          '"python3 -I path/ui_run.py {run} {script} --json {json}" or --ui settings')
-        return [sys.executable, '-I', str(runner), '{run}', '{script}', '--json', '{json}']
+                          '"python3 -I path/ui_run.py {run} {script}" or --ui settings')
+        # ui_run.py takes `run script` and writes <run>/ui_run.json itself (no --json flag; see UIDRIVE.md).
+        return [sys.executable, '-I', str(runner), '{run}', '{script}']
 
     # ------------------------------------------------------------------ 2./3. boot, live, park
     def boot(self):
@@ -1305,21 +1306,24 @@ class Cycle:
 
     def probe_eval(self, sources, adir, markers, ui):
         """Row verdicts from VERIFY's tools/probe_eval.py when present (the one evaluator); the built-in matcher only until then.
-        Contract (HARNESS.md): probe_eval.py --probes FILE --text NAME=PATH... --markers M1,M2 --ui-json PATH --json OUT
-        -> {"rows": [{"id", "verdict", "evidence": [...], ...}]}. Any failure falls back, and the report says which ran."""
+        Contract: probe_eval.py ATTEMPT_DIR... --probes FILE --json (stdout)
+        -> {"attempts", "rows":[{"id","verdict","evidence",...}]}. Any failure falls back, and the report says which ran."""
         builtin = evaluate(self.expect_doc, sources, markers, ui)
         if not PROBE_EVAL.is_file() or self.args.builtin_eval:
             return builtin, 'hk_cycle built-in (interim: tools/probe_eval.py ' + ('not present)' if not PROBE_EVAL.is_file() else 'skipped)')
-        ui_json = adir / 'ui-steps.json'
-        ui_json.write_text(json.dumps(ui, default=str))
+        # Real tools/probe_eval.py (VERIFY): attempt dir(s) positionally, --probes PROBES, --json to stdout ->
+        # {"attempts":[...], "rows":[{id, verdict, evidence, ...}]}. Only usable when --expect is a probes.yaml-shaped
+        # file; a HARNESS per-cycle expect file is a different schema, so that case falls through to the built-in matcher.
+        attempt_dirs = [str(d) for d in (self.live_run, getattr(self, 'runner_dir', None)) if d]
+        if not attempt_dirs:
+            return builtin, 'hk_cycle built-in (no attempt dir for probe_eval)'
         out = adir / 'probe_eval.json'
-        cmd = [sys.executable, '-I', str(PROBE_EVAL), '--probes', str(Path(self.report['expect']).resolve())]
-        for name in sources:
-            cmd += ['--text', f'{name}={adir / (name + ".txt")}']
-        cmd += ['--markers', ','.join(sorted(markers)), '--ui-json', str(ui_json), '--json', str(out)]
+        cmd = [sys.executable, '-I', str(PROBE_EVAL), *attempt_dirs,
+               '--probes', str(Path(self.report['expect']).resolve()), '--json']
         rc, text = self.run(cmd, self.t['analysis'], 'probe-eval', kill_at=99)
         try:
-            rows = json.loads(out.read_text())['rows']
+            out.write_text(text)
+            rows = json.loads(text)['rows']
             want = {r['id']: r for r in builtin}
             merged = []
             for r in rows:
@@ -1651,7 +1655,7 @@ def parse_args(argv):
     p.add_argument('--image', help='research/images/X (directory) or its boot.img')
     p.add_argument('--mach', help='the image kernel, .unstripped (symbols; its UUID must be in the image)')
     p.add_argument('--ui', help="UI script for tools/ui_run.py, or 'settings' for tools/ui_settings_test.py")
-    p.add_argument('--ui-cmd', help='UI runner command with {run} {script} {json} {out} (default: tools/ui_run.py {run} {script} --json {json})')
+    p.add_argument('--ui-cmd', help='UI runner command with {run} {script} {json} {out} (default: tools/ui_run.py {run} {script}; it writes {run}/ui_run.json)')
     p.add_argument('--builtin-eval', action='store_true', help="use hk_cycle's own matcher even if tools/probe_eval.py exists")
     p.add_argument('--attended', action='store_true', help='someone used the phone by hand: rows that need input count as exercised')
     p.add_argument('--force-ui', action='store_true', help='run the UI script although the image lacks blazer_usbcon_input=1')
