@@ -1,0 +1,17 @@
+phone-bridge: m1box is at 0a499f7624, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: copying research/ios26-phaseb-r1/display/fb120/tools/build_fb120.py to the Mac (3.4K)
+23:01:53 waiting for build slot lock
+23:01:53 lock held
+23:01:53 tree branch p1 HEAD b228c4f
+23:01:53 checked out hk-fb120 cd60b8d200ec6dc3ad909cbd6440180abc7b5b6d
+23:02:53 build fb120-build rc 0
+23:02:53 c2b3e7b30d60498858b05f165ce25c4f6e43f54aa1a0004dfa46c840f43488c0  kernel.fb120
+23:02:53 2d800da1852e17fd1986cae0091b9e8a924506cdca98c66f4bf5104f01912479  kernel.fb120.unstripped
+23:02:53 eda6a3e91a561abdae0715d4b26bfdd0cf9f877daa2544a350e614ee34363876  SweetFramebuffer.cpo (/iokit/DEVELOPMENT/SweetFramebuffer.cpo)
+23:02:53 f21aca12d638a757fd43c8d695c89f0ca2c8533eab025d10ec2d306afbe35b6c  sweet_scanout.cpo (/iokit/DEVELOPMENT/sweet_scanout.cpo)
+23:02:53 524c0512779d5ded8dfe2fd37e38f3ae4deae669a295e7f27d056f7206b6f43a  tensor_dpu.o (/iokit/DEVELOPMENT/tensor_dpu.o)
+23:02:53 restored branch p1 HEAD b228c4f
+23:03:52 build fb120-restore-p1-build rc 0
+23:03:52 obj kernel after restore c765efe4e70e78458e59f4a309dbe7bd9f4f86af30b44fbc2b6f118091992130
+23:03:52 restored p1 kernel has the fb120 string: False
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-phaseb-r1/display/fb120/build/

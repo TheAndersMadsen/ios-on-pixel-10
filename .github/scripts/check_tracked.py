@@ -48,6 +48,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-phaseb-r1/settings/((tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|py|c|sh|json|txt)
   | ios26-phaseb-r1/touch/(test/(shim/IOKit/)?)?[A-Za-z0-9_.-]+\.(md|patch|sh|cpp|c|h|txt)
   | ios26-phaseb-r1/display/(test/)?[A-Za-z0-9_.-]+\.(md|patch|py|c)
+  | ios26-phaseb-r1/display/([A-Za-z0-9_.-]+/){0,2}[A-Za-z0-9_.-]+\.(md|patch|py|c|h|sh|txt|json|out)
   | ios26-sensors-r1/s2/((src|tests|tools|receipts|patches)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh|txt|json)
   | ios26-sensors-r1/((ios|android|tools/ios|mag-r1(/(patches|src|tests|tools|receipts))?)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|txt)
   | ios26-gpu-r1/m2/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log|patch)

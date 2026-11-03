@@ -1,0 +1,2 @@
+a7-ios-system-fb120v bootable 94991fe6aa1428cffcbdfa4306232cfb0db8ef94619c784eee1a38497558de77 payload 26130864 margin 39929424
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-fb120v/manifest.json

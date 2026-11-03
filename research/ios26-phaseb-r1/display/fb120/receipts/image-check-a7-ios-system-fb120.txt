@@ -1,0 +1,2 @@
+OK a7-ios-system-fb120 bootable 345b45892b1541a0307ee771ed46b919e8b5d43e1613690b2649a5ff4543b33a
+shared tools/image_tool.py: OK a7-ios-system-fb120 bootable 345b45892b1541a0307ee771ed46b919e8b5d43e1613690b2649a5ff4543b33a

@@ -1,0 +1,5 @@
+model kicks/s (TE 120.6 Hz), jitter 0/200/500 us:
+  copy 1600 us: int1 running 60 120.7 120.7 116.6 | fb120 running 120 120.7 120.7 120.7
+  copy 2100 us: int1 running 60 120.7 101.1 88.7 | fb120 running 120 120.7 120.7 120.2
+  copy 2500 us: int1 running 60 72.5 72.8 68.6 | fb120 running 120 120.7 117.7 95.5
+PASS: 18315 checks, 0 failures

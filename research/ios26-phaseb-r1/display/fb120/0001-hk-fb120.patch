@@ -1,0 +1,206 @@
+From cd60b8d200ec6dc3ad909cbd6440180abc7b5b6d Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 23:01:30 +0100
+Subject: [PATCH] sweet fb: 120 Hz by fast copy (hk_fb_refresh=120 with
+ hk_fb_fast=1), 121/122 add the LTPO idle drop (VRR 30/10 Hz, implies
+ hk_fb_fence); 250-500 us FRM_DONE poll while a frame waits
+
+---
+ iokit/Kernel/arm/SweetFramebuffer.cpp | 16 ++++++---
+ iokit/Kernel/arm/sweet_dpu_policy.h   |  2 +-
+ iokit/Kernel/arm/sweet_fb_refresh.h   | 48 +++++++++++++++++++++++----
+ iokit/Kernel/arm/sweet_scanout.cpp    |  9 +++++
+ 4 files changed, 63 insertions(+), 12 deletions(-)
+
+diff --git a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+index 685cbed..515306e 100644
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -192,6 +192,7 @@ public:
+ 	uint64_t      fStatPresents, fStatCopyUS, fStatCopyMax, fStatBytes;
+ 	uint64_t      fStatDirtyLogged;
+ 	uint32_t      fRefresh;       /* hk_fb_refresh: 0 off, or the rate that runs */
++	uint32_t      fRefreshAsked;  /* hk_fb_refresh as given: 121/122 also ask for the LTPO idle drop */
+ 	uint32_t      fTickUS;        /* paced, for a client that asked for vsync */
+ 	struct sweet_fb_rate fRate;
+ 	uint32_t      fDpu;           /* hk_dpu bits, sweet_dpu_policy.h; 0 off */
+@@ -672,7 +673,8 @@ AppleCLCD::start(IOService *provider)
+ 	bool refresh_arg = PE_parse_boot_argn("hk_fb_refresh", &gate, sizeof(gate));
+ 	gate = sweet_dpu_refresh_ask(fDpu, refresh_arg, gate);  /* no hk_dpu: gate as parsed */
+ 	if (refresh_arg || gate != 0) {
+-		fRefresh = sweet_fb_refresh_decide(gate, fFlip);
++		fRefreshAsked = gate;
++		fRefresh = sweet_fb_refresh_decide(gate, fFlip, sweet_fb_fast == 1);
+ 		if (fRefresh != 0) {
+ 			uint32_t ticks = sweet_fb_refresh_ticks(fRefresh);
+ 			fPace = true;
+@@ -688,6 +690,9 @@ AppleCLCD::start(IOService *provider)
+ 				OSSafeReleaseNULL(d);
+ 			}
+ 			IOLog("SWEET FB: refresh asked %u, running %u, flip %d, interval %u\n", gate, fRefresh, fFlip, ticks);
++			if (fRefresh == 120 && !fFlip) {
++				IOLog("SWEET FB: refresh 120 by copy: fast %u, waiting poll %u-%u us\n", sweet_fb_fast, SWEET_FB_POLL_WAITING_MIN_US, SWEET_FB_POLL_WAITING_MAX_US);
++			}
+ 		} else {
+ 			IOLog("SWEET FB: refresh %u refused\n", gate);
+ 		}
+@@ -713,11 +718,12 @@ AppleCLCD::start(IOService *provider)
+ 		PE_parse_boot_argn("hk_panel_hz", &panel_hz, sizeof(panel_hz));
+ 		uint64_t ns;
+ 		absolutetime_to_nanoseconds(mach_absolute_time(), &ns);
+-		hk_vrr_init(&fVrr, fDpu, panel_hz, ns / 1000);
++		uint32_t vrr_bits = fDpu | sweet_fb_refresh_vrr_bits(fRefreshAsked, fRefresh);
++		hk_vrr_init(&fVrr, vrr_bits, panel_hz, ns / 1000);
+         /* Requires display_sync's completion quarantine patch: legacy ready()
+          * reports idle even after a fetch fault. Parent must link both patches. */
+         uint32_t fence = 0;
+-        if (fVrr.on && (!PE_parse_boot_argn("hk_fb_fence", &fence, sizeof(fence)) || fence != 1)) {
++        if (fVrr.on && !sweet_fb_refresh_wants_fence(fRefreshAsked) && (!PE_parse_boot_argn("hk_fb_fence", &fence, sizeof(fence)) || fence != 1)) {
+             IOLog("SWEET FB: vrr disabled: requires hk_fb_fence=1 completion quarantine\n");
+             fVrr.on = false;
+         }
+@@ -725,7 +731,7 @@ AppleCLCD::start(IOService *provider)
+ 			IOLog("SWEET FB: vrr off: nothing scanning out\n");
+ 			fVrr.on = false;
+ 		}
+-        if ((fDpu & HK_DPU_VRR) && !fVrr.on) IOLog("SWEET FB: vrr disabled: busy rate %u or inactive scanout\n", panel_hz);
++        if ((vrr_bits & HK_DPU_VRR) && !fVrr.on) IOLog("SWEET FB: vrr disabled: busy rate %u or inactive scanout\n", panel_hz);
+ 	}
+ 	if (fDpu != 0) {
+ 		IOLog("SWEET FB: dpu bits %#x zc %d flip %d dirty %d refresh %u\n", fDpu, (fDpu & HK_DPU_ZC) != 0, fFlip, fDirtyMode, fRefresh);
+@@ -925,7 +931,7 @@ AppleCLCD::paceNextUS(void)
+ 	}
+ 	uint32_t left = sweet_scanout_remaining_us();
+ 	if (left != 0) {
+-		return sweet_fb_pace_poll_us(left, fRefresh);       /* poll is one MMIO read; no sooner than 1 ms is worth it */
++		return sweet_fb_pace_poll_us(left, fRefresh, fDirty);       /* poll is one MMIO read; no sooner than 1 ms is worth it */
+ 	}
+ 	if (fHeldValid) {
+ 		return 1000;
+diff --git a/iokit/Kernel/arm/sweet_dpu_policy.h b/iokit/Kernel/arm/sweet_dpu_policy.h
+index 89cbcd9..81f32ed 100644
+--- a/iokit/Kernel/arm/sweet_dpu_policy.h
++++ b/iokit/Kernel/arm/sweet_dpu_policy.h
+@@ -6,7 +6,7 @@
+  *               cleaned or copied (hk_fb_dirty=1), and a flip no longer marks the panel buffer wholly stale. Every 256th flip is cleaned whole.
+  *   0x02 VRR    LTPO idle: after SWEET_DPU_IDLE_US with no swap and nothing in flight, the panel goes to 30 Hz by DCS; the next swap brings it
+  *               back before its kick. A failed DCS ends VRR for the boot.
+- *   0x04 R120   tell CoreAnimation 120 Hz (as hk_fb_refresh=120). Honoured only with flips running; otherwise 60, as sweet_fb_refresh_decide.
++ *   0x04 R120   tell CoreAnimation 120 Hz (as hk_fb_refresh=120). Honoured with flips running or the fast copy (hk_fb_fast=1); otherwise 60, as sweet_fb_refresh_decide.
+  *   0x08 PROBE  read-only: log the DPU's output timing, TE and DSC registers at attach, for a later partial-update patch.
+  *   0x10 VRR10  idle rate 10 Hz instead of 30.
+  */
+diff --git a/iokit/Kernel/arm/sweet_fb_refresh.h b/iokit/Kernel/arm/sweet_fb_refresh.h
+index c0b4fed..44e5a44 100644
+--- a/iokit/Kernel/arm/sweet_fb_refresh.h
++++ b/iokit/Kernel/arm/sweet_fb_refresh.h
+@@ -1,26 +1,55 @@
+ /*
+- * hk_fb_refresh=60|120: the rate CoreAnimation is told, and the numbers to see what it does with it. No XNU types: host-tested. research/ios26-fps-r1/FINDINGS.md.
++ * hk_fb_refresh=60|120|121|122: the rate CoreAnimation is told, and the numbers to see what it does with it. No XNU types: host-tested. research/ios26-fps-r1/FINDINGS.md.
+  * QuartzCore 23G90 (static): AppleDisplay::update_display_limits reads dict IOMFBDisplayRefresh, key displayMinRefreshInterval, as 2^-32 s;
+  * without it heartbeat_rate is the literal 1/60. phone-fast-r2 (physical): a transfer starts at TE and takes 5370 us of 8291, so 2.9 ms is free per TE. A copy into the
+- * buffer being sent can't overlap the transfer and takes about 5 ms, so copying shows at most every second TE. Telling iOS 120 is only honest with zero copy.
++ * buffer being sent can't overlap the transfer. It took about 5 ms then; with hk_fb_fast=1 it takes ~1.6 ms (r3), which fits the 2.9 ms, so 120 also runs by copy.
+  */
+ #ifndef SWEET_FB_REFRESH_H
+ #define SWEET_FB_REFRESH_H
+ #include <stdint.h>
+ #include <stdbool.h>
+ #include "sweet_fb_dirty.h"
++#include "sweet_dpu_policy.h"
+ 
+ #define SWEET_FB_RATE_EVERY_US 5000000u
+ 
+-/* 0: off. Otherwise what will run: 120 needs flip, and falls to 60 without. */
++/*
++ * hk_fb_refresh=60|120|121|122. 121/122: 120 Hz busy plus the LTPO idle drop (hk_dpu VRR, idle 30 or 10 Hz), in the same token: no extra boot-arg bytes.
++ * 0: off. Otherwise what will run: 120 needs flip or the fast copy, and falls to 60 without.
++ * Fast copy (hk_fb_fast=1, physical r3: 1.5-2.1 ms for the whole 11.3 MB canvas) fits in what a TE leaves free after the transfer (8291 - 5370 us = 2.9 ms),
++ * so a frame that is waiting when FRM_DONE lands is copied and kicked before the next TE.
++ */
++static inline bool
++sweet_fb_refresh_is_120(uint32_t asked)
++{
++	return asked == 120 || asked == 121 || asked == 122;
++}
++
+ static inline uint32_t
+-sweet_fb_refresh_decide(uint32_t asked, bool flip)
++sweet_fb_refresh_decide(uint32_t asked, bool flip, bool fast_copy)
+ {
+ 	if (asked == 60) return 60;
+-	if (asked == 120) return flip ? 120 : 60;
++	if (sweet_fb_refresh_is_120(asked)) return (flip || fast_copy) ? 120 : 60;
++	return 0;
++}
++
++/* The hk_dpu VRR bits that 121/122 stand for, only when 120 runs. hk_dpu's own bits still count. */
++static inline uint32_t
++sweet_fb_refresh_vrr_bits(uint32_t asked, uint32_t running)
++{
++	if (running != 120) return 0;
++	if (asked == 121) return HK_DPU_VRR;
++	if (asked == 122) return HK_DPU_VRR | HK_DPU_VRR10;
+ 	return 0;
+ }
+ 
++/* VRR sends DCS between frames, so it needs the completion quarantine (hk_fb_fence=1); 121/122 imply it. */
++static inline bool
++sweet_fb_refresh_wants_fence(uint32_t asked)
++{
++	return asked == 121 || asked == 122;
++}
++
+ /* The nominal rate: UIScreen rounds 1/interval, and TE's real 120.6 Hz would read 121. Each frame still starts on TE, in hardware. 0: publish nothing, CA's own 1/60 stands. */
+ static inline uint32_t
+ sweet_fb_refresh_ticks(uint32_t running)
+@@ -38,10 +67,17 @@ sweet_fb_refresh_tick_us(uint32_t running, uint32_t off_us)
+ /*
+  * When to look for FRM_DONE. Off: when the last frame took that long, at least 1 ms. On, that guess is wrong by up to a TE period, because a frame's wait for TE
+  * depends on when it was kicked, and sleeping past FRM_DONE loses a TE. So never sleep over the poll's bound.
++ * 120 with a frame waiting: every 250-500 us, so detection (<= 0.5 ms) + fast copy (~1.6 ms) still lands before the next TE (2.9 ms free).
+  */
++#define SWEET_FB_POLL_WAITING_MIN_US 250u
++#define SWEET_FB_POLL_WAITING_MAX_US 500u
+ static inline uint32_t
+-sweet_fb_pace_poll_us(uint32_t left, uint32_t running)
++sweet_fb_pace_poll_us(uint32_t left, uint32_t running, bool waiting)
+ {
++	if (running == 120 && waiting) {
++		if (left < SWEET_FB_POLL_WAITING_MIN_US) return SWEET_FB_POLL_WAITING_MIN_US;
++		return left > SWEET_FB_POLL_WAITING_MAX_US ? SWEET_FB_POLL_WAITING_MAX_US : left;
++	}
+ 	uint32_t bound = running == 120 ? 1000u : 2000u;
+ 	if (left < 1000u) return 1000u;
+ 	if (running != 0 && left > bound) return bound;
+diff --git a/iokit/Kernel/arm/sweet_scanout.cpp b/iokit/Kernel/arm/sweet_scanout.cpp
+index 1d58690..6804a90 100644
+--- a/iokit/Kernel/arm/sweet_scanout.cpp
++++ b/iokit/Kernel/arm/sweet_scanout.cpp
+@@ -11,6 +11,7 @@
+ #include "tensor_dpu_te.h"
+ #include "sweet_fb_copy_rows.h"
+ #include "sweet_dpu_policy.h"
++#include "sweet_fb_refresh.h"
+ 
+ extern "C" vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
+ 
+@@ -567,6 +568,14 @@ void sweet_scanout_attach(uint64_t pa, uintptr_t pixels, uint32_t width, uint32_
+ 	sweet_present_trace_init();
+ 	uint32_t want = 0, qos = 0, probe_on = 0, bench_on = 0;
+ 	PE_parse_boot_argn("hk_fb_fence", &s_fence_gate, sizeof(s_fence_gate));
++	{
++		/* hk_fb_refresh=121/122 asks for VRR, which needs the completion quarantine: on before the first kick. */
++		uint32_t refresh = 0;
++		if (PE_parse_boot_argn("hk_fb_refresh", &refresh, sizeof(refresh)) && sweet_fb_refresh_wants_fence(refresh) && s_fence_gate != 1) {
++			s_fence_gate = 1;
++			IOLog("tensor-dpu: fence on for hk_fb_refresh %u\n", refresh);
++		}
++	}
+ 	PE_parse_boot_argn("hk_fb_fast", &sweet_fb_fast, sizeof(sweet_fb_fast));
+ 	PE_parse_boot_argn("hk_fb_scanout", &want, sizeof(want));
+ 	if (want != 1) { IOLog("tensor-dpu: off, frames stay in memory\n"); return; }
+-- 
+2.54.0 (Apple Git-157)
+

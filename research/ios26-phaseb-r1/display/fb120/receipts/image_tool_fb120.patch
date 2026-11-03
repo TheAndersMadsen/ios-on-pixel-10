@@ -1,0 +1,10 @@
+14c14
+< X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # int/tools/image_tool_int1.py: the Mac's acf48b98 + pwr1 + netstack (INT1.md), run from here
+---
+> X = Path(__file__).resolve().parents[5]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # display/fb120/tools/image_tool_fb120.py: int1's image_tool_int1.py + hk_fb_refresh=121|122 (fb120/FB120.md), run from here
+168c168
+< PHONE_ALLOWED.update({'hk_fb_refresh': r'hk_fb_refresh=(60|120)', 'hk_bright': r'hk_bright=[0-9]{2,3}', 'blazer_aks_log': r'blazer_aks_log=1', 'blazer_aks_wrap': r'blazer_aks_wrap=1',
+---
+> PHONE_ALLOWED.update({'hk_fb_refresh': r'hk_fb_refresh=(60|120|121|122)', 'hk_bright': r'hk_bright=[0-9]{2,3}', 'blazer_aks_log': r'blazer_aks_log=1', 'blazer_aks_wrap': r'blazer_aks_wrap=1',
+445a446
+>         if any(t in extra for t in ('hk_fb_refresh=121', 'hk_fb_refresh=122')) and b'fence on for hk_fb_refresh' not in buf: die('hk_fb_refresh=121/122 needs the hk-fb120 kernel (display/fb120/FB120.md)')
