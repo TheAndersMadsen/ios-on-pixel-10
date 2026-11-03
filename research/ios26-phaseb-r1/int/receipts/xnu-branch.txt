@@ -1,0 +1,168 @@
+# hk-int1 (Mac research/ios26-release-r1/work/xnu), base 7227fe7
+tree now: p1 b228c4f, dirty files:        0
+
+## commits (oldest first): new  <- picked  subject
+71a45a3 Base 7227fe7 (kernel.rootview). CoreBrightness Display init reads the marketing
+table at NULL when getBacklightCalibration: returns NO; backboardd SIGSEGVs every
+~30 s whenever hk_bright publishes an uncalibrated AppleARMBacklight.
+research/ios26-phaseb-r1/corebrightness/FINDINGS.md, patch 0001 (b9df615b).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit f24a98d716f68b294d4b2ab7e558796194949b44)
+|hk_bright: publish backlight-calibration-parameters and backlight-marketing-table on AppleARMBacklight
+4092d03 UIKit picks a digitizer collection's touch handler from kIOHIDEventFieldDigitizerIsDisplayIntegrated:
+0 = indirect (trackpad), 1 = direct finger. SweetHIDTouch set only the DisplayIntegrated service property,
+so every tap reached apps as an indirect touch. Set the field on the collection and every child, for the
+panel path and the live tap path, through sweet_touch_event.h (shared with the host test).
+sweet_touch_indirect=1 restores the old shape for an A/B boot.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit e731e6878ad42a0d483f9cd919a24b06e70902c5)
+|SweetHID: touch events are display integrated (direct touches for UIKit)
+f69a083 Applies research/ios26-connectivity-r1/bluetooth/aks-wrap/0001-sweet-aks-wrap-unwrap.patch and
+0002-blazer-aks-wrap-build-on.patch unchanged on hk-bright-calib-bl (f24a98d).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit 44689e02f105f2daea3dae5762912d6847f81902)
+|SweetKeyStore: gated AKS wrap/unwrap (blazer_aks_wrap=1), BLAZER_AKS_WRAP=1 in the BLAZER build
+cc79fc1 Software answers for aks_create_bag/save_bag/load_bag (an opaque 16-byte user record, no keys), keybag persona
+create/list/delete and set_keybag_for_volume_with_cookie_persona, so usermanagerd can set up the local user's
+personas. Off unless both BLAZER_AKS_USERSESSION and the boot-arg are set. No identity or attestation selectors.
+Host test: research/ios26-apps-r1/usersession/tests. Plan: research/ios26-apps-r1/usersession/PLAN.md.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit eb2d19ba821b77c2d4153d9216cf4491cf83fd27)
+|SweetKeyStore: gated AKS user-session selectors (blazer_aks_usersession=1); persona alloc log (blazer_persona_log=1)
+ed186e2 Foundation's atomic writes replace an existing file with renamex_np(RENAME_SWAP). varfs had no vnop_renamex and no
+vnop_exchange, so the SWEET HFS fallback (0052) could not help and every such save on /private/var failed with
+ENOTSUP (usermanagerd's usersession.kb/persona.kb). Directory swaps and other flags stay ENOTSUP.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit cc422959eae4b482e3dbcbac4af6065d3a178aeb)
+|ramfs (varfs): RENAME_SWAP of two files and RENAME_EXCL (vnop_renamex)
+2cabedd Settings' main thread (a7-ios-system-r10-perf, HKMAIN) waits in SystemConfiguration's __waitForInterfaces for
+Plugin:InterfaceNamer *QUIET*/*COMPLETE*/*TIMEOUT*. 23G90 configd's InterfaceNamer publishes nothing until it holds an
+IONetworkStack connection, else its WaitStackTimeout (300 s) fires: past the phone's 300 s deadline. blazer_netstack=1
+publishes the existing stand-in with no interface and no USB. Its user client logs the opener and IOKit's root busy
+state, and when busy names the busy leaves and the moment the root goes quiet. hk_deny now prints the first 64
+refusals, then every power of two with the count, so a relaunch loop stays visible.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit 093ca86dd7d7ca0ff14fce87a96c2dbeee85d48f)
+|blazer_netstack=1: IONetworkStack alone, so configd's InterfaceNamer answers; hk_deny counts refusals
+0f57607 libsystem_sandbox's issue helper passes 7 u64 words with the caller's 0x3ff0-byte buffer in word 4; on failure it
+frees the buffer and returns NULL. Op 5 returned ENOENT, so containermanagerd handed out containers with a NULL
+sandbox token and SafariCore's WBSSetUpAccessToAppDataContainerWithIdentifier faulted in sandbox_extension_consume
+(Preferences SIGSEGV, wifi-join-r2). Write "invalid", which libsandbox itself issues for flag bit 0 and which
+consume accepts without a syscall. Nothing is enforced here, so nothing is extended. Consume (op 6) stays ENOENT.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit 237a8b59ef762c468d5a32a79ffb7fb8fab4d804)
+|sweet sandbox: extension issue (op 5) answers libsandbox's no-op token
+db92b8c Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit e1d1768242bd97e51cff53f1e231f630b814e5a3)
+|SweetHID/blazer keys: checked physical key delivery and the reviewed power-key lifecycle (buttons_integration 0001)
+9d6c25c Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit b9f96eb5bc47c2ef97c5426fae21dfca0cdffa5f)
+|blazer haptic: bounded native ROM-effect service (blazer_haptic_service=1, ID-only stage) (feature-haptics 0832)
+0cf628e Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit 52f02999b88e10222a654aaf73b98db96565400b)
+|blazer haptic: blazer_haptic_tap=1, one ROM effect per new touch contact from a worker thread
+38de7f8 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit c798a681c8e804db65062444a8a08aefd85d8cca)
+|BLAZER build: BLAZER_KEY_DELIVERY=1 BLAZER_HAPTIC_SERVICE=1 (both still default off at boot)
+7bc06c1 research/ios26-phaseb-r1/brightness/0001-hk-bright-brt1-dcs-log-q16-max-nits.patch on hk-touch-direct + 44689e0 eb2d19b cc42295.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit 4480b5a7fb2500eae78aeeb155f45b2a6051f91a)
+|hk_bright: 16.16 user-accessible/edr max nits, truthful request log, unknown-key names, slider-visible transport log
+0ff6cc4 Every hk_ustack_s seconds (default 5) a kernel thread prints, for each task whose p_comm is in hk_ustack=, a
+header (shared cache slide, main image, suspend count, CPU) and one line per thread: state, block_hint, x16/x0,
+CPU and switches since the last round, time off CPU, user pc/lr/sp and the frame-pointer chain (hk_hog_walk).
+Unchanged threads fold into one same: line; images outside the shared cache are listed from dyld's
+all_image_infos. Bounded by hk_ustack_n rounds per pid and hk_ustack_max lines. With blazer_usbcon_input=1,
+vendor request 0x64 (hk_ustack_wire.h) samples one pid for 1..120 rounds. Read-only (copyinmap, as hk_hog).
+Pure part and EP0 dispatch host-tested (research/ios26-phaseb-r1/live/ustack/test). BLAZER only; off without
+hk_ustack= and blazer_usbcon_input=1.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit cac047f9c473b560cddd195063b0af050299aad5)
+|hk_ustack: user stacks of named processes on the console (hk_ustack=NAME,...; EP0 0x64)
+6acfe5b Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit 2d640f1efbbf2634854f09e88d3b70c2d723b9b2)
+|hk_ustack: EP0 request 0x70, clear of HLI1 0x60..0x68 (KEY, SWIPE, SNAP)
+484717f Reads only, after the existing power-up and CORE_ID check and before its power-down: the registers stock's REE debug dump
+reads with plain OSReadHWReg (Clk, EVENT_STATUS, MMU fault/status, SLC), from a 64 KiB view of rgx, and RGX_CR_TIMER twice
+1 ms apart. Modes 1 and 2 unchanged. Host test research/ios26-gpu-r1/tests (820 checks, 11/11 mutants).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+(cherry picked from commit d30f78548f8a03885d8d65f1cd0652431c05d901)
+|blazer gpu: blazer_gpu=3 read-only register survey and timer tick check after stage 1's CORE_ID PASS
+
+## duplicate picks dropped (same git patch-id --stable)
+ 44689e0=2fee0a8869e9 6ec2724=2fee0a8869e9 d2f4d47=2fee0a8869e9
+ eb2d19b=d9f63d27a095 23ea0a2=d9f63d27a095 7343d9a=d9f63d27a095
+ cc42295=5ad114fbb8eb ad12d3d=5ad114fbb8eb 2fbe8f1=5ad114fbb8eb
+
+## per source branch: diff of its files between its tip and hk-int1 (excluding makedefs/MakeInc.def)
+hk-bright-calib-bl f24a98d: iokit/Kernel/arm/SweetFramebuffer.cpp 
+hk-aks-wrap 44689e0: iokit/Kernel/arm/SweetFramebuffer.cpp iokit/Kernel/arm/SweetKeyStore.cpp 
+hk-aks-usersession cc42295: iokit/Kernel/arm/SweetFramebuffer.cpp 
+hk-touch-direct e731e68: iokit/Kernel/arm/SweetFramebuffer.cpp iokit/Kernel/arm/hid/SweetHID.cpp iokit/Kernel/arm/hid/hk_live_hid.inc 
+hk-netstack-cfg1 093ca86: iokit/Kernel/arm/SweetFramebuffer.cpp 
+hk-pwr1 c798a68: iokit/Kernel/arm/SweetFramebuffer.cpp 
+hk-bright-brt1 4480b5a: iokit/Kernel/arm/hid/SweetHID.cpp iokit/Kernel/arm/hid/hk_live_hid.inc 
+hk-sandbox-token 237a8b5: iokit/Kernel/arm/SweetFramebuffer.cpp 
+hk-ustack-dbg4 2d640f1: iokit/Kernel/arm/SweetFramebuffer.cpp iokit/Kernel/arm/hid/SweetHID.cpp iokit/Kernel/arm/hid/hk_live_hid.inc 
+hk-gpu-survey-r1 d30f785: identical
+
+## files touched by more than one pick
+bsd/dev/blazer_haptic.c: 0cf628e 9d6c25c
+iokit/Kernel/arm/SweetFramebuffer.cpp: 71a45a3 7bc06c1
+iokit/Kernel/arm/SweetKeyStore.cpp: cc79fc1 f69a083
+iokit/Kernel/arm/hid/SweetHID.cpp: 0cf628e 4092d03 db92b8c
+iokit/Kernel/arm/hid/hk_live_hid.inc: 4092d03 db92b8c
+makedefs/MakeInc.def: 38de7f8 cc79fc1 f69a083
+osfmk/arm64/blazer_usbcon.c: 0ff6cc4 6acfe5b
+osfmk/arm64/blazer_usbcon_core.inc: 0ff6cc4 6acfe5b
+osfmk/kern/hk_ustack.c: 0ff6cc4 6acfe5b
+osfmk/kern/hk_ustack_wire.h: 0ff6cc4 6acfe5b
+
+## BLAZER flags
+MACHINE_FLAGS_ARM64_BLAZER = -DARM64_BOARD_CONFIG_SWEET -DTEGU=1 -DBLAZER=1 -mcpu=cortex-a55 -march=armv8.2-a+crypto -DBLAZER_GPU_FW_DIAGNOSTIC=1 -DBLAZER_AKS_TRACE=1 -DBLAZER_AKS_LOG=1 -DBLAZER_AKS_WRAP=1 -DBLAZER_AKS_USERSESSION=1 -DBLAZER_KEY_DELIVERY=1 -DBLAZER_HAPTIC_SERVICE=1
+MakeInc.def diff lines vs hk-pwr1:        0
+hk-int1 484717fc194d599cfd28985012b19e7bf0be9748
+## every file hk-int1 changes vs 7227fe7, and the source tips whose copy is byte-identical
+bsd/dev/blazer_gpu.c: hk-gpu-survey-r1
+bsd/dev/blazer_haptic.c: hk-pwr1
+bsd/dev/blazer_haptic_hw.c: hk-pwr1
+bsd/dev/blazer_haptic_hw.h: hk-pwr1
+bsd/dev/blazer_haptic_service.h: hk-pwr1
+bsd/dev/blazer_haptic_tap.h: hk-pwr1
+bsd/dev/blazer_usbnet.c: hk-netstack-cfg1
+bsd/dev/hakios.blazer_keys.c: hk-pwr1
+bsd/kern/kern_exec.c: hk-netstack-cfg1
+bsd/kern/sweet_amfi.c: hk-sandbox-token
+bsd/kern/sweet_sandbox_issue.h: hk-sandbox-token
+bsd/kern/sys_persona.c: hk-aks-usersession hk-netstack-cfg1 hk-pwr1 hk-bright-brt1 hk-sandbox-token
+bsd/miscfs/ramfs/ramfs.c: hk-aks-usersession hk-netstack-cfg1 hk-pwr1 hk-bright-brt1 hk-sandbox-token
+iokit/Kernel/arm/BlazerNetServices.cpp: hk-netstack-cfg1
+iokit/Kernel/arm/SweetFramebuffer.cpp: hk-bright-brt1
+iokit/Kernel/arm/SweetKeyStore.cpp: hk-aks-usersession hk-netstack-cfg1 hk-pwr1 hk-bright-brt1 hk-sandbox-token
+iokit/Kernel/arm/blazer_aks_usersession.inc: hk-aks-usersession hk-netstack-cfg1 hk-pwr1 hk-bright-brt1 hk-sandbox-token
+iokit/Kernel/arm/blazer_aks_wrap.inc: hk-aks-wrap hk-aks-usersession hk-netstack-cfg1 hk-pwr1 hk-bright-brt1 hk-sandbox-token
+iokit/Kernel/arm/hid/SweetHID.cpp: hk-pwr1
+iokit/Kernel/arm/hid/hk_live_hid.inc: hk-pwr1
+iokit/Kernel/arm/hid/hk_physical_keys.inc: hk-pwr1
+iokit/Kernel/arm/hid/sweet_touch_event.h: hk-touch-direct hk-pwr1 hk-bright-brt1 hk-ustack-dbg4
+iokit/Kernel/arm/hk_bright_calib.h: hk-bright-calib-bl hk-aks-wrap hk-aks-usersession hk-touch-direct hk-netstack-cfg1 hk-pwr1 hk-bright-brt1 hk-sandbox-token hk-ustack-dbg4
+iokit/Kernel/arm/hk_bright_map.h: hk-bright-brt1
+iokit/Kernel/arm/sweet_scanout.cpp: hk-bright-brt1
+makedefs/MakeInc.def: hk-pwr1
+osfmk/arm64/blazer_usbcon.c: hk-ustack-dbg4
+osfmk/arm64/blazer_usbcon_core.inc: hk-ustack-dbg4
+osfmk/conf/files: hk-ustack-dbg4
+osfmk/kern/hk_top.c: hk-ustack-dbg4
+osfmk/kern/hk_ustack.c: hk-ustack-dbg4
+osfmk/kern/hk_ustack_pure.inc: hk-ustack-dbg4
+osfmk/kern/hk_ustack_wire.h: hk-ustack-dbg4

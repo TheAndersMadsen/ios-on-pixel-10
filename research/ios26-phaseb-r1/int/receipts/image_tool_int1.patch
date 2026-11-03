@@ -1,0 +1,70 @@
+--- image_tool.mac-before.py	2026-11-03 20:32:05.798657596 +0100
++++ image_tool_int1.py	2026-11-03 20:33:51.865449137 +0100
+@@ -11,7 +11,7 @@
+ import argparse, array, hashlib, json, os, re, shutil, struct, subprocess, sys, time
+ from pathlib import Path
+ sys.dont_write_bytecode = True
+-X = Path(__file__).resolve().parent; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'
++X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # int/tools/image_tool_int1.py: the Mac's acf48b98 + pwr1 + netstack (INT1.md), run from here
+ RUN = R/'images'; WORK = RUN/'.work'  # images and scratch stay under research/, which git ignores
+ sys.path[:0] = [str(X)]
+ import adt as ADT, mkadt, mkpayload
+@@ -180,10 +180,14 @@
+                       'hk_ustack_n': r'hk_ustack_n=[1-9][0-9]{0,3}', 'hk_ustack_max': r'hk_ustack_max=[1-9][0-9]{0,5}'})
+ # research/ios26-phaseb-r1/live/NET.md: kernel IPv4 192.168.77.2/24 on en2 over the USB gadget (CDC-ECM 1209:0003), no default route.
+ PHONE_ALLOWED.update({'blazer_usbnet': r'blazer_usbnet=1', 'blazer_usbnet_direct': r'blazer_usbnet_direct=1'})
++PHONE_ALLOWED.update({'blazer_netstack': r'blazer_netstack=1'})  # research/ios26-phaseb-r1/configd/FIX.md: IONetworkStack alone
++PHONE_EXACT_INT1 = ('blazer_power_key=1', 'blazer_key_delivery=1', 'blazer_haptic_tap=1')  # research/ios26-phaseb-r1/pwr/PLAN.md
++DROP_DIAG = ('hk_fb_probe=1', 'hk_usertrace=1')  # --drop-diag: base-line diagnostics a full line may give up (pwr/PLAN.md; int/INT1.md)
+ PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
+ # validation_disables: kconfig.md, osfmk/kern/debug.c. atm_diagnostic_config: mine.md, osfmk/atm/atm.c:60. hk_fb_*: render's names.
+ PHONE_EXACT = ('blazer_fast_first=1', 'blazer_smp_report=1', 'blazer_smp_report=2', 'blazer_smp_test=1', 'blazer_ssbs=1', 'blazer_ssbs=3', 'validation_disables=0x39d64', 'atm_diagnostic_config=0x400', 'hk_fb_scale=1', 'hk_fb_scale=2', 'hk_fb_filter=1', 'blazer_ufs_multi=1', 'blazer_cs_nohash=1', 'blazer_rtc=1', 'blazer_keys=1', 'blazer_haptic=1', 'blazer_haptic=3', 'hk_bench=1', 'hk_amu=1', 'hk_pmu=1', 'hk_pmu=2', 'hk_fb_fast=1', 'blazer_ic_va=1', 'hk_fb_bench=2', 'blazer_ufs_spin_us=300', 'blazer_ufs_cost=1', 'blazer_ufs_hold=1', 'blazer_battery=1', 'blazer_battery=2', 'hk_fb_period=1', 'hk_fb_te=1', 'hk_fb_te=2', 'hk_panel_hz=120', 'hk_panel_hz=60', 'hk_panel_hz=30', 'hk_panel_hz=10', 'hk_panel_off=1')  # last two: mine.md
+ PHONE_EXACT += ('blazer_rtc_bounds=1',)  # A7: p32's line, as research/ios26-bootchain-r1/image_tool.py
++PHONE_EXACT += PHONE_EXACT_INT1
+ def set_cpus(c, n):
+     """The line it was, with cpus=N. Both multi-core shapes come through here."""
+     if len(re.findall(r'(?<!\S)cpus=1(?!\S)', c)) != 1: die('line has no single cpus=1')
+@@ -434,6 +438,13 @@
+         if any(x.startswith('hk_screen') for x in extra) and b'HK SCREEN: on, record' not in buf: die('kernel has no hk_screen (hk-screen-dbg5)')
+         if 'blazer_usbcon_snap=1' in extra and b'blazer_usbcon_snap' not in buf: die('kernel has no usbcon snapshot (DBG3 0001)')
+         if 'blazer_keys=1' in extra and b'blazer-keys: polling pads' not in buf: die('kernel holds keys until keys-probe-r1 passes: handoffs/cpmlock.md')
++        if 'blazer_power_key=1' in extra and 'blazer_keys=1' not in extra: die('blazer_power_key=1 goes with blazer_keys=1')
++        if 'blazer_key_delivery=1' in extra and ('blazer_keys=1' not in extra or 'blazer_power_key=1' not in extra or b'blazer-keys: delivery requires reviewed power lifecycle' not in buf):
++            die('blazer_key_delivery=1: needs blazer_keys=1 blazer_power_key=1 and a kernel built with BLAZER_KEY_DELIVERY=1 (pwr/PLAN.md)')
++        if 'blazer_haptic_tap=1' in extra and (any(t.startswith('blazer_haptic=') for t in extra) or b'blazer-haptic: tap feedback on' not in buf or b'native ROM service ready' not in buf):
++            die('blazer_haptic_tap=1: alone (it implies the ID-only stage and the service) and a kernel built with BLAZER_HAPTIC_SERVICE=1 (pwr/PLAN.md)')
++        if 'blazer_netstack=1' in extra and b'blazer-netstack: published alone' not in buf: die('kernel has no blazer_netstack (hk-netstack-cfg1, configd/FIX.md)')
++        if 'blazer_netstack=1' in extra and any(t.startswith(('blazer_usbnet=', 'blazer_wifi_net=')) for t in extra): die('blazer_netstack=1 is the stand-in alone: not with blazer_usbnet/blazer_wifi_net')
+         if any(t.startswith('blazer_thermal_panic_c=') for t in extra) and 'blazer_thermal=2' not in extra: die('blazer_thermal_panic_c needs blazer_thermal=2')
+         if getattr(a, 'phone_deadline', None) not in (None, 300, 1800, 3600): die('--phone-deadline: 300, 1800 or 3600')
+         if getattr(a, 'phone_deadline', None) == 3600 and ('blazer_thermal=2' not in extra or a.bootcpu): die('--phone-deadline 3600: power.md, needs the armed guard, blazer_thermal=2, and no --bootcpu')
+@@ -472,6 +483,10 @@
+         if c.count('blazer_deadline=1800') != 1: die('phone line has no single 1800 s deadline')
+         c = c.replace('blazer_deadline=1800', f'blazer_deadline={pd}' if pd else FC_DEADLINE if a.bootcpu or order else 'blazer_deadline=1800')
+     if audit: c += ' blazer_cpu0_audit=1'
++    for t in getattr(a, 'drop_diag', None) or []:
++        if t not in DROP_DIAG or not a.phone_root: die(f'--drop-diag: one of {DROP_DIAG}, with --phone-root')
++        if c.split().count(t) != 1: die(f'--drop-diag: {t} is not once on the line')
++        c = ' '.join(x for x in c.split() if x != t)
+     if len(c) >= mkpayload.BOOT_LINE_LENGTH: die(f'command line {len(c)} bytes, shim limit {mkpayload.BOOT_LINE_LENGTH - 1}')
+     out.mkdir(parents=True)
+     if a.fullcheck:
+@@ -539,8 +554,9 @@
+                donor=mkadt.D421AP_SHA256, md0=sha(a.md0) if a.md0 else None, md1=sha(a.md1) if a.md1 else None, image=sha(img), image_bytes=img.stat().st_size, payload=sha(pl), payload_bytes=len(raw), margin_bytes=PARTITION - FOOTER_ROOM - len(raw),
+                virt_base=info['virt_base'], entry=info['entry'], kernel_end=info['kernel_end'], fixups=info['fixups'], segs=info['segs'], plan=plan, dpu=a.dpu, cflags=env['EXTRA_CFLAGS'], extra_src=env['TGL_EXTRA_SRC'],
+                tests={k: m.group(0) for k, m in tests.items()}, avb=avbt.strip().splitlines()[-1], decode=f'python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/{name}/manifest.json',
+-               shim_copy=tree(SHIM), tools={n: sha(X/n) for n in ('adt.py', 'image_tool.py', 'mkadt.py', 'mkbootimg.py', 'mkpayload.py')})
++               shim_copy=tree(SHIM), tools={n: sha(Path(__file__).resolve() if n == 'image_tool.py' else X/n) for n in ('adt.py', 'image_tool.py', 'mkadt.py', 'mkbootimg.py', 'mkpayload.py')})
+     if window != PHYS: rec['window_base'] = hex(window)
++    if getattr(a, 'drop_diag', None): rec['dropped_diag'] = list(a.drop_diag)
+     if persist: rec['persist_ios_data'] = persist
+     if audit: rec['cpu_audit'] = dict(mode=1, core=0, read_only=True, a520_support_accepted=False)
+     if many: rec.update(cpus=len(order) if order else a.cpus, **({'cpu_order': order} if order else {}))  # no shape, no new keys
+@@ -710,6 +726,7 @@
+     i = sub.add_parser('image'); i.add_argument('name'); i.add_argument('--kernel', required=True); i.add_argument('--kernel-sha', required=True)
+     i.add_argument('--cpu-audit', action='store_true', help='read-only cpu0 firmware audit on baseline five A725s; docs/CPU.md')
+     i.add_argument('--cpu-health', action='store_true', help='frozen p30 cap16 common health acceptance profile; supplies exact phone arguments; docs/CPU.md')
++    i.add_argument('--drop-diag', action='append', help=f'with --phone-root: drop this base-line diagnostic, one of {DROP_DIAG}')
+     i.add_argument('--route', choices=['ufs', 'md'], default='ufs'); i.add_argument('--md0'); i.add_argument('--md1'); i.add_argument('--cpus', type=int, default=1); i.add_argument('--cpu-order', help='cores for cpus=N in logical order, e.g. 5,6,2,3,4,1,0. handoffs/smp.md'); i.add_argument('--dpu', action='store_true')
+     i.add_argument('--canvas'); i.add_argument('--gamut'); i.add_argument('--args'); i.add_argument('--test-kernel', action='store_true'); i.add_argument('--legacy-base', action='store_true'); i.add_argument('--phone-root', action='store_true', help='PHONE-ROOT.md: --route ufs on ios26-phone-r1'); i.add_argument('--soak', type=int, help='N read-only passes, not a phone-run image; 0: the not-live line'); i.add_argument('--preflight', action='store_true', help='--phone-root line on the old partition content, labelled, not bootable'); i.add_argument('--touch', action='store_true', help='--phone-root plus blazer_touch=1, nothing else'); i.add_argument('--phone-deadline', type=int, help='1800, or 3600 with blazer_thermal=2: handoffs/cpmlock.md'); i.add_argument('--soak-whole', help='whole crc the passes must give, hex'); i.add_argument('--phone-args', help='extra tokens for --phone-root, allow-list only'); i.add_argument('--var-overlay', help='overlay file for hk_overlay=MASK'); i.add_argument('--var-overlay-sha'); i.add_argument('--bootcpu', help='0x200, 0x300 or 0x500: run XNU on that core, ios26-fastcore-r1. Parent only, after speed-probe-r3'); i.add_argument('--qemu-run'); i.add_argument('--phone-route'); i.add_argument('--readback', help='root image: sample its blocks for read-back'); i.add_argument('--readback-sha'); i.add_argument('--fullcheck', help='same root as --readback: read all of it and log CRCs'); i.add_argument('--persist-ios-data', action='store_true', help='admit blazer_persist=1 [blazer_persist_period=15..3600] for the pinned kernel.rootview on ios_system only: ios-data-persist/PHYSICAL-PLAN.md'); i.add_argument('--persist', type=int, choices=[2, 3], help='with --fullcheck: blazer_persist=N, handoffs/persist.md'); i.add_argument('--persist-table', help='table.json: the pass skips its blocks, blazer_ufs_fullcheck=2, and so does the list'); i.add_argument('--expect-test-block', help='TABLE.json:A or :B: the list for a kernel with no mask after blazer_persist=2 wrote that pattern'); i.add_argument('--window-base', choices=(hex(PHYS), '0x882000000'), help='kernel RAM base, handoffs/ram.md'); i.add_argument('--second-boot', action='store_true', help='first-boot contract plus shim DPU stage, disp0 and the scanout arguments'); i.add_argument('--first-boot', action='store_true', help="blazer's first phone boot contract: headless ADT, md0 only, fixed base and command line")
+     c = sub.add_parser('check'); c.add_argument('dir')

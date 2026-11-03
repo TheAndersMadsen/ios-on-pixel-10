@@ -1,0 +1,2 @@
+OK a7-ios-system-int1 bootable f67220f8fada32b0795548bb4974a875c9801a6936d9ac6ed03307df947b066c
+shared tools/image_tool.py: OK a7-ios-system-int1 bootable f67220f8fada32b0795548bb4974a875c9801a6936d9ac6ed03307df947b066c

@@ -1,0 +1,19 @@
+{
+  "base": "95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55",
+  "pwr": "d0804b36bb540b1e63eeda033654e252ff4da8359b5c0f1d6f6d1af631b27b97",
+  "app2": "0eb06481d31376b95684dbc6bc53a005adff7ae3e03e967a983f46e41605755e",
+  "output_sha256": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e",
+  "bytes": 661680,
+  "records": 52,
+  "from_pwr_replaced": [
+    0
+  ],
+  "from_app2_replaced": [
+    39
+  ],
+  "appended": [
+    "[49] d g0 /private/var/mobile/Library/TCC",
+    "[50] f g29 /private/var/hk/hk_stderr_console.dylib",
+    "[51] l g0 /private/var/db/timezone/localtime"
+  ]
+}

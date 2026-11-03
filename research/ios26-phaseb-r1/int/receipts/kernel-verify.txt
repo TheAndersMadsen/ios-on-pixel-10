@@ -1,0 +1,84 @@
+# kernel.int1 verification (m1box llvm-nm/llvm-objdump 23.1.4 on the Mac build copied back)
+0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf  kernel.int1
+531b12eb0976e553ed8464949bb8ca962227bbb14342bd905ac2acb948fb160f  kernel.int1.unstripped
+kernel.int1: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
+undefined symbols: 0
+## symbols (nm, type + name)
+_ramfs_renamex                       s
+_sweet_sandbox_syscall               s
+_blazer_haptic_tap                   S
+_blazer_haptic_play_rom              S
+_haptic_thread                       s
+_hh_play_rom                         S
+_sweet_hid_key_checked               S
+_sweet_hid_keys_epoch                S
+_hk_ustack_start                     S
+_hk_ustack_control                   S
+_hk_us_thread                        s
+_blazer_net_publish_services         S
+_blazer_net_busy_leaves              
+_blazer_net_quiet_watch              
+_gSweetTouchDirect                   
+IONetworkStackUserClient12initWithTask: 2 [b S ]
+SweetHIDButtons.*physical: 6 [s S ]
+sweet_touch_collection_fields: 1 [s ]
+SweetHIDTouch5touch: 1 [S ]
+publishBacklight: 1 [S ]
+sweet_bl_set: 1 [s ]
+queueBrightness: 1 [S ]
+## strings (count in kernel.int1)
+SWEET BL: calibration                            1
+backlight-calibration-parameters                 1
+backlight-marketing-table                        1
+sweet_touch_indirect                             1
+%s touches                                       1
+SWEET AKS: wrap/unwrap on                        1
+blazer_aks_usersession                           1
+blazer_persona_log                               2
+blazer_netstack                                  1
+blazer-netstack: published alone                 1
+IONetworkStack opened by                         1
+refusal %                                        2
+SWEET Sandbox                                    3
+tap feedback on                                  1
+native ROM service ready                         1
+delivery requires reviewed power lifecycle       1
+blazer-power-key: armed                          1
+SWEET PHYSICAL                                   3
+blazer-keys: polling pads                        1
+queued for DCS                                   1
+unknown request keys                             1
+nits) cap %u acl_off                             1
+queue only                                       0
+HK USTACK: every %u s                            1
+live request on (usbcon 0x70)                    0
+MMU_FAULT_STATUS_META                            1
+SLC_STATUS1                                      1
+blazer_gpu                                       4
+## SweetHIDTouch::touch (__ZN13SweetHIDTouch5touchEibii): calls to _blazer_haptic_tap (0xfffffe0007a24fc0) and IsDisplayIntegrated 0xb0019 field id
+fffffe0008086a58:      	bl	0xfffffe0007a24fc0 <_blazer_haptic_tap>
+## AppleCLCD::publishBacklight (__ZN9AppleCLCD16publishBacklightEv): cap << 16
+fffffe000806d528:      	lsl	w22, w20, #16
+fffffe000806d5e4:      	lsl	w12, w12, #16
+fffffe000806d798:      	ubfiz	x22, x20, #16, #32
+## _sweet_sandbox_syscall: copyin 0x38 / copyout 8
+34:fffffe0007d3157c:      	mov	w2, #0x38       ; =56
+38:fffffe0007d3158c:      	bl	0xfffffe00079721f0 <_copyin>
+45:fffffe0007d315a8:      	bl	0xfffffe0007972a10 <_copyout>
+78:fffffe0007d3162c:      	bl	0xfffffe00079721f0 <_copyin>
+85:fffffe0007d31648:      	bl	0xfffffe0007972a10 <_copyout>
+## _hk_ustack_control / usbcon dispatch: request 0x70
+
+kernel.int1.unstripped:	file format mach-o arm64
+
+ramfs_renamex instructions: 0
+## callers (whole-kernel disassembly)
+_hk_ustack_control callers/refs: 1
+_hk_ustack_start callers/refs: 1
+_ramfs_renamex callers/refs: 0
+_blazer_haptic_tap callers/refs: 1
+_blazer_net_publish_services callers/refs: 3
+_sweet_sandbox_syscall callers/refs: 0
+  hk_ustack_control referenced from <_usbcon_thread>:
+<__ZN13SweetHIDTouch5touchEibii>: fffffe0008086c98:      	add	w1, w22, #0x14
+<__ZL29sweet_touch_collection_fieldsI10IOHIDEventEvPT_iibjb>: fffffe00080872cc:      	add	w1, w25, #0x18

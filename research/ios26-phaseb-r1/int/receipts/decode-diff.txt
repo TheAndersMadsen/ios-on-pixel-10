@@ -1,0 +1,20 @@
+### perf-r1.ovl -> int1-r1.ovl
+A 95701ed9bf56e7e7 (49 records) vs B c440b6ea64759d09 (52 records): 47 byte-identical (0 at a new index)
+DIFF [0->0] f g0 /private/var/mobile/Library/Preferences/com.apple.springboard.plist: mode/uid/gid 0o600 501:501 -> 0o600 501:501, 793 -> 774 B, sha256 9e4be03245d0084b -> b3941b70fcdc12e8
+DIFF [39->39] c g29 hk_env: mode/uid/gid 0o0 0:0 -> 0o0 0:0, 710 -> 821 B, sha256 26def9d58baf5e60 -> 7dbd20ac62d9ac4c
+ONLY-B [49] d g0 /private/var/mobile/Library/TCC 0 B sha256 e3b0c44298fc1c14
+ONLY-B [50] f g29 /private/var/hk/hk_stderr_console.dylib 50192 B sha256 a630a41b80d15a27
+ONLY-B [51] l g0 /private/var/db/timezone/localtime 43 B sha256 3d43ac82867ff60e
+
+### pwr-r1.ovl -> int1-r1.ovl
+A d0804b36bb540b1e (50 records) vs B c440b6ea64759d09 (52 records): 49 byte-identical (1 at a new index)
+DIFF [39->39] c g29 hk_env: mode/uid/gid 0o0 0:0 -> 0o0 0:0, 710 -> 821 B, sha256 26def9d58baf5e60 -> 7dbd20ac62d9ac4c
+ONLY-B [49] d g0 /private/var/mobile/Library/TCC 0 B sha256 e3b0c44298fc1c14
+ONLY-B [50] f g29 /private/var/hk/hk_stderr_console.dylib 50192 B sha256 a630a41b80d15a27
+MOVED [49->51] l g0 /private/var/db/timezone/localtime (byte-identical)
+
+### app2-r1.ovl -> int1-r1.ovl
+A 0eb06481d31376b9 (51 records) vs B c440b6ea64759d09 (52 records): 50 byte-identical (0 at a new index)
+DIFF [0->0] f g0 /private/var/mobile/Library/Preferences/com.apple.springboard.plist: mode/uid/gid 0o600 501:501 -> 0o600 501:501, 793 -> 774 B, sha256 9e4be03245d0084b -> b3941b70fcdc12e8
+ONLY-B [51] l g0 /private/var/db/timezone/localtime 43 B sha256 3d43ac82867ff60e
+

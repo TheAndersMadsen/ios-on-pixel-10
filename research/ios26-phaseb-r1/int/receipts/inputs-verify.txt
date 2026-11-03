@@ -1,0 +1,3 @@
+research/ios26-phaseb-r1/int/build/kernel.int1: OK
+research/ios26-phaseb-r1/int/overlays/int1-r1.ovl: OK
+research/ios26-apps-r1/app2/overlays/app2-r1.ovl: OK
