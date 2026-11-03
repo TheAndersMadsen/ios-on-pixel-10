@@ -1,0 +1,39 @@
+host tests, m1box 2026-11-03T19:35:26Z, cc (GCC) 16.1.1 20260430
+$ cc -std=c11 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -I xnu-src/osfmk/arm64 test/test_hk_screen.c && ./a.out OUT
+PASS: 0 failures
+$ cc -std=c11 -O2 -Wall -Wextra -Werror (no sanitizers)
+PASS: 0 failures
+$ python3 -I tools/test_fb_png.py
+test_box_record_matches_model (__main__.KernelWriter.test_box_record_matches_model) ... ok
+test_c_unit_passes (__main__.KernelWriter.test_c_unit_passes) ... ok
+test_other_boot_is_stale (__main__.KernelWriter.test_other_boot_is_stale) ... ok
+test_point_record_matches_model (__main__.KernelWriter.test_point_record_matches_model) ... ok
+test_absent_torn_short (__main__.Record.test_absent_torn_short) ... ok
+test_attempt_directory (__main__.Record.test_attempt_directory) ... ok
+test_bgra_panel_buffer (__main__.Record.test_bgra_panel_buffer) ... ok
+test_captured_before_entry_is_stale (__main__.Record.test_captured_before_entry_is_stale) ... ok
+test_fresh_record_to_png (__main__.Record.test_fresh_record_to_png) ... ok
+test_no_picture (__main__.Record.test_no_picture) ... ok
+test_rgb565_input (__main__.Record.test_rgb565_input) ... ok
+test_scale (__main__.Record.test_scale) ... ok
+test_stale_refused_unless_allowed (__main__.Record.test_stale_refused_unless_allowed) ... ok
+test_box_average (__main__.Sampler.test_box_average) ... ok
+test_channel_order (__main__.Sampler.test_channel_order) ... ok
+test_dims_match_the_kernel (__main__.Sampler.test_dims_match_the_kernel) ... ok
+test_bad_arguments (__main__.Screenshot.test_bad_arguments) ... ok
+test_dump (__main__.Screenshot.test_dump) ... ok
+test_live_newest_run (__main__.Screenshot.test_live_newest_run) ... ok
+test_live_refused (__main__.Screenshot.test_live_refused) ... ok
+Ran 20 tests in 3.308s
+OK
+$ python3 -I tools/fb_png.py OUT/kernel-box.log
+fb_png: wrote OUT/box.png (360x803) capture 1 deadline, fresh, t+0.026 s, took 1000 us, scanout on
+01532a29a5881e81397f634574db5d45af223ff678996953c45406e34de9aa2f  OUT/box.png
+-- sources
+fd9d8a08d24d0c69cb53854d2b7278438b88b8c8b222179d87843a4039bc8232  research/ios26-phaseb-r1/live/screen/xnu-src/osfmk/arm64/hk_screen.c
+add97c1ca6b1228a668d9641ccf7a6dc492924857f1bd209f9600d95dddac3ed  research/ios26-phaseb-r1/live/screen/xnu-src/osfmk/arm64/hk_screen_pure.inc
+6e3929563a74548018f7d8ff2e93fe8e1ddf8221201c47e85f484ab120fd343d  research/ios26-phaseb-r1/live/screen/0002-hk-screen.patch
+64f65e5bda92759c26fa2cb76ceb130a89e16c599eb303af4c5e60bf2ecf162a  research/ios26-phaseb-r1/live/screen/test/test_hk_screen.c
+5b834f88e6fd9582ce1e56439f9fc1813c8bed398e183fe843574747c17a561a  tools/fb_png.py
+a1911f71e5305a44b848bad24df791fe0bc2c9943f9ff4a21245ce7c855a9571  tools/test_fb_png.py
+dc8b70b1b546ebc8836a5a8370326e7ef6949c3439e9a77e8b6ebff5e7d07c1c  tools/screenshot.sh

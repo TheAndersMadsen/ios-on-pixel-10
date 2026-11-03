@@ -1,0 +1,423 @@
+--- a/iokit/Kernel/arm/sweet_scanout.cpp
++++ b/iokit/Kernel/arm/sweet_scanout.cpp
+@@ -302,6 +302,19 @@
+ 	return ow * oh * 2;
+ }
+ 
++int sweet_scanout_picture_buffer(uintptr_t *va, uint32_t *stride, uint32_t *w, uint32_t *h, uint32_t *on)
++{
++	/* hk_screen: the snapshot's picture, for a reader that samples it itself (also in the panic path: no locks). Also after
++	 * the scanout latched off: the buffer still holds the last frame copied in. */
++	uintptr_t v = s_panel_va;
++	uint32_t st = s_panel_stride;
++	if (!s_on_panel || v == 0) return 0;
++	uint32_t sw = s_scaling ? s_layout.src_w : s_attach_w, sh = s_scaling ? s_layout.src_h : s_attach_h;
++	if (sw == 0 || sh == 0 || st < sw * 4) return 0;
++	*va = v; *stride = st; *w = sw; *h = sh; *on = s_on ? 1 : 0;
++	return 1;
++}
++
+ int sweet_scanout_picture(uint32_t *x, uint32_t *y, uint32_t *w, uint32_t *h)
+ {
+ 	if (!s_scaling || !s_on) return 0;
+--- a/iokit/Kernel/arm/sweet_scanout.h
++++ b/iokit/Kernel/arm/sweet_scanout.h
+@@ -50,6 +50,9 @@
+  * *src_w/*src_h are set whenever a picture exists, even if cap is too small for this step. */
+ uint32_t sweet_scanout_snapshot(uint8_t *dst, uint32_t cap, uint32_t step, uint32_t *w, uint32_t *h,
+     uint32_t *src_w, uint32_t *src_h);
++/* hk_screen (osfmk/arm64/hk_screen.c): the same picture's buffer, BGRA, stride bytes; *on 0 if the scanout latched off.
++ * 0 if there is none (never attached, or a flipped client surface). Lock free. */
++int sweet_scanout_picture_buffer(uintptr_t *va, uint32_t *stride, uint32_t *w, uint32_t *h, uint32_t *on);
+ /* hk_dpu: the arg after sweet_dpu_bits, parsed once. 0: off. sweet_dpu_policy.h. */
+ uint32_t sweet_scanout_dpu_bits(void);
+ /* 1: flips are possible: attached, layout in force, not latched. */
+--- a/osfmk/kern/debug.c
++++ b/osfmk/kern/debug.c
+@@ -1477,6 +1477,14 @@
+ 
+ 	ksancov_on_panic_log();
+ 
++#if defined(BLAZER)
++	if ((debugger_current_op == DBOP_PANIC) ||
++	    ((debugger_current_op == DBOP_DEBUGGER) && debugger_is_panic)) {
++		/* hk_screen=: the glass into the dumped ramoops zone, before anything here can reset the phone. */
++		extern void hk_screen_panic(void);
++		hk_screen_panic();
++	}
++#endif
+ 	if ((debugger_current_op == DBOP_PANIC) ||
+ 	    ((debugger_current_op == DBOP_DEBUGGER) && debugger_is_panic)) {
+ 		/*
+--- a/bsd/dev/hakios.blazer_ufs.c
++++ b/bsd/dev/hakios.blazer_ufs.c
+@@ -1114,7 +1114,13 @@
+ 				printf("blazer-gic: dropped %u SGIs, last INTID %u\n", seen, blazer_sgi_last);
+ 			}
+ 		}
++		{
++			extern void hk_screen_tick(void);
++			hk_screen_tick();
++		}
+ 		if (n882_port_now_us() - ufs_root_t0_us >= (uint64_t)ufs_root_deadline_s * 1000000ULL) {
++			extern void hk_screen_deadline(void);
++			hk_screen_deadline();
+ 			panic("blazer-root: deadline %u s, stage %s, %llu reads, %llu blocks, busy %llu ms, last lba %llu",
+ 			    ufs_root_deadline_s, ufs_root_stage_name, ufs_root_io.reads, ufs_root_io.blocks,
+ 			    ufs_root_io.busy_us / 1000, ufs_root_io.last_lba);
+@@ -1132,6 +1138,10 @@
+ 	PE_parse_boot_argn("blazer_ufs_deadline", &deadline, sizeof(deadline));
+ 	PE_parse_boot_argn("blazer_deadline", &deadline, sizeof(deadline));
+ 	ufs_root_t0_us = n882_port_now_us();
++	{
++		extern void hk_screen_init(void);
++		hk_screen_init();
++	}
+ 	printf("blazer-root: PAGE_SIZE %u mem %llx at %llx, deadline %u s\n", (unsigned)PAGE_SIZE,
+ 	    (unsigned long long)mem_size, (unsigned long long)gPhysBase, deadline);
+ 	/* Physical record of the cache rule the static_if patcher depends on, and of whether its patch reached the fetch path. */
+--- a/osfmk/conf/files.arm64
++++ b/osfmk/conf/files.arm64
+@@ -58,6 +58,7 @@
+ osfmk/arm64/blazer_perf.c	standard
+ osfmk/arm64/blazer_gov.c	standard
+ osfmk/arm64/blazer_panic.c	standard
++osfmk/arm64/hk_screen.c	standard
+ osfmk/arm64/blazer_usbcon.c	standard
+ osfmk/arm64/tegu_early.c	standard
+ osfmk/arm64/arm64_hypercall.c	standard
+--- /dev/null
++++ b/osfmk/arm64/hk_screen.c
+@@ -0,0 +1,151 @@
++/*
++ * hk_screen=N: what is on the glass, for after the boot. The picture the copy path put in the panel buffer
++ * (sweet_scanout_picture_buffer) is downscaled to 360 px wide RGB565 into the ramoops zone that every fastboot park
++ * already dumps (kernel.log = 0x95200000..0x955fffff; this record at pmsg+0x150000, PA 0x95550000, below TGL_ALL at
++ * 0x955f0000). ABL's named ramdump regions cannot reach the panel buffer itself (0xf0000000, 14.6 MB).
++ *
++ *   hk_screen=0  off (default)          hk_screen=1  at the blazer deadline and at panic
++ *   hk_screen=N  N >= 10: also every N s from the blazer-root watch (10 s ticks)
++ *   hk_screen_box=0  point samples instead of 2x2 averages
++ *
++ * The record carries this boot's XNUENT1 identity, so tools/fb_png.py can tell it from a previous boot's residue.
++ * research/ios26-phaseb-r1/live/SCREEN.md. BLAZER only.
++ */
++#if defined(BLAZER)
++#include <stdint.h>
++#include <stddef.h>
++#include <kern/debug.h>
++#include <kern/misc_protos.h>
++#include <kern/startup.h>
++#include <libkern/crc.h>
++#include <machine/atomic.h>
++#include <machine/machine_routines.h>
++#include <pexpert/pexpert.h>
++
++#include "hk_screen_pure.inc"
++
++extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
++/* iokit/Kernel/arm/sweet_scanout.cpp */
++extern int sweet_scanout_picture_buffer(uintptr_t *va, uint32_t *stride, uint32_t *w, uint32_t *h, uint32_t *on);
++
++TUNABLE(uint32_t, hk_screen, "hk_screen", 0);
++TUNABLE(uint32_t, hk_screen_box, "hk_screen_box", 1);
++
++#define HK_SCREEN_PA            0x95550000ULL   /* pmsg + 0x150000 */
++#define HK_SCREEN_BYTES         0xa0000u        /* to 0x955f0000, shim/tgl_all.h's record */
++#define HK_SCREEN_ENT_PAGE      0x9543c000ULL   /* 16 KiB page holding the msgbuf v2 header 0x9543f800 */
++#define HK_SCREEN_ENT_OFF       0x3840u         /* its XNUENT1 record, +0x40 */
++#define HK_SCREEN_WIDTH         360u
++#define HK_SCREEN_TICK_S        10u
++
++static vm_offset_t hk_scr_va, hk_scr_ent_va;
++static uint32_t hk_scr_seq, hk_scr_logged;
++static uint64_t hk_scr_last;
++static _Atomic uint32_t hk_scr_busy, hk_scr_final;
++
++static uint64_t
++hk_scr_now(void)
++{
++	return __builtin_arm_rsr64("CNTVCT_EL0");
++}
++
++static void
++hk_scr_barrier(void)
++{
++	__asm__ volatile ("dsb sy" ::: "memory");
++}
++
++static uint32_t
++hk_scr_crc(uint32_t crc, const void *buf, size_t len)
++{
++	return crc32(crc, buf, len);
++}
++
++/* No lock, no allocation: also runs in the panic path with the other cores stopped. */
++static uint32_t
++hk_scr_capture(uint32_t reason, uint32_t *w, uint32_t *h, uint32_t *took)
++{
++	uintptr_t va = 0;
++	uint32_t stride = 0, sw = 0, sh = 0, on = 0;
++	uint64_t t0 = hk_scr_now();
++	int have = sweet_scanout_picture_buffer(&va, &stride, &sw, &sh, &on);
++	volatile uint32_t *rec = (volatile uint32_t *)hk_scr_va;
++	const volatile uint64_t *ent = hk_scr_ent_va ? (const volatile uint64_t *)(hk_scr_ent_va + HK_SCREEN_ENT_OFF) : NULL;
++	uint32_t n = hk_screen_write(rec, HK_SCREEN_BYTES, have ? (const volatile uint32_t *)va : NULL, stride, sw, sh,
++	    HK_SCREEN_WIDTH, hk_screen_box != 0, reason, ++hk_scr_seq, on, ent, t0, __builtin_arm_rsr64("CNTFRQ_EL0"),
++	    hk_scr_now, hk_scr_crc, hk_scr_barrier);
++	const volatile struct hk_screen_hdr *hd = (const volatile struct hk_screen_hdr *)rec;
++	*w = hd->width;
++	*h = hd->height;
++	*took = hd->took_us;
++	return n;
++}
++
++/* hakios_blazer_watch_start (bsd_init, every boot): map the record and the identity once. */
++void
++hk_screen_init(void)
++{
++	if (hk_screen == 0 || hk_scr_va != 0) {
++		return;
++	}
++	hk_scr_va = ml_io_map((vm_offset_t)HK_SCREEN_PA, HK_SCREEN_BYTES);
++	hk_scr_ent_va = ml_io_map((vm_offset_t)HK_SCREEN_ENT_PAGE, 0x4000);
++	if (hk_scr_va == 0) {
++		printf("HK SCREEN: map of %#llx failed, off\n", HK_SCREEN_PA);
++		return;
++	}
++	/* A previous boot's record stays until the first capture replaces it; fb_png.py checks the identity anyway. */
++	printf("HK SCREEN: on, record %#llx (%u KiB), %u px wide, %s, at deadline/panic%s%u%s\n", HK_SCREEN_PA,
++	    HK_SCREEN_BYTES / 1024, HK_SCREEN_WIDTH, hk_screen_box ? "2x2 box" : "point",
++	    hk_screen >= HK_SCREEN_TICK_S ? " and every " : "", hk_screen >= HK_SCREEN_TICK_S ? hk_screen : 0,
++	    hk_screen >= HK_SCREEN_TICK_S ? " s" : "");
++}
++
++/* The blazer-root watch, every 10 s. */
++void
++hk_screen_tick(void)
++{
++	uint32_t expect = 0, w, h, took, n;
++	if (hk_screen < HK_SCREEN_TICK_S || hk_scr_va == 0 || os_atomic_load(&hk_scr_final, acquire)) {
++		return;
++	}
++	uint64_t now = hk_scr_now(), hz = __builtin_arm_rsr64("CNTFRQ_EL0");
++	if (hk_scr_last != 0 && now - hk_scr_last < (uint64_t)hk_screen * hz - hz / 2) {
++		return;
++	}
++	if (!os_atomic_cmpxchgv(&hk_scr_busy, 0, 1, &expect, acquire)) {
++		return;
++	}
++	hk_scr_last = now;
++	n = hk_scr_capture(HK_SCREEN_REASON_PERIODIC, &w, &h, &took);
++	os_atomic_store(&hk_scr_busy, 0, release);
++	if (hk_scr_logged < 3 || hk_scr_seq % 20 == 0) {
++		hk_scr_logged++;
++		printf("HK SCREEN: capture %u periodic %ux%u, %u bytes, %u us\n", hk_scr_seq, w, h, n, took);
++	}
++}
++
++/* The blazer-root watch, right before its deadline panic: thread context, so it logs. The panic keeps this one. */
++void
++hk_screen_deadline(void)
++{
++	uint32_t w, h, took, n;
++	if (hk_screen == 0 || hk_scr_va == 0 || os_atomic_xchg(&hk_scr_final, 1, acq_rel) != 0) {
++		return;
++	}
++	n = hk_scr_capture(HK_SCREEN_REASON_DEADLINE, &w, &h, &took);
++	printf("HK SCREEN: capture %u deadline %ux%u, %u bytes, %u us\n", hk_scr_seq, w, h, n, took);
++}
++
++/* debugger_collect_diagnostics, once, before PEHaltRestart(kPEPanicBegin). Ignores a periodic capture a stopped core
++ * left half done: that core won't run again, and this rewrites the whole record. */
++void
++hk_screen_panic(void)
++{
++	uint32_t w, h, took;
++	if (hk_screen == 0 || hk_scr_va == 0 || os_atomic_xchg(&hk_scr_final, 1, acq_rel) != 0) {
++		return;
++	}
++	(void)hk_scr_capture(HK_SCREEN_REASON_PANIC, &w, &h, &took);
++}
++#endif /* BLAZER */
+--- /dev/null
++++ b/osfmk/arm64/hk_screen_pure.inc
+@@ -0,0 +1,178 @@
++/*
++ * hk_screen's record and sampler, without kernel headers, so test/test_hk_screen.c runs the same code on the host.
++ * The includer supplies <stdint.h>/<stddef.h> types and a crc32(crc, buf, len) that matches zlib's (libkern/crc.h does).
++ *
++ * Record "HKSCR1" (tools/fb_png.py must match): a 128-byte header, then height rows of width RGB565 little-endian
++ * pixels, no padding. The magic is cleared first and written last, so a capture cut short reads as absent.
++ */
++#define HK_SCREEN_MAGIC0        0x43534b48u     /* "HKSC" */
++#define HK_SCREEN_MAGIC1        0x00003152u     /* "R1\0\0": the bytes read "HKSCR1" */
++#define HK_SCREEN_VERSION       1u
++#define HK_SCREEN_HDR_BYTES     128u
++#define HK_SCREEN_FORMAT_RGB565 1u
++#define HK_SCREEN_FLAG_ON       (1u << 0)       /* scanout was live (not latched off) */
++#define HK_SCREEN_FLAG_BOX      (1u << 1)       /* each pixel is a 2x2 average, else a point sample */
++#define HK_SCREEN_FLAG_NOPIC    (1u << 2)       /* no picture: not attached, or a flipped client surface */
++#define HK_SCREEN_REASON_PANIC    1u
++#define HK_SCREEN_REASON_PERIODIC 2u
++#define HK_SCREEN_REASON_DEADLINE 3u
++#define HK_SCREEN_MAX_W         640u
++
++struct hk_screen_hdr {
++	uint32_t magic0, magic1;        /* written last */
++	uint32_t version, hdr_bytes;
++	uint32_t seq, reason;           /* seq: captures this boot, from 1 */
++	uint32_t width, height;
++	uint32_t format, flags;
++	uint32_t src_w, src_h;          /* the picture sampled: backboardd's canvas under hk_fb_scale, else the panel buffer */
++	uint32_t step_q16, took_us;     /* source pixels per output pixel, 16.16 */
++	uint32_t data_bytes, data_crc;  /* crc32 (zlib) of the pixel rows */
++	uint64_t cntvct, freq;          /* CNTVCT_EL0 at the start, CNTFRQ_EL0 */
++	uint64_t ent_magic;             /* copied from this boot's XNUENT1 record (msgbuf header + 0x40) */
++	uint64_t ent_nonce, ent_entry_t, ent_handoff_t;
++	uint32_t src_stride, reserved0;
++	uint64_t reserved1;
++};
++_Static_assert(sizeof(struct hk_screen_hdr) == HK_SCREEN_HDR_BYTES, "HKSCR1 header size");
++
++/* Output size for a picture sw x sh at out_w pixels wide. 0 if it can't be done. */
++static inline int
++hk_screen_dims(uint32_t sw, uint32_t sh, uint32_t out_w, uint32_t *ow, uint32_t *oh, uint32_t *step_q16)
++{
++	if (sw == 0 || sh == 0 || out_w == 0 || sw > 0x8000u || sh > 0x8000u) {
++		return 0;
++	}
++	if (out_w > sw) {
++		out_w = sw;
++	}
++	if (out_w > HK_SCREEN_MAX_W) {
++		out_w = HK_SCREEN_MAX_W;
++	}
++	out_w &= ~1u;                   /* two pixels per stored word */
++	if (out_w == 0) {
++		return 0;
++	}
++	uint32_t step = (uint32_t)(((uint64_t)sw << 16) / out_w);
++	uint32_t h = (uint32_t)(((uint64_t)sh << 16) / step);
++	if (h == 0) {
++		return 0;
++	}
++	*ow = out_w;
++	*oh = h;
++	*step_q16 = step;
++	return 1;
++}
++
++/* BGRA in memory (B lowest byte) to RGB565. */
++static inline uint16_t
++hk_screen_565(uint32_t p)
++{
++	return (uint16_t)(((p >> 8) & 0xf800u) | ((p >> 5) & 0x07e0u) | ((p >> 3) & 0x001fu));
++}
++
++/* Source coordinate of output index i: the centre of its cell, clamped so i+1 (the box's second tap) stays inside. */
++static inline uint32_t
++hk_screen_tap(uint32_t i, uint32_t step_q16, uint32_t limit)
++{
++	uint32_t s = (uint32_t)(((uint64_t)i * step_q16 + step_q16 / 2) >> 16);
++	return s >= limit ? limit - 1 : s;
++}
++
++/* One output row. src: the picture's first pixel; stride in bytes. Word loads only (device or write-combined memory). */
++static inline void
++hk_screen_row(const volatile uint32_t *src, uint32_t stride, uint32_t sw, uint32_t sh, uint32_t oy, uint32_t ow,
++    uint32_t step_q16, int box, uint16_t *out)
++{
++	uint32_t sy = hk_screen_tap(oy, step_q16, sh);
++	uint32_t sy1 = sy + 1 < sh ? sy + 1 : sy;
++	const volatile uint32_t *r0 = (const volatile uint32_t *)((uintptr_t)src + (uint64_t)sy * stride);
++	const volatile uint32_t *r1 = (const volatile uint32_t *)((uintptr_t)src + (uint64_t)sy1 * stride);
++	for (uint32_t ox = 0; ox < ow; ox++) {
++		uint32_t sx = hk_screen_tap(ox, step_q16, sw);
++		if (!box) {
++			out[ox] = hk_screen_565(r0[sx]);
++			continue;
++		}
++		uint32_t sx1 = sx + 1 < sw ? sx + 1 : sx;
++		uint32_t a = r0[sx], b = r0[sx1], c = r1[sx], d = r1[sx1];
++		/* Per channel: (sum + 2) / 4. Channels 0 and 2 in one lane, 1 and 3 in the other; 4 x 255 fits in 10 bits. */
++		uint32_t lo = (a & 0x00ff00ffu) + (b & 0x00ff00ffu) + (c & 0x00ff00ffu) + (d & 0x00ff00ffu) + 0x00020002u;
++		uint32_t hi = ((a >> 8) & 0x00ff00ffu) + ((b >> 8) & 0x00ff00ffu) + ((c >> 8) & 0x00ff00ffu) +
++		    ((d >> 8) & 0x00ff00ffu) + 0x00020002u;
++		uint32_t p = ((lo >> 2) & 0x00ff00ffu) | (((hi >> 2) & 0x00ff00ffu) << 8);
++		out[ox] = hk_screen_565(p);
++	}
++}
++
++/*
++ * Write a whole record at rec (cap bytes there). pic == NULL (no picture) writes a header with FLAG_NOPIC and no rows.
++ * ent: this boot's XNUENT1 record (64 bytes), or NULL. Returns the record's size, or 0 if it didn't fit.
++ * Stores are 32-bit and aligned only. barrier() orders the magic around the body.
++ */
++static inline uint32_t
++hk_screen_write(volatile uint32_t *rec, uint32_t cap, const volatile uint32_t *pic, uint32_t stride, uint32_t sw, uint32_t sh,
++    uint32_t out_w, int box, uint32_t reason, uint32_t seq, uint32_t on, const volatile uint64_t *ent,
++    uint64_t cntvct, uint64_t freq, uint64_t (*now)(void), uint32_t (*crcfn)(uint32_t, const void *, size_t),
++    void (*barrier)(void))
++{
++	struct hk_screen_hdr h;
++	uint16_t row[HK_SCREEN_MAX_W];
++	uint32_t ow = 0, oh = 0, step = 0;
++	uint32_t *hw = (uint32_t *)&h;
++
++	if (cap < HK_SCREEN_HDR_BYTES) {
++		return 0;
++	}
++	rec[0] = 0;
++	rec[1] = 0;
++	barrier();
++	for (uint32_t i = 0; i < HK_SCREEN_HDR_BYTES / 4; i++) {
++		hw[i] = 0;
++	}
++	h.version = HK_SCREEN_VERSION;
++	h.hdr_bytes = HK_SCREEN_HDR_BYTES;
++	h.seq = seq;
++	h.reason = reason;
++	h.format = HK_SCREEN_FORMAT_RGB565;
++	h.cntvct = cntvct;
++	h.freq = freq;
++	h.src_w = sw;
++	h.src_h = sh;
++	h.src_stride = stride;
++	h.flags = (on ? HK_SCREEN_FLAG_ON : 0) | (box ? HK_SCREEN_FLAG_BOX : 0);
++	if (ent != NULL) {
++		h.ent_magic = ent[0];
++		h.ent_nonce = ent[1];
++		h.ent_entry_t = ent[2];
++		h.ent_handoff_t = ent[6];       /* XNUENT1 +0x30: handoff_t (tegu_early.c blazer_mirror_hdr) */
++	}
++	if (pic == NULL || !hk_screen_dims(sw, sh, out_w, &ow, &oh, &step) || stride < sw * 4u ||
++	    (uint64_t)HK_SCREEN_HDR_BYTES + (uint64_t)ow * oh * 2u > cap) {
++		h.flags |= HK_SCREEN_FLAG_NOPIC;
++		ow = oh = step = 0;
++	}
++	uint32_t crc = 0;
++	volatile uint32_t *body = rec + HK_SCREEN_HDR_BYTES / 4;
++	for (uint32_t oy = 0; oy < oh; oy++) {
++		hk_screen_row(pic, stride, sw, sh, oy, ow, step, box, row);
++		crc = crcfn(crc, row, (size_t)ow * 2u);
++		for (uint32_t i = 0; i < ow / 2; i++) {
++			body[(uint64_t)oy * (ow / 2) + i] = (uint32_t)row[2 * i] | ((uint32_t)row[2 * i + 1] << 16);
++		}
++	}
++	h.width = ow;
++	h.height = oh;
++	h.step_q16 = step;
++	h.data_bytes = ow * oh * 2u;
++	h.data_crc = crc;
++	uint64_t t = now() - cntvct;
++	h.took_us = freq ? (uint32_t)(t * 1000000u / freq) : 0;
++	for (uint32_t i = 2; i < HK_SCREEN_HDR_BYTES / 4; i++) {
++		rec[i] = hw[i];
++	}
++	barrier();
++	rec[1] = HK_SCREEN_MAGIC1;
++	rec[0] = HK_SCREEN_MAGIC0;
++	barrier();
++	return HK_SCREEN_HDR_BYTES + h.data_bytes;
++}

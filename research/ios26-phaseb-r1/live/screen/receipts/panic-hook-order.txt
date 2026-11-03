@@ -1,0 +1,6 @@
+fffffe000777aa64:      	bl	0xfffffe000797c8e0 <_hk_screen_panic>
+fffffe000777aa84:      	bl	0xfffffe0007fe2ad0 <_PEHaltRestartInternal>
+fffffe000777aa94:      	bl	0xfffffe0008091f90 <_PE_init_panicheader>
+fffffe000777ac28:      	bl	0xfffffe000777b720 <_kdp_machine_reboot_type>
+fffffe000777ad7c:      	bl	0xfffffe000777b720 <_kdp_machine_reboot_type>
+fffffe000777adb0:      	bl	0xfffffe000777b720 <_kdp_machine_reboot_type>

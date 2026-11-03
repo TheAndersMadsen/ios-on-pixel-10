@@ -1,0 +1,38 @@
+phone-bridge: m1box is at 66fa691dc9, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: uncommitted on m1box and different on the Mac (the Mac's version runs): dualboot/validate.py research/ios26-connectivity-r1/wifi/receipts/image_tool-w1.txt research/ios26-connectivity-r1/wifi/receipts/tests.txt tools/image_tool.py tools/test_usbcon_tool.py tools/usbcon.py 
+20:27:25 waiting for build slot lock
+20:29:17 lock held
+20:29:17 tree branch p1 HEAD b228c4f dirty=False
+20:29:17 applied 0001-hk-live-key-swipe-snapshot.patch sha256 d93bec9b0e24698bf1ec4c0c7608030054979c39e437eb4ad1644d5ab26aef23:
+iokit/Kernel/arm/hid/SweetHID.cpp    |   5 ++
+ iokit/Kernel/arm/hid/hk_live_hid.inc | 121 +++++++++++++++++++++++++++++++----
+ iokit/Kernel/arm/sweet_scanout.cpp   |  30 +++++++++
+ iokit/Kernel/arm/sweet_scanout.h     |   5 ++
+ osfmk/arm64/blazer_usbcon.c          |  77 ++++++++++++++++++++++
+ osfmk/arm64/blazer_usbcon_core.inc   |  13 +++-
+ osfmk/arm64/blazer_usbcon_input.inc  |  36 +++++++++--
+ osfmk/arm64/hk_live_input.h          |  20 +++++-
+ 8 files changed, 285 insertions(+), 22 deletions(-)
+20:29:17 commit c74c9cb60cd043e78b7d0d519afc476d83a33ab1
+20:29:17 applied 0002-hk-screen.patch sha256 6e3929563a74548018f7d8ff2e93fe8e1ddf8221201c47e85f484ab120fd343d:
+bsd/dev/hakios.blazer_ufs.c        |  10 +++
+ iokit/Kernel/arm/sweet_scanout.cpp |  13 +++
+ iokit/Kernel/arm/sweet_scanout.h   |   3 +
+ osfmk/arm64/hk_screen.c            | 151 +++++++++++++++++++++++++++++++
+ osfmk/arm64/hk_screen_pure.inc     | 178 +++++++++++++++++++++++++++++++++++++
+ osfmk/conf/files.arm64             |   1 +
+ osfmk/kern/debug.c                 |   8 ++
+ 7 files changed, 364 insertions(+)
+20:29:17 commit 8f019a88545d423613899da8af55cdd072c4e16a
+20:29:17 branch hk-screen-dbg5 HEAD 8f019a88545d423613899da8af55cdd072c4e16a
+20:29:46 build screen-dbg5-build rc 0
+20:29:46 8e22c1ff59caaef03cf0408c3ba8d3ad3e748513ad8eff807277b867ef565d82  kernel.dbg5-screen
+20:29:46 84246fa915269667c1e9ebba2b03a5510fb0b8ed85ca2ac8aa6702b274adf33d  kernel.dbg5-screen.unstripped
+20:29:46 5ebe36c45a26d979987975767b16b237a8d9f629612a223848fd95c290e299b6  osfmk/DEVELOPMENT/hk_screen.o
+20:29:46 512002132ed233218295ece9f6bd3e72d9e0bdb176b9bf195a95b4cddddf6612  osfmk/DEVELOPMENT/blazer_usbcon.o
+20:29:46 6f33ddf82e9811d85dd19db1a7314eb60dbd21bd5d0d8daf26186b71e8121acf  osfmk/DEVELOPMENT/debug.o
+20:29:46 474d305af5498c6be07cd62947b0d355082d13ed35fc405958e10f5cd3fbcfdb  bsd/DEVELOPMENT/hakios.blazer_ufs.o
+20:29:46 22d6572cbac4b108daec3e1952ee7c3567309426f778e93338dec6753549697d  iokit/DEVELOPMENT/sweet_scanout.cpo
+20:29:46 restored branch p1 HEAD b228c4f
+20:30:22 build screen-dbg5-restore-p1-build rc 0
+20:30:22 obj kernel after restore 5e457e2359278e3d6943fa6d989c80f5cc43619e54d61a842ece54c4e3369af9
