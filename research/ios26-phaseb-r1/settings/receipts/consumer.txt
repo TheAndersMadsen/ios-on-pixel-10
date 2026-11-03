@@ -1,0 +1,15 @@
+CHANGED [14] f group 7 /private/var/db/com.apple.xpc.launchd/disabled.plist: 7442 -> 7484 B, written under mask, gains com.apple.bluetoothd
+PASS records: 46 identical, 1 changed; hk_env identical (661 B with NUL); hk_deny identical: bluetoothd
+EXEC backboardd DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib
+EXEC backboardd HK_CONTAINER_READY=probe
+EXEC backboardd HK_ACCEL_ONCE=skip
+EXEC SpringBoard FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome
+EXEC SpringBoard DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC SpringBoard HK_BATTERY_TRACE=1
+EXEC Preferences DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+EXEC Preferences HK_SETTINGS_ARTWORK=1
+EXEC iconservicesagent DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+EXEC iconservicesagent HK_SETTINGS_ARTWORK=1
+EXEC powerd DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC powerd HK_BATTERY_TRACE=1
+PASS: release consumers; only the active disabled.plist changed; 268 checks

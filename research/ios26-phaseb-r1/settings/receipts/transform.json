@@ -1,0 +1,20 @@
+{
+  "base_sha256": "f5d4c3676d1cf78c1b21036b784819d66425ce6bb55c27a46eee17f277412a97",
+  "output_sha256": "ee7554b9aba04d437992e3dbea73a9bdd5c444273b6cecd6fa3d9cfbf950a3ca",
+  "bytes": 541808,
+  "entries": 47,
+  "changed_entry": 14,
+  "group_bit": 7,
+  "mask": "0xa0080081",
+  "added_to_disabled": [
+    "com.apple.bluetoothd"
+  ],
+  "disabled_before": 159,
+  "disabled_after": 160,
+  "plist_bytes": [
+    7442,
+    7484
+  ],
+  "hk_deny_unchanged": "bluetoothd",
+  "other_records_byte_identical": 46
+}

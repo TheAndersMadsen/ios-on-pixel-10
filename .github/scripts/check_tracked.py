@@ -30,6 +30,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-connectivity-r1/wifi/r2/(src/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh)
   | ios26-wifi-r1/tools/mkwifisecret\.py
   | ios26-connectivity-r1/wifi/((tools|tests|receipts)/)?[A-Za-z0-9_.-]+\.(md|py|patch|c|sh|txt|meta)
+  | ios26-phaseb-r1/settings/((tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|py|c|sh|json|txt)
   | ios26-phaseb-r1/touch/(test/(shim/IOKit/)?)?[A-Za-z0-9_.-]+\.(md|patch|sh|cpp|c|h|txt)
   | ios26-phaseb-r1/display/(test/)?[A-Za-z0-9_.-]+\.(md|patch|py|c)
   | ios26-sensors-r1/((ios|android|tools/ios|mag-r1(/(patches|src|tests|tools|receipts))?)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|txt)

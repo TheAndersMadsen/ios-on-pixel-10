@@ -1,0 +1,13 @@
+cmdline bytes 1013 -> 1013; tokens 57 -> 57
+cmdline identical
+adt: "8c626a40c1433b0fb107ab97352c6e291a8e99871f91dde8591aede6be7ce981" -> "f1431e4a109cfd1b1d4a1c6d46728f4e88634c1e6cb9cf171967d5b3fd85e7d7"
+adt_facts: {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "38bba309d0 -> {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button_type": 2, "model": "iPhone12,3", "seed_sha256": "68d184fc0a
+decode: "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r7-touch/manifest.json" -> "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-r8-settings/manifest.json"
+epoch: 1793721409 -> 1793722936
+ids: {"epoch": "0x2f2c8efe68", "handoff": 1, "record_nonce": "aeb05298e207cde02cd3f52532d04176", "stamp_nonce": "0xf531b6822eddf085"} -> {"epoch": "0x2f2c8efeaa", "handoff": 1, "record_nonce": "9653cf764aa51db6c1baa6ebf72c33f5", "stamp_nonce": "0xb32364f46c76ca82"}
+image: "5e71f94a1b5b9d3fbb653d9931d427078ca1ea2e1cf76740c12abef8a5d5873d" -> "73a1311d466d0ee58e6ea18cf187a9c98693b8e03f7447036074bb24177a53b6"
+margin_bytes: 40085536 -> 40085504
+name: "a7-ios-system-r7-touch" -> "a7-ios-system-r8-settings"
+payload: "dcf31506373113bbc10f200535150a45fd04c8c2ccf3072b0e1832f94540168b" -> "efa31d8003a479a0ed61a583274372784349a4c813fdb50cb999b189296e37bf"
+payload_bytes: 25974752 -> 25974784
+var_overlay: {"bytes": 541768, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/accel-wait/build-mac/overlays/artwork-container-battery-observe-accel-skip-r1.ovl", "placed": ["0x884d9c000",  -> {"bytes": 541808, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/settings/overlays/settings-btdisabled-r1.ovl", "placed": ["0x884d9c000", "0x88000"], "sha256": "ee7554b9aba04d
