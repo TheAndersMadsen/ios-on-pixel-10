@@ -52,3 +52,24 @@ respawns with and without any change, so it cannot measure one. Next measurement
   (`HK_CONTAINER_READY=probe`); the 300 s log has `initFileURLWithPath` 0 and no `HKCONTAINER:` line. backboardd died
   of SIGSEGV instead (7 in a row). Open question for the next host step: whether the SIGSEGV happens before the
   interposed call, which would explain the missing receipts.
+
+## QEMU fix run: `runs/backboardd-15m-retry-r17` (m1box TCG, 900 s, exit 0, root unchanged; console 929b1e53…)
+
+One variable against r16: the overlay. `artifacts/a7-retry-l1.ovl` (f107cf63…) is the A7 phone overlay
+(artwork-container-battery-observe-r1, 7d610456…) with one same-length edit in the `hk_env` row,
+`HK_CONTAINER_READY=probe` -> `retry`, and the FNV-1a body hash recomputed; it decodes to the same 46 rows, and only row 39 differs.
+Root, kernel and boot-args are r16's.
+
+| Measure (900 s) | r16 (no fix) | r17 (fix, retry) |
+| --- | --- | --- |
+| `exec backboardd` | 1 | 1 |
+| respawns (userabort/usercrash/SIGSEGV) | 0 | 0 |
+| `initFileURLWithPath` / `Error getting shared system container` | 0 / 0 | 0 / 0 |
+| `hk_env: backboardd gets ... HK_CONTAINER_READY=retry` | none | yes |
+| `HKCONTAINER:` receipts | n/a | 0 |
+| system container resolved (StartWindowServer shader cache path) | yes | yes |
+
+Reading: with the fix loaded, backboardd respawns 0 times in 15 minutes, as without it. QEMU cannot show that the fix
+helps, because the abort never happens there. No `HKCONTAINER:` line appeared, so this run does not prove the
+interposed call executed. It writes to /dev/console, which this capture may not include. The same overlay
+does **not** make backboardd crash in QEMU, so the phone's SIGSEGV (A7) is not caused by the overlay alone.
