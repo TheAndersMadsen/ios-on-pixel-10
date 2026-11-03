@@ -1,0 +1,7 @@
+1 attempt(s):
+  emit-tag: console
+
+✅ NFC: works [emit-tag] (status ❌ open; promote)
+    + a tag read by RF discovery: emit-tag.log:35: blazer-nfc: tag: nfc-a, protocol 0x4, id 04a1b2c3d4e5f6
+    + blazer-nfc: ends: ok, stage 4: emit-tag.log:43: blazer-nfc: ends: ok, stage 4, chip answered, fw 0x01301e00, ntfs 4, tags 1
+    note: Kernel driver reads tags: nfc-a id 04a1b2c3d4e5f6 (emit-tag); no iOS NFC service

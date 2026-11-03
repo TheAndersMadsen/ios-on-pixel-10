@@ -1,0 +1,2 @@
+OK a7-ios-system-nfc1 bootable ee451c6c5dc49f13fdc22fcee5027f734f63ea1e383430406d25382ae867db16
+shared tools/image_tool.py: OK a7-ios-system-nfc1 bootable ee451c6c5dc49f13fdc22fcee5027f734f63ea1e383430406d25382ae867db16

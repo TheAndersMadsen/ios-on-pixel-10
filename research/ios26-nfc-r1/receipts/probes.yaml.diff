@@ -1,0 +1,34 @@
+--- /tmp/nfc-ref/probes.before	2026-11-03 23:31:49.374316743 +0100
++++ docs/probes.yaml	2026-11-03 23:31:49.395343122 +0100
+@@ -617,8 +617,29 @@
+   - id: nfc
+     phone_only: true
+     row: NFC
+-    owner: 'Not assigned'
+-    next: {kind: none, minutes: 0, test: 'Not assigned'}
++    needs:
++      boot_args: ['blazer_nfc=[1-4]']
++      markers: ['blazer-nfc: ']
++      image: 'hk-nfc1 kernel (research/ios26-nfc-r1/DESIGN.md), e.g. a7-ios-system-nfc1'
++    works:
++      all:
++        - {re: 'blazer-nfc: tag: (?P<tech>nfc-[abfv]|other), protocol 0x[0-9a-f]+, id (?P<tag_id>[0-9a-f]+)', label: 'a tag read by RF discovery'}
++        - {re: 'blazer-nfc: ends: ok, stage 4'}
++      note: 'Kernel driver reads tags: {tech} id {tag_id} ({attempt}); no iOS NFC service'
++    partial:
++      all:
++        - {re: 'blazer-nfc: chip st21nfc fw 0x(?P<fw>[0-9a-f]{8}) hw 0x(?P<hw>[0-9a-f]{2})', label: 'ST21NFC identified (power-up CORE_RESET_NTF)'}
++      any:
++        - {re: 'blazer-nfc: nci init ok'}
++        - {re: 'blazer-nfc: address 0x08 acked, power-up reset ntf received'}
++      note: 'ST21NFC powered and identified in the kernel: fw 0x{fw} hw 0x{hw} ({attempt})'
++    fails:
++      - {re: 'blazer-nfc: address 0x08 never acked', label: 'controller never answered (enable polarity, mux or clock)'}
++      - {re: 'blazer-nfc: chip in loader mode', label: 'controller in loader mode'}
++      - {re: 'blazer-nfc: core generic error ntf, status 0x(?P<nci_err>[0-9a-f]+)', label: 'NCI generic error (RF config/clock)'}
++      - {re: 'blazer-nfc: ends: (?!ok)(?P<nfc_stop>[a-z-]+), stage', label: 'driver stopped'}
++    owner: 'Was an NFC card held on the back of the phone during the 30 s window?'
++    next: {kind: unattended, minutes: 15, test: 'Boot a7-ios-system-nfc1 (obs1 + blazer_nfc=4 blazer_nfc_wait=30): identify line unattended; a tag line if the owner holds a card at ~60-90 s'}
+ 
+   - id: uwb
+     phone_only: true

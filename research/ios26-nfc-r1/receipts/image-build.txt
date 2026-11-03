@@ -1,0 +1,2 @@
+a7-ios-system-nfc1 bootable ee451c6c5dc49f13fdc22fcee5027f734f63ea1e383430406d25382ae867db16 payload 26168416 margin 39891872
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-nfc1/manifest.json

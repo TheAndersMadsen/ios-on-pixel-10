@@ -1,0 +1,43 @@
+com.apple.xpc.launchd|2026-11-03 00:00:00) boot-args = debug=0x8 blazer_haptic_tap=1 blazer_nfc=4 blazer_nfc_wait=30
+blazer-nfc: stage 4, starts in 60 s
+blazer-nfc: pad chip-enable (hsion 1) param 0x100 dmux 0x1 tx 0x0 rx 0x0
+blazer-nfc: pad power-state (hsion 3) param 0x100 dmux 0x1 tx 0x1 rx 0x0
+blazer-nfc: next gdmc pad 3 at 0x6483000
+blazer-nfc: pad host-irq (gdmc 3) param 0x100 dmux 0x4 tx 0x1 rx 0x0: irq readable
+blazer-nfc: chip enable not driven (off)
+blazer-nfc: lsio_e 2 (2 on)
+blazer-nfc: cli was 1,1,1
+blazer-nfc: i2c clock 200000000 Hz
+blazer-nfc: controller type 0x44570140 version 0x3230312a
+blazer-nfc: chip enable high
+blazer-nfc: bus found: enable 0x0 status 0x2 con 0x0 tar 0x0
+blazer-nfc: rx 33 bytes: 60 00 1e 01 00 20 02 1a 04 00 01 30 1e 00 01 02 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 12 34
+blazer-nfc: chip st21nfc fw 0x01301e00 hw 0x04 loader 0x010203 nci 0x20 manuf 0x02 trigger 0x01 config 0x00
+blazer-nfc: address 0x08 acked, power-up reset ntf received
+blazer-nfc: tx CORE_RESET (4 bytes)
+blazer-nfc: rx 4 bytes: 40 00 01 00
+blazer-nfc: rsp CORE_RESET status 0x0
+blazer-nfc: rx 33 bytes: 60 00 1e 02 00 20 02 1a 04 00 01 30 1e 00 01 02 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 12 34
+blazer-nfc: chip st21nfc fw 0x01301e00 hw 0x04 loader 0x010203 nci 0x20 manuf 0x02 trigger 0x02 config 0x00
+blazer-nfc: tx CORE_INIT (5 bytes)
+blazer-nfc: rx 14 bytes: 40 01 0b 00 1a 1e 00 02 00 02 ff 01 00 02
+blazer-nfc: rsp CORE_INIT status 0x0
+blazer-nfc: nci init ok: nci 0x20, fw 0x01301e00, init rsp 14 bytes
+blazer-nfc: tx ST_NFC_MODE_ON (5 bytes)
+blazer-nfc: rx 4 bytes: 4f 02 01 00
+blazer-nfc: rsp ST_NFC_MODE_ON status 0x0
+blazer-nfc: tx RF_DISCOVER (12 bytes)
+blazer-nfc: rx 4 bytes: 41 03 01 00
+blazer-nfc: rsp RF_DISCOVER status 0x0
+blazer-nfc: discovery on (poll a/b/f/v), listening 3 s
+blazer-nfc: rx 24 bytes: 61 05 15 01 02 04 00 ff 01 0b 44 00 07 04 a1 b2 c3 d4 e5 f6 01 20 00 00
+blazer-nfc: rf activated: id 1 interface 0x2 protocol 0x4 mode 0x0
+blazer-nfc: tag: nfc-a, protocol 0x4, id 04a1b2c3d4e5f6
+blazer-nfc: discovery: tag found after 1 rf notifications
+blazer-nfc: tx RF_DEACTIVATE (4 bytes)
+blazer-nfc: rx 4 bytes: 41 06 01 00
+blazer-nfc: rsp RF_DEACTIVATE status 0x0
+blazer-nfc: rx 5 bytes: 61 06 02 00 00
+blazer-nfc: rf deactivated ntf, type 0x0 reason 0x0
+blazer-nfc: chip enable restored to tx 0x0 (ok)
+blazer-nfc: ends: ok, stage 4, chip answered, fw 0x01301e00, ntfs 4, tags 1

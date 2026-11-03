@@ -1,0 +1,6 @@
+1 attempt(s):
+  emit-absent: console
+
+· NFC: no log verdict (status ❌ open; agree)
+    - blocker controller never answered (enable polarity, mux or clock) (x1, emit-absent): emit-absent.log:14: blazer-nfc: address 0x08 never acked, power-up reset ntf not received
+    - blocker driver stopped (x1, emit-absent): emit-absent.log:17: blazer-nfc: ends: nak, stage 4, chip silent, fw 0x00000000, ntfs 0, tags 0

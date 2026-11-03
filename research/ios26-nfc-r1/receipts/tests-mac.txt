@@ -1,0 +1,3 @@
+PASS: 118 checks, 0 failed
+mutants: 15/15 caught
+rc 0

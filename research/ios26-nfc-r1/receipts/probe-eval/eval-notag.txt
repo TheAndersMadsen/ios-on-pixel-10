@@ -1,0 +1,9 @@
+1 attempt(s):
+  emit-notag: console
+
+🟡 NFC: partial [emit-notag] (status ❌ open; promote)
+    + ST21NFC identified (power-up CORE_RESET_NTF): emit-notag.log:15: blazer-nfc: chip st21nfc fw 0x01301e00 hw 0x04 loader 0x010203 nci 0x20 manuf 0x02 trigger 0x01 config 0x00
+    + ST21NFC identified (power-up CORE_RESET_NTF): emit-notag.log:21: blazer-nfc: chip st21nfc fw 0x01301e00 hw 0x04 loader 0x010203 nci 0x20 manuf 0x02 trigger 0x02 config 0x00
+    + blazer-nfc: nci init ok: emit-notag.log:25: blazer-nfc: nci init ok: nci 0x20, fw 0x01301e00, init rsp 14 bytes
+    + blazer-nfc: address 0x08 acked, power-up reset ntf received: emit-notag.log:16: blazer-nfc: address 0x08 acked, power-up reset ntf received
+    note: ST21NFC powered and identified in the kernel: fw 0x01301e00 hw 0x04 (emit-notag)

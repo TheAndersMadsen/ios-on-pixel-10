@@ -1,0 +1,22 @@
+--- /tmp/nfc-ref/MAP.before	2026-11-03 23:37:59.347107769 +0100
++++ docs/debug/MAP.md	2026-11-03 23:38:09.444581186 +0100
+@@ -282,6 +282,19 @@
+ DOCS: research/ios26-phaseb-r1/ (sens2 image)
+ OPEN: none recorded here
+ 
++## nfc
++SUBSYS: nfc
++SRC: xnu/bsd/dev/blazer_nfc_hw.c (pure, host-tested), blazer_nfc.c, blazer_cli10_bus.h + the cli10 lock in blazer_haptic.c (branch hk-nfc1); research/ios26-nfc-r1/tests/
++ARGS: blazer_nfc=1..4 (1 pads read-only, 2 power + identify, 3 NCI init, 4 RF discovery), blazer_nfc_wait=1..60 (stage 4 listen s), blazer_nfc_delay=30..600 (default 60), blazer_nfc_keep=1
++TAGS: `blazer-nfc:` (pad …, chip st21nfc fw/hw/loader/nci, address 0x08 acked/never acked, rsp <CMD> status, nci init ok, tag: <tech> … id, discovery: …, ends: <stop>)
++SIG: `blazer-nfc: address 0x08 never acked` → ST21NFC not powered (enable pad hsion 1 polarity/mux) or needs the 19.2 MHz clock (OPEN)
++SIG: `blazer-nfc: chip in loader mode` → controller firmware not in router mode; no NCI is sent
++SIG: `blazer-nfc: core generic error ntf` during stage 4 → RF needs ST config/clock (OPEN)
++SIG: haptic `tap N rc 16` while blazer-nfc runs → EBUSY by design (the cli10 bus lock), the tap is skipped
++TOOLS: `hk logs --grep blazer-nfc`; `python3 -I tools/probe_eval.py --row nfc <attempt>`; host `sh research/ios26-nfc-r1/tests/run.sh`
++DOCS: research/ios26-nfc-r1/DESIGN.md (pins, ST HAL facts, phone test and expected lines)
++OPEN: never booted on the phone (a7-ios-system-nfc1 built); RF clock pads not driven; no iOS nfcd service or mirror rule yet
++
+ ## screen
+ SUBSYS: screen
+ SRC: xnu osfmk/arm64/hk_screen.c, hk_screen_pure.inc (branch hk-screen-dbg5); tools/fb_png.py, tools/screenshot.sh

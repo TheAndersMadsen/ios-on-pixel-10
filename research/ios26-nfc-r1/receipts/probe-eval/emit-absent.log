@@ -1,0 +1,17 @@
+com.apple.xpc.launchd|2026-11-03 00:00:00) boot-args = debug=0x8 blazer_haptic_tap=1 blazer_nfc=4 blazer_nfc_wait=30
+blazer-nfc: stage 4, starts in 60 s
+blazer-nfc: pad chip-enable (hsion 1) param 0x100 dmux 0x1 tx 0x0 rx 0x0
+blazer-nfc: pad power-state (hsion 3) param 0x100 dmux 0x1 tx 0x1 rx 0x0
+blazer-nfc: next gdmc pad 3 at 0x6483000
+blazer-nfc: pad host-irq (gdmc 3) param 0x0 dmux 0x4 tx 0x1 rx 0x0: irq not readable, polled reads instead
+blazer-nfc: chip enable not driven (off)
+blazer-nfc: lsio_e 2 (2 on)
+blazer-nfc: cli was 1,1,1
+blazer-nfc: i2c clock 200000000 Hz
+blazer-nfc: controller type 0x44570140 version 0x3230312a
+blazer-nfc: chip enable high
+blazer-nfc: bus found: enable 0x0 status 0x2 con 0x0 tar 0x0
+blazer-nfc: address 0x08 never acked, power-up reset ntf not received
+blazer-nfc: stop nak, detail 0x1
+blazer-nfc: chip enable restored to tx 0x0 (ok)
+blazer-nfc: ends: nak, stage 4, chip silent, fw 0x00000000, ntfs 0, tags 0

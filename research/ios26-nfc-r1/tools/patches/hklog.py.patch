@@ -1,0 +1,10 @@
+--- a/tools/hklog.py	2026-11-03 23:36:34.116254048 +0100
++++ b/tools/hklog.py	2026-11-03 23:38:29.167965360 +0100
+@@ -50,6 +50,7 @@
+     ('apps', re.compile(rf'^HKL ({DAEMONS_APPS})\[|^HK USTACK|^HKMAIN|^HKSTDERR|^SWEET Sandbox|^usertrap:|^userabort'
+                         rf'|^hk_(env|deny): ({DAEMONS_APPS})\b|\(({DAEMONS_APPS})\)|\b(MobilePhone|Preferences)\[\d+')),
+     ('location', re.compile(r'^HKL (locationd)\[|\blocationd\[\d+')),
++    ('nfc', re.compile(r'^blazer-nfc:|^HKL (nfcd|nfcd_lite|SEService|seserviced)\[|\b(nfcd|seserviced)\[\d+|com\.apple\.(nfcd|seserviced)\b')),
+     ('proc', re.compile(r'^HKOBS \d+ \S+ t=\d+ proc:|^hk_(env|deny|adaptive):|exited due to|exited with exit code'
+                         r'|\bjob state = (exited|spawn failed)|\bservice state: (spawn scheduled|penalty box)|^CRASH|crash(ed)? loop')),
+     ('status', re.compile(r'^HKOBS |^blazer-root: (watch|deadline)|^HK TOP|^HKBATT')),

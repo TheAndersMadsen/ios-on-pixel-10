@@ -1,0 +1,11 @@
+--- a/tools/qemu_preflight.py	2026-11-03 23:09:46.895958838 +0100
++++ b/tools/qemu_preflight.py	2026-11-03 23:38:29.168062652 +0100
+@@ -60,7 +60,7 @@
+               ('blazer_thermal', 'Tensor thermal sensors'), ('blazer_gov', 'Tensor DVFS governor'),
+               ('blazer_usbcon', 'DWC3 USB gadget console'), ('blazer_rtc', 'PMIC RTC'), ('hk_bright', 'panel backlight / DCS'),
+               ('blazer_keys', 'GPIO volume keys'), ('blazer_power_key', 'PMIC power key'), ('blazer_key_delivery', 'key HID delivery (needs blazer_keys)'),
+-              ('blazer_haptic', 'haptics driver (CS40L)'), ('blazer_bootcpu', 'phone boot cluster id'), ('blazer_gpu', 'Mali GPU'),
++              ('blazer_haptic', 'haptics driver (CS40L)'), ('blazer_nfc', 'NFC controller (ST21NFC on the haptics I2C bus)'), ('blazer_bootcpu', 'phone boot cluster id'), ('blazer_gpu', 'Mali GPU'),
+               ('blazer_wifi', 'BCM4390 PCIe'), ('blazer_usbnet', 'USB network gadget'), ('blazer_bt', 'Bluetooth UART'),
+               ('blazer_persist', 'ios_data persist needs a GPT fake LUN (--root fakelun image, --keep)'),
+               ('blazer_ufs_fake_lun', 'GPT fake LUN (--root fakelun image, --keep)')]

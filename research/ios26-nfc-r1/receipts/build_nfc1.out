@@ -1,0 +1,16 @@
+23:29:12 waiting for build slot lock
+23:29:12 lock held
+23:29:12 tree branch p1 HEAD b228c4f
+23:29:14 hk-nfc1 = f4fa53021d154cb99906f7325056b421bcb92d08 (on 2841211), src 69a1a54deb799b9f9494648b4a4bfb959ce2048d99375bd021a79326d402bf36
+23:29:15 checked out hk-nfc1 f4fa53021d154cb99906f7325056b421bcb92d08
+23:30:29 build nfc1-build rc 0
+23:30:29 d458026064e52c301fb243449b80dc58ca67d1260b715db8d94da570f86453ce  kernel.nfc1
+23:30:29 381b948ee3d7f465d6499ec0eb20e7bcf32a78ec730827ae4dc8cfce26a732a2  kernel.nfc1.unstripped
+23:30:29 bb8b7f62d6c2a7acdeb847168695eae7e7aea6b8537ad0c37251819f2eb6fcd4  blazer_nfc_hw.o (/bsd/DEVELOPMENT/blazer_nfc_hw.o)
+23:30:29 0d31b5a8908341fb12b8e7f03e883d86889e5fd922d07e3c75b32344139c7e10  blazer_nfc.o (/bsd/DEVELOPMENT/blazer_nfc.o)
+23:30:29 360f515dfe3b8c8464a5b027b82fadcc49e418b68c7346d01a8cdba9243f1e61  blazer_haptic.o (/bsd/DEVELOPMENT/blazer_haptic.o)
+23:30:29 2762c62a447316471ae809ccea62ae0933d710346d79ec9fcfec4ff5316d4fab  bsd_init.o (/bsd/DEVELOPMENT/bsd_init.o)
+23:30:29 restored branch p1 HEAD b228c4f
+23:31:48 build nfc1-restore-p1-build rc 0
+23:31:48 obj kernel after restore 4671599f62d45d2e83dc895b58770f798674024e1f10d84f1cdcfa728cdf379f
+23:31:48 restored p1 kernel has the blazer-nfc string: False

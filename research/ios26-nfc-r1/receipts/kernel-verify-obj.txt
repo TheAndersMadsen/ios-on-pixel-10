@@ -1,0 +1,25 @@
+== blazer_haptic.o 360f515dfe3b8c8464a5b027b82fadcc49e418b68c7346d01a8cdba9243f1e61 (branch relocations per function)
+   1 <ltmp0>: _lck_mtx_lock
+   1 <_blazer_cli10_exit>: _lck_mtx_unlock
+   2 <_blazer_haptic_play_rom>: _lck_mtx_try_lock
+   1 <_blazer_haptic_play_rom>: _hh_play_rom
+   4 <_blazer_haptic_play_rom>: _lck_mtx_unlock
+   1 <_blazer_haptic_init>: _kernel_thread_start
+   7 <_haptic_thread>: _ml_io_map
+   1 <_haptic_thread>: _lck_mtx_lock
+   1 <_haptic_thread>: _hh_run
+   1 <_haptic_thread>: _lck_mtx_unlock
+   1 <_haptic_thread>: _lck_mtx_lock
+   1 <_haptic_thread>: _lck_mtx_unlock
+   1 <_k_cpm_enter>: _blazer_cpmq_enter
+   1 <_k_cpm_exit>: _blazer_cpmq_exit
+== blazer_nfc.o 0d31b5a8908341fb12b8e7f03e883d86889e5fd922d07e3c75b32344139c7e10 (branch relocations per function)
+   1 <ltmp0>: _kernel_thread_start
+   1 <_nfc_thread>: _ml_io_map
+   1 <_nfc_thread>: _nf_init
+   1 <_nfc_thread>: _nf_run
+   1 <_nfc_thread>: _nf_stop_name
+   1 <_k_cpm_enter>: _blazer_cpmq_enter
+   1 <_k_cpm_exit>: _blazer_cpmq_exit
+   1 <_k_bus_enter>: _blazer_cli10_enter
+   1 <_k_bus_exit>: _blazer_cli10_exit

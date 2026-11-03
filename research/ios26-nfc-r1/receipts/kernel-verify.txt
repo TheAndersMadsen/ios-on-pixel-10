@@ -1,0 +1,30 @@
+kernel 381b948ee3d7f465d6499ec0eb20e7bcf32a78ec730827ae4dc8cfce26a732a2  research/ios26-nfc-r1/build/kernel.nfc1.unstripped
+branch hk-nfc1 f4fa53021d154cb99906f7325056b421bcb92d08 parent 284121116f90c6549c8a3bc35250579c9cd9f155
+undefined symbols: 0
+-- symbols
+_blazer_nfc_init           fffffe0007a2a0e0 S
+_nf_init                   fffffe0007a262c0 S
+_nf_run                    fffffe0007a26350 S
+_nf_stop_name              fffffe0007a26290 S
+_blazer_cli10_enter        fffffe0007a258c0 S
+_blazer_cli10_exit         fffffe0007a258d0 S
+_blazer_haptic_init        fffffe0007a25a20 S
+_blazer_haptic_play_rom    fffffe0007a25910 S
+-- strings
+blazer-nfc: stage %u, starts in %u s             1
+blazer-nfc: ends: %s, stage %u                   1
+chip st21nfc fw 0x%08x hw 0x%02x                 1
+address 0x%02x %s, power-up reset ntf %s         1
+nci init ok: nci 0x%02x                          1
+tag: %s, protocol 0x%x, id %s                    1
+discovery: %s after %u rf notifications          1
+blazer-cli10                                     1
+blazer-haptic: tap feedback on                   1
+-- callers (bl or a tail-call b)
+_bsd_init                    -> _blazer_nfc_init       1
+_bsd_init                    -> _blazer_haptic_init    1
+_blazer_haptic_play_rom      -> _blazer_cli10_exit     0
+-- haptic_thread / nfc_thread are static: their lock calls, by disassembly of every function calling the lock
+-- lck_mtx_try_lock in blazer_haptic_play_rom: 2
+-- build warnings in changed files
+(end of warnings)
