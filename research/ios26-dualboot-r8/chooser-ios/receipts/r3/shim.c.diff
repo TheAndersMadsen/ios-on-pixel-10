@@ -1,0 +1,57 @@
+diff --git i/shim/shim.c w/shim/shim.c
+index 24f7ac7..b44176f 100644
+--- i/shim/shim.c
++++ w/shim/shim.c
+@@ -78,6 +78,9 @@
+ #ifndef TGL_USB_WAIT_SECONDS
+ #define TGL_USB_WAIT_SECONDS 8
+ #endif
++/* TGL_USB_DISABLE: the usb-warm REFUSED argument, ASCII "USBSKIP0". No
++ * GSNPSID reads like it, so a decoder never mistakes it for a probed value. */
++#define TGL_USB_SKIPPED_ARG UINT64_C(0x555342534b495030)
+ static unsigned reset_method = 1; /* saved Blazer /psci uses SMC */
+ static volatile int in_exception;
+ static const char *stage;
+@@ -542,6 +545,22 @@ void shim_main(uint64_t dtb)
+ 	if (usb_status)
+ 		stage_fail(TGL_STAMP_R_USBFATAL, "usb console bring-up failed",
+ 		    (uint32_t)(int32_t)usb_status);
++#endif
++#else
++	/* 6. Cold-safe build (chooser-ios-r3, research/ios26-dualboot-r8/
++	 * chooser-ios/COLD-r3.md): no EP0 console and no USB MMIO at all. On a
++	 * cold power-on ABL never powers or clocks the USB block (HSIO_N,
++	 * CPM-voted, with no readable status register), and the first wrapper
++	 * CSR read (0x0c450000) ended the boot without an exception the shim
++	 * could take (20261103-193247-installed-ios-crash: last stamp usb-warm
++	 * ENTER). The stamp below records the skip; XNU's blazer_usbcon then
++	 * finds no EP0 READY stamp and never reads the controller. The watchdog
++	 * quiesce below runs in both builds. */
++	stage = "USB skipped (cold-safe build)";
++	stage_id = TGL_STAGE_USB_WARM;
++	bringup_gate("post-console");
++	con_str("USB", "disabled at build time (cold-safe, no USB MMIO)");
++	tgl_stamp(TGL_STAGE_USB_WARM, TGL_STAMP_F_REFUSED, TGL_USB_SKIPPED_ARG);
+ #endif
+ 	/* Quiesce the watchdogs BEFORE the diagnostic enumeration wait: the
+ 	 * survey finds THREE WDTs but the pat path services only two, and an
+@@ -556,6 +575,7 @@ void shim_main(uint64_t dtb)
+ 		tgl_stamp(stage_id, TGL_STAMP_F_DONE,
+ 		    (uint64_t)wdt[0].disabled | ((uint64_t)wdt[1].disabled << 1));
+ 	}
++#ifndef TGL_USB_DISABLE
+ #if TGL_FAST_START
+ 	/* F1: no host is expected on a normal start; a host that is still
+ 	 * mid-request gets its data stage finished (bounded), nothing more. */
+@@ -563,10 +583,8 @@ void shim_main(uint64_t dtb)
+ #else
+ 	tgl_usb_console_wait(TGL_USB_WAIT_SECONDS);
+ #endif
+-	bringup_gate("post-usb");
+-#else
+-	con_str("USB", "disabled at build time");
+ #endif
++	bringup_gate("post-usb");
+ 
+ 	/* 6.5 UFS probe ladder (v3.9, P2 lane): U0-U9, one attempt per boot,
+ 	 * side-effect-light, fail-closed. Evidence lands in the stamp

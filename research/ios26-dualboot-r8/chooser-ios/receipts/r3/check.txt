@@ -1,0 +1,9 @@
+$ chooser_ios_image.py check research/images/chooser-ios-r3
+OK chooser-ios-r3 chooser-ios bootable default android installable cold-safe 3d11da924951a6df91094cb4f273c976890909062530f6400d8297ef6501e15e
+rc=0
+$ chooser_ios_image.py check research/images/chooser-ios-r2
+recorded installable, but the shim starts the USB console: it faults on a cold power-on (chooser-ios/COLD-r3.md)
+rc=1
+$ chooser_ios_image.py check research/images/chooser-ios-r2-ios
+OK chooser-ios-r2-ios chooser-ios bootable default ios not installable usb-console 929a660cfbaf5bb6b55403822e0b47fa8ac3c059a6cb26a21b14bb68f8df807e
+rc=0

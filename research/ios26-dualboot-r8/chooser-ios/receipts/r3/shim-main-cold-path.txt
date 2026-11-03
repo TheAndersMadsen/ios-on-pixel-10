@@ -1,0 +1,19 @@
+376-    2054:      	mov	w0, #0x23               // =35
+377-    2058:      	mov	w1, #0x10               // =16
+378-    205c:      	movk	x2, #0x4b49, lsl #16
+379-    2060:      	movk	x2, #0x4253, lsl #32
+380:    2064:      	movk	x2, #0x5553, lsl #48
+381-    2068:      	bl	0x1a674 <tgl_stamp>
+382-    206c:      	adrp	x8, 0x2d000 <capability+0xa10>
+383-    2070:      	add	x8, x8, #0xa5e
+384-    2074:      	mov	w0, #0x14               // =20
+385-    2078:      	str	x8, [x25, #0x48]
+386-    207c:      	mov	w8, #0x14               // =20
+387-    2080:      	mov	w1, #0x1                // =1
+388-    2084:      	mov	x2, xzr
+389-    2088:      	str	w8, [x26, #0x6d0]
+390-    208c:      	bl	0x1a674 <tgl_stamp>
+391-    2090:      	mov	x0, x20
+392-    2094:      	bl	0x88a4 <wdt_quiesce_late>
+393-    2098:      	ldr	w8, [x20, #0xc]
+394-    209c:      	ldr	w9, [x20, #0x44]

@@ -1,0 +1,16 @@
+ok   host test builds
+     keys_laguna_test: 120 checks, 0 failures
+ok   host test on mocked MMIO passes
+ok   AArch64 keys_laguna.o, TGL_KEYS_POLL=1
+ok   object machine is AArch64
+ok   defines keys_init/poll/raw_levels: {'keys_init': 'T', 'keys_poll': 'T', 'keys_raw_levels': 'T'}
+ok   no undefined symbols (reader is injected)
+ok   no ABS64 relocation (shim image contract)
+ok   pad reads go through the injected reader (blr)
+ok   builds RXDATA PA 0x052b0010 (pad 48 base; 51/52 add 0x3000/0x4000)
+ok   gate off: keys_laguna.o is empty
+ok   chooser.o with TGL_CHOOSER_KEYS_POLL=1
+ok   hook calls keys_init/keys_poll and defines chooser_keys_db
+ok   hook without TGL_CHOOSER_KEYS refuses to build
+ok   hook gate off: chooser.o has no keys_laguna reference (r8 path unchanged)
+test_keys: PASS

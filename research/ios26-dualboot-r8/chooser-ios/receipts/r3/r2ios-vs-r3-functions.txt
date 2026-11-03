@@ -1,0 +1,4 @@
+shim_main: 841 vs 826 instructions, 469 differ
+tgl_chooser_run: 985 vs 985 instructions, 8 differ
+tgl_stamp_boot_us: 30 vs 29 instructions, 1 differ
+322 of 325 common functions identical after normalisation; only in B: []; only in A: []

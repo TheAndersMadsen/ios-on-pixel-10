@@ -1,0 +1,15 @@
+test_cli_accepts_the_switch (__main__.Cli.test_cli_accepts_the_switch) ... ok
+test_cli_refuses_poll_without_keys_before_reading_input (__main__.Cli.test_cli_refuses_poll_without_keys_before_reading_input) ... ok
+test_existing_refusals_kept (__main__.Gates.test_existing_refusals_kept) ... ok
+test_keys_fix_adds_only_its_gates (__main__.Gates.test_keys_fix_adds_only_its_gates) ... ok
+test_keys_fix_and_diag_refusals (__main__.Gates.test_keys_fix_and_diag_refusals) ... ok
+test_keys_poll_adds_only_the_keys_gates (__main__.Gates.test_keys_poll_adds_only_the_keys_gates) ... ok
+test_keys_poll_needs_keys (__main__.Gates.test_keys_poll_needs_keys) ... ok
+test_keys_without_poll_has_no_poll_gate (__main__.Gates.test_keys_without_poll_has_no_poll_gate) ... ok
+test_r11_unchanged (__main__.Gates.test_r11_unchanged) ... ok
+test_symbols_checked_with_the_gate (__main__.Gates.test_symbols_checked_with_the_gate) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.114s
+
+OK

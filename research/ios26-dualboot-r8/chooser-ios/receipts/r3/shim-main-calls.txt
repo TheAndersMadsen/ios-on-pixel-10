@@ -1,0 +1,4 @@
+shim_main direct calls, chooser-ios-r2 -> chooser-ios-r3 (multiset):
+ removed [('<bringup_gate>', 1), ('<con_hex2>', 1), ('<laguna_usb_running>', 1), ('<laguna_usb_transfer_active>', 1), ('<tgl_usb_console_start>', 1), ('<tgl_usb_console_wait>', 2)]
+ added   [('<tgl_stamp>', 1), ('<tgl_stamp_over_deadline>', 1), ('<tgl_stamp_reason>', 1)]
+ (bringup_gate: one of its calls is inlined in r3, hence tgl_stamp_over_deadline/tgl_stamp_reason)

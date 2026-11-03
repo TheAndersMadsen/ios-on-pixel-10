@@ -1,0 +1,6 @@
+{
+ "tgl_usb_console_start": [
+  "laguna_usb_board_resume",
+  "laguna_usb_start"
+ ]
+}

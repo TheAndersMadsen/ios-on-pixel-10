@@ -79,10 +79,18 @@ class Gates(unittest.TestCase):
         self.assertEqual(T.menu_reference_flags(True).split(), T.R11_MENU_FLAGS.split() + ['-DTGL_DCS_PRESENT_QUIET=1'])
 
     def test_installable(self):
-        self.assertTrue(T.installable(True, True, False))     # chooser-ios-r2: keys, default Android
-        self.assertFalse(T.installable(True, True, True))     # chooser-ios-r2-ios: default iOS
-        self.assertFalse(T.installable(True, False, False))   # chooser-ios-r1: no keys
-        self.assertFalse(T.installable(False, True, False))   # test-* builds
+        self.assertTrue(T.installable(True, True, False, True))     # chooser-ios-r3: keys, default Android, cold-safe
+        self.assertFalse(T.installable(True, True, False))          # chooser-ios-r2: USB console, faulted on a cold power-on
+        self.assertFalse(T.installable(True, True, True, True))     # default iOS
+        self.assertFalse(T.installable(True, False, False, True))   # no keys
+        self.assertFalse(T.installable(False, True, False, True))   # test-* builds
+
+    def test_cold_safe_flag(self):
+        f = T.chooser_cflags(self.IOS, True, False, True).split()
+        self.assertEqual(f[-1], '-DTGL_USB_DISABLE=1')
+        self.assertEqual(f[:-1], T.chooser_cflags(self.IOS, True, False).split())   # r3 = r2's gates + the USB gate only
+        self.assertNotIn('-DTGL_USB_DISABLE=1', T.chooser_cflags(self.IOS, True, True).split())
+        self.assertNotIn('tgl_cpm_init', T.USB_ENTRY)                                  # the display ladder calls it too
 
     def test_key_symbols(self):
         for s in ('tgl_chooser_ios_menu_tick', 'chooser_menu_tick', 'keys_poll'):
@@ -116,6 +124,49 @@ class LoopCheck(unittest.TestCase):
         self.assertIn('2 ways', T.r13_loop_linked(self.RUN.replace('   236bc:      \tbl\t0x24744 <tgl_menu_draw_band>', ''), 0x23d50, 0x298060))
         self.assertIn('present', T.r13_loop_linked(self.RUN.replace('tgl_dcsm_present', 'tgl_dcs_present'), 0x23d50, 0x298060))
         self.assertIn('hard end', T.r13_loop_linked(self.RUN.replace('#0x3a98', '#0x1388'), 0x23d50, 0x298060))
+
+
+class UsbCheck(unittest.TestCase):
+    # llvm-objdump -d shape of the linked shim
+    CONSOLE = """
+0000000000001000 <shim_main>:
+    1010:      \tbl\t0x5000 <tgl_usb_console_start>
+    1020:      \tbl\t0x6000 <wdt_quiesce_late>
+    1030:      \tbl\t0x5400 <tgl_usb_console_wait>
+0000000000005000 <tgl_usb_console_start>:
+    5010:      \tbl\t0x7000 <laguna_usb_board_resume>
+    5020:      \tb\t0x7400 <laguna_usb_start>
+0000000000005400 <tgl_usb_console_wait>:
+    5410:      \tbl\t0x7800 <laguna_usb_poll>
+"""
+    COLD = """
+0000000000001000 <shim_main>:
+    1010:      \tbl\t0x4000 <con_str>
+    1020:      \tbl\t0x6000 <wdt_quiesce_late>
+    1030:      \tbl\t0x4800 <tgl_usb_console_service>
+0000000000005000 <tgl_usb_console_start>:
+    5010:      \tbl\t0x7000 <laguna_usb_board_resume>
+    5020:      \tb\t0x7400 <laguna_usb_start>
+"""
+
+    def test_console_build(self):
+        self.assertEqual(T.usb_linked(self.CONSOLE, False), 0)
+        self.assertIn('reached from', T.usb_linked(self.CONSOLE, True))
+
+    def test_cold_build(self):
+        self.assertEqual(T.usb_linked(self.COLD, True), 0)
+        self.assertIn('does not start', T.usb_linked(self.COLD, False))
+        calls, q = T.usb_calls(self.COLD)
+        self.assertTrue(q)
+        self.assertEqual(calls, {'tgl_usb_console_start': {'laguna_usb_board_resume', 'laguna_usb_start'}})
+
+    def test_cold_refusals(self):
+        no_quiesce = self.COLD.replace('<wdt_quiesce_late>', '<wdt_pat>')   # r2-era TGL_USB_DISABLE: the quiesce was inside the USB block
+        self.assertIn('wdt_quiesce_late', T.usb_linked(no_quiesce, True))
+        tail = self.COLD + "0000000000009000 <loader_boot>:\n    9010:      \tbl\t0x5000 <tgl_usb_console_start>\n"
+        self.assertIn("['loader_boot']", T.usb_linked(tail, True))
+        elsewhere = self.COLD.replace('0000000000005000 <tgl_usb_console_start>:', '0000000000005000 <other>:')
+        self.assertIn("['other']", T.usb_linked(elsewhere, True))                # any non-entry caller of laguna_usb_start
 
 
 class Budget(unittest.TestCase):
