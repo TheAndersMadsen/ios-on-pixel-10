@@ -28,7 +28,8 @@ its own `ios_system` / `ios_data` partitions. The run brief is `GOAL.md`; receip
 
 ## Remaining work, in order
 
-1. Attended r4 (cached decode), r7 (visible menu), r8 (volume keys), one at a time.
+1. r4 (cached decode) PASS: Android in 42 s. r7 showed the menu on the panel; giving the display
+   back to Linux is open (r7 kernel panic, r9 CPM hang). Next: quiesce the DPU before power-off, then keys (r8).
 2. Cached EL2 identity map for the decode; then the visible startup menu and the volume-key
    pad read, each as its own candidate.
 3. A6 migration (attended, packet), then A7: `ios_system` flash and an XNU writer bound to

@@ -30,8 +30,9 @@ recoverable. QEMU and host tools support development; they are not phone results
   loop). Nothing written. Receipts: `research/ios26-dualboot-r8/`.
 - **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of chooser-v1-r3 (`shim/chooser.c`, stock boot
   vbmeta transplanted) chain-loads the stock Android kernel at EL2. Android completed boot 3 times in a row
-  (kernel at 0xc9c00000, /data decrypted, return checks PASS), plain boots follow. Not yet physical: the
-  on-panel menu (r7), volume keys (r8), cached decode (r4; decode takes ~2.5 min now). Receipts:
+  (kernel at 0xc9c00000, /data decrypted, return checks PASS), plain boots follow. r4 (cached decode)
+  reaches Android in 42 s. r7 put the startup menu on the panel (owner saw it), but Linux then panicked:
+  the DPU power domain was left on. r9's attempt to switch it off hung CPM. Volume keys (r8) not run. Receipts:
   `research/ios26-dualboot-r8/attempts/A3-RESULT.md`.
 - **Apps (QEMU, 2026-11-02):** LaunchServices refuses every container-requiring
   restored app. App-Placeholder (H1) and MCM-container (H2) causes were tested and
