@@ -38,3 +38,17 @@ Remaining cause (inference): on the phone, containermanagerd does not answer bac
 time early in boot (the abort is "intermittent early" in the physical records). No fix was applied: QEMU shows 0
 respawns with and without any change, so it cannot measure one. Next measurement is physical: the A7 iOS boot from
 `ios_system` with backboardd and containermanagerd mirrored, recording the BaseBoard error text and code.
+
+## Existing fix and the first physical data point (added 2026-11-03 14:20)
+
+- The fix already exists: `research/ios26-opt-20261102/boot_services/src/hk_container_ready.c` (Mac checkout; 140
+  lines) interposes `container_system_path_for_identifier` in backboardd only. `HK_CONTAINER_READY=probe` logs
+  `HKCONTAINER: ... result=path|null` per early call; `=retry` also retries the transient codes 52, 91 and 107, bounded.
+  No new interposer was written (docs/reuse/2026-11-02/darwin-services.md).
+- QEMU r16 did not carry it (overlay `hgltrack-rebuilt.ovl`: `hk_env: backboardd gets DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib`).
+  A QEMU fix run cannot discriminate (0 aborts with and without), so none was made; the lane closes on the two rejected
+  hypotheses above.
+- PHYSICAL, A7 boot `a7-ios-system-r1` (`research/ios26-phaseb-r1/A7.md`): backboardd got the fix in **probe** mode
+  (`HK_CONTAINER_READY=probe`); the 300 s log has `initFileURLWithPath` 0 and no `HKCONTAINER:` line. backboardd died
+  of SIGSEGV instead (7 in a row). Open question for the next host step: whether the SIGSEGV happens before the
+  interposed call, which would explain the missing receipts.
