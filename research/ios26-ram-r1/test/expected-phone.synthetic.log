@@ -1,0 +1,4 @@
+[    0.05] blazer-mem: window 0x882000000 + 0x35ef80000, was + 0x100000000, hw.memsize 0x400000000
+[    0.05] blazer-mem: full map, installed 0x400000000, managed 0x882000000..0xbe0f80000, unmanaged: low bank 0x80000000..0x100000000, high 0x880000000..0x882000000 and 0xbe0f80000..0xc00000000
+[    0.06] blazer-mem: vm max_mem 0x35ef80000, hw.memsize 0x400000000
+[  900.00] blazer-root: deadline 900 s, stage 9

@@ -1,0 +1,10 @@
+14c14
+< X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # int/tools/image_tool_int1.py: the Mac's acf48b98 + pwr1 + netstack (INT1.md), run from here
+---
+> X = Path(__file__).resolve().parents[3]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # ios26-ram-r1/tools/image_tool_ramfull.py: image_tool_int1.py 728bdd21 + blazer_mem 14..16 (RAM.md), run from here
+149c149
+<                  'blazer_mem': r'blazer_mem=([5-9]|1[0-3])', 'blazer_mem_test': r'blazer_mem_test=(64|4096)', 'blazer_mem_report': r'blazer_mem_report=1',
+---
+>                  'blazer_mem': r'blazer_mem=([5-9]|1[0-6])', 'blazer_mem_test': r'blazer_mem_test=(64|4096)', 'blazer_mem_report': r'blazer_mem_report=1',
+445a446
+>         if any(re.fullmatch(r'blazer_mem=1[4-6]', t) for t in extra) and b'blazer-mem: full map' not in buf: die('blazer_mem=14..16 needs the full-map kernel (XNU hk-ram-full 476c253, research/ios26-ram-r1/RAM.md)')

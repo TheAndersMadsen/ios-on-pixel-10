@@ -1,0 +1,12 @@
+cc cc (GCC) 16.1.1 20260430
+cc -Wall -Wextra -Werror -I../ref test_memplan.c && ./a.out ; and again with -fsanitize=address,undefined -fno-sanitize-recover=all
+blazer_mem=16 on the phone (base 0x882000000, loader + 0x100000000):
+  installed (8 FDT banks)            0x400000000   16.00 GiB  -> hw.memsize
+  managed window 0x882000000..0xbe0f80000 0x35ef80000  13.48 GiB  -> max_mem (was 0x33b000000, 12.92 GiB)
+    of which Android places its own dynamic pools there at its boot: 179 MiB (vstream/vframe/pkvm_iommu_cma, map reusable)
+  unmanaged high, bottom 0x880000000..0x882000000: 32 MiB (16 MiB iomem reserved, owner unknown, + loader alignment)
+  unmanaged high, top 0xbe0f80000..0xc00000000: 496 MiB (MTE tag store from 0xbe0f83000; faprev, faceauth above)
+  unmanaged low bank 0x80000000..0x100000000: 2048 MiB, of which fixed DT carve-outs 563 MiB, the rest shim/ABL/panel/USB/UFS and blazer_low (denied)
+  managed / installed = 84.3 %
+25044 checks, 0 failed
+asan+ubsan: 25044 checks, 0 failed

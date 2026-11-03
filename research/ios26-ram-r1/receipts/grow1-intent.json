@@ -1,0 +1,10 @@
+{
+ "kernel_sha": "d92f5d737c248fc1f8660f2b18cd4f1620c3a17d4df4e73a4eb1ee507546cc87",
+ "root_sha": "205cb0e2887aeee1454c82fdb57a95e0b4f0443f738bcab6d387c4bb9462d9b7",
+ "overlay_sha": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e",
+ "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793744060 varfs=1 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 atm_diagnostic_config=0x400 hk_overlay=0xA0080081 blazer_aks_wrap=1 blazer_netstack=1 hk_ustack=Preferences,MobilePhone sched_preemption_disable_debug_mode=0 wdt=-1 hk_usertrace=1 hk_top=30 blazer_mem=15 blazer_mem_test=4096 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=8589934592",
+ "window": 16106127360,
+ "loader": 10737418240,
+ "root_pa": "0xa02e00000",
+ "top": "0xc02eac000"
+}

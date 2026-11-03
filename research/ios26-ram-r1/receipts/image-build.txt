@@ -1,0 +1,2 @@
+a7-ios-system-ramfull bootable 2463b8de9e76bffac6524ab2e3d916ee9a16ae3c06bc9b7efe6dc417dc3d30e1 payload 26130864 margin 39929424
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-ramfull/manifest.json

@@ -1,0 +1,33 @@
+5a6,8
+> research/ios26-ram-r1 variant: --loader-gib L hands the kernel memSize = memSizeActual = ADT dram-size = L GiB of the
+> SIZE GiB backed window, as the phone loader hands 4 GiB of its bank, so blazer_mem=GIB can grow it. Lives in the repo; the
+> rig directory comes from HACKIOS_QEMU_RIG.
+10c13
+< D = Path(__file__).resolve().parent.parent; R = D.parent; BC = R/'ios26-bootchain-r1/tools'
+---
+> D = Path(os.environ.get('HACKIOS_QEMU_RIG', '/data/hackios-qemu'))/'research/ios26-apps-r1'; R = D.parent; BC = R/'ios26-bootchain-r1/tools'
+58c61
+<     ap = argparse.ArgumentParser(); ap.add_argument('name'); ap.add_argument('--kernel', type=Path, required=True); ap.add_argument('--root', type=Path, required=True); ap.add_argument('--window-gib', type=int, default=6)
+---
+>     ap = argparse.ArgumentParser(); ap.add_argument('name'); ap.add_argument('--kernel', type=Path, required=True); ap.add_argument('--root', type=Path, required=True); ap.add_argument('--window-gib', type=int, default=6); ap.add_argument('--loader-gib', type=int, default=None)
+66c69
+<     SIZE = a.window_gib << 30; epoch = int(time.time())
+---
+>     SIZE = a.window_gib << 30; LSIZE = (a.loader_gib or a.window_gib) << 30; assert LSIZE <= SIZE; epoch = int(time.time())
+81c84
+<     ch.props = [(k, f, struct.pack('<Q', SIZE) if k == 'dram-size' else v) for k, f, v in ch.props]
+---
+>     ch.props = [(k, f, struct.pack('<Q', LSIZE) if k == 'dram-size' else v) for k, f, v in ch.props]
+99c102,103
+<     ba = bytearray(PAGE); struct.pack_into('<HH', ba, 0, 2, 2); struct.pack_into('<4Q', ba, 8, vb, BASE, SIZE, top)
+---
+>     assert top-BASE < LSIZE-(1 << 29), 'loader window too small for root'
+>     ba = bytearray(PAGE); struct.pack_into('<HH', ba, 0, 2, 2); struct.pack_into('<4Q', ba, 8, vb, BASE, LSIZE, top)
+101c105
+<     cl = ARGS.encode(); ba[108:108+len(cl)] = cl; struct.pack_into('<Q', ba, 1144, SIZE)
+---
+>     cl = ARGS.encode(); ba[108:108+len(cl)] = cl; struct.pack_into('<Q', ba, 1144, LSIZE)
+113c117
+<                args=ARGS, root_rw=bool(a.root_rw), fixups=nfix, virt_base=hex(vb), entry=hex(m['entry']), root_pa=hex(root_pa), root_size=hex(rsize), adt_pa=hex(adt_pa), ba_pa=hex(ba_pa), top=hex(top), window=SIZE, cpu=cpu, argv=cmd)
+---
+>                args=ARGS, root_rw=bool(a.root_rw), fixups=nfix, virt_base=hex(vb), entry=hex(m['entry']), root_pa=hex(root_pa), root_size=hex(rsize), adt_pa=hex(adt_pa), ba_pa=hex(ba_pa), top=hex(top), window=SIZE, loader=LSIZE, cpu=cpu, argv=cmd)

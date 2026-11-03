@@ -1,0 +1,241 @@
+From 476c253eb1946d5d53c575af0f94791c88ddc2ad Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 23:03:24 +0100
+Subject: [PATCH] blazer mem: blazer_mem=14..16 full map (window to the MTE tag
+ base 0xbe0f80000, hw.memsize = installed 16 GiB); 5..13 unchanged; blazer-mem
+ readback after arm_vm_init
+
+The loader hands XNU 4 GiB (memSize = memSizeActual = 0x100000000). blazer_mem=13
+grew memSize to 12.92 GiB but left memSizeActual at 4 GiB, so hw.memsize (max_mem_actual)
+read 4 GiB, below what the VM manages, and ml_get_booter_memory_size underflowed.
+The full map reports ABL's DRAM size, as iBoot does (memSizeActual >= memSize).
+Limits and the Android reservations they avoid: osfmk/arm/blazer_memplan.h (pure, host-tested).
+---
+ osfmk/arm/arm_init.c          | 45 ++++++++++++------
+ osfmk/arm/blazer_memplan.h    | 86 +++++++++++++++++++++++++++++++++++
+ pexpert/pexpert/arm64/SWEET.h | 15 +-----
+ 3 files changed, 119 insertions(+), 27 deletions(-)
+ create mode 100644 osfmk/arm/blazer_memplan.h
+
+diff --git a/osfmk/arm/arm_init.c b/osfmk/arm/arm_init.c
+index a640605..6113123 100644
+--- a/osfmk/arm/arm_init.c
++++ b/osfmk/arm/arm_init.c
+@@ -40,6 +40,7 @@
+ #include <kern/startup.h>
+ #if defined(BLAZER)
+ #include <arm/pmap/blazer_lowbank.h>
++#include <arm/blazer_memplan.h>
+ extern boolean_t blazer_low_holds(uint64_t pa);
+ #endif
+ #include <kern/debug.h>
+@@ -355,8 +356,9 @@ arm_auxkc_init(void *mh, void *base)
+  * not above the loader's size: nothing changes. Must run before arm_vm_init. start.s
+  * has already mapped only the loader's size, and nothing above it is touched until
+  * arm_vm_init has built the physical aperture over the new size.
+- * hw.memsize keeps the loader's value unless blazer_mem_report=1: userland keeps
+- * seeing the 4 GiB device it is built for.
++ * GIB 5..13: up to BLAZER_RAM_TOP; hw.memsize keeps the loader's value unless
++ * blazer_mem_report=1. GIB 14..16, the full map: up to BLAZER_RAM_TOP_TAGS, and
++ * hw.memsize is the installed 16 GiB. Limits and why: arm/blazer_memplan.h.
+  */
+ static uint64_t blazer_mem_old_end;
+ 
+@@ -365,7 +367,7 @@ static void __attribute__((noinline))
+ blazer_ram_audit(const boot_args *args)
+ {
+ 	uint32_t audit = 0;
+-	const uint64_t installed = 0x400000000ULL; /* eight FDT 2 GiB banks */
++	const uint64_t installed = BLAZER_RAM_INSTALLED;
+ 	if (!PE_parse_boot_argn("blazer_ram_audit", &audit, sizeof(audit)) || audit != 1) {
+ 		return;
+ 	}
+@@ -379,8 +381,9 @@ static void
+ blazer_mem_apply(boot_args *args)
+ {
+ 	uint32_t gib = 0, report = 0;
+-	uint64_t base = args->physBase, old = args->memSize, end, top = BLAZER_RAM_TOP, fake = 0;
++	uint64_t base = args->physBase, old = args->memSize, end = 0, actual = 0, fake = 0;
+ 	uint32_t past = 0;
++	int plan;
+ 
+ 	if (!PE_parse_boot_argn("blazer_mem", &gib, sizeof(gib)) ||
+ 	    (uint64_t)gib <= (old >> 30)) {
+@@ -391,24 +394,39 @@ blazer_mem_apply(boot_args *args)
+ 		sweet_early_printf("blazer-ram: top denied: ownership unknown\n");
+ 	}
+ 	/* QEMU only: its root sits in the window, past the phone's top. The image tool refuses this arg. */
+-	if (PE_parse_boot_argn("blazer_ufs_fake", &fake, sizeof(fake)) && fake != 0) {
+-		top = base + ((uint64_t)gib << 30);
+-	}
+-	if (base < BLAZER_RAM_BOTTOM || base >= top || gib > 64) {
++	PE_parse_boot_argn("blazer_ufs_fake", &fake, sizeof(fake));
++	PE_parse_boot_argn("blazer_mem_report", &report, sizeof(report));
++	plan = blazer_mem_plan(base, old, args->memSizeActual, gib, fake != 0, report != 0, &end, &actual);
++	if (plan == BLAZER_MEM_REFUSE) {
+ 		panic("blazer-mem: refused, %u GiB at base 0x%llx", gib, base);
+ 	}
+-	end = MIN(base + ((uint64_t)gib << 30), top);
+-	if (end <= base + old) {
++	if (plan != BLAZER_MEM_GROW) {
+ 		return;
+ 	}
+ 	args->memSize = end - base;
++	args->memSizeActual = actual;
+ 	gDramSize = args->memSize;
+-	if (PE_parse_boot_argn("blazer_mem_report", &report, sizeof(report)) && report != 0) {
+-		args->memSizeActual = args->memSize;
+-	}
+ 	blazer_mem_old_end = base + old;
+ 	sweet_early_printf("blazer-mem: window 0x%llx + 0x%llx, was + 0x%llx, hw.memsize 0x%llx\n",
+ 	    base, args->memSize, old, args->memSizeActual);
++	if (gib >= BLAZER_MEM_FULL_GIB && fake != 0) {
++		sweet_early_printf("blazer-mem: full map (QEMU fake), installed 0x%llx, managed 0x%llx..0x%llx\n",
++		    actual, base, end);
++	} else if (gib >= BLAZER_MEM_FULL_GIB) {
++		sweet_early_printf("blazer-mem: full map, installed 0x%llx, managed 0x%llx..0x%llx, "
++		    "unmanaged: low bank 0x80000000..0x100000000, high 0x880000000..0x%llx and 0x%llx..0xc00000000\n",
++		    actual, base, end, base, end);
++	}
++}
++
++/* After arm_vm_init: what max_mem (VM-managed) and hw.memsize (max_mem_actual) became. */
++static void
++blazer_mem_readback(void)
++{
++	if (blazer_mem_old_end != 0) {
++		sweet_early_printf("blazer-mem: vm max_mem 0x%llx, hw.memsize 0x%llx\n",
++		    (unsigned long long)max_mem, (unsigned long long)max_mem_actual);
++	}
+ }
+ 
+ /*
+@@ -815,6 +833,7 @@ arm_init(
+ 	arm_vm_init(xmaxmem, args);
+ 	sweet_early_mark(15, "arm_vm_init returned");
+ #if defined(BLAZER)
++	blazer_mem_readback();
+ 	blazer_mem_test(args);
+ 	blazer_low_test();
+ #endif
+diff --git a/osfmk/arm/blazer_memplan.h b/osfmk/arm/blazer_memplan.h
+new file mode 100644
+index 0000000..966aff9
+--- /dev/null
++++ b/osfmk/arm/blazer_memplan.h
+@@ -0,0 +1,86 @@
++/*
++ * blazer_mem: how far the kernel-managed window grows, and what hw.memsize reports.
++ * No XNU types: the host test compiles this file as it stands.
++ *
++ * This phone (FDT d7c27fdc..., ABL "DRAM size : 0x400000000") has 16 GiB in two banks:
++ *   low   0x080000000..0x100000000   2 GiB. Every fixed DT carve-out (AoC, GPU/TPU/GXP firmware,
++ *         GSA, bl31, sec_dram/trusty, modem, ramoops, ABL) and our shim, panel and USB/UFS arenas.
++ *         Not managed here; blazer_low (arm/pmap/blazer_lowbank.h) is the only route, and it
++ *         stays denied on the phone.
++ *   high  0x880000000..0xc00000000  14 GiB. No fixed DT carve-out. Android's iomem and dmesg
++ *         (attempts/final-return) reserve only its two ends:
++ *           0x880000000 + 16 MiB                    reserved, owner unknown
++ *           0xbbd1f8000..0xbd5600000                Linux's own early allocations (memblock)
++ *           0xbd5c00000..0xbfb800000 vstream, vframe   dynamic CMA, "map reusable"
++ *           0xbfb800000..0xbfc000000 pkvm_iommu_cma     dynamic CMA, "map reusable"
++ *           0xbfc000000..0xbfd000000 faprev             dynamic CMA, "map reusable"
++ *           0xbfd000000..0xc00000000 faceauth_tpu/_dsp  dynamic, "map non-reusable"
++ *         Every one of these is placed by Android's kernel at its own boot (no fixed reg), so
++ *         none exists while iOS runs. ABL also names "MTE addr 0xbe0f83000" (16 GiB / 33 below
++ *         the top) and "MTE S: 1, NS: 0": secure MTE may tag from there up. Never past it.
++ *
++ * Bottom is rounded up and the old top down to the 32 MiB the loader wants of a base.
++ */
++#ifndef _BLAZER_MEMPLAN_H_
++#define _BLAZER_MEMPLAN_H_
++#include <stdint.h>
++
++#define BLAZER_RAM_BOTTOM         0x882000000ULL
++/* blazer_mem=5..13: stop below Android's first top reservation (iomem 0xbbd1f8000). */
++#define BLAZER_RAM_TOP            0xbbd000000ULL
++/* blazer_mem=14..16, the full map: up to the MTE tag base, page aligned down. */
++#define BLAZER_RAM_TOP_TAGS       0xbe0f80000ULL
++/* Installed DRAM: ABL's "DRAM size", eight FDT 2 GiB banks. What hw.memsize reports in the full map. */
++#define BLAZER_RAM_INSTALLED      0x400000000ULL
++#define BLAZER_MEM_FULL_GIB       14u
++#define BLAZER_MEM_MAX_GIB        64u
++
++enum {
++	BLAZER_MEM_REFUSE = -1,
++	BLAZER_MEM_KEEP   = 0,          /* no change: arg absent or not above the loader's size */
++	BLAZER_MEM_GROW   = 1,
++};
++
++/*
++ * base/old/old_actual: the loader's physBase, memSize, memSizeActual. gib: blazer_mem.
++ * fake: QEMU's blazer_ufs_fake (its RAM ends at base + gib GiB, not at the phone's top).
++ * report: blazer_mem_report=1 (hw.memsize = the managed size; the full map ignores it).
++ * On GROW, *end is the new window end and *actual the new memSizeActual (hw.memsize).
++ * The full map reports the installed DRAM, as iBoot does: memSizeActual >= memSize,
++ * max_mem stays what the VM manages. Below it, hw.memsize keeps the loader's value
++ * unless report: what earlier kernels did, unchanged.
++ */
++static inline int
++blazer_mem_plan(uint64_t base, uint64_t old, uint64_t old_actual, uint32_t gib, int fake, int report,
++    uint64_t *end, uint64_t *actual)
++{
++	uint64_t want, top, size;
++	int full = gib >= BLAZER_MEM_FULL_GIB;
++
++	if ((uint64_t)gib <= (old >> 30)) {
++		return BLAZER_MEM_KEEP;
++	}
++	top = full ? BLAZER_RAM_TOP_TAGS : BLAZER_RAM_TOP;
++	if (gib > BLAZER_MEM_MAX_GIB || base < BLAZER_RAM_BOTTOM) {
++		return BLAZER_MEM_REFUSE;
++	}
++	want = base + ((uint64_t)gib << 30);
++	if (fake) {
++		top = want;
++	}
++	if (base >= top) {
++		return BLAZER_MEM_REFUSE;
++	}
++	*end = want < top ? want : top;
++	if (*end <= base + old) {
++		return BLAZER_MEM_KEEP;
++	}
++	size = *end - base;
++	if (full) {
++		*actual = size > BLAZER_RAM_INSTALLED ? size : BLAZER_RAM_INSTALLED;
++	} else {
++		*actual = report ? size : old_actual;
++	}
++	return BLAZER_MEM_GROW;
++}
++#endif /* _BLAZER_MEMPLAN_H_ */
+diff --git a/pexpert/pexpert/arm64/SWEET.h b/pexpert/pexpert/arm64/SWEET.h
+index 57f0b12..74007d7 100644
+--- a/pexpert/pexpert/arm64/SWEET.h
++++ b/pexpert/pexpert/arm64/SWEET.h
+@@ -63,20 +63,7 @@
+ #define SWEET_VTIMER_INTID        27      /* FDT timer: virt PPI 11 */
+ #define BLAZER_WINDOW_PA          0xa00000000ULL  /* page16k-r1, physical */
+ #define BLAZER_WINDOW_BYTES       0x100000000ULL
+-/*
+- * blazer_mem=GIB may grow the window upward, never past these. From this phone's
+- * FDT and Android's iomem (one boot, 2026-10-22): 0x880000000 + 16 MiB and
+- * everything from 0xbbd1f8000 up are reserved, owners unknown. Bottom is rounded up,
+- * top down, to the 32 MiB the loader wants of a base.
+- */
+-#define BLAZER_RAM_BOTTOM         0x882000000ULL
+-#define BLAZER_RAM_TOP            0xbbd000000ULL
+-/*
+- * blazer_mem_top=1: past Android's own reservations, stopping short of the MTE tag store.
+- * ABL, on this boot path: "MTE S: 1, NS: 0, tag base: 0xbe0f83000". That base is 16 GiB / 33
+- * below the top. Never past it: secure MTE is on (ABL's log), so it may be protected.
+- */
+-#define BLAZER_RAM_TOP_TAGS       0xbe0f80000ULL
++/* blazer_mem=GIB: the window's limits are in osfmk/arm/blazer_memplan.h. */
+ #define BLAZER_DUMP_BASE          0x95200000ULL   /* ramoops, 4 MiB captured */
+ #else
+ #define SWEET_VTIMER_INTID        19
+-- 
+2.54.0 (Apple Git-157)
+

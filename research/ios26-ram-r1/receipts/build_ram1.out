@@ -1,0 +1,14 @@
+23:03:44 waiting for build slot lock
+23:05:48 lock held
+23:05:48 tree branch p1 HEAD b228c4f
+23:05:49 checked out hk-ram-full 476c253eb1946d5d53c575af0f94791c88ddc2ad
+23:06:54 build ramfull-build rc 0
+23:06:54 d92f5d737c248fc1f8660f2b18cd4f1620c3a17d4df4e73a4eb1ee507546cc87  kernel.ramfull
+23:06:54 2258c949055e0ab367ff97dce12d2e09d27a1bb8452514bf9d29d022c8954fe7  kernel.ramfull.unstripped
+23:06:54 1dcdaa1ded9105f969ae9cc2ee047bed21cbddb600142ac9dc018abade5da623  arm_init.o (/osfmk/DEVELOPMENT/arm_init.o)
+23:06:54 17787cbc87e4d5ddcf61a539f179723851be1747613907e35a15358da456e004  arm_vm_init.o (/osfmk/DEVELOPMENT/arm_vm_init.o)
+23:06:54 1ccc23ee48b0d4ca608ee641ca14805cbec07a46215ac3a63d71eca1786e84c0  kern_mib.o (/bsd/DEVELOPMENT/kern_mib.o)
+23:06:54 restored branch p1 HEAD b228c4f
+23:08:00 build ramfull-restore-p1-build rc 0
+23:08:00 obj kernel after restore 89ddad4fd7d3ba651aadba6806fe2a4d01ffd03235a4cb652ed29fe9829ee823
+23:08:00 restored p1 kernel has the full-map string: False

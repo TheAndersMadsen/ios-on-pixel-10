@@ -1,0 +1,2 @@
+research/ios26-ram-r1/build/kernel.ramfull: OK
+research/ios26-phaseb-r1/int/overlays/int1-r1.ovl: OK

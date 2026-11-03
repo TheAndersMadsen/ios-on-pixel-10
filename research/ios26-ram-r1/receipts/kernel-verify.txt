@@ -1,0 +1,151 @@
+== file
+research/ios26-ram-r1/build/obj/arm_init.o:            Mach-O 64-bit object arm64
+research/ios26-ram-r1/build/kernel.ramfull:            Mach-O 64-bit executable arm64
+research/ios26-ram-r1/build/kernel.ramfull.unstripped: Mach-O 64-bit executable arm64
+== arm_init.o blazer symbols
+0000000000021b20 (__DATA,__bss) non-external _blazer_mem_old_end
+0000000000002080 (__TEXT,__text) non-external _blazer_ram_audit
+0000000000002950 (__DATA,__const) external [no dead strip] _gDramSize
+                 (undefined) external _max_mem
+                 (undefined) external _max_mem_actual
+== arm_init.o strings
+blazer-ram: top denied: ownership unknown
+blazer-mem: refused, %u GiB at base 0x%llx @%s:%d
+blazer-mem: window 0x%llx + 0x%llx, was + 0x%llx, hw.memsize 0x%llx
+blazer-mem: full map (QEMU fake), installed 0x%llx, managed 0x%llx..0x%llx
+blazer-mem: full map, installed 0x%llx, managed 0x%llx..0x%llx, unmanaged: low bank 0x80000000..0x100000000, high 0x880000000..0x%llx and 0x%llx..0xc00000000
+blazer-ram: audit base 0x%llx managed %llu unavailable %llu installed %llu low admitted 0
+blazer-ram: low denied: ownership unknown, mask 0x%x
+blazer-mem: vm max_mem 0x%llx, hw.memsize 0x%llx
+blazer-mem: bad test stride %u @%s:%d
+blazer-mem: test start 0x%llx..0x%llx stride %u
+blazer-mem: test written
+blazer-mem: test failed, %llu words, first at 0x%llx @%s:%d
+blazer-mem: test pass
+== kernel strings
+2
+blazer-mem: refused, %u GiB at base 0x%llx @%s:%d
+blazer-mem: window 0x%llx + 0x%llx, was + 0x%llx, hw.memsize 0x%llx
+blazer-mem: full map (QEMU fake), installed 0x%llx, managed 0x%llx..0x%llx
+blazer-mem: full map, installed 0x%llx, managed 0x%llx..0x%llx, unmanaged: low bank 0x80000000..0x100000000, high 0x880000000..0x%llx and 0x%llx..0xc00000000
+blazer-mem: vm max_mem 0x%llx, hw.memsize 0x%llx
+blazer-mem: bad test stride %u @%s:%d
+blazer-mem: test start 0x%llx..0x%llx stride %u
+blazer-mem: test written
+blazer-mem: test failed, %llu words, first at 0x%llx @%s:%d
+blazer-mem: test pass
+blazer-mem: unexpected window %llx + %llx
+== kernel symbols
+fffffe00082d40c8 b _blazer_mem_old_end
+fffffe000824b410 S _max_mem
+== undefined in kernel
+       0
+== uuid
+UUID: 9753A547-9CB6-3743-88B3-9CAB82D7623A (arm64) research/ios26-ram-r1/build/kernel.ramfull
+== kernel max_mem_actual
+fffffe0008102418 s _arm_init
+fffffe000824b400 S _max_mem_actual
+== arm_init.o: full-map constants in _arm_init (mov/movk building 0xbe0f80000, 0xbbd000000, 0x400000000; cmp gib 13)
+637:    15c0:      	cmp	w8, #0x40
+641:    15d0:      	mov	x11, #0xe0f80000        ; =3774349312
+642:    15d4:      	cmp	w8, #0xd
+643:    15d8:      	movk	x9, #0xb, lsl #32
+644:    15dc:      	movk	x11, #0xb, lsl #32
+667:    1638:      	cmp	w8, #0xd
+== _arm_init 0x1590..0x16c0 (blazer_mem_plan inlined)
+    1580:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    1584:      	add	x0, x0, #0x0
+    1588:      	add	x1, sp, #0x70
+    158c:      	mov	w2, #0x8                ; =8
+    1590:      	bl	0x1590 <_arm_init+0x9a8>
+    1594:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    1598:      	add	x0, x0, #0x0
+    159c:      	add	x1, sp, #0x58
+    15a0:      	mov	w2, #0x4                ; =4
+    15a4:      	bl	0x15a4 <_arm_init+0x9bc>
+    15a8:      	ldr	w8, [sp, #0x60]
+    15ac:      	cmp	x26, x8
+    15b0:      	b.hs	0x16a4 <_arm_init+0xabc>
+    15b4:      	lsr	x9, x20, #25
+    15b8:      	cmp	x9, #0x441
+    15bc:      	b.lo	0x1fb4 <_arm_init+0x13cc>
+    15c0:      	cmp	w8, #0x40
+    15c4:      	b.hi	0x1fb4 <_arm_init+0x13cc>
+    15c8:      	ldr	x10, [sp, #0x70]
+    15cc:      	mov	x9, #0xbd000000         ; =3170893824
+    15d0:      	mov	x11, #0xe0f80000        ; =3774349312
+    15d4:      	cmp	w8, #0xd
+    15d8:      	movk	x9, #0xb, lsl #32
+    15dc:      	movk	x11, #0xb, lsl #32
+    15e0:      	csel	x11, x11, x9, hi
+    15e4:      	add	x9, x20, x8, lsl #30
+    15e8:      	cmp	x10, #0x0
+    15ec:      	csel	x10, x11, x9, eq
+    15f0:      	cmp	x20, x10
+    15f4:      	b.hs	0x1fb4 <_arm_init+0x13cc>
+    15f8:      	cmp	x9, x10
+    15fc:      	csel	x26, x9, x10, lo
+    1600:      	add	x9, x22, x20
+    1604:      	cmp	x26, x9
+    1608:      	b.ls	0x16a4 <_arm_init+0xabc>
+    160c:      	ldr	w10, [sp, #0x58]
+    1610:      	adrp	x11, 0x1000 <_arm_init+0x418>
+    1614:      	ldr	x11, [x11]
+    1618:      	sub	x12, x26, x20
+    161c:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    1620:      	add	x0, x0, #0x0
+    1624:      	cmp	w10, #0x0
+    1628:      	mov	x10, #0x400000000       ; =17179869184
+    162c:      	csel	x11, x11, x12, eq
+    1630:      	cmp	x12, x10
+    1634:      	csel	x10, x12, x10, hi
+    1638:      	cmp	w8, #0xd
+    163c:      	adrp	x8, 0x1000 <_arm_init+0x418>
+    1640:      	add	x8, x8, #0x0
+    1644:      	csel	x27, x10, x11, hi
+    1648:      	str	x12, [x23]
+    164c:      	str	x9, [x21]
+    1650:      	str	x12, [x8]
+    1654:      	str	x27, [x8, #0x460]
+    1658:      	stp	x22, x27, [sp, #0x10]
+    165c:      	stp	x20, x12, [sp]
+    1660:      	bl	0x1660 <_arm_init+0xa78>
+    1664:      	ldr	w8, [sp, #0x60]
+    1668:      	cmp	w8, #0xe
+    166c:      	b.lo	0x1684 <_arm_init+0xa9c>
+    1670:      	ldr	x9, [sp, #0x70]
+    1674:      	cbz	x9, 0x1684 <_arm_init+0xa9c>
+    1678:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    167c:      	add	x0, x0, #0x0
+    1680:      	b	0x1698 <_arm_init+0xab0>
+    1684:      	cmp	w8, #0xe
+    1688:      	b.lo	0x16a4 <_arm_init+0xabc>
+    168c:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    1690:      	add	x0, x0, #0x0
+    1694:      	stp	x20, x26, [sp, #0x18]
+    1698:      	stp	x20, x26, [sp, #0x8]
+    169c:      	str	x27, [sp]
+    16a0:      	bl	0x16a0 <_arm_init+0xab8>
+    16a4:      	bl	0x16a4 <_arm_init+0xabc>
+    16a8:      	ldp	x20, x26, [x24]
+    16ac:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    16b0:      	add	x0, x0, #0x0
+    16b4:      	add	x1, sp, #0x6c
+    16b8:      	mov	w2, #0x4                ; =4
+    16bc:      	str	wzr, [sp, #0x6c]
+    16c0:      	str	xzr, [sp, #0x70]
+    16c4:      	stp	xzr, xzr, [sp, #0x58]
+    16c8:      	bl	0x16c8 <_arm_init+0xae0>
+    16cc:      	adrp	x22, 0x1000 <_arm_init+0x418>
+    16d0:      	adrp	x23, 0x1000 <_arm_init+0x418>
+    16d4:      	add	x23, x23, #0x0
+    16d8:      	cbz	w0, 0x197c <_arm_init+0xd94>
+    16dc:      	ldr	w8, [sp, #0x6c]
+    16e0:      	cbz	w8, 0x197c <_arm_init+0xd94>
+    16e4:      	adrp	x0, 0x1000 <_arm_init+0x418>
+    16e8:      	add	x0, x0, #0x0
+    16ec:      	add	x1, sp, #0x70
+    16f0:      	mov	w2, #0x8                ; =8
+    16f4:      	bl	0x16f4 <_arm_init+0xb0c>
+    16f8:      	cbz	w0, 0x172c <_arm_init+0xb44>
+    16fc:      	ldr	x8, [sp, #0x70]
