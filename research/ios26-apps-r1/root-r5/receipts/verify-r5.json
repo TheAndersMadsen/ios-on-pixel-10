@@ -1,0 +1,22 @@
+{
+ "r4_entries": 292551,
+ "r5_entries": 293752,
+ "added": 1201,
+ "removed": 0,
+ "changed": 7,
+ "changed_list": [
+  "Applications/MobilePhone.app/MobilePhone",
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/CallsDialer",
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/_CodeSignature/CodeResources",
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/VoicemailMessageNotificationExtension",
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/_CodeSignature/CodeResources",
+  "Applications/MobilePhone.app/_CodeSignature/CodeResources",
+  "private/var.skel.tsv"
+ ],
+ "restored_expected": 1201,
+ "reseal_expected": 7,
+ "missing_restored": [],
+ "missing_reseal": [],
+ "problems": [],
+ "problem_count": 0
+}

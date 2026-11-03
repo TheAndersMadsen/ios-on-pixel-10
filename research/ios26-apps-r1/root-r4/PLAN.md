@@ -230,3 +230,5 @@ paths. Sizes and sha256 prefixes: `research/ios26-phaseb-r1/about/receipts/r5-fi
   and `*.omo` whenever it keeps the `.momd/VersionInfo.plist` (it now keeps the plist and deletes the model, which is what
   aborts CoreData); `DENY` does not match `MusicLibrary.framework` or `AccessibilitySharedSupport.framework`; `KEEP_CAR` adds
   `MobilePhone|CallsDialer|CallsAppUI|TelephonyUI|ConversationKit|CommunicationsUI|ContactsUI`.
+
+**Done as `root-r5/PLAN.md` (2026-11-04):** r5 b7f41eed… = r4 + these files + the int3 crash-stack set (LinkPresentation/OnBoardingKit Assets.car, OnBoardingBundles, AppPlaceholders, var.skel iTunes_Control); the prune.py rule changes above are still unapplied.

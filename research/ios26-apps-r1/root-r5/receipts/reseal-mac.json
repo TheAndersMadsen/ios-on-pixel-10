@@ -1,0 +1,164 @@
+{
+ "hard_links_broken_before_after": [
+  50,
+  50
+ ],
+ "bundles": 12,
+ "baseline_r4_codesign_v_bad": {
+  "System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc: invalid resource directory (directory or signature have been modified)"
+  ],
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex: a sealed resource is missing or invalid"
+  ],
+  "Applications/MobilePhone.app": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/before/Applications/MobilePhone.app: a sealed resource is missing or invalid"
+  ]
+ },
+ "after_restore_before_resign_bad": {
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework: a sealed resource is missing or invalid"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc: invalid resource directory (directory or signature have been modified)"
+  ],
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex: a sealed resource is missing or invalid"
+  ],
+  "Applications/MobilePhone.app": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/Applications/MobilePhone.app: a sealed resource is missing or invalid"
+  ]
+ },
+ "resigned_deepest_first": [
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/CallsDialer",
+  "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/VoicemailMessageNotificationExtension",
+  "Applications/MobilePhone.app/MobilePhone"
+ ],
+ "skipped_shared_hardlinked_seal": [
+  "System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex",
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex",
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex",
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex",
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex",
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex",
+  "System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc"
+ ],
+ "after_resign_codesign_v_deep_bad": {
+  "System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/Extensions/LimitedLibraryPickerViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactViewViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/ContactsViewService.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/FullAccessSettingsPromptExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/PlugIns/OnboardingPromptExtension.appex: invalid resource directory (directory or signature have been modified)"
+  ],
+  "System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc": [
+   1,
+   "/Users/andersmadsen/hackios-root-r5-work/reseal/after/System/Library/Frameworks/ContactsUI.framework/XPCServices/ContactsButtonXPCService.xpc: invalid resource directory (directory or signature have been modified)"
+  ]
+ },
+ "changed_files": [
+  [
+   "Applications/MobilePhone.app/MobilePhone",
+   "0c5df8c61197c04b0092b8537c4c54d767f70723791b20e51a8ed9f13cdc90c2",
+   "00c2b0db96e00d00648f855395be738fa21efff167711ce87a4f7edc52a4e0cc"
+  ],
+  [
+   "Applications/MobilePhone.app/_CodeSignature/CodeResources",
+   "0f14bb1f1982976cc28dc2f580dbcd196a9dfc66392cfec08528d09eca5a82ae",
+   "fdc1b9a25f4e273f7c05903e924873392380ae4d95b221309f190196884dce96"
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/VoicemailMessageNotificationExtension",
+   "62e2d9f12e8947b9d314195cf7abf17cd085219919178602a320614e953d293f",
+   "cac734d1efb66f64038d5caeb3483b951c9cc6f4d388f84e239fc6ce011dcbbf"
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/_CodeSignature/CodeResources",
+   "48106bda5fc6af144bd31613c0f0d5a7b0a97af571be1f923945409adba851e1",
+   "4dc0f710b0c32cb995d789558e9437b1d79086f56256ea133d64c63a7dc31962"
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/CallsDialer",
+   "e4072e0bf4fcdc36cdf4531725246095467697d1c73ef6e9283763c6e1f7a5ae",
+   "0689da50b0f5cfc5039abbafef1767cf4ac0aa3e7f20941852b8abc8f84be482"
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/_CodeSignature/CodeResources",
+   "f6c7a21de98280bbf127c970a329fadad57c4c7dd83b0ccb1e93dc55bd7761c4",
+   "71d11c1dce462cd6c0d2e3939048bc7bb1a7fa3d60ada2863dd8c49e6a6e1001"
+  ]
+ ],
+ "new_seal_files_not_in_r4": []
+}

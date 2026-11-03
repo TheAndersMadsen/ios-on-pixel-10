@@ -1,0 +1,176 @@
+FILE absent Applications/MobilePhone.app/Assets.car missing-dirs: []
+FILE absent Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Assets.car missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/CallsDialer.framework/Assets.car missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/CallsAppUI.framework/Assets.car missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/TelephonyUI.framework/Assets.car missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/ConversationKit.framework/Assets.car missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/CommunicationsUI.framework/Assets.car missing-dirs: []
+FILE absent System/Library/Frameworks/ContactsUI.framework/Assets.car missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/MusicLibrary.framework/MLSortMapTables.plist missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/MusicLibrary.framework/SortingDetails.plist missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/MusicLibrary.framework/en.lproj/MLSections.plist missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/MusicLibrary.framework/com.apple.Music.artworkConfig missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXSSPunctuationModel.momd/AXSSPunctuationModel.mom missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/VOPronunciationModel.momd/VOPronunciationModel.mom missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXLanguageToLocale.plist missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/SynthesizerLanguageMap.plist missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/FullKeyboardAccessStandardCommands-Default.plist missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_zh.sqlite missing-dirs: []
+FILE absent System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_ja.sqlite missing-dirs: []
+BUNDLE Applications/MobilePhone.app missing 10 bytes 3075013
+    f 1829272 Applications/MobilePhone.app/Assets.car
+    f 8520 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/FaceTime.loctable
+    f 294629 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/General.loctable
+    f 35723 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/MPVoicemail.loctable
+    f 100160 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/VoicemailUI.loctable
+    f 629896 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Assets.car
+    f 52206 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/BottomBar.loctable
+    f 17171 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Dialer.loctable
+    f 90089 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Localizable-Stewie.loctable
+    f 17347 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/MPKeypad.loctable
+BUNDLE Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework missing 5 bytes 806709
+    f 629896 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Assets.car
+    f 52206 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/BottomBar.loctable
+    f 17171 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Dialer.loctable
+    f 90089 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Localizable-Stewie.loctable
+    f 17347 Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/MPKeypad.loctable
+BUNDLE System/Library/Frameworks/ContactsUI.framework missing 54 bytes 325744
+    f 288712 System/Library/Frameworks/ContactsUI.framework/Assets.car
+    f 101 System/Library/Frameworks/ContactsUI.framework/de.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ur.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/he.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ar.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/el.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ja.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/en_IN.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/mr.lproj/ABCardDisplay.plist
+    f 31780 System/Library/Frameworks/ContactsUI.framework/PlugIns/MonogramPosterExtension.appex/default.metallib
+    f 101 System/Library/Frameworks/ContactsUI.framework/uk.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/es_419.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/gu.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/kn.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/pt_PT.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/pa.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/es.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/sl.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/or.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/da.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/it.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/bg.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/sk.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/zh_CN.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/kk.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/pt_BR.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ms.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ta.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ml.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/sv.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/en_AU.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/te.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/cs.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ko.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/no.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/hu.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/tr.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/pl.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/fr_CA.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/vi.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/lt.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ru.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/fr.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/fi.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/id.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/nl.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/th.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/bn.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ro.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/zh_HK.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/hr.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/hi.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/ca.lproj/ABCardDisplay.plist
+    f 101 System/Library/Frameworks/ContactsUI.framework/zh_TW.lproj/ABCardDisplay.plist
+BUNDLE System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework missing 17 bytes 3556754
+    f 969 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXLanguageToLocale.plist
+    f 483328 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_ja.sqlite
+    f 1511424 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_zh.sqlite
+    f 290254 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AccessibilitySharedSupport.loctable
+    f 139836 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/FullKeyboardAccess.loctable
+    f 1396 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/FullKeyboardAccessStandardCommands-Default.plist
+    f 2080 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/InfoPlist.loctable
+    f 9401 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/RemoteDesktop.loctable
+    f 246558 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/SymbolNameOverrides.loctable
+    f 780076 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/SymbolNamesAutoGenerated.loctable
+    f 70257 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/SynthesizerLanguageMap.plist
+    f 4658 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXSSPunctuationModel.momd/AXSSPunctuationModel.mom
+    f 5346 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/VOPronunciationModel.momd/VOPronunciationModel.mom
+    f 2118 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_ja.momd/AXWordDescriptionsData_ja.mom
+    f 2960 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_ja.momd/AXWordDescriptionsData_ja.omo
+    f 2469 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_zh.momd/AXWordDescriptionsData_zh.mom
+    f 3624 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_zh.momd/AXWordDescriptionsData_zh.omo
+BUNDLE System/Library/PrivateFrameworks/CallsAppUI.framework missing 1 bytes 31768
+    f 31768 System/Library/PrivateFrameworks/CallsAppUI.framework/Assets.car
+BUNDLE System/Library/PrivateFrameworks/CallsDialer.framework missing 1 bytes 629896
+    f 629896 System/Library/PrivateFrameworks/CallsDialer.framework/Assets.car
+BUNDLE System/Library/PrivateFrameworks/CommunicationsUI.framework missing 1 bytes 71928
+    f 71928 System/Library/PrivateFrameworks/CommunicationsUI.framework/Assets.car
+BUNDLE System/Library/PrivateFrameworks/ConversationKit.framework missing 1 bytes 974296
+    f 974296 System/Library/PrivateFrameworks/ConversationKit.framework/Assets.car
+BUNDLE System/Library/PrivateFrameworks/MusicLibrary.framework missing 55 bytes 291816
+    f 257010 System/Library/PrivateFrameworks/MusicLibrary.framework/MLLocalizable.loctable
+    f 1218 System/Library/PrivateFrameworks/MusicLibrary.framework/MLSortMapTables.plist
+    f 93 System/Library/PrivateFrameworks/MusicLibrary.framework/SortingDetails.plist
+    f 933 System/Library/PrivateFrameworks/MusicLibrary.framework/com.apple.Music.artworkConfig
+    f 369 System/Library/PrivateFrameworks/MusicLibrary.framework/de.lproj/MLSections.plist
+    f 823 System/Library/PrivateFrameworks/MusicLibrary.framework/ur.lproj/MLSections.plist
+    f 492 System/Library/PrivateFrameworks/MusicLibrary.framework/he.lproj/MLSections.plist
+    f 539 System/Library/PrivateFrameworks/MusicLibrary.framework/ar.lproj/MLSections.plist
+    f 511 System/Library/PrivateFrameworks/MusicLibrary.framework/el.lproj/MLSections.plist
+    f 416 System/Library/PrivateFrameworks/MusicLibrary.framework/ja.lproj/MLSections.plist
+    f 895 System/Library/PrivateFrameworks/MusicLibrary.framework/mr.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/en.lproj/MLSections.plist
+    f 574 System/Library/PrivateFrameworks/MusicLibrary.framework/uk.lproj/MLSections.plist
+    f 931 System/Library/PrivateFrameworks/MusicLibrary.framework/gu.lproj/MLSections.plist
+    f 4141 System/Library/PrivateFrameworks/MusicLibrary.framework/kn.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/pt_PT.lproj/MLSections.plist
+    f 799 System/Library/PrivateFrameworks/MusicLibrary.framework/pa.lproj/MLSections.plist
+    f 292 System/Library/PrivateFrameworks/MusicLibrary.framework/es.lproj/MLSections.plist
+    f 304 System/Library/PrivateFrameworks/MusicLibrary.framework/sl.lproj/MLSections.plist
+    f 939 System/Library/PrivateFrameworks/MusicLibrary.framework/or.lproj/MLSections.plist
+    f 304 System/Library/PrivateFrameworks/MusicLibrary.framework/da.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/it.lproj/MLSections.plist
+    f 553 System/Library/PrivateFrameworks/MusicLibrary.framework/bg.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/sk.lproj/MLSections.plist
+    f 380 System/Library/PrivateFrameworks/MusicLibrary.framework/zh_CN.lproj/MLSections.plist
+    f 630 System/Library/PrivateFrameworks/MusicLibrary.framework/kk.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/ms.lproj/MLSections.plist
+    f 841 System/Library/PrivateFrameworks/MusicLibrary.framework/ta.lproj/MLSections.plist
+    f 979 System/Library/PrivateFrameworks/MusicLibrary.framework/ml.lproj/MLSections.plist
+    f 304 System/Library/PrivateFrameworks/MusicLibrary.framework/sv.lproj/MLSections.plist
+    f 4183 System/Library/PrivateFrameworks/MusicLibrary.framework/te.lproj/MLSections.plist
+    f 311 System/Library/PrivateFrameworks/MusicLibrary.framework/cs.lproj/MLSections.plist
+    f 444 System/Library/PrivateFrameworks/MusicLibrary.framework/ko.lproj/MLSections.plist
+    f 304 System/Library/PrivateFrameworks/MusicLibrary.framework/no.lproj/MLSections.plist
+    f 393 System/Library/PrivateFrameworks/MusicLibrary.framework/hu.lproj/MLSections.plist
+    f 311 System/Library/PrivateFrameworks/MusicLibrary.framework/tr.lproj/MLSections.plist
+    f 326 System/Library/PrivateFrameworks/MusicLibrary.framework/pl.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/fr_CA.lproj/MLSections.plist
+    f 328 System/Library/PrivateFrameworks/MusicLibrary.framework/vi.lproj/MLSections.plist
+    f 315 System/Library/PrivateFrameworks/MusicLibrary.framework/lt.lproj/MLSections.plist
+    f 566 System/Library/PrivateFrameworks/MusicLibrary.framework/ru.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/en_GB.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/fr.lproj/MLSections.plist
+    f 304 System/Library/PrivateFrameworks/MusicLibrary.framework/fi.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/id.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/nl.lproj/MLSections.plist
+    f 665 System/Library/PrivateFrameworks/MusicLibrary.framework/th.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/pt.lproj/MLSections.plist
+    f 903 System/Library/PrivateFrameworks/MusicLibrary.framework/bn.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/ro.lproj/MLSections.plist
+    f 1065 System/Library/PrivateFrameworks/MusicLibrary.framework/zh_HK.lproj/MLSections.plist
+    f 316 System/Library/PrivateFrameworks/MusicLibrary.framework/hr.lproj/MLSections.plist
+    f 1029 System/Library/PrivateFrameworks/MusicLibrary.framework/hi.lproj/MLSections.plist
+    f 286 System/Library/PrivateFrameworks/MusicLibrary.framework/ca.lproj/MLSections.plist
+    f 1065 System/Library/PrivateFrameworks/MusicLibrary.framework/zh_TW.lproj/MLSections.plist
+BUNDLE System/Library/PrivateFrameworks/TelephonyUI.framework missing 1 bytes 60584
+    f 60584 System/Library/PrivateFrameworks/TelephonyUI.framework/Assets.car
+MobilePhone CodeResources files2 has Assets.car: False files has: False

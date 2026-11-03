@@ -1,0 +1,4 @@
+** Checking multi-linked files.
+** Checking catalog hierarchy.
+** Checking extended attributes file.
+** Checking volume bitmap.

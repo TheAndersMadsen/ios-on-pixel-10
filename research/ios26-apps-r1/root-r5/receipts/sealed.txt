@@ -1,0 +1,9 @@
+Applications/MobilePhone.app
+System/Library/Frameworks/ContactsUI.framework
+System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework
+System/Library/PrivateFrameworks/CallsAppUI.framework
+System/Library/PrivateFrameworks/CallsDialer.framework
+System/Library/PrivateFrameworks/CommunicationsUI.framework
+System/Library/PrivateFrameworks/ConversationKit.framework
+System/Library/PrivateFrameworks/MusicLibrary.framework
+System/Library/PrivateFrameworks/TelephonyUI.framework

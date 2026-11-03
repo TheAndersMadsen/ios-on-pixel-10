@@ -1,0 +1,95 @@
+# int3 live boot (PHYSICAL) usercrash/userabort, symbolicated with dsc_sym.py against /data/hackios-qemu/dsc-r6 (slide 0x1f0f0000)
+23:22:32.536 [   62.76] usercrash: Preferences[191] CoreFoundation: "*** Terminating app due to uncaught exception 'NSGenericException', reason: 'iTunesControlDoesNotExist /private/var/mobile/Media/iTunes_Control does not exist'
+23:22:32.541 [   62.76] usercrash: Preferences[191] libc++abi: "terminating due to uncaught exception of type NSException"
+23:22:32.541 [   62.76] usercrash: Preferences[191] libsystem_c: "abort() called"
+23:22:32.545 [   62.76] userabort: Preferences[191] aborts, shared cache slide 0x1f0f0000; called from: 0x1ae1cafcc 0x19f2bafd4 0x19f2bcb90 0x19f1bb868 0x19f2c71f8 0x19f2badcc 0x19f1c7b58 0x252164728 0x25216460c 0x2521644a4 0x1c2d99310 0x1c2d992ac 0x1c2d9799c 
+23:22:36.617 [   66.81] usercrash: MobileSMS[226] CoreFoundation: "*** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: 'Trying to create an LPImage with nil data.'
+23:22:36.644 [   66.87] usercrash: MobileSMS[226] libc++abi: "terminating due to uncaught exception of type NSException"
+23:22:36.644 [   66.87] usercrash: MobileSMS[226] libsystem_c: "abort() called"
+23:22:36.673 [   66.87] userabort: MobileSMS[226] aborts, shared cache slide 0x1f0f0000; called from: 0x1ae1cafcc 0x19f2bafd4 0x19f2bcb90 0x19f1bb868 0x19f2c71f8 0x19f2badcc 0x19f1c7b58 0x1f4229b20 0x1a822d50c 0x1a822c42c 0x1a840ac34 0x1a8405c60 0x1a842df0c 0x
+23:23:43.198 [  133.39] usercrash: FaceTime[359] CoreFoundation: "*** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '*** -[__NSSetM addObject:]: object cannot be nil'
+23:23:43.225 [  133.45] usercrash: FaceTime[359] libc++abi: "terminating due to uncaught exception of type NSException"
+23:23:43.253 [  133.45] usercrash: FaceTime[359] libsystem_c: "abort() called"
+23:23:43.278 [  133.47] userabort: FaceTime[359] aborts, shared cache slide 0x1f0f0000; called from: 0x1ae1cafcc 0x19f2bafd4 0x19f2bcb90 0x19f1bb868 0x19f2c71f8 0x19f2c8e18 0x19f2b5360 0x19f1b938c 0x1a25debec 0x1d6469328 0x1d6468bd0 0x1d6468a88 0x1d64a4740 0x1
+23:36:21.206 [  891.31] usercrash: Freeform[3292] CoreFoundation: "*** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '*** -[__NSSetM addObject:]: object cannot be nil'
+23:36:21.206 [  891.34] usercrash: Freeform[3292] libc++abi: "terminating due to uncaught exception of type NSException"
+23:36:21.206 [  891.34] usercrash: Freeform[3292] libsystem_c: "abort() called"
+23:36:21.206 [  891.34] userabort: Freeform[3292] aborts, shared cache slide 0x1f0f0000; called from: 0x1ae1cafcc 0x19f2bafd4 0x19f2bcb90 0x19f1bb868 0x19f2c71f8 0x19f2c8e18 0x19f2b5360 0x19f1b938c 0x1a25debec 0x1d6469328 0x1d6468bd0 0x1d6468a88 0x1b248c4ac 0x
+## Preferences
+cache uuid 0f1ee33235db30f38f5fbd4b954138d5
+0x1ae1cafcc unslid 0x18f0dafcc  libsystem_c.dylib __TEXT+0x76fcc  nearest _abort +0x94
+0x19f2bafd4 unslid 0x1801cafd4  libc++abi.dylib __TEXT+0x7fd4  nearest <redacted> +0x0
+0x19f2bcb90 unslid 0x1801ccb90  libc++abi.dylib __TEXT+0x9b90  nearest __ZSt14set_unexpectedPFvvE +0x0
+0x19f1bb868 unslid 0x1800cb868  libobjc.A.dylib __TEXT+0x33868  nearest <redacted> +0x9c
+0x19f2c71f8 unslid 0x1801d71f8  libc++abi.dylib __TEXT+0x141f8  nearest <redacted> +0x10
+0x19f2badcc unslid 0x1801cadcc  libc++abi.dylib __TEXT+0x7dcc  nearest <redacted> +0x0
+0x19f1c7b58 unslid 0x1800d7b58  libobjc.A.dylib __TEXT+0x3fb58  nearest _objc_exception_rethrow +0x2c
+0x252164728 unslid 0x233074728  MusicLibrary __TEXT+0x6728  nearest <redacted> +0xa8
+0x25216460c unslid 0x23307460c  MusicLibrary __TEXT+0x660c  nearest <redacted> +0xc0
+0x2521644a4 unslid 0x2330744a4  MusicLibrary __TEXT+0x64a4  nearest <redacted> +0x38
+0x1c2d99310 unslid 0x1a3ca9310  MediaPlayer __TEXT+0x8310  nearest <redacted> +0x18
+0x1c2d992ac unslid 0x1a3ca92ac  MediaPlayer __TEXT+0x82ac  nearest <redacted> +0x68
+0x1c2d9799c unslid 0x1a3ca799c  MediaPlayer __TEXT+0x699c  nearest <redacted> +0x320
+0x1c2d975a0 unslid 0x1a3ca75a0  MediaPlayer __TEXT+0x65a0  nearest <redacted> +0x30
+0x1c2d97254 unslid 0x1a3ca7254  MediaPlayer __TEXT+0x6254  nearest <redacted> +0xc0
+0x1c2d96d2c unslid 0x1a3ca6d2c  MediaPlayer __TEXT+0x5d2c  nearest <redacted> +0x100
+0x1c2d96af4 unslid 0x1a3ca6af4  MediaPlayer __TEXT+0x5af4  nearest <redacted> +0x3c
+0x1dd1181e4 unslid 0x1be0281e4  libdispatch.dylib __TEXT+0x1b1e4  nearest <redacted> +0x10
+0x1dd1015b0 unslid 0x1be0115b0  libdispatch.dylib __TEXT+0x45b0  nearest <redacted> +0x20
+0x1c2d97cb0 unslid 0x1a3ca7cb0  MediaPlayer __TEXT+0x6cb0  nearest <redacted> +0x60
+0x1c2d96a5c unslid 0x1a3ca6a5c  MediaPlayer __TEXT+0x5a5c  nearest <redacted> +0xc8
+0x1c2da9b48 unslid 0x1a3cb9b48  MediaPlayer __TEXT+0x18b48  nearest <redacted> +0x54
+0x1c2daae2c unslid 0x1a3cbae2c  MediaPlayer __TEXT+0x19e2c  nearest <redacted> +0x80
+0x241101eb4 unslid 0x222011eb4  GeneralSettingsUI __TEXT+0x7eb4  nearest <redacted> +0x6c
+## MobileSMS
+cache uuid 0f1ee33235db30f38f5fbd4b954138d5
+0x1ae1cafcc unslid 0x18f0dafcc  libsystem_c.dylib __TEXT+0x76fcc  nearest _abort +0x94
+0x19f2bafd4 unslid 0x1801cafd4  libc++abi.dylib __TEXT+0x7fd4  nearest <redacted> +0x0
+0x19f2bcb90 unslid 0x1801ccb90  libc++abi.dylib __TEXT+0x9b90  nearest __ZSt14set_unexpectedPFvvE +0x0
+0x19f1bb868 unslid 0x1800cb868  libobjc.A.dylib __TEXT+0x33868  nearest <redacted> +0x9c
+0x19f2c71f8 unslid 0x1801d71f8  libc++abi.dylib __TEXT+0x141f8  nearest <redacted> +0x10
+0x19f2badcc unslid 0x1801cadcc  libc++abi.dylib __TEXT+0x7dcc  nearest <redacted> +0x0
+0x19f1c7b58 unslid 0x1800d7b58  libobjc.A.dylib __TEXT+0x3fb58  nearest _objc_exception_rethrow +0x2c
+0x1f4229b20 unslid 0x1d5139b20  CoreAutoLayout __TEXT+0x3b20  nearest <redacted> +0x128
+0x1a822d50c unslid 0x18913d50c  UIKitCore __TEXT+0x1550c  nearest <redacted> +0x210
+0x1a822c42c unslid 0x18913c42c  UIKitCore __TEXT+0x1442c  nearest <redacted> +0x914
+0x1a840ac34 unslid 0x18931ac34  UIKitCore __TEXT+0x1f2c34  nearest <redacted> +0x3e4
+0x1a8405c60 unslid 0x189315c60  UIKitCore __TEXT+0x1edc60  nearest <redacted> +0x2b0
+0x1a842df0c unslid 0x18933df0c  UIKitCore __TEXT+0x215f0c  nearest <redacted> +0x58
+0x1a84312b0 unslid 0x1893412b0  UIKitCore __TEXT+0x2192b0  nearest <redacted> +0xb8
+0x1a82601a0 unslid 0x1891701a0  UIKitCore __TEXT+0x481a0  nearest <redacted> +0x308
+0x1a8260aec unslid 0x189170aec  UIKitCore __TEXT+0x48aec  nearest <redacted> +0x28
+0x1a825f0a0 unslid 0x18916f0a0  UIKitCore __TEXT+0x470a0  nearest <redacted> +0xa7c
+0x1a32808a4 unslid 0x1841908a4  QuartzCore __TEXT+0x2bd8a4  nearest <redacted> +0x1cc
+0x1a32803f4 unslid 0x1841903f4  QuartzCore __TEXT+0x2bd3f4  nearest <redacted> +0x298
+0x1a821d8a0 unslid 0x18912d8a0  UIKitCore __TEXT+0x58a0  nearest <redacted> +0x14c
+0x1a86df0d8 unslid 0x1895ef0d8  UIKitCore __TEXT+0x4c70d8  nearest <redacted> +0x28
+0x1a8ccce5c unslid 0x189bdce5c  UIKitCore __TEXT+0xab4e5c  nearest <redacted> +0xf0c4
+0x1a8ccced8 unslid 0x189bdced8  UIKitCore __TEXT+0xab4ed8  nearest <redacted> +0xf140
+0x1a86defc8 unslid 0x1895eefc8  UIKitCore __TEXT+0x4c6fc8  nearest <redacted> +0x28
+## FaceTime
+cache uuid 0f1ee33235db30f38f5fbd4b954138d5
+0x1ae1cafcc unslid 0x18f0dafcc  libsystem_c.dylib __TEXT+0x76fcc  nearest _abort +0x94
+0x19f2bafd4 unslid 0x1801cafd4  libc++abi.dylib __TEXT+0x7fd4  nearest <redacted> +0x0
+0x19f2bcb90 unslid 0x1801ccb90  libc++abi.dylib __TEXT+0x9b90  nearest __ZSt14set_unexpectedPFvvE +0x0
+0x19f1bb868 unslid 0x1800cb868  libobjc.A.dylib __TEXT+0x33868  nearest <redacted> +0x9c
+0x19f2c71f8 unslid 0x1801d71f8  libc++abi.dylib __TEXT+0x141f8  nearest <redacted> +0x10
+0x19f2c8e18 unslid 0x1801d8e18  libc++abi.dylib __TEXT+0x15e18  nearest ___cxa_get_exception_ptr +0x0
+0x19f2b5360 unslid 0x1801c5360  libc++abi.dylib __TEXT+0x2360  nearest ___cxa_init_primary_exception +0x0
+0x19f1b938c unslid 0x1800c938c  libobjc.A.dylib __TEXT+0x3138c  nearest _objc_exception_throw +0x1c0
+0x1a25debec unslid 0x1834eebec  CoreFoundation __TEXT+0x7bec  nearest <redacted> +0x3c0
+0x1d6469328 unslid 0x1b7379328  OnBoardingKit __TEXT+0x2328  nearest <redacted> +0xd8
+0x1d6468bd0 unslid 0x1b7378bd0  OnBoardingKit __TEXT+0x1bd0  nearest <redacted> +0x6c
+0x1d6468a88 unslid 0x1b7378a88  OnBoardingKit __TEXT+0x1a88  nearest <redacted> +0x40
+0x1d64a4740 unslid 0x1b73b4740  OnBoardingKit __TEXT+0x3d740  nearest <redacted> +0x20
+0x100a59268 unslid 0xe1969268: not in cache
+0x100a6067c unslid 0xe197067c: not in cache
+0x100a2d050 unslid 0xe193d050: not in cache
+0x100a30d10 unslid 0xe1940d10: not in cache
+0x1a2648b00 unslid 0x183558b00  CoreFoundation __TEXT+0x71b00  nearest <redacted> +0x94
+0x1a2648bb0 unslid 0x183558bb0  CoreFoundation __TEXT+0x71bb0  nearest <redacted> +0x5c
+0x1a2648a0c unslid 0x183558a0c  CoreFoundation __TEXT+0x71a0c  nearest <redacted> +0x1b8
+0x1a2649908 unslid 0x183559908  CoreFoundation __TEXT+0x72908  nearest __CFXNotificationPost +0x2e0
+0x19f89609c unslid 0x1807a609c  Foundation __TEXT+0x2e09c  nearest <redacted> +0x5c
+0x1a83bd424 unslid 0x1892cd424  UIKitCore __TEXT+0x1a5424  nearest <redacted> +0xc8
+0x1a83adc38 unslid 0x1892bdc38  UIKitCore __TEXT+0x195c38  nearest <redacted> +0x520

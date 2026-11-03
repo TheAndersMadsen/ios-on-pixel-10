@@ -1,0 +1,16 @@
+# QEMU (m1box TCG) excerpts; route = root-r4 qemu-launch.sh (r23/r26, kernel app2 b875e3e3, overlay qemu-app2-r1 f5603849, 1800 s). QEMU only.
+== root-r4-q-r4q20 {"elapsed":1800.4649755320002,"exit":0,"root_unchanged":true}
+"ios_system" on LUN 0: first block 2628e6, 20480 MiB, read only
+Scanned 253 apps in /Applications
+Scanned 0 apps in /System/Library/AppPlaceholders
+usertrap=0 userabort=0 usercrash=0 INVALID_PERSONA=0 panic(cpu=0 'Info.plist missing'=643 (AppPlaceholders: 147)
+== root-r5-q-r5q20v1 {"elapsed":1800.6520197319987,"exit":0,"root_unchanged":true}
+"ios_system" on LUN 0: first block 2628e6, 20480 MiB, read only
+Scanned 253 apps in /Applications
+Scanned 0 apps in /System/Library/AppPlaceholders
+usertrap=0 userabort=0 usercrash=0 INVALID_PERSONA=0 panic(cpu=0 'Info.plist missing'=643 (AppPlaceholders: 147)
+== root-r5-q-r5q20 {"elapsed":1800.235024108999,"exit":0,"root_unchanged":true}
+"ios_system" on LUN 0: first block 2628e6, 20480 MiB, read only
+Scanned 253 apps in /Applications
+Scanned 49 apps in /System/Library/AppPlaceholders
+usertrap=0 userabort=0 usercrash=0 INVALID_PERSONA=0 panic(cpu=0 'Info.plist missing'=496 (AppPlaceholders: 0)

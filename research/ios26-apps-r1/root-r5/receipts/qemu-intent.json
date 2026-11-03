@@ -1,0 +1,11 @@
+{
+ "scope": "QEMU only (m1box TCG); not phone evidence",
+ "route": "research/ios26-apps-r1/root-r4/tools/qemu-launch.sh (r23/r26, rd=ufsroot0, blazer_ufs_root=ios_system, blazer_deadline=1800), unchanged from root-r4",
+ "kernel": "app2/kernel.rootview-bl-app2 b875e3e30d643b5b82965e6a6470dd9a4017a6e57a33e73a859b6e594dcb0d13",
+ "overlay": "app2/qemu-app2-r1.ovl f56038494bbfc47efda397bcc7187ee9a33ca63c5893c8a75786f007a7beaf7c",
+ "control": "runs/root-r4-q-r4q20 (root-r4/qemu/r4q20-logmirror.img f44614ff...)",
+ "root": "root-r5/qemu/r5q20-logmirror.img 5d8e15962070b28c8cb2e333e3218783fc5416a70fe5b7c4b866252d23e130fe = r4q20-logmirror + build_r5.sh (same tars as phone r5; census = phone r5 except the 4 logmirror plists)",
+ "superseded": "runs/root-r5-q-r5q20v1 (v1 root, Phone/About/AX set only)",
+ "the one variable": "r5's 1201 restored files + MobilePhone reseal + var.skel iTunes_Control rows",
+ "expect": ["lsd scans 253 apps in /Applications as r4", "AppPlaceholders Info.plist-missing lines gone", "Home not worse than r4", "no new traps/aborts/panics, root unchanged"]
+}

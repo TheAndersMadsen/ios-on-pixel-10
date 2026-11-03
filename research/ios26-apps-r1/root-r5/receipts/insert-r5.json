@@ -1,0 +1,49 @@
+{
+ "created_files": 1201,
+ "created_dirs": [],
+ "existing_dirs_kept": 545,
+ "replaced": [
+  [
+   "Applications/MobilePhone.app/MobilePhone",
+   1,
+   6546944,
+   6546944
+  ],
+  [
+   "Applications/MobilePhone.app/_CodeSignature/CodeResources",
+   1,
+   12239,
+   15705
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/VoicemailMessageNotificationExtension",
+   1,
+   697760,
+   697760
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/_CodeSignature/CodeResources",
+   1,
+   2660,
+   4984
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/CallsDialer",
+   1,
+   700480,
+   700480
+  ],
+  [
+   "Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/_CodeSignature/CodeResources",
+   1,
+   1798,
+   2910
+  ],
+  [
+   "private/var.skel.tsv",
+   1,
+   23348,
+   23465
+  ]
+ ]
+}

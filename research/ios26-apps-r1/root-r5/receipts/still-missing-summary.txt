@@ -1,0 +1,29 @@
+# stock 23G90 OS volume entries absent from r5 (b7f41eed), excluding staged_system_apps (in /Applications since r4)
+entries 182074 files 181831 bytes 8640191885
+## by kind (top 25)
+ 135400    633112921 .bin
+   7857    249602701 .plist
+   7667    204753595 .png
+   4508     61841129 .strings
+   2671    630057419 .loctable
+   1657      1202375 Info.plist
+   1534    296859809 (none)
+   1518       185480 .patternbin
+   1249     44787387 .json
+   1114     10763277 .austrip
+    994      3859958 .md
+    873   1125209117 .dat
+    619    632392952 Assets.car
+    538      6571641 .txt
+    532     31813491 .m4a
+    452    270124309 .art
+    450      7936063 .html
+    434      4205642 .xml
+    411      1364455 .summary
+    408    122555100 .ktx
+    402      5887268 .shape
+    402     47704827 .caf
+    399     31054661 .stringsdict
+    394    507933514 .mov
+    394     23295521 .net
+## Assets.car still missing inside frameworks: 351 bytes 399393464
