@@ -64,6 +64,13 @@ unsigned tgl_chooser_ios_action(unsigned result, unsigned ios_available);
 /* Initial selection for the menu: 1 (iOS) only with TGL_CHOOSER_IOS_DEFAULT and an admitted entry. */
 unsigned tgl_chooser_ios_initial_sel(unsigned ios_available, unsigned default_ios);
 
+/* One pass of the menu loop with chooser-v1-r13's fix (TGL_CHOOSER_KEYS_FIX; keys/DIAG-r13.md): keys = held
+ * bits now, seen = bits the row hook saw during the last redraw. tgl_chooser_menu_feed, then the 15 s hard end
+ * (TGL_CHOOSER_MENU_MAX_MS after start_ms), then *secs = the countdown number to show. Returns the menu result
+ * (0 = pending; *secs is then set). Pure, host-tested. */
+unsigned tgl_chooser_ios_menu_tick(struct tgl_chooser_menu *s, uint64_t start_ms, uint64_t now_ms,
+	unsigned keys, unsigned seen, unsigned *secs);
+
 /* tgl_chooser_run's return value when iOS was picked and the CPU is handed back to shim_main.
  * Any other return (including 0) is a refusal and shim_main resets. */
 extern const char tgl_chooser_picked_ios[];

@@ -1,0 +1,15 @@
+mutants 20/20 caught
+ufs route host test: 87 checks, 0 failed
+speed mutants 21/21 caught
+ufs speed host test: 55 checks, 0 failed
+all-stage mutants 14/14 caught
+all-stage host test: 9 checks, 0 failed
+fast-start host test: 40 checks, 0 failed
+chooser host test: 44 checks, 0 failed
+lz4 host test: 5 checks, 0 failed
+el2 mmu host test: 12 checks, 0 failed
+chooser-ios host test: 74 checks, 0 failed
+lz4 host test: 68 checks, 0 failed
+chooser host test: 89 checks, 0 failed
+62 checks, 0 failed
+chooser-ios tool test: 12 tests, 0 failed

@@ -15,6 +15,8 @@ vbmeta transplanted (chooser_image.py's A3/r3 contract), so the Android branch b
 The shim is built with the iOS image's own cflags/sources (the direct iOS path after the menu is that image's
 shim) plus TGL_CHOOSER_IOS and the r11 chooser gates; tgl_dcs.c is built twice (shim/tgl_dcs_menu.c).
 --default-ios: the countdown ends on iOS (attended test of the iOS branch before keys); never installable.
+--keys: volume keys via keys_laguna with chooser-v1-r13's menu loop (keys sampled per drawn row, cached band render,
+redraw on change, quiet presents with a record-room check; research/ios26-dualboot-r8/keys/DIAG-r13.md).
 research/ios26-dualboot-r8/chooser-ios/DESIGN.md."""
 import argparse, hashlib, json, os, re, shutil, struct, subprocess, sys, tempfile
 from pathlib import Path
@@ -37,6 +39,13 @@ WANT_T = ('tgl_chooser_run', 'tgl_chooser_ios_admit', 'tgl_chooser_ios_layout', 
           'loader_boot', 'tegu_el_drop_and_jump', 'tgl_ufsh_power_mode', 'tgl_ufs_link_relink', 'tgl_all_mark', 'shim_main')
 NOT_PRESENT = ('tgl_dcs_release', 'tgl_dcs_present', 'tgl_dcsm_handoff')  # the iOS instance must stay the HANDOFF build
 QUIESCE_MARKS = ('#0xef9, lsl #16', '#0x107c', '#0xee8, lsl #16', '#-0xe001', '#0xfff1, lsl #16')  # chooser_image.py
+# --keys: keys_laguna plus chooser-v1-r13's loop (chooser_image.py KEYS_FIX_FLAGS). r12's loop sampled the keys only
+# between ~4 s redraws; chooser_ios.c shares r13's helpers through shim/chooser_menu_r13.h.
+KEYS_FLAGS = ' -DTGL_KEYS_POLL=1' + CI.KEYS_FIX_FLAGS
+KEYS_SRC = ' keys_laguna.c'
+KEYS_T = ('keys_poll', 'keys_init', 'tgl_chooser_menu_feed', 'tgl_chooser_ios_menu_tick', 'chooser_menu_tick')
+KEYS_ONLY = ('keys_poll', 'tgl_chooser_ios_menu_tick', 'chooser_menu_tick', 'tgl_menu_row_hook')  # absent without --keys
+R11_MENU_FLAGS = '-DTGL_CHOOSER=1 -DTGL_CHOOSER_MMU=1 -DTGL_CHOOSER_UI=1 -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3 -DTGL_DCS_QUIESCE=1'
 # image_tool's iOS shim gates (DPU on): the HANDOFF display instance and the direct iOS path.
 IOS_NEEDS = ('-DTGL_ALL_DCS=1', '-DTGL_FRAME_RUNG=3', '-DTGL_DCS_HANDOFF=1')
 
@@ -81,15 +90,73 @@ def budget(shim_bytes, payload_bytes, lz4_bytes, vbmeta_bytes=4096):
                 blob_limit=BLOB_LIMIT, blob_margin=BLOB_LIMIT - blob, blob_over_proven=blob - PROVEN_BLOB)
 
 
-def text_identity(llvm, shim_dir, ios_cflags):
-    """Compile tgl_dcs.c three ways and compare .text/.rodata: the renamed menu instance must equal an r11-gated build,
-    and the iOS instance under the chooser gates must equal the iOS image's build. Fixed nonce values on all sides."""
+def chooser_cflags(ios_cflags, keys, default_ios):
+    """The shim's EXTRA_CFLAGS: the iOS image's own, the chooser gates, then the default entry and the keys."""
+    return ios_cflags + ' ' + CHOOSER_IOS_FLAGS + (' -DTGL_CHOOSER_IOS_DEFAULT=1' if default_ios else '') + (KEYS_FLAGS if keys else '')
+
+
+def chooser_src(ios_src, keys):
+    return ios_src + ' ' + CHOOSER_IOS_SRC + (KEYS_SRC if keys else '')
+
+
+def menu_reference_flags(keys):
+    """What the renamed menu display instance must equal: r11's tgl_dcs.c build, plus r13's quiet present with --keys."""
+    return R11_MENU_FLAGS + (' -DTGL_DCS_PRESENT_QUIET=1' if keys else '')
+
+
+def installable(bootable, keys, default_ios):
+    """Only the image A8 would flash: bootable, volume keys with the r13 loop, Android by timeout."""
+    return bool(bootable and keys and not default_ios)
+
+
+def adrp_refs(disasm):
+    """Addresses an llvm-objdump listing forms with adrp + add (taken) and adrp + str/ldr offset (stored to / loaded from).
+    The adrp page is the hex value objdump prints; a register is forgotten when anything else writes it."""
+    page, taken, stored = {}, set(), set()
+    for ln in disasm.splitlines():
+        m = re.match(r'\s*[0-9a-f]+:\s+(\w+)\s+(.*)$', ln)
+        if not m: continue
+        op, args = m.group(1), m.group(2)
+        a = re.match(r'adrp\s+(x\d+), 0x([0-9a-f]+)', f'{op} {args}')
+        if a: page[a.group(1)] = int(a.group(2), 16); continue
+        a = re.match(r'(x\d+), (x\d+), #0x([0-9a-f]+)$', args)
+        if op == 'add' and a and a.group(2) in page:
+            v = page[a.group(2)] + int(a.group(3), 16); taken.add(v)
+            page.pop(a.group(1), None)
+            continue
+        a = re.match(r'([wx]\d+|[wx]zr), \[(x\d+)(?:, #0x([0-9a-f]+))?\]$', args)
+        if op in ('str', 'ldr') and a and a.group(2) in page:
+            stored.add(page[a.group(2)] + int(a.group(3) or '0', 16))
+            if op == 'ldr': page.pop(a.group(1).replace('w', 'x'), None)
+            continue
+        d = re.match(r'([wx]\d+)', args)
+        if d and op not in ('str', 'stp', 'cmp', 'tst', 'cbz', 'cbnz', 'tbz', 'tbnz', 'b', 'bl', 'ret', 'br', 'blr', 'dc', 'msr'):
+            page.pop('x' + d.group(1)[1:], None)
+    return taken, stored
+
+
+def r13_loop_linked(disasm, tick_addr, hook_addr):
+    """0 when tgl_chooser_run installs chooser_menu_tick as the row hook, draws the band twice (shadow and direct
+    fallback), presents through the menu instance and carries the 15 s hard end; else what is missing."""
+    taken, stored = adrp_refs(disasm)
+    if tick_addr not in taken: return 'chooser_menu_tick address never formed'
+    if hook_addr not in stored: return 'tgl_menu_row_hook never written'
+    if len(re.findall(r'\bbl\s+0x[0-9a-f]+ <tgl_menu_draw_band>', disasm)) < 2: return 'band drawn fewer than 2 ways'
+    if not re.search(r'\bbl\s+0x[0-9a-f]+ <tgl_dcsm_present>', disasm): return 'no tgl_dcsm_present call'
+    if '#0x3a98' not in disasm: return 'no 15000 ms hard end'
+    return 0
+
+
+def text_identity(llvm, shim_dir, ios_cflags, keys=False):
+    """Compile tgl_dcs.c several ways and compare .text/.rodata: the renamed menu instance must equal an r11-gated build
+    (r11 + quiet present with --keys), and the iOS instance under the chooser gates must equal the iOS image's build.
+    With --keys the menu instance must also differ from plain r11 (the quiet present is in). Fixed nonce values."""
     base = ['-target', 'aarch64-unknown-none-elf', '-O2', '-ffreestanding', '-nostdlib', '-fno-pic', '-mgeneral-regs-only', '-mstrict-align',
             '-fno-stack-protector', '-fno-jump-tables', '-w', '-DTGL_STAMP_NONCE=0x1234ULL', '-DTGL_UFS_EPOCH=1ULL', '-DTGL_UFS_RECORD_NONCE={0}',
             '-DTGL_UFS_ROUTE=1', '-DTGL_UFS_POST_LINK=1', '-DTGL_UFS_HANDOFF=1', '-DTGL_STAMP_UFS_FOCUS=1']
     ios = ios_cflags.split()
-    r11 = '-DTGL_CHOOSER=1 -DTGL_CHOOSER_MMU=1 -DTGL_CHOOSER_UI=1 -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3 -DTGL_DCS_QUIESCE=1'.split()
-    both = ios + CHOOSER_IOS_FLAGS.split()
+    ref = menu_reference_flags(keys).split()
+    both = chooser_cflags(ios_cflags, keys, False).split()
     out = {}
     with tempfile.TemporaryDirectory() as t:
         def obj(name, src, flags):
@@ -101,11 +168,14 @@ def text_identity(llvm, shim_dir, ios_cflags):
                 subprocess.run([str(llvm / 'llvm-objcopy'), '-O', 'binary', '-j', sec, str(o), str(b)], check=True)
                 h[sec] = hashlib.sha256(b.read_bytes()).hexdigest()
             return h
-        out['menu_r11'] = obj('r11', 'tgl_dcs.c', r11)
+        out['menu_reference'] = obj('ref', 'tgl_dcs.c', ref)
+        out['menu_reference_flags'] = ' '.join(ref)
         out['menu_instance'] = obj('menu', 'tgl_dcs_menu.c', both)
+        if keys: out['menu_r11'] = obj('r11', 'tgl_dcs.c', R11_MENU_FLAGS.split())
         out['ios_alone'] = obj('ios', 'tgl_dcs.c', ios)
         out['ios_instance'] = obj('iosc', 'tgl_dcs.c', both)
-    out['menu_equal'] = out['menu_r11'] == out['menu_instance']
+    out['menu_equal'] = out['menu_reference'] == out['menu_instance']
+    if keys: out['menu_quiet'] = out['menu_r11']['.text'] != out['menu_instance']['.text']
     out['ios_equal'] = out['ios_alone'] == out['ios_instance']
     return out
 
@@ -153,8 +223,8 @@ def build(a):
     out.mkdir(parents=True)
     log = (out / 'build.log').open('w')
     t = IT.scope(a.name)
-    cflags = ios_cflags + ' ' + CHOOSER_IOS_FLAGS + (' -DTGL_CHOOSER_IOS_DEFAULT=1' if a.default_ios else '') + (' -DTGL_KEYS_POLL=1' if a.keys else '')
-    src = ios_src + ' ' + CHOOSER_IOS_SRC + (' keys_laguna.c' if a.keys else '')
+    cflags = chooser_cflags(ios_cflags, a.keys, a.default_ios)
+    src = chooser_src(ios_src, a.keys)
     llvm = Path(os.environ.get('LLVM', str(IT.LLVM)))
     env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(llvm), 'HOSTCC': os.environ.get('HOSTCC', '/usr/bin/cc'), 'TGL_UFS_HANDOFF': '1',
            'TGL_TOOLCHAIN': 'llvm', 'EXTRA_CFLAGS': cflags, 'TGL_EXTRA_SRC': src}
@@ -180,6 +250,12 @@ def build(a):
         test_out += CI.run([str(t / 'out/lz4_test'), str(k), str(im)], log)
     test_out += CI.run([str(t / 'out/chooser_test')] + ([str(Path(a.fdt).resolve())] if a.fdt else []), log)
     test_out += CI.run([sys.executable, '-I', str(t / 'test_dcs_quiesce.py')], log)
+    if a.keys:  # r13: the shadow band equals the direct band, the row hook fires during a redraw (the device's copy loop)
+        mbs = t / 'out/menu_band_shadow_test'
+        CI.run([env['HOSTCC'], '-O2', '-w', '-DTGL_MENU_ROW_HOOK=1', '-fsanitize=address,undefined', '-o', str(mbs),
+                str(t / 'menu_ui.c'), str(t / 'menu_band_shadow_test.c')], log)
+        test_out += CI.run([str(mbs)], log)
+        if not re.search(r'menu band shadow test: \d+ checks, 0 failed', test_out): IT.die('menu band shadow host test did not pass')
     test_out += CI.run([sys.executable, '-I', str(X / 'test_chooser_ios_image.py')], log)
     log.flush(); blog = (out / 'build.log').read_text()
     for pat in (r'chooser-ios host test: \d+ checks, 0 failed', r'lz4 host test: \d+ checks, 0 failed', r'chooser host test: \d+ checks, 0 failed',
@@ -191,10 +267,11 @@ def build(a):
     # ARM64 linked-image evidence: symbols, the hook, the quiesce in the menu release only, and source-level gate isolation.
     shutil.copy2(t / 'out/shim.elf', out / 'shim.elf'); (out / 'arm64-symbols.txt').write_text(syms)
     if nm('-u').split(): IT.die('undefined symbols in shim')
-    for s in WANT_T + (('tgl_fc_entry', 'tgl_fastcore_handoff') if '-DTGL_FASTCORE=1' in ios_cflags.split() else ()) + (('keys_poll', 'keys_init') if a.keys else ()):
+    for s in WANT_T + (('tgl_fc_entry', 'tgl_fastcore_handoff') if '-DTGL_FASTCORE=1' in ios_cflags.split() else ()) + (KEYS_T if a.keys else ()):
         if not re.search(rf'^[0-9a-fA-F]+ [Tt] {s}$', syms, re.M): IT.die(f'shim lacks text symbol {s}')
+    if a.keys and not re.search(r'^[0-9a-fA-F]+ [BbDd] tgl_menu_row_hook$', syms, re.M): IT.die('shim lacks data symbol tgl_menu_row_hook')
     if not re.search(r'^[0-9a-fA-F]+ [Rr] tgl_chooser_picked_ios$', syms, re.M): IT.die('handback sentinel missing')
-    for s in NOT_PRESENT + (() if a.keys else ('keys_poll',)):
+    for s in NOT_PRESENT + (() if a.keys else KEYS_ONLY):
         if re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present: wrong display instance or keys gate')
     objdump = lambda sym: subprocess.run([str(llvm / 'llvm-objdump'), '-d', '-r', '--no-show-raw-insn', f'--disassemble-symbols={sym}', str(out / 'shim.elf')],
                                          capture_output=True, text=True, check=True).stdout
@@ -204,8 +281,14 @@ def build(a):
     if '#0xef9, lsl #16' in objdump('tgl_dcs_run'): IT.die('the iOS display instance touches GPCSR (quiesce leaked into the HANDOFF build)')
     sm = objdump('shim_main')
     if not re.search(r'bl\s+0x[0-9a-f]+ <tgl_chooser_run>', sm): IT.die('shim_main does not call tgl_chooser_run')
-    ident = text_identity(llvm, t, ios_cflags)
-    if not ident['menu_equal']: IT.die('menu display instance differs from the r11-gated tgl_dcs.c build')
+    if a.keys:  # the r13 loop is the one linked: hook installed, the pure tick and the menu instance's present called
+        run = objdump('tgl_chooser_run'); (out / 'chooser-run-disasm.txt').write_text(run)
+        addr = lambda s: int(re.search(rf'^([0-9a-fA-F]+) [A-Za-z] {s}$', syms, re.M).group(1), 16)
+        why = r13_loop_linked(run, addr('chooser_menu_tick'), addr('tgl_menu_row_hook'))
+        if why: IT.die(f'tgl_chooser_run: {why}: the r13 menu loop is not linked')
+    ident = text_identity(llvm, t, ios_cflags, bool(a.keys))
+    if not ident['menu_equal']: IT.die('menu display instance differs from the r11-gated tgl_dcs.c build (r11 + quiet present with --keys)')
+    if a.keys and not ident['menu_quiet']: IT.die('menu display instance lacks the r13 quiet present')
     if not ident['ios_equal']: IT.die('iOS display instance changes under the chooser gates')
 
     boot = out / 'boot.img'
@@ -228,8 +311,9 @@ def build(a):
 
     real = budget(len(shim) - 16 - len(payload), len(payload), len(st['kernel']), len(vb))
     bootable = ios_bootable and not a.name.startswith('test-')
-    rec = dict(kind='chooser-ios', version=1, name=a.name, bootable=bootable, installable=bootable and not a.default_ios and bool(a.keys),
-               default_entry='ios' if a.default_ios else 'android', keys_read=bool(a.keys), ios=ios,
+    rec = dict(kind='chooser-ios', version=1, name=a.name, bootable=bootable, installable=installable(bootable, a.keys, a.default_ios),
+               default_entry='ios' if a.default_ios else 'android', keys_read=bool(a.keys), keys_fix=bool(a.keys),
+               menu_loop='r13' if a.keys else 'r11', ios=ios,
                image=IT.sha(boot), image_bytes=boot.stat().st_size, kernel_blob=IT.sha(out / 'kernel.bin'), kernel_blob_bytes=len(blob),
                end_off=end_off, payload_off=end_off + 16, payload_bytes=len(payload), payload_sha256=IT.sha(pl_file), segment_offset=seg_off, segment_bytes=len(seg),
                budget=real, text_identity=ident, avb_mode='stock', avb=v,
@@ -269,6 +353,9 @@ def check(d):
     f = b[-64:]; _, _, orig, off, size = struct.unpack('>IIQQQ', f[4:36])
     if f[:4] != b'AVBf' or b[off:off + size][:4] != b'AVB0' or 'sha256 ' + hashlib.sha256(b[off:off + size]).hexdigest() not in m['avb']:
         sys.exit('transplanted vbmeta differs from the record')
+    fix = all(f in m['cflags'].split() for f in KEYS_FLAGS.split())
+    if m['keys_read'] != fix or m.get('keys_fix', False) != fix: sys.exit('keys gates in cflags differ from the manifest (keys need the r13 loop)')
+    if m['installable'] != installable(m['bootable'], m['keys_read'], m['default_entry'] == 'ios'): sys.exit('installable flag inconsistent')
     if m['ios'].get('dir'):
         ios = Path(m['ios']['dir'])
         if IT.sha(ios / 'payload-usb.bin') != m['payload_sha256']: sys.exit('payload differs from the named iOS image')
@@ -295,7 +382,7 @@ if __name__ == '__main__':
     i.add_argument('--bootcpu', help='with --payload: build the fastcore shim as for --bootcpu')
     i.add_argument('--stock-kernel', required=True); i.add_argument('--stock-kernel-sha', required=True)
     i.add_argument('--fdt', help='A0 /sys/firmware/fdt dump: admission and placement host tests on real data')
-    i.add_argument('--keys', action='store_true', help='volume keys via shim/keys_laguna.c (TGL_KEYS_POLL)')
+    i.add_argument('--keys', action='store_true', help='volume keys via shim/keys_laguna.c (TGL_KEYS_POLL) with the r13 menu loop (keys/DIAG-r13.md)')
     i.add_argument('--default-ios', action='store_true', help='countdown ends on iOS: attended iOS-branch test image, never installable')
     c = sub.add_parser('check'); c.add_argument('dir')
     g = sub.add_parser('budget'); g.add_argument('--payload', required=True); g.add_argument('--stock-kernel', required=True)

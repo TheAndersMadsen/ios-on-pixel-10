@@ -252,43 +252,13 @@ static unsigned chooser_keys_db(void)
 #endif
 
 #if TGL_CHOOSER_KEYS_FIX
-/* chooser-v1-r13, research/ios26-dualboot-r8/keys/DIAG-r13.md. r12's ring never moved: r7/r9/r10 stamps show the 5 s
- * menu picking after ~8.94 s with only 2 redraws (3 FRAME_STATUS notes), i.e. one band redraw ~3.97 s, and the keys
- * were sampled only between redraws. The band blends over its own pixels, and the framebuffer is Normal-NC. */
+/* chooser-v1-r13, research/ios26-dualboot-r8/keys/DIAG-r13.md: the row-hook key sampling, the cached band copy and the
+ * record-room check live in chooser_menu_r13.h, shared with chooser_ios.c. */
 #if !TGL_CHOOSER_KEYS_POLL || !TGL_CHOOSER_UI || !TGL_CHOOSER_DISPLAY || !TGL_MENU_ROW_HOOK || !defined(TGL_DCS_PRESENT_QUIET)
 #error "TGL_CHOOSER_KEYS_FIX needs TGL_CHOOSER_KEYS_POLL, TGL_CHOOSER_UI, TGL_CHOOSER_DISPLAY, TGL_MENU_ROW_HOOK and TGL_DCS_PRESENT_QUIET"
 #endif
-#define TGL_CHOOSER_MENU_MAX_MS 15000u	/* hard end of the menu: the DCS budget (25 s from the display start) covers the release */
-#define TGL_CHOOSER_DCS_RESERVE 300u	/* record entries kept for the release (187 on the host fake, plus the TOP state polls) */
-#define TGL_CHOOSER_PRESENT_COST 20u	/* a quiet present logs 2; budget it as a loud one (~18 in r10) */
-#define DCS_HDR_ENTRIES 44u		/* struct hdr (tgl_dcs.c): magic 8, stamp_nonce 8, record_nonce 16, epoch 8, pattern 4 */
-
-static unsigned (*chooser_tick_keys)(void);
-static unsigned chooser_tick_seen, chooser_ticks;
-static void chooser_menu_tick(void)
-{
-	chooser_ticks++;
-	if (chooser_tick_keys) chooser_tick_seen |= chooser_tick_keys();
-}
-
-/* Room for one more present and still the release: the record header's live entry count (written after every entry). */
-static unsigned chooser_dcs_entries(void)
-{
-	return *(volatile uint32_t *)(uintptr_t)(TGL_DCS_RECORD_PA + DCS_HDR_ENTRIES);
-}
-static int chooser_dcs_room(void)
-{
-	return chooser_dcs_entries() + 8u + TGL_CHOOSER_PRESENT_COST + TGL_CHOOSER_DCS_RESERVE < TGL_DCS_CAPACITY;
-}
-
-/* Band rows from the cached shadow to the panel buffer: stores only, never a read of Normal-NC. volatile keeps the
- * compiler from turning the loop into a memcpy call (the shim has none). */
-static void chooser_band_copy(uint32_t *fb, const uint32_t *sh)
-{
-	volatile uint64_t *d = (volatile uint64_t *)(void *)(fb + (uint64_t)TGL_MENU_BAND_Y0 * FB_W);
-	const uint64_t *p = (const uint64_t *)(const void *)(sh + (uint64_t)TGL_MENU_BAND_Y0 * FB_W);
-	for (uint64_t n = (uint64_t)(TGL_MENU_BAND_Y1 - TGL_MENU_BAND_Y0) * FB_W / 2; n; n--) *d++ = *p++;
-}
+#include "chooser_menu_r13.h"
+_Static_assert(TGL_MENU_W == FB_W, "the band copy's stride is the panel buffer's");
 #endif
 
 #if TGL_CHOOSER_KEYS_DIAG

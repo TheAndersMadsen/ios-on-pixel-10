@@ -1,0 +1,2 @@
+tgl_chooser_run: 985 vs 985 instructions, 8 differ
+324 of 325 common functions identical after normalisation; only in B: []; only in A: []

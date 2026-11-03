@@ -1,6 +1,7 @@
 /* Host test for chooser_ios.c: image layout (shim | TEGUPLD1 payload | TGLLNX01 segment),
  * iOS admission through the shim's own payload validator and handoff checks, the menu with a
- * live iOS entry, and the pick -> action table. Optional real data:
+ * live iOS entry, the pick -> action table, and chooser-v1-r13's redraw/key fix on the iOS menu
+ * (tgl_chooser_ios_menu_tick and the shared chooser_menu_r13.h helpers). Optional real data:
  *   chooser_ios_test [A0 fdt.dtb [payload-usb.bin [stock lz4 bytes]]]
  * Build: cc -DTGL_CHOOSER_HOST -o chooser_ios_test chooser_ios.c fdt.c chooser_ios_test.c */
 #include <stdio.h>
@@ -11,6 +12,11 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include "payload.h"
 #pragma GCC diagnostic pop
+/* chooser.c's r13 helpers, the same header the device loop uses; the record header is a fake here. */
+static volatile uint32_t fake_dcs_entries;
+#define CHOOSER_DCS_ENTRIES_P (&fake_dcs_entries)
+#define TGL_MENU_ROW_HOOK 1
+#include "chooser_menu_r13.h"
 
 static unsigned fails, checks;
 #define CHECK(c, m) do { checks++; if (!(c)) { fails++; printf("FAIL %s\n", m); } } while (0)
@@ -185,6 +191,130 @@ static void menu_tests(void)
 	CHECK(TGL_CHOOSER_PICKED_IOS != 0 && TGL_CHOOSER_PICKED_IOS[0], "handback sentinel is a non-null string");
 }
 
+/* chooser-v1-r13 on the iOS menu (keys/DIAG-r13.md). r12's loop sampled the keys only between ~3.97 s redraws;
+ * here the loop sees "seen" (keys held at any row-hook sample during the last redraw). Times are ms from boot. */
+static unsigned tick(struct tgl_chooser_menu *s, uint64_t start, uint64_t t, unsigned k, unsigned seen, unsigned *secs)
+{
+	return tgl_chooser_ios_menu_tick(s, start, t, k, seen, secs);
+}
+
+/* The loop at r12's speed: one sample per redraw of 3970 ms, starting at start+1000 (chooser.c's first redraw).
+ * press_lo..press_hi is a key held during one redraw only (released before the next sample). */
+static unsigned slow_loop(struct tgl_chooser_menu *s, uint64_t start, unsigned key, uint64_t press_lo, uint64_t press_hi,
+	uint64_t *at)
+{
+	unsigned secs = 0, r = 0;
+	uint64_t prev = start;
+	for (uint64_t t = start; t < start + 60000; t = t == start ? start + 1000 : t + 3970) {
+		unsigned seen = key && press_lo < t && press_hi > prev ? key : 0;	/* the hook saw it during [prev, t) */
+		if ((r = tick(s, start, t, 0, seen, &secs))) { *at = t; return r; }
+		prev = t;
+	}
+	*at = 0;
+	return r;
+}
+
+static unsigned fake_keys_seq[8], fake_keys_n, fake_keys_i;
+static unsigned fake_keys(void) { return fake_keys_i < fake_keys_n ? fake_keys_seq[fake_keys_i++] : 0; }
+
+static void r13_tests(void)
+{
+	struct tgl_chooser_menu s;
+	unsigned secs = 99, r;
+	uint64_t at, start = 7800;	/* r9/r10: the menu came up ~7.8 s after shim entry */
+
+	/* installable image (default Android, entry admitted): a Vol Down press that started and ended inside one redraw */
+	tgl_chooser_menu_init(&s, start, 1);
+	s.sel = tgl_chooser_ios_initial_sel(1, 0);
+	r = slow_loop(&s, start, TGL_KEY_DOWN, start + 1500, start + 1700, &at);
+	CHECK(r == TGL_CHOOSE_IOS && s.why == TGL_WHY_KEYS && s.presses == 1, "r13 iOS: Vol Down inside a 3.97 s redraw picks iOS");
+	CHECK(tgl_chooser_ios_action(r, 1) == TGL_IOS_ACT_XNU, "r13 iOS: that pick hands back to the iOS path");
+	/* r12's loop (no seen bits) on the same timing: the press is lost and the countdown boots Android */
+	tgl_chooser_menu_init(&s, start, 1);
+	r = slow_loop(&s, start, 0, 0, 0, &at);
+	CHECK(r == TGL_CHOOSE_ANDROID && s.why == TGL_WHY_TIMEOUT, "r13 iOS: hands off -> Android by timeout");
+	CHECK(at >= start + TGL_CHOOSER_TIMEOUT_MS && at <= start + TGL_CHOOSER_MENU_MAX_MS, "r13 iOS: timeout pick inside the hard end");
+
+	/* C3 sequence: Vol Down (iOS), then Vol Up (Android), each seen only during a redraw */
+	tgl_chooser_menu_init(&s, start, 1);
+	CHECK(!tick(&s, start, start + 100, 0, 0, &secs) && secs == 5, "r13 iOS: countdown shows 5 at the start");
+	CHECK(!tick(&s, start, start + 1000, 0, TGL_KEY_DOWN, &secs) && s.sel == 1, "r13 iOS: Vol Down seen -> ring on iOS");
+	CHECK(secs == 4, "r13 iOS: a press inside the countdown keeps the number");
+	CHECK(!tick(&s, start, start + 2500, 0, TGL_KEY_UP, &secs) && s.sel == 0 && s.presses == 2, "r13 iOS: Vol Up seen -> ring on Android");
+	CHECK(secs == 3, "r13 iOS: grace after the last press (3 s)");
+	CHECK(!tick(&s, start, start + 5499, 0, 0, &secs), "r13 iOS: pending until the grace ends");
+	r = tick(&s, start, start + 5500, 0, 0, &secs);
+	CHECK(r == TGL_CHOOSE_ANDROID && s.why == TGL_WHY_KEYS, "r13 iOS: Down then Up -> Android");
+	/* a press held across two samples is one press, not two (seen and held together) */
+	tgl_chooser_menu_init(&s, start, 1);
+	tick(&s, start, start + 1000, TGL_KEY_DOWN, TGL_KEY_DOWN, &secs);
+	tick(&s, start, start + 1100, TGL_KEY_DOWN, TGL_KEY_DOWN, &secs);
+	tick(&s, start, start + 1200, 0, TGL_KEY_DOWN, &secs);
+	CHECK(s.presses == 1 && s.sel == 1, "r13 iOS: a held key is one press");
+	/* a chord seen during a redraw is ignored */
+	tgl_chooser_menu_init(&s, start, 1);
+	tick(&s, start, start + 1000, 0, TGL_KEY_DOWN | TGL_KEY_UP, &secs);
+	CHECK(s.presses == 0 && s.sel == 0, "r13 iOS: chord ignored");
+
+	/* default-iOS image: no press -> iOS; the number counts 5..1 and one redraw per number */
+	tgl_chooser_menu_init(&s, start, 1);
+	s.sel = tgl_chooser_ios_initial_sel(1, 1);
+	unsigned shown = 5, redraws = 0;
+	for (uint64_t t = start; ; t += 10) {
+		if ((r = tick(&s, start, t, 0, 0, &secs))) break;
+		if (secs != shown) { redraws++; shown = secs; }
+	}
+	CHECK(r == TGL_CHOOSE_IOS && s.why == TGL_WHY_TIMEOUT, "r13 iOS: default-iOS image -> iOS by timeout");
+	CHECK(redraws == 4 && shown == 1, "r13 iOS: redraws only when the number changes (4 in 5 s)");
+	/* default-iOS image, Vol Up seen -> Android */
+	tgl_chooser_menu_init(&s, start, 1);
+	s.sel = 1;
+	r = slow_loop(&s, start, TGL_KEY_UP, start + 3000, start + 3200, &at);
+	CHECK(r == TGL_CHOOSE_ANDROID && s.why == TGL_WHY_KEYS, "r13 iOS: default iOS, Vol Up -> Android");
+	/* entry refused at admission: Vol Down still moves the ring, the pick is Android (NO_IOS) */
+	tgl_chooser_menu_init(&s, start, 0);
+	r = slow_loop(&s, start, TGL_KEY_DOWN, start + 1500, start + 1700, &at);
+	CHECK(r == TGL_CHOOSE_ANDROID && s.why == TGL_WHY_NO_IOS && tgl_chooser_ios_action(r, 0) == TGL_IOS_ACT_ANDROID,
+	    "r13 iOS: refused entry, Vol Down -> Android (NO_IOS)");
+
+	/* hard end: a press every 2 s never keeps the menu past start + 15 s */
+	tgl_chooser_menu_init(&s, start, 1);
+	r = 0;
+	uint64_t t, end = 0;
+	unsigned over = 0;
+	for (t = start; t < start + 40000 && !r; t += 50) {
+		unsigned k = ((t - start) / 2000) % 2 ? TGL_KEY_DOWN : TGL_KEY_UP;
+		unsigned seen = (t - start) % 2000 == 1000 ? k : 0;
+		r = tick(&s, start, t, 0, seen, &secs);
+		if (r) end = t;
+		else over += s.deadline_ms > start + TGL_CHOOSER_MENU_MAX_MS || secs > 5;
+	}
+	CHECK(over == 0, "r13 iOS: deadline and number stay inside the hard end");
+	/* a press seen at the very sample of the hard end costs one more loop pass, as in chooser.c */
+	CHECK(r && end >= start + TGL_CHOOSER_MENU_MAX_MS && end <= start + TGL_CHOOSER_MENU_MAX_MS + 50, "r13 iOS: menu ends at the 15 s hard end");
+
+	/* the shared helpers (chooser_menu_r13.h) */
+	fake_keys_seq[0] = 0; fake_keys_seq[1] = TGL_KEY_DOWN; fake_keys_seq[2] = 0; fake_keys_n = 3; fake_keys_i = 0;
+	chooser_tick_keys = fake_keys; chooser_tick_seen = 0; chooser_ticks = 0;
+	for (int i = 0; i < 5; i++) chooser_menu_tick();
+	CHECK(chooser_ticks == 5 && chooser_tick_seen == TGL_KEY_DOWN, "r13 helper: row tick ORs the keys seen during a redraw");
+	chooser_tick_keys = 0;
+	chooser_menu_tick();
+	CHECK(chooser_ticks == 6, "r13 helper: row tick without a key reader only counts");
+	fake_dcs_entries = TGL_DCS_CAPACITY - 8u - TGL_CHOOSER_PRESENT_COST - TGL_CHOOSER_DCS_RESERVE - 1u;
+	CHECK(chooser_dcs_room(), "r13 helper: present allowed while the release keeps its room");
+	fake_dcs_entries++;
+	CHECK(!chooser_dcs_room() && fake_dcs_entries == 1204u, "r13 helper: no present from 1204 record entries on");
+	size_t px = (size_t)TGL_MENU_W * TGL_MENU_H;
+	uint32_t *fb = malloc(px * 4), *sh = malloc(px * 4);
+	for (size_t i = 0; i < px; i++) { fb[i] = 0x11111111u; sh[i] = (uint32_t)(i * 2654435761u); }
+	chooser_band_copy(fb, sh);
+	size_t bad = 0, lo = (size_t)TGL_MENU_BAND_Y0 * TGL_MENU_W, hi = (size_t)TGL_MENU_BAND_Y1 * TGL_MENU_W;
+	for (size_t i = 0; i < px; i++) bad += i >= lo && i < hi ? fb[i] != sh[i] : fb[i] != 0x11111111u;
+	CHECK(bad == 0, "r13 helper: band copy writes exactly the band rows");
+	free(fb); free(sh);
+}
+
 static uint8_t *slurp(const char *path, uint64_t *n)
 {
 	FILE *f = fopen(path, "rb");
@@ -234,6 +364,7 @@ int main(int argc, char **argv)
 	layout_tests();
 	admit_tests();
 	menu_tests();
+	r13_tests();
 	if (argc > 1)
 		real_tests(argv[1], argc > 2 ? argv[2] : 0, argc > 3 ? strtoull(argv[3], 0, 0) : 20437225ull,
 		    argc > 4 ? strtoull(argv[4], 0, 0) : 0x2a0000ull);

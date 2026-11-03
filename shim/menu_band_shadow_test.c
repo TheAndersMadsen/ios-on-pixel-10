@@ -11,12 +11,10 @@ static unsigned ticks, fails, checks;
 #define CHECK(c, m) do { checks++; if (!(c)) { fails++; printf("FAIL %s\n", m); } } while (0)
 static void tick(void) { ticks++; }
 
-/* chooser.c chooser_band_copy, on the host */
-static void band_copy(uint32_t *fb, const uint32_t *sh)
-{
-	size_t o = (size_t)TGL_MENU_BAND_Y0 * TGL_MENU_W, n = (size_t)(TGL_MENU_BAND_Y1 - TGL_MENU_BAND_Y0) * TGL_MENU_W;
-	memcpy(fb + o, sh + o, n * 4);
-}
+/* the device's own band copy (chooser_menu_r13.h, used by chooser.c and chooser_ios.c); no record read here */
+#define CHOOSER_DCS_ENTRIES_P ((volatile uint32_t *)0)
+#include "chooser_menu_r13.h"
+#define band_copy chooser_band_copy
 
 int main(void)
 {

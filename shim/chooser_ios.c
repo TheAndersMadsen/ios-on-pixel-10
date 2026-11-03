@@ -93,6 +93,23 @@ unsigned tgl_chooser_ios_initial_sel(unsigned ios_available, unsigned default_io
 	return ios_available && default_ios ? 1u : 0u;
 }
 
+#if defined(TGL_CHOOSER_HOST) || TGL_CHOOSER_KEYS_FIX
+#if defined(TGL_CHOOSER_HOST) && !defined(TGL_MENU_ROW_HOOK)
+#define TGL_MENU_ROW_HOOK 1	/* host tests only: chooser_menu_r13.h's constants; nothing here calls the hook */
+#endif
+#include "chooser_menu_r13.h"
+unsigned tgl_chooser_ios_menu_tick(struct tgl_chooser_menu *s, uint64_t start_ms, uint64_t now_ms,
+	unsigned keys, unsigned seen, unsigned *secs)
+{
+	/* chooser.c's r13 loop body: feed (a press seen during a redraw counts), then the hard end, then the number. */
+	unsigned r = tgl_chooser_menu_feed(s, now_ms, keys, seen);
+	if (r) return r;
+	if (s->deadline_ms > start_ms + TGL_CHOOSER_MENU_MAX_MS) s->deadline_ms = start_ms + TGL_CHOOSER_MENU_MAX_MS;
+	*secs = (unsigned)((s->deadline_ms - now_ms + 999) / 1000);
+	return 0;
+}
+#endif
+
 #if defined(CIOS_DEVICE) && TGL_CHOOSER_IOS
 #if !TGL_CHOOSER_MMU || !TGL_CHOOSER_UI || !TGL_CHOOSER_DISPLAY
 #error "TGL_CHOOSER_IOS builds on the chooser-v1-r11 line: TGL_CHOOSER_MMU, _UI and _DISPLAY must be 1"
@@ -113,6 +130,16 @@ unsigned tgl_chooser_ios_initial_sel(unsigned ios_available, unsigned default_io
 #endif
 #if TGL_KEYS_POLL
 #include "keys_laguna.h"
+#endif
+#if TGL_CHOOSER_KEYS_FIX
+/* chooser-v1-r13's fix (keys/DIAG-r13.md) on the iOS menu: keys sampled by menu_ui's row hook during every
+ * redraw, the band drawn in the cached Android destination and only stored to the Normal-NC panel buffer,
+ * a redraw only when the ring or the number changes, quiet presents while the record keeps the release's room.
+ * The helpers are chooser.c's (chooser_menu_r13.h, included above). */
+#if !TGL_KEYS_POLL || !TGL_MENU_ROW_HOOK || !defined(TGL_DCS_PRESENT_QUIET)
+#error "TGL_CHOOSER_KEYS_FIX (chooser-ios) needs TGL_KEYS_POLL, TGL_MENU_ROW_HOOK and TGL_DCS_PRESENT_QUIET"
+#endif
+_Static_assert(TGL_MENU_W == FB_W, "the band copy's stride is the panel buffer's");
 #endif
 
 extern char _head[], _end[];
@@ -226,7 +253,8 @@ static void __attribute__((noreturn)) chain_jump_mmu_off(uint64_t sctlr, uint64_
 
 /* iOS branch: the EL2 MMU and caches off, returning (el2_mmu.h declares tgl_el2_mmu_off but no
  * file defines it). [lo, hi) is the loaded image: it holds the stack, BSS and el2t, the only
- * lines this boot dirtied (the menu buffer is Normal non-cacheable). Between its clean and the
+ * lines this boot dirtied (the menu buffer is Normal non-cacheable; with TGL_CHOOSER_KEYS_FIX the band
+ * shadow in [lo2, hi2) is cleaned by clean_dcache before this runs). Between its clean and the
  * SCTLR_EL2 write this block makes no store, so no line can be dirtied after the clean; after the
  * write both cacheable ranges are cleaned+invalidated again to drop lines that speculation
  * allocated meanwhile (all clean, nothing lost), so a later cache-on (XNU) never hits a stale
@@ -272,6 +300,20 @@ static void __attribute__((noinline)) cios_mmu_off(uint64_t sctlr, uint64_t lo, 
 	    "isb"
 	    :: "r"(x0), "r"(x1), "r"(x2), "r"(x3), "r"(x4) : "x5", "x9", "x10", "x11", "memory");
 }
+
+#if TGL_CHOOSER_KEYS_FIX
+/* The r13 band shadow dirtied WB lines in the Android destination: write them back while the map is still on,
+ * so that cios_mmu_off again finds only the loaded image dirty (its third loop then drops clean lines only). */
+static void clean_dcache(uint64_t lo, uint64_t hi)
+{
+	uint64_t ctr;
+	__asm__ volatile("mrs %0, ctr_el0" : "=r"(ctr));
+	uint64_t line = UINT64_C(4) << ((ctr >> 16) & 0xf);
+	for (uint64_t a = lo & ~(line - 1); a < hi; a += line)
+		__asm__ volatile("dc civac, %0" :: "r"(a) : "memory");
+	__asm__ volatile("dsb sy" ::: "memory");
+}
+#endif
 
 static void inval_dcache(uint64_t lo, uint64_t hi)
 {
@@ -416,6 +458,52 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	unsigned shown_sel = s.sel;
 	tgl_stamp(TGL_STAGE_CHOOSER_MENU, TGL_STAMP_F_ENTER, TGL_CHOOSER_TIMEOUT_MS | (uint64_t)ios_ok << 32 | (uint64_t)s.sel << 33);
 	unsigned r, held = 0;
+#if TGL_CHOOSER_KEYS_FIX
+	/* chooser.c's r13 loop with the menu instance's present. The shadow is the Android destination (WB, free until
+	 * the lz4 decode); the iOS branch cleans it before the MMU goes off, the Android branch's jump cleans it. */
+	uint32_t *shadow = cached && seg.image_size >= (uint64_t)FB_STRIDE * TGL_MENU_BAND_Y1 ? (uint32_t *)(uintptr_t)base : 0;
+	unsigned shown_secs = view.seconds;
+	chooser_tick_keys = kf;
+	chooser_tick_seen = 0;
+	tgl_menu_row_hook = chooser_menu_tick;
+	for (;;) {
+		uint64_t t = now_ms();
+		unsigned k = kf ? kf() : 0;
+		unsigned seen = chooser_tick_seen, secs = shown_secs;
+		chooser_tick_seen = 0;
+		if ((k | seen) != held) {
+			tgl_stamp(TGL_STAGE_CHOOSER_KEY, TGL_STAMP_F_DONE, (t - start) << 8 | (uint64_t)seen << 4 | k);
+			held = k | seen;
+		}
+		r = tgl_chooser_ios_menu_tick(&s, start, t, k, seen, &secs);
+		if (r) break;
+		if (t - last_pat >= 1000) { if (pat) pat(); last_pat = t; }
+		if (s.sel != shown_sel || secs != shown_secs) {
+			view.sel = s.sel;
+			view.seconds = secs;
+			if (shadow) {
+				tgl_menu_draw_band(shadow, FB_W, &view);
+				chooser_band_copy(fb, shadow);
+			} else {
+				tgl_menu_draw_band(fb, FB_W, &view);
+			}
+			shown_sel = s.sel;
+			shown_secs = secs;
+			if (shown && chooser_dcs_room()) {
+				__asm__ volatile("dsb sy" ::: "memory");
+				int prc = tgl_dcsm_present();
+				if (prc) {
+					shown = 0;
+					tgl_stamp(TGL_STAGE_CHOOSER_DISPLAY, TGL_STAMP_F_REFUSED, (uint64_t)1 << 40 | (uint32_t)prc);
+				}
+			}
+		}
+		for (volatile unsigned d = 0; d < 20000; d++) { }
+	}
+	tgl_menu_row_hook = 0;
+	chooser_tick_keys = 0;
+	(void)last_line;
+#else
 	for (;;) {
 		uint64_t t = now_ms();
 		unsigned k = kf ? kf() : 0;
@@ -443,6 +531,7 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 		}
 		for (volatile unsigned d = 0; d < 20000; d++) { }
 	}
+#endif
 	unsigned act = tgl_chooser_ios_action(r, ios_ok);
 	tgl_stamp(TGL_STAGE_CHOOSER_PICK, TGL_STAMP_F_DONE,
 	    (now_ms() - start) << 8 | (act == TGL_IOS_ACT_XNU ? TGL_CHOOSE_IOS : TGL_CHOOSE_ANDROID) << 4 | s.why);
@@ -457,6 +546,9 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	if (act == TGL_IOS_ACT_XNU) {
 		/* The direct iOS path starts with the MMU and caches off: undo the chooser's map. */
 		uint64_t after = 0;
+#if TGL_CHOOSER_KEYS_FIX
+		if (shadow) clean_dcache(base, base + (uint64_t)FB_STRIDE * TGL_MENU_BAND_Y1);
+#endif
 		if (cached) {
 			cios_mmu_off(sctlr0, (uint64_t)(uintptr_t)head, (uint64_t)(uintptr_t)head + isz,
 			    base, base + seg.image_size);

@@ -1,0 +1,13 @@
+19a20,22
+> chooser_menu_tick
+> cios_keys
+> cios_keys_start
+85a89,91
+> keys_init
+> keys_poll
+> keys_raw_levels
+214a221
+> text_c
+221a229,230
+> tgl_chooser_ios_menu_tick
+> tgl_chooser_menu_feed

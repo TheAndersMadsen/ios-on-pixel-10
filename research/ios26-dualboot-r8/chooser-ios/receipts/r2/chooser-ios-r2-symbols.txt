@@ -1,0 +1,20 @@
+# chooser-ios-r2 shim.elf: r13 loop symbols (llvm-nm), undefined symbols, and the linked-loop check
+0000000000023d50 t chooser_menu_tick
+0000000000023c78 t cios_keys
+0000000000023bcc t cios_keys_start
+0000000000023ec4 t cios_mmu_off
+000000000002bbf4 T keys_init
+000000000002bc38 T keys_poll
+00000000000071a8 T loader_boot
+0000000000001a90 T shim_main
+0000000000022be0 T tgl_chooser_ios_menu_tick
+000000000002238c T tgl_chooser_menu_feed
+000000000003038c R tgl_chooser_picked_ios
+0000000000022c68 T tgl_chooser_run
+000000000001b940 T tgl_dcs_run
+0000000000029674 T tgl_dcsm_present
+0000000000028828 T tgl_dcsm_release
+0000000000024744 T tgl_menu_draw_band
+0000000000298060 B tgl_menu_row_hook
+undefined: 0
+absent (must be empty): 

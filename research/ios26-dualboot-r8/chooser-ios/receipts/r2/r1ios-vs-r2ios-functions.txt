@@ -1,0 +1,7 @@
+band: 516 vs 440 instructions, 504 differ
+fill_bg: 87 vs 100 instructions, 98 differ
+tgl_chooser_run: 792 vs 985 instructions, 946 differ
+tgl_dcsm_present: 9 vs 20 instructions, 14 differ
+tgl_menu_draw: 112 vs 31 instructions, 107 differ
+tile: 228 vs 245 instructions, 237 differ
+310 of 316 common functions identical after normalisation; only in B: ['chooser_menu_tick', 'cios_keys', 'cios_keys_start', 'keys_init', 'keys_poll', 'keys_raw_levels', 'text_c', 'tgl_chooser_ios_menu_tick', 'tgl_chooser_menu_feed']; only in A: []

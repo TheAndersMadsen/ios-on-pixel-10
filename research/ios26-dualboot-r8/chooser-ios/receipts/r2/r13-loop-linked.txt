@@ -1,0 +1,3 @@
+chooser-ios-r2 chooser_menu_tick=0x23d50 tgl_menu_row_hook=0x298060 r13_loop_linked: OK
+chooser-ios-r2-ios chooser_menu_tick=0x23d50 tgl_menu_row_hook=0x298060 r13_loop_linked: OK
+chooser-ios-r1-ios chooser_menu_tick=-0x1 tgl_menu_row_hook=-0x1 r13_loop_linked: chooser_menu_tick address never formed
