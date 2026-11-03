@@ -1,0 +1,23 @@
+# 2026-11-03T20:39:01+01:00 m1box cc (GCC) 16.1.1 20260430
+cc -std=gnu11 -g -O1 -fsanitize=address,undefined -fno-sanitize-recover=undefined -Im2/tests/inc -Im2/src m2/tests/test_m2.c
+75 checks, 0 failed
+rc=0
+m2/tests/mutants_m2.sh
+caught health-waits-rtn
+caught pass-on-consume
+caught second-after-unread
+caught no-log-type
+caught no-tb-size
+caught tb-cached-va
+caught log-on-rung5
+caught wrong-stateflags
+caught no-fresh-check
+caught line-offset
+caught exec-wait-short
+caught no-diag
+M1 regression: cc ... -Itests m2/src/blazer_gpu.c tests/test_survey.c
+blazer_gpu=3 host test: 820 checks, 0 failed (8 cases)
+fwlog_decode on the STOCK model's log:
+# HK GPUTA: M2 fwlog: ptr 17 wrap 0, 17 words from 0 (24 words)
+    5: 0x000000000000 MTS     KCCB Slot 0: Cmd=0x2abc006f, Driver ID=0   [RGXFW_SF_MTS_KCCBCMD_EXEC]
+   11: 0x000000000000 MTS     KCCB Slot 1: Cmd=0x2abc00ce, Driver ID=0   [RGXFW_SF_MTS_KCCBCMD_EXEC]

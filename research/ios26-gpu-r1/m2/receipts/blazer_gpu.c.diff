@@ -1,0 +1,30 @@
+--- src/blazer_gpu.c.base	2026-11-03 20:25:36.527291568 +0100
++++ src/blazer_gpu.c	2026-11-03 20:28:27.691553223 +0100
+@@ -14,7 +14,8 @@
+  * Facts from GPL-2.0 google-modules (GrapheneOS kernel_pixel_6.12 @5940a317) and Dual MIT/GPL pvrsrvkm: numbers only, no code copied.
+  * blazer_gpu=3: stage 1, and between steps 5 and 6 a read-only survey (gpu_survey below): the registers stock's REE debug dump reads with plain
+  * OSReadHWReg (rgxdebug_common.c RGXDumpRGXRegisters, volcanic/rgxdebug.c Clk/MMU/SLC parts; none of its DDLOGSECURE, FW core or RISC-V DM reads),
+- * and RGX_CR_TIMER twice 1 ms apart: does the core's clock tick with our power-up. Reads only, a 64 KiB view of rgx, no write beyond stage 1's. */
++ * and RGX_CR_TIMER twice 1 ms apart: does the core's clock tick with our power-up. Reads only, a 64 KiB view of rgx, no write beyond stage 1's.
++ * blazer_gpu_survey_live: the same survey for blazer_gpu_tipc=6 after its commands (ios26-gpu-r1/M2.md). */
+ #ifdef BLAZER_GPU_HOSTTEST
+ #include "blazer_gpu_test.h"
+ #else
+@@ -327,6 +328,17 @@
+ 	return 0;
+ }
+ 
++/* For blazer_gpu_tipc=6 (M2): the same 18 REE reads and timer check, after the firmware has run, while the core is still on from blazer_gpu_power_on.
++ * Reads only, the reviewed list and 64 KiB view; never called with the domain off (the caller powered it on and nothing powers it off before the panic) */
++void blazer_gpu_survey_live(void);
++
++void
++blazer_gpu_survey_live(void)
++{
++	printf("blazer-gpu: survey after firmware\n");
++	gpu_survey();
++}
++
+ #ifndef BLAZER_GPU_HOSTTEST
+ __dead2 static void
+ gpu_thread(void *arg __unused, wait_result_t wr __unused)

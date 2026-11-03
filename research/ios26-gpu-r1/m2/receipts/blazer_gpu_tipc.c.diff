@@ -1,0 +1,329 @@
+--- src/blazer_gpu_tipc.c.base	2026-11-03 20:25:36.470292634 +0100
++++ src/blazer_gpu_tipc.c	2026-11-03 20:29:53.450415166 +0100
+@@ -3,6 +3,11 @@
+  * The GPU firmware route, one rung a boot. Off unless boot-arg blazer_gpu_tipc=N. Runs once from a thread at cpus=1, and ends the boot with a panic naming the result.
+  * =1: log Trusty's build, connect to the GPU TA, send PING, read the reply. No firmware, no carve-out, no GPU register, no vote.
+  * =4: =2, then the shared firmware data, GPU on, SMC START, poll bFirmwareStarted and the connection. =5: =4, then one HEALTH_CHECK on the KCCB. The boot ends within seconds: nothing stops the firmware; the reset does. No job, no load.
++ * =6 (M2, ios26-gpu-r1/M2.md): =4 with the firmware's own trace log switched on (the TRACEBUF stock fills when a log type is set), then the firmware's view
++ *     printed from shared memory before any kick (OS runtime flags, CR poll, fault and assert buffers, FWCCB), then the commands in stock's order and shape:
++ *     HEALTH_CHECK as RGXFWHealthCheckCmd sends it (consumption only: stock reserves no return slot for it and waits on none), then STATEFLAGS_CTRL with no
++ *     flag change, whose return slot stock waits on (RGXFWSetFwConfigFlags: RGXSendCommandAndGetKCCBSlot + RGXWaitForKCCBSlotUpdate). PASS is CMD_EXECUTED there.
++ *     After them: the view again, the firmware log as raw words (decoded on the host against rgx_fwif_sf.h), and blazer_gpu=3's 18 REE registers.
+  * =2: log the build, check our firmware file, put it in the carve-out, send SEND_FIRMWARE_IMAGE once, read the reply. No START, no vote, no GPU register:
+  *     stock sends this before its first power-on (pvrsrv.c: RGXInit, then PVRSRVSetDevicePowerStateKM). After the send, nothing here reads or writes the carve-out: the TA may protect it.
+  * Transport: blazer_aoc.c's polled client, the same SMC list, compiled a second time with its own port and log prefix. One owner of Trusty's virtio per boot,
+@@ -22,11 +27,14 @@
+ #include "hmfw_vendor_layout.h"
+ static unsigned gta_diag_wanted;
+ #endif
++#include "hmfw_m2_layout.h"
+ 
+ #ifndef BLAZER_AOC_HOSTTEST
+ #include <machine/machine_routines.h>
+ extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
+ extern int blazer_gpu_power_on(vm_offset_t *rgx_out);
++extern void blazer_gpu_survey_live(void);
++#define gta_survey() blazer_gpu_survey_live()
+ #define gta_shared_map() ((volatile uint8_t *)ml_io_map((vm_offset_t)(GTA_CARVEOUT_PA + GF_MAIN_HEAP_OFF), GF_RAW_SIZE - GF_MAIN_HEAP_OFF))
+ #define gta_power_on(rgx) blazer_gpu_power_on(rgx)
+ #define gta_mts_kick(rgx, v) do { *(volatile uint32_t *)((rgx) + GTA_CR_MTS_SCHEDULE) = (v); __asm__ volatile ("dsb sy" : : : "memory"); } while (0)
+@@ -257,10 +265,17 @@
+ #define GTA_START_MS       1000u
+ #define GTA_ACTIVE_MS      3000u
+ #define GTA_HEALTH_MS      1000u
++/* Rung 6 (M2). The trace buffer is stock's default size; the groups are the ones whose messages name KCCB slots, driver state, power, HWR and faults */
++#define GTA_TB_DW          ((uint32_t)HMFV2_TB_DEFAULT_DW)
++#define GTA_LOG_M2         ((uint32_t)(HMFV2_LOG_TYPE_TRACE | HMFV2_LOG_M2_GROUPS))
++#define GTA_TB_PRINT_DW    4096u            /* at most 512 lines of the log in the kernel log */
++#define GTA_CMD_STATEFLAGS ((uint32_t)HMFV2_CMD_STATEFLAGS)
++#define GTA_EXEC_MS        1000u
++#define GTA_QUIET_MS       50u              /* after a command stock waits on nothing for: let a return value land, if the firmware writes one */
+ 
+ static volatile uint8_t *gs;
+ static uint32_t gs_next;
+-static struct { uint32_t kctl, kccb, rtn, fctl, fccb, sysdata; } gsh;
++static struct { uint32_t kctl, kccb, rtn, fctl, fccb, sysdata, tbuf, tbdata; } gsh;
+ 
+ static void gs_w32(uint32_t off, uint32_t v) { *(volatile uint32_t *)(void *)(gs + (off - (uint32_t)GF_MAIN_HEAP_OFF)) = v; }
+ static uint32_t gs_r32(uint32_t off) { return *(volatile uint32_t *)(void *)(gs + (off - (uint32_t)GF_MAIN_HEAP_OFF)); }
+@@ -296,7 +311,7 @@
+ 
+ /* Returns 0, or the main heap ran out: can't, by sizes, and checked */
+ static int
+-gta_shared_init(void)
++gta_shared_init(bool m2)
+ {
+ 	static const uint32_t km[] = GF_ALIGN_KM;
+ 	const uint32_t os = GTA_SH_OSINIT, si = GTA_SH_SYSINIT;
+@@ -338,7 +353,13 @@
+ 	gs_w64(si + GF_SI_sFBCDCLargeStateTableBase, GF_FBCDC_LARGE_BASE);
+ 	gs_w64(si + GF_SI_sTextureHeapBase, GF_TEXTURE_BASE);
+ 	gs_w64(si + GF_SI_sPDSIndirectHeapBase, GF_PDS_INDIRECT_BASE);
+-	gs_ptr(si + GF_SI_sTraceBufCtl, GF_SZ_RGXFWIF_TRACEBUF);
++	gsh.tbuf = gs_ptr(si + GF_SI_sTraceBufCtl, GF_SZ_RGXFWIF_TRACEBUF);
++	if (m2) {
++		/* RGXSetupFwSysData then RGXTraceBufferInitOnDemandResources: log type, one buffer per firmware thread, its size. Written before START */
++		gsh.tbdata = gs_ptr(gsh.tbuf + HMFV2_TB_BUFFER0, GTA_TB_DW * 4u);
++		gs_w32(gsh.tbuf + HMFV2_TB_SIZE_DW, GTA_TB_DW);
++		gs_w32(gsh.tbuf + HMFV2_TB_LOG_TYPE, GTA_LOG_M2);
++	}
+ 	gsh.sysdata = gs_ptr(si + GF_SI_sFwSysData, GF_SZ_RGXFWIF_SYSDATA);
+ 	a = gs_ptr(si + GF_SI_sAlignChecks, (uint32_t)sizeof(km) + (GF_ALIGN_UM_MAX + 2u) * 4u);
+ 	gs_w32(a, (uint32_t)(sizeof(km) / sizeof(km[0])));
+@@ -503,9 +524,190 @@
+ 	return GTA_PASS;
+ }
+ 
++/* Rung 6 (M2). Reads of our own uncached shared map only, except gta_kccb's two stock-shaped commands and the survey's REE register reads */
++static const char *const gta_os_state_name[8] = { "OFFLINE", "READY", "ACTIVE", "GRACEFUL_OFFLOAD", "FORCED_OFFLOAD", "COOLDOWN", "6?", "7?" };
++
++/* A firmware-written C string, read as words (device memory), printable ASCII only, always terminated */
++static void
++gta_m2_str(uint32_t off, uint32_t max, char *out)
++{
++	uint32_t n = 0;
++
++	for (uint32_t i = 0; i < max; i += 4) {
++		uint32_t w = gs_r32(off + i);
++
++		for (uint32_t b = 0; b < 4 && i + b < max; b++) {
++			char c = (char)(w >> (8 * b));
++
++			if (c == 0) {
++				out[n] = 0;
++				return;
++			}
++			out[n++] = (c >= 32 && c < 127) ? c : '?';
++		}
++	}
++	out[n] = 0;
++}
++
++static void
++gta_m2_filebuf(const char *when, const char *what, unsigned idx, uint32_t base)
++{
++	char path[HMFV2_ASSERT_BYTES + 1], info[HMFV2_ASSERT_BYTES + 1];
++	const uint32_t line = gs_r32(base + 2u * (uint32_t)HMFV2_ASSERT_BYTES);   /* ui32LineNum: TB_ASSERT0_LINE - TB_ASSERT0_PATH */
++
++	gta_m2_str(base, HMFV2_ASSERT_BYTES, path);
++	gta_m2_str(base + HMFV2_ASSERT_BYTES, HMFV2_ASSERT_BYTES, info);
++	if (line == 0 && path[0] == 0 && info[0] == 0) {
++		AOC_LOG("M2 %s: %s%u empty\n", when, what, idx);
++		return;
++	}
++	AOC_LOG("M2 %s: %s%u line %u path \"%s\" info \"%s\"\n", when, what, idx, line, path, info);
++}
++
++/* The firmware's view of us, at one moment. Never acks, consumes or writes anything */
++static void
++gta_m2_state(const char *when)
++{
++	const uint32_t sd = gsh.sysdata, tb = gsh.tbuf;
++	uint32_t os[8], faults;
++
++	aoc_barrier();
++	AOC_LOG("M2 %s: started %u ts 0x%x; kccb w %u r %u rtn0 0x%x rtn1 0x%x; fwccb w %u r %u; conn fw %u os %u\n", when,
++	    gs_r32(GTA_SH_SYSINIT + GF_SI_bFirmwareStarted), gs_r32(GTA_SH_SYSINIT + GF_SI_ui32FirmwareStartedTimeStamp),
++	    gs_r32(gsh.kctl + GF_CCB_W), gs_r32(gsh.kctl + GF_CCB_R), gs_r32(gsh.rtn), gs_r32(gsh.rtn + 4),
++	    gs_r32(gsh.fctl + GF_CCB_W), gs_r32(gsh.fctl + GF_CCB_R), gs_r32(GTA_SH_CONN + GF_CC_FW), gs_r32(GTA_SH_CONN + GF_CC_OS));
++	for (unsigned i = 0; i < 8; i++) {
++		os[i] = gs_r32(sd + HMFV2_SYS_OS_RUNTIME_FLAGS0 + 4u * i);
++	}
++	AOC_LOG("M2 %s: sys cfg 0x%x ext 0x%x pow %u; os0 rt 0x%x state %s fl_ok %u; os1-7 rt 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", when,
++	    gs_r32(sd + HMFV2_SYS_CONFIG_FLAGS), gs_r32(sd + HMFV2_SYS_CONFIG_FLAGS_EXT), gs_r32(sd + HMFV2_SYS_POW_STATE),
++	    os[0], gta_os_state_name[os[0] & (uint32_t)HMFV2_OS_STATE_MASK], (os[0] >> 3) & 1u, os[1], os[2], os[3], os[4], os[5], os[6], os[7]);
++	faults = gs_r32(sd + HMFV2_SYS_FW_FAULTS);
++	AOC_LOG("M2 %s: sys fw_faults %u; cr poll addr 0x%x mask 0x%x count %u; hwr 0x%x; sysflags 0x%x; ts0 %u\n", when, faults,
++	    gs_r32(sd + HMFV2_SYS_CR_POLL_ADDR0), gs_r32(sd + HMFV2_SYS_CR_POLL_MASK0), gs_r32(sd + HMFV2_SYS_CR_POLL_COUNT0),
++	    gs_r32(sd + HMFV2_SYS_HWR_FLAGS), gs_r32(sd + HMFV2_SYS_FLAGS), gs_r32(sd + HMFV2_SYS_TS_MIRROR0));
++	for (uint32_t i = 0; i < faults && i < (uint32_t)HMFV2_FAULTINFO_MAX; i++) {
++		const uint32_t fi = sd + HMFV2_SYS_FAULT_INFO0 + i * (HMFV2_SYS_FAULT_INFO1 - HMFV2_SYS_FAULT_INFO0);
++
++		AOC_LOG("M2 %s: fault%u data 0x%08x%08x\n", when, i, gs_r32(fi + (HMFV2_SYS_FAULT_INFO0_DATA - HMFV2_SYS_FAULT_INFO0) + 4),
++		    gs_r32(fi + (HMFV2_SYS_FAULT_INFO0_DATA - HMFV2_SYS_FAULT_INFO0)));
++		gta_m2_filebuf(when, "fault", i, fi + (HMFV2_SYS_FAULT_INFO0_PATH - HMFV2_SYS_FAULT_INFO0));
++	}
++	AOC_LOG("M2 %s: trace type 0x%x size %u ptr %u wrap %u flags 0x%x buf 0x%x\n", when, gs_r32(tb + HMFV2_TB_LOG_TYPE), gs_r32(tb + HMFV2_TB_SIZE_DW),
++	    gs_r32(tb + HMFV2_TB_TRACE_POINTER0), gs_r32(tb + HMFV2_TB_WRAP0), gs_r32(tb + HMFV2_TB_FLAGS), gs_r32(tb + HMFV2_TB_BUFFER0));
++	gta_m2_filebuf(when, "assert", 0, tb + HMFV2_TB_ASSERT0_PATH);
++	gta_diag_snapshot(when);
++}
++
++/* The firmware's own log, raw: 8 words a line, offset in words. Its format strings are rgx_fwif_sf.h's, decoded on the host (m2/tools/fwlog_decode.py) */
++static void
++gta_m2_fwlog(void)
++{
++	const uint32_t ptr = gs_r32(gsh.tbuf + HMFV2_TB_TRACE_POINTER0), wrap = gs_r32(gsh.tbuf + HMFV2_TB_WRAP0);
++	uint32_t start, count;
++
++	if (gsh.tbdata == 0 || ptr > GTA_TB_DW) {
++		AOC_LOG("M2 fwlog: none (ptr %u wrap %u)\n", ptr, wrap);
++		return;
++	}
++	count = wrap ? GTA_TB_DW : ptr;
++	if (count > GTA_TB_PRINT_DW) {
++		count = GTA_TB_PRINT_DW;
++	}
++	start = (ptr + GTA_TB_DW - count) % GTA_TB_DW;
++	AOC_LOG("M2 fwlog: ptr %u wrap %u, %u words from %u\n", ptr, wrap, count, start);
++	for (uint32_t i = 0; i < count; i += 8) {
++		uint32_t w[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
++
++		for (uint32_t j = 0; j < 8 && i + j < count; j++) {
++			w[j] = gs_r32(gsh.tbdata + 4u * ((start + i + j) % GTA_TB_DW));
++		}
++		AOC_LOG("M2 TB %04x: %08x %08x %08x %08x %08x %08x %08x %08x\n", (start + i) % GTA_TB_DW, w[0], w[1], w[2], w[3], w[4], w[5], w[6], w[7]);
++	}
++	AOC_LOG("M2 fwlog: end\n");
++}
++
++enum { GTA_K_EXECUTED = 0, GTA_K_CONSUMED = 1, GTA_K_UNREAD = 2, GTA_K_NOT_EXECUTED = 3, GTA_K_BAD = 4 };
++
++/* One command in the next slot of our own fresh ring, as RGXSendCommandRaw writes it: return slot reset first when the caller will wait on it, the
++ * command (type, zero flags, zero data), write offset, MTS kick for DM GP. Consumption within 1 s, then CMD_EXECUTED within 1 s if stock waits on it */
+ static int
+-gta_rung4(const uint8_t *file, uint32_t len, bool health)
++gta_kccb(vm_offset_t rgx, uint32_t slot, uint32_t type, bool wait_rtn, const char *name)
+ {
++	const uint32_t cmd = gsh.kccb + slot * GF_SZ_RGXFWIF_KCCB_CMD;
++	uint64_t t0, end, t_read;
++	uint32_t rtn;
++
++	if (gs_r32(gsh.kctl + GF_CCB_W) != slot || gs_r32(gsh.kctl + GF_CCB_R) != slot) {
++		AOC_LOG("M2 %s: ring not at slot %u (w %u r %u)\n", name, slot, gs_r32(gsh.kctl + GF_CCB_W), gs_r32(gsh.kctl + GF_CCB_R));
++		return GTA_K_BAD;
++	}
++	gs_w32(gsh.rtn + 4u * slot, 0); /* RGXFWIF_KCCB_RTN_SLOT_NO_RESPONSE */
++	aoc_barrier();
++	gs_zero(cmd, GF_SZ_RGXFWIF_KCCB_CMD);
++	gs_w32(cmd + GF_KC_TYPE, type);
++	aoc_barrier();
++	gs_w32(gsh.kctl + GF_CCB_W, slot + 1u);
++	aoc_barrier();
++	t0 = aoc_now_ms();
++	gta_mts_kick(rgx, GTA_KICK_GP);
++	end = t0 + GTA_HEALTH_MS;
++	while (gs_r32(gsh.kctl + GF_CCB_R) != slot + 1u) {
++		if (aoc_now_ms() >= end) {
++			AOC_LOG("M2 %s: slot %u NOT READ in %u ms (r %u)\n", name, slot, GTA_HEALTH_MS, gs_r32(gsh.kctl + GF_CCB_R));
++			return GTA_K_UNREAD;
++		}
++		aoc_sleep_ms(1);
++	}
++	t_read = aoc_now_ms();
++	end = t_read + (wait_rtn ? GTA_EXEC_MS : GTA_QUIET_MS);
++	while (!((rtn = gs_r32(gsh.rtn + 4u * slot)) & (uint32_t)HMFV2_RTN_EXECUTED) && aoc_now_ms() < end) {
++		aoc_sleep_ms(1);
++	}
++	aoc_barrier();
++	rtn = gs_r32(gsh.rtn + 4u * slot);
++	AOC_LOG("M2 %s: slot %u read in %llu ms; return 0x%x after %llu ms more (%s)\n", name, slot, t_read - t0, rtn, aoc_now_ms() - t_read,
++	    wait_rtn ? "stock waits on it" : "stock waits on nothing");
++	if (rtn & (uint32_t)HMFV2_RTN_EXECUTED) {
++		return GTA_K_EXECUTED;
++	}
++	return wait_rtn ? GTA_K_NOT_EXECUTED : GTA_K_CONSUMED;
++}
++
++static int
++gta_m2(vm_offset_t rgx)
++{
++	int h, e = GTA_K_BAD;
++	bool sent = false;
++
++	AOC_LOG("M2: stock order: started, HEALTH_CHECK (consumption), STATEFLAGS_CTRL (execution); log type 0x%x, %u words\n", GTA_LOG_M2, GTA_TB_DW);
++	gta_m2_state("boot");
++	h = gta_kccb(rgx, 0, (uint32_t)GF_CMD_HEALTH, false, "HEALTH_CHECK");
++	gta_m2_state("after-health");
++	if (h != GTA_K_UNREAD && h != GTA_K_BAD) {
++		/* Never a second command behind one the firmware has not read */
++		sent = true;
++		e = gta_kccb(rgx, 1, GTA_CMD_STATEFLAGS, true, "STATEFLAGS_CTRL");
++		gta_m2_state(e == GTA_K_EXECUTED ? "after-stateflags" : "stateflags-fail");
++	}
++	gta_m2_fwlog();
++	gta_survey();
++	if (e == GTA_K_EXECUTED) {
++		AOC_LOG("M2 HEALTH PASS: STATEFLAGS_CTRL executed (CMD_EXECUTED), HEALTH_CHECK %s\n", h == GTA_K_EXECUTED ? "executed" : "consumed");
++		return GTA_PASS;
++	}
++	AOC_LOG("M2 HEALTH FAIL: HEALTH_CHECK %s, STATEFLAGS_CTRL %s\n",
++	    h == GTA_K_UNREAD ? "unread" : h == GTA_K_BAD ? "ring not fresh" : h == GTA_K_EXECUTED ? "executed" : "consumed",
++	    !sent ? "not sent" : e == GTA_K_UNREAD ? "unread" : e == GTA_K_NOT_EXECUTED ? "read, not executed" : "ring not fresh");
++	aoc_stop(h == GTA_K_UNREAD ? "HEALTH_CHECK not read in 1 s" : h == GTA_K_BAD ? "KCCB not fresh" :
++	    e == GTA_K_NOT_EXECUTED ? "STATEFLAGS_CTRL read, not executed in 1 s" : e == GTA_K_UNREAD ? "STATEFLAGS_CTRL not read in 1 s" : "KCCB not fresh");
++	return GTA_STOPPED;
++}
++
++static int
++gta_rung4(const uint8_t *file, uint32_t len, unsigned rung)
++{
++	const bool health = rung == 5;
+ 	uint64_t r[8] = { GTA_SMC_GPU, GTA_SMC_START, 0, 0, 0, 0, 0, 0 };
+ 	struct gta_fw fw;
+ 	vm_offset_t rgx = 0;
+@@ -537,7 +739,7 @@
+ 		}
+ 		return rc;
+ 	}
+-	if (gta_shared_init()) {
++	if (gta_shared_init(rung == 6)) {
+ 		return GTA_STOPPED;
+ 	}
+ 	if (gta_power_on(&rgx) != 0) {
+@@ -561,11 +763,15 @@
+ 	} else {
+ 		const uint64_t end = aoc_now_ms() + GTA_ACTIVE_MS;
+ 
+-		/* rgxpower.c: the kernel waits for this, and may have to kick once for it. Without a kick here: =5 kicks */
+-		while (!health && gs_r32(GTA_SH_CONN + GF_CC_FW) != GTA_FW_ACTIVE && aoc_now_ms() < end) {
++		/* rgxpower.c: the kernel waits for this, and may have to kick once for it. Without a kick here: =5 kicks.
++		 * =6 does not wait: with RGX_NUM_DRIVERS_SUPPORTED 1 (lga production) KM_GET_FW_CONNECTION is the constant ACTIVE, stock never reads the field */
++		if (rung == 6) {
++			rc = gta_m2(rgx);
++		}
++		while (rung == 4 && gs_r32(GTA_SH_CONN + GF_CC_FW) != GTA_FW_ACTIVE && aoc_now_ms() < end) {
+ 			aoc_sleep_ms(1);
+ 		}
+-		if (!health && gs_r32(GTA_SH_CONN + GF_CC_FW) != GTA_FW_ACTIVE) {
++		if (rung == 4 && gs_r32(GTA_SH_CONN + GF_CC_FW) != GTA_FW_ACTIVE) {
+ 			AOC_LOG("firmware started, connection not active in 3 s\n");
+ 		}
+ 		if (health) {
+@@ -576,7 +782,7 @@
+ 	(void)aoc_nop(0, 0, 0);
+ 	gta_log_dump();
+ 	if (rc == GTA_PASS) {
+-		AOC_LOG("rung %u PASS, firmware running (smcs %u)\n", health ? 5u : 4u, aoc.smcs);
++		AOC_LOG("rung %u PASS, firmware running (smcs %u)\n", rung, aoc.smcs);
+ 	}
+ 	return rc;
+ }
+@@ -719,7 +925,7 @@
+ gta_thread(void *arg __unused, wait_result_t wr __unused)
+ {
+ 	const unsigned rung = gta_rung_wanted;
+-	int rc = rung >= 4 ? gta_rung4(blazer_gpu_fw + 16, (uint32_t)*(const uint64_t *)(const void *)blazer_gpu_fw, rung == 5) :
++	int rc = rung >= 4 ? gta_rung4(blazer_gpu_fw + 16, (uint32_t)*(const uint64_t *)(const void *)blazer_gpu_fw, rung) :
+ 	    rung == 2 ? gta_rung2(blazer_gpu_fw + 16, (uint32_t)*(const uint64_t *)(const void *)blazer_gpu_fw) : gta_rung1(rung == 3);
+ 
+ 	IOSleep(200);
+@@ -740,7 +946,7 @@
+ 	unsigned on = 0, cpus = 0, other = 0;
+ 	thread_t thread;
+ 
+-	if (!PE_parse_boot_argn("blazer_gpu_tipc", &on, sizeof(on)) || on < 1 || on > 5) {
++	if (!PE_parse_boot_argn("blazer_gpu_tipc", &on, sizeof(on)) || on < 1 || on > 6) {
+ 		return;
+ 	}
+ 	gta_rung_wanted = on;
+@@ -748,6 +954,9 @@
+ 	if (on == 5) {
+ 		(void)PE_parse_boot_argn("blazer_gpu_tipc_diag", &gta_diag_wanted, sizeof(gta_diag_wanted));
+ 	}
++	if (on == 6) {
++		gta_diag_wanted = 1;    /* M2 always captures the FWCCB, read-only */
++	}
+ #endif
+ 	if (!PE_parse_boot_argn("cpus", &cpus, sizeof(cpus)) || cpus != 1) {
+ 		printf("HK GPUTA: refused, needs cpus=1\n");

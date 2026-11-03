@@ -1,0 +1,3 @@
+             CC blazer_gpu.o
+             CC blazer_gpu_tipc.o
+             LD kernel.development.blazer.unstripped.noctf
