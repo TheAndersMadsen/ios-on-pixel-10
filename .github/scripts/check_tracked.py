@@ -37,6 +37,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-apps-r1/crashes-r9/[A-Za-z0-9_.-]+\.(md|txt)
   | ios26-phaseb-r1/brightness/((test|ref)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|cpp|py|txt)
   | ios26-apps-r1/app2/((src|tests|tools|receipts|xnu-src)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|m|py|sh|txt|json|inc)
+  | ios26-connectivity-r1/wifi/r4/((src|tests|receipts)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh|txt)
   | ios26-connectivity-r1/wifi/r3/((src|tests|receipts)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh|txt)
   | ios26-phaseb-r1/live/((screen|screen/(tools|tests|src|receipts)|ustack|ustack/(tools|tests|src|receipts|xnu-src))/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh|txt|json|inc)
   | ios26-phaseb-r1/pwr/((src|tests|tools|receipts|patches)/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh|txt|json)

@@ -1,0 +1,10 @@
+Android's Wi-Fi files, read on the phone in Android by read-only adb (`adb exec-out su -c 'cat /vendor/firmware/<f>'`), 2026-11-03 21:20,
+build google/blazer_beta/blazer:17/DP11.261016.003/16708287. Kept out of git: m1box /data/hackios-qemu/wifi-r4/fw-57.31 (700/600),
+Mac research/ios26-wifi-r1/fw-57.31 (700/600, git-ignored). Hashes equal android-fw/adb-firmware.txt.
+db46afd65f4e3d9ec4f825bc52f2487195f9bb0d43062baade35c68b26c92864  fw_bcmdhd.bin_4390_b1        2525684 bytes  27.10.1121.57.31 FWID 01-765a5017
+12cf65692efd15050479bfd6b70e0a287350b609b13e71ad62261ef0b0f990eb  fw_bcmdhd.map_4390_b1        2882406 bytes  (not loaded; symbols for this build)
+fe7cf29218f8cea8a5cf43a8e46c735f84f336004b9236e3d46e7a4990da1bc5  bcmdhd.cal_USI_G7BB_7311_V11   22871 bytes  = fw/ (already in r1-r3)
+9ad4c6ceff1ff29eb1cd30f585103a69425cc15d3bfc66786d941d0b8661596e  bcmdhd_clm.blob_4390_b1        30180 bytes  = fw/ (already in r1-r3)
+75c0515da4e74de05d67f53f0ffa1145d5ce5a2c3261303b15fd78531b6f697a  bcmdhd_txcap.blob_ROW           2883 bytes  = fw/ (already in r1-r3)
+fw-57.31 also holds fw/'s other three NVRAMs unchanged (7321 b08be0e8, 6327 44dec2d4, fallback 226c3f62), which blazer_wifi_fw.c embeds too.
+r1-r3 firmware (fw/, unchanged): 3d3e386a1158118fa3ddd915ea460a94f31c3a1498627e14231f70545188ebae fw_bcmdhd.bin_4390_b1 2525692 bytes, 27.10.1121.57.30 FWID 01-800a0c25.

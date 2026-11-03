@@ -1,0 +1,313 @@
+From 885589f9dc9ebd2a9148108d2e952b877263e7f3 Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 21:30:37 +0100
+Subject: [PATCH] blazer wifi join r4: Android's 27.10.1121.57.31 firmware
+ (fw-57.31), buf_key_b4_m4 1 and PM 0 before up, RX witness and receive
+ counters after each method
+
+r3's two-method join unchanged. B4_FW_DIR now research/ios26-wifi-r1/fw-57.31 (Android's own
+files on this phone, root read 2026-11-03; NVRAM, CLM, TXCAP hashes equal fw/'s). Station-role
+settings from stock's init_sta_role_iovars and wl_cfg80211_set_pm, only said. After each
+method: the RX post ring's read index (did the dongle ever take a buffer?) and wl_cnt_wlc_t
+rxframe/rxnobuf/... with the change since the last look. Gate: buf_key_b4_m4 and WLC_SET_PM
+at the dry level.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ bsd/dev/blazer_bcm4390.c      |  2 +-
+ bsd/dev/blazer_bcm4390_join.c | 31 +++++++++++-
+ bsd/dev/blazer_bcm4390_ring.c | 16 ++++++
+ bsd/dev/blazer_bcm4390_scan.c | 94 +++++++++++++++++++++++++++++++++++
+ bsd/dev/blazer_pcie1.h        |  6 +++
+ bsd/dev/blazer_wifi_fw.c      |  7 ++-
+ 6 files changed, 152 insertions(+), 4 deletions(-)
+
+diff --git a/bsd/dev/blazer_bcm4390.c b/bsd/dev/blazer_bcm4390.c
+index e7da1d9..c61a5f2 100644
+--- a/bsd/dev/blazer_bcm4390.c
++++ b/bsd/dev/blazer_bcm4390.c
+@@ -914,7 +914,7 @@ read_shared(struct p1 *p)
+ 	p->shared_flags2 = w[S_FLAGS2 / 4];
+ 	p->shared_flags3 = w[S_FLAGS3 / 4];
+ 	p->ewp_info = w[S_EWP / 4];
+-	p->ops.log(p->ops.ctx, "fw: UP. Shared flags 0x%08x: IPC version %u, trap %u. FWID 0x%08x, the file's 01-800a0c25\n", p->shared_flags, p->shared_flags & SHARED_VERSION_MASK, (p->shared_flags & SHARED_TRAP) ? 1u : 0u, p->fwid);
++	p->ops.log(p->ops.ctx, "fw: UP. Shared flags 0x%08x: IPC version %u, trap %u. FWID 0x%08x, the file's (27.10.1121.57.31, Android's) 01-765a5017\n", p->shared_flags, p->shared_flags & SHARED_VERSION_MASK, (p->shared_flags & SHARED_TRAP) ? 1u : 0u, p->fwid);
+ 	for (unsigned i = 0; i < SHARED_LOG_WORDS; i += 4) {
+ 		p->ops.log(p->ops.ctx, "fw: shared +%02x: %08x %08x %08x %08x\n", i * 4, w[i], w[i + 1], w[i + 2], w[i + 3]);
+ 	}
+diff --git a/bsd/dev/blazer_bcm4390_join.c b/bsd/dev/blazer_bcm4390_join.c
+index 2c5d7d6..e5c9f2e 100644
+--- a/bsd/dev/blazer_bcm4390_join.c
++++ b/bsd/dev/blazer_bcm4390_join.c
+@@ -454,6 +454,22 @@ b4_join_pre_up(struct p1 *p)
+ 			return (int)p->stop;
+ 		}
+ 		p->ops.log(p->ops.ctx, "join: sup_wpa to 1 before the interface is up: status %d\n", st);
++		/* r4: the rest of stock's station role that touches the handshake (wl_cfg80211.c init_sta_role_iovars: "Enable firmware key
++		 * buffering before sent 4-way M4"), and PM_OFF, which stock sets at the connect (physical: "wl_cfg80211_set_pm: PM 0 done" before
++		 * PSK_SUP 6). Stock goes on whatever they answer: only said */
++		if (set_int(p, "buf_key_b4_m4", 1, &st)) {
++			return (int)p->stop;
++		}
++		p->ops.log(p->ops.ctx, "join: buf_key_b4_m4 to 1: status %d\n", st);
++		{
++			uint8_t pm[4];
++
++			jn_put32(pm, 0, 0);
++			if (b4_ioctl(p, WLC_SET_PM, pm, sizeof(pm))) {
++				return (int)p->stop;
++			}
++			p->ops.log(p->ops.ctx, "join: PM to 0 (off) for the handshake: status %d\n", p->ioc_status);
++		}
+ 	}
+ 	if (p->cfg.net_mode != 0 && p->ops.net_ready != NULL) {
+ 		p->ops.net_ready(p->ops.ctx, p->mac);
+@@ -1197,6 +1213,16 @@ say_band(struct p1 *p)
+ 	return 0;
+ }
+ 
++/* r4: after a method's end, keyed or not: did a frame come in at all? The dongle's RX ring indices, and its receive counters since the last
++ * look (rxnobuf: frames dropped for want of a host buffer; rxframe/rxnondata: what it heard) */
++static int
++rx_look(struct p1 *p)
++{
++	const char *when = p->jn_method == 1 ? "after method 1" : "after method 2";
++
++	return b4_rx_witness(p, when) || b4_rx_counters(p, when) ? (int)p->stop : 0;
++}
++
+ /* last: the failure stops the boot, with r2's codes. Otherwise *failed says so and method 2 follows */
+ static int
+ join_wait(struct p1 *p, bool last, bool *failed)
+@@ -1238,7 +1264,7 @@ join_wait(struct p1 *p, bool last, bool *failed)
+ 			p->ops.log(p->ops.ctx, "join: joined in %u ms\n", ms);
+ 			p->ops.log(p->ops.ctx, "join: keyed by method %u: %s\n", p->jn_method,
+ 			    p->jn_method == 1 ? "Android's order (wsec_info passphrase, multi-AKM, any address)" : "r2's order, no mfp, wsec from the RSN IE");
+-			return say_band(p);
++			return say_band(p) || rx_look(p) ? (int)p->stop : 0;
+ 		}
+ 		if (ms >= JOIN_WAIT_MS) {
+ 			p->ops.log(p->ops.ctx, "join: no end in %u ms: result seen %d, link %d, handshake %u/%u\n", ms, p->jn_set_ssid_seen, p->jn_link, p->jn_sup_status, p->jn_sup_reason);
+@@ -1248,6 +1274,9 @@ join_wait(struct p1 *p, bool last, bool *failed)
+ 		}
+ 		p->ops.delay_us(p->ops.ctx, 1000);
+ 	}
++	if (rx_look(p)) {
++		return (int)p->stop;
++	}
+ 	if (last) {
+ 		return p1_halt(p, code, detail);
+ 	}
+diff --git a/bsd/dev/blazer_bcm4390_ring.c b/bsd/dev/blazer_bcm4390_ring.c
+index 6a88898..bbb9d6a 100644
+--- a/bsd/dev/blazer_bcm4390_ring.c
++++ b/bsd/dev/blazer_bcm4390_ring.c
+@@ -567,6 +567,22 @@ b4_rx_post_all(struct p1 *p)
+ 	return 0;
+ }
+ 
++/* r4: did the dongle ever take an RX buffer? Read, never written: the RX post ring's read index is the dongle's (it moves as it fetches
++ * our buffers), the RX completion ring's write index too. r1-r3 never had an RX item, and a data frame (M1 is the first) needs a host buffer */
++int
++b4_rx_witness(struct p1 *p, const char *when)
++{
++	uint16_t post_rd = 0, cpl_wr = 0;
++
++	if (idx_get(p, IDX_H2D_R, h2d_index_slot(B4_H2D_RXPOST), &post_rd) || idx_get(p, IDX_D2H_W, B4_D2H_RX - B4_D2H_CTRL, &cpl_wr)) {
++		return (int)p->stop;
++	}
++	p->ops.log(p->ops.ctx, "rx: witness %s: post ring written to %u, the dongle has read to %u (%s); completion ring: dongle at %u, us at %u. Items %u, %u bytes, %u dropped\n", when,
++	    p->ring[B4_H2D_RXPOST].wr, post_rd, post_rd == p->ring[B4_H2D_RXPOST].wr ? "all taken" : post_rd == 0 ? "none taken" : "some taken", cpl_wr, p->ring[B4_D2H_RX].rd,
++	    p->rx_items, p->rx_bytes, p->rx_dropped);
++	return 0;
++}
++
+ /* ---- D2H: dhd_prot_process_ctrlbuf, dhd_prot_d2h_sync_xorcsum ---- */
+ 
+ static int
+diff --git a/bsd/dev/blazer_bcm4390_scan.c b/bsd/dev/blazer_bcm4390_scan.c
+index 1b9a198..f9a26d9 100644
+--- a/bsd/dev/blazer_bcm4390_scan.c
++++ b/bsd/dev/blazer_bcm4390_scan.c
+@@ -186,6 +186,8 @@ static const struct {
+ 	{ WLC_SET_VAR, "wpa_auth", B4_GATE_DRY }, { WLC_SET_VAR, "auth", B4_GATE_DRY }, { WLC_SET_VAR, "sup_wpa", B4_GATE_DRY }, { WLC_SET_VAR, "wsec", B4_GATE_DRY }, { WLC_SET_VAR, "mfp", B4_GATE_DRY }, { WLC_SET_WSEC_PMK, NULL, B4_GATE_DRY },
+ 	/* r3 method 1, Android's: wsec_info (algos, the passphrase with the SSID, sae_pwe), join_pref, and the band it joined on. Settings too */
+ 	{ WLC_SET_VAR, "wsec_info", B4_GATE_DRY }, { WLC_SET_VAR, "join_pref", B4_GATE_DRY }, { WLC_GET_VAR, "chanspec", B4_GATE_DRY },
++	/* r4: the station role's, as stock's init_sta_role_iovars and wl_cfg80211_set_pm. Settings too */
++	{ WLC_SET_VAR, "buf_key_b4_m4", B4_GATE_DRY }, { WLC_SET_PM, NULL, B4_GATE_DRY },
+ 	/* The ones that go on the air: the join, and between r3's two methods the disassociation */
+ 	{ WLC_SET_VAR, "join", B4_GATE_ARMED, false, true }, { WLC_DISASSOC, NULL, B4_GATE_ARMED },
+ };
+@@ -715,6 +717,92 @@ b4_read_counters(struct p1 *p, unsigned when)
+ 	return 0;
+ }
+ 
++/* r4: the receive side of the same counters. Only the words before wl_cnt_wlc_t's first array, whose places don't depend on NFIFO */
++static const struct { uint16_t word; const char *name; } rxc_words[8] = {
++	{ 15, "rxframe" }, { 17, "rxerror" }, { 19, "rxnobuf" }, { 20, "rxnondata" }, { 26, "rxnoscb" }, { 27, "rxbadproto" }, { 29, "rxbadda" }, { 30, "rxfilter" },
++};
++
++int
++b4_rx_counters(struct p1 *p, const char *when)
++{
++	uint8_t *b = p->ioc_big;
++	uint32_t at = CNT_HDR, end, v[8] = { 0 }, slices = 0;
++	char line[320];
++	uint32_t m = 0;
++
++	(void)iov_name(b, sizeof(p->ioc_big), "counters");
++	if (b4_ioctl(p, WLC_GET_VAR, b, sizeof(p->ioc_big))) {
++		return (int)p->stop;
++	}
++	if (p->ioc_status != 0 || p->ioc_got_len < CNT_HDR) {
++		p->ops.log(p->ops.ctx, "rx: counters %s: status %d, %u bytes\n", when, p->ioc_status, p->ioc_got_len);
++		return 0;
++	}
++	end = CNT_HDR + (uint32_t)sc_get16(b, 2);
++	if (end > p->ioc_got_len) {
++		end = p->ioc_got_len;
++	}
++	while (at + CNT_TUPLE_HDR <= end) {
++		uint32_t id = sc_get16(b, at), len = sc_get16(b, at + 2), d = at + CNT_TUPLE_HDR;
++
++		if (len > end - d) {
++			break;
++		}
++		if (id == CNT_WLC && len >= 32u * 4u) {
++			for (unsigned i = 0; i < 8; i++) {
++				v[i] += sc_get32(b, d + rxc_words[i].word * 4u);
++			}
++			slices++;
++		}
++		at = d + ((len + 3u) & ~3u);
++	}
++	if (slices == 0) {
++		p->ops.log(p->ops.ctx, "rx: counters %s: no wlc counters\n", when);
++		return 0;
++	}
++	for (unsigned i = 0; i < 8 && m + 40 < sizeof(line); i++) {
++		uint32_t k = 0;
++		const char *n = rxc_words[i].name;
++
++		line[m++] = ' ';
++		while (n[k] != 0) {
++			line[m++] = n[k++];
++		}
++		line[m++] = ' ';
++		/* The value, then (+delta) when there was a last look */
++		{
++			char dig[12];
++			uint32_t x = v[i], nd = 0;
++
++			do {
++				dig[nd++] = (char)('0' + x % 10u);
++				x /= 10u;
++			} while (x != 0 && nd < sizeof(dig));
++			while (nd != 0) {
++				line[m++] = dig[--nd];
++			}
++			if (p->rxc_ok) {
++				x = v[i] - p->rxc[i];
++				line[m++] = '(';
++				line[m++] = '+';
++				do {
++					dig[nd++] = (char)('0' + x % 10u);
++					x /= 10u;
++				} while (x != 0 && nd < sizeof(dig));
++				while (nd != 0) {
++					line[m++] = dig[--nd];
++				}
++				line[m++] = ')';
++			}
++		}
++	}
++	line[m] = 0;
++	p->ops.log(p->ops.ctx, "rx: counters %s, %u slices:%s\n", when, slices, line);
++	memcpy(p->rxc, v, sizeof(p->rxc));
++	p->rxc_ok = true;
++	return 0;
++}
++
+ /* ---- The scan: wl_scan_prep, wl_run_escan ---- */
+ 
+ static uint16_t
+@@ -831,6 +919,9 @@ b4_scan(struct p1 *p)
+ 		return (int)p->stop;
+ 	}
+ 	p->ops.log(p->ops.ctx, "rx: %u buffers posted\n", p->rx_posted);
++	if (b4_rx_witness(p, "after the posting")) {
++		return (int)p->stop;
++	}
+ 	/* dhd_preinit_ioctls: which of stock's two routes. This is the short one. Read, for the log */
+ 	if (get_u32(p, "preinit_status", &p->preinit_status, &p->preinit_err)) {
+ 		return (int)p->stop;
+@@ -867,6 +958,9 @@ b4_scan(struct p1 *p)
+ 		return (int)p->stop;
+ 	}
+ 	p->ops.log(p->ops.ctx, "rx: %u items back, %u bytes in them. tx: %u completion items\n", p->rx_items, p->rx_bytes, p->tx_items);
++	if (b4_rx_witness(p, "after the scan") || b4_rx_counters(p, "after the scan")) {
++		return (int)p->stop;
++	}
+ 	if (p->cnt_known[0] && p->cnt_known[1] && (p->cnt_frames[1] != p->cnt_frames[0] || p->cnt_probereq[1] != p->cnt_probereq[0] || p->cnt_probersp[1] != p->cnt_probersp[0])) {
+ 		return p1_halt(p, P1_STOP_TX_SEEN, p->cnt_probereq[1] - p->cnt_probereq[0]);
+ 	}
+diff --git a/bsd/dev/blazer_pcie1.h b/bsd/dev/blazer_pcie1.h
+index cfdd1bc..d000616 100644
+--- a/bsd/dev/blazer_pcie1.h
++++ b/bsd/dev/blazer_pcie1.h
+@@ -224,6 +224,9 @@ struct p1 {
+ 	/* The flow ring: 0 none, 1 asked for, 2 up */
+ 	uint32_t flow_state, tx_busy, tx_sent, tx_status_bad, tx_done;
+ 	uint32_t rx_frames, rx_dropped;
++	/* r4: the firmware's receive counters at the last look (wl_cnt_wlc_t words, summed over its slices) */
++	uint32_t rxc[8];
++	bool rxc_ok;
+ 	uint8_t tx_hold[1514];  /* The frame waiting for the flow ring */
+ 	uint32_t tx_hold_len;
+ 	/* blazer_wifi_net=1: the kernel's own DHCP, ARP and one ping */
+@@ -245,6 +248,7 @@ struct p1 {
+ #define WLC_SET_VAR     263u
+ #define WLC_SET_WSEC_PMK 268u
+ #define WLC_DISASSOC    52u
++#define WLC_SET_PM      86u     /* r4: PM_OFF for the handshake, as wl_cfg80211_set_pm at the connect */
+ 
+ /* The guarded accesses, for blazer_bcm4390.c too. All stop the run on a refused address */
+ int p1_rd(struct p1 *p, uint64_t pa, uint32_t *v);
+@@ -262,6 +266,7 @@ int b4_scan(struct p1 *p);      /* stage SCAN, called from inside stage RINGS's
+ int b4_ioctl(struct p1 *p, uint32_t cmd, uint8_t *buf, uint16_t len);   /* 0 means answered: the answer's in buf, the firmware's status in p->ioc_status. Refuses what b4_ioctl_allowed refuses */
+ int b4_poll(struct p1 *p);      /* All three completion rings, then the firmware's trap and mailbox state, once */
+ int b4_rx_post_all(struct p1 *p);
++int b4_rx_witness(struct p1 *p, const char *when);   /* r4: the RX rings' indices, read only. blazer_bcm4390_ring.c */
+ bool b4_ioctl_allowed(uint32_t cmd, const uint8_t *buf, uint32_t len, int level);
+ int b4_gate_level(const struct p1 *p);
+ void b4_on_event(struct p1 *p, const uint8_t *frame, uint32_t bytes);   /* One event buffer's content, from the ring's completion */
+@@ -271,6 +276,7 @@ int b4_join_pre_up(struct p1 *p);       /* Country, en0 */
+ void b4_join_heard(struct p1 *p, const uint8_t *bi, uint32_t bytes);    /* One scan record */
+ int b4_join_run(struct p1 *p);          /* After the scan: dry run, or join and frames */
+ int b4_read_counters(struct p1 *p, unsigned when);      /* The firmware's own count of what it sent. blazer_bcm4390_scan.c */
++int b4_rx_counters(struct p1 *p, const char *when);    /* r4: its receive counters, and what changed since the last look. blazer_bcm4390_scan.c */
+ bool b4_join_event(struct p1 *p, uint32_t type, uint32_t status, uint32_t reason, uint32_t flags);        /* true: it was one of the join's */
+ void b4_net_rx(struct p1 *p, const uint8_t *frame, uint32_t bytes);     /* A frame off the air, for the stage's own use or en0 */
+ void b4_scrub_text(const struct p1 *p, char *line);     /* The network's name and address out of the firmware's own words */
+diff --git a/bsd/dev/blazer_wifi_fw.c b/bsd/dev/blazer_wifi_fw.c
+index 65c6802..2286477 100644
+--- a/bsd/dev/blazer_wifi_fw.c
++++ b/bsd/dev/blazer_wifi_fw.c
+@@ -1,9 +1,12 @@
+ #if defined(BLAZER)
+ /* SPDX-License-Identifier: MIT
+  * Google's stock Wi-Fi firmware and NVRAM, pulled in by path at build time, for local boot images only. The owner approved this for local images; these files never go in git, and a kernel built with them is never published.
+- * Pinned copies: research/ios26-wifi-r1/fw, MANIFEST in research/ios26-firmware-r1. Each symbol: the size as 8 bytes, 8 of padding, then the file. A local label inside one global symbol keeps the linker from splitting it. */
++ * Pinned copies: research/ios26-wifi-r1/fw, MANIFEST in research/ios26-firmware-r1.
++ * r4 (hk-wifi-join3): research/ios26-wifi-r1/fw-57.31, Android's own files on this phone today (root read of /vendor/firmware, 2026-11-03):
++ * firmware 27.10.1121.57.31 FWID 01-765a5017 (db46afd6...2864), NVRAM 7311 (fe7cf292, as fw/), CLM (9ad4c6ce, as fw/), TXCAP (75c0515d, as fw/).
++ * The other three NVRAMs are fw/'s, unchanged. fw/ keeps 27.10.1121.57.30 (3d3e386a) for every other branch. Each symbol: the size as 8 bytes, 8 of padding, then the file. A local label inside one global symbol keeps the linker from splitting it. */
+ 
+-#define B4_FW_DIR "/Users/andersmadsen/Developer/personal/hackios/research/ios26-wifi-r1/fw/"
++#define B4_FW_DIR "/Users/andersmadsen/Developer/personal/hackios/research/ios26-wifi-r1/fw-57.31/"
+ 
+ #define B4_IMAGE(sym, file)                     \
+ 	__asm__(".section __TEXT,__const\n"     \
+-- 
+2.56.0
+

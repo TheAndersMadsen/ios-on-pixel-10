@@ -1,0 +1,28 @@
+== hk-wifi-join3 885589f9dc9ebd2a9148108d2e952b877263e7f3, parent 3da6bcc16870ebbfc1805bc71752310de718dce9 (Mac tree research/ios26-release-r1/work/xnu; m1box edit clone /data/hackios-qemu/wifi-r4/xnu)
+ed6dbab1d7cf148f2bfbee23d6c3b3b4fcf36a03214fb17b7bc076b2e76c3693  research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r4
+c12905d4a1244bc8f1cd4d246d043e0acf95c91b27ec7100af80b579f93bb502  research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r4.unstripped
+research/ios26-dualboot-r8/rootview/kernel.rootview-wifi-r4: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
+embedded firmware: fw-57.31/fw_bcmdhd.bin_4390_b1 (db46afd6) bytes in the kernel: True ; .57.30 version string in the kernel: False
+build log research/ios26-release-r1/logs/wifi-r4-build.log: CC blazer_pcie1.o blazer_bcm4390.o blazer_bcm4390_join.o blazer_wifi_net.o blazer_bcm4390_ring.o blazer_bcm4390_scan.o blazer_apple80211.o blazer_wifi.o blazer_wifi_fw.o; 0 warnings in blazer_* files (61 linker/search-path lines, as r3's)
+== kernel c12905d4a1244bc8f1cd4d246d043e0acf95c91b27ec7100af80b579f93bb502
+kernel has _b4_net_parse
+kernel has _b4_join_run
+kernel has _b4_ioctl_allowed
+kernel has _blazer_wifi_net_secret
+kernel has _b4_img_fw
+kernel has _b4_rx_witness
+kernel has _b4_rx_counters
+kernel string: join: method 1: Android
+kernel string: join: keyed by method %u
+kernel string: join: method 2: r2
+kernel string: join: method 1 over: disassociate
+kernel string: sup_wpa to 1 before the interface is up
+kernel string: join: passphrase given to the firmware by wsec_info
+kernel string: the image holds a network
+kernel string: blazer_wifi_join
+kernel string: PM to 0 (off) for the handshake
+kernel string: join: buf_key_b4_m4 to 1
+kernel string: rx: witness %s
+kernel string: rx: counters %s, %u slices
+kernel string: the file's (27.10.1121.57.31, Android's) 01-765a5017
+kernel string: version 27.10.1121.57.31
