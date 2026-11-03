@@ -18,6 +18,15 @@ BAD_NAME = re.compile(r'''(?ix)
   | (^|/)(fw_bcmdhd|bcmdhd|rgx\.fw|aoc\.|kepler\.|seurat\.|cs35l|cs40l|synaptics\.img)   # firmware by name
   | (^|/)(kernelcache|dyld_shared_cache|sep-firmware|DeviceTree\.|iBoot|LLB)              # Apple's files by name
 ''')
+# research/ stays local-only, except these text files the Phase B brief (research/ios26-phaseb-r1/RUN.md) requires in
+# git: the run brief and ledger, the m1box QEMU rig, its calibration receipt and the ios_data negative-test receipt.
+# Content checks below still apply to them; they are added with `git add -f` because .gitignore keeps research/.
+RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
+    ios26-phaseb-r1/[A-Za-z0-9_.-]+\.md
+  | ios26-apps-r1/tools/m1box/[A-Za-z0-9_.-]+\.(py|sh|md)
+  | ios26-apps-r1/receipts/m1box-rig/[A-Za-z0-9_.-]+\.md
+  | ios26-dualboot-r8/ios-data-persist/[A-Za-z0-9_.-]+\.md
+)$''')
 # 15 digits alone is an IMEI's shape. Neighbouring word characters or a dot mean a longer number, hash or decimal.
 IMEI = re.compile(rb'(?<![0-9A-Za-z_.])[0-9]{15}(?![0-9A-Za-z_])')
 SERIAL = re.compile(rb'(?i)(androidboot\.serialno|ro\.serialno|serialno|imei|meid)["\']?\s*[=:]\s*["\']?[0-9A-Za-z]{6,}')
@@ -47,13 +56,13 @@ def main():
     problems = []
     names = git('ls-files', '-z').decode().split('\0')[:-1]
     for name in names:
-        if BAD_NAME.search(name):
+        if BAD_NAME.search(name) and not RESEARCH_ALLOW.match(name):
             problems.append(f'{name}: name is on the never-commit list')
         for problem in check_content(name, git('show', f':{name}')):
             problems.append(f'{name}: {problem}')
     if '--history' in sys.argv:
         for name in sorted(set(git('log', '--all', '--format=', '--name-only', '-z').decode().split('\0'))):
-            if name and name not in names and BAD_NAME.search(name):
+            if name and name not in names and BAD_NAME.search(name) and not RESEARCH_ALLOW.match(name):
                 problems.append(f'{name}: in history, on the never-commit list')
     print('\n'.join(problems) if problems else f'clean: {len(names)} files')
     return 1 if problems else 0
