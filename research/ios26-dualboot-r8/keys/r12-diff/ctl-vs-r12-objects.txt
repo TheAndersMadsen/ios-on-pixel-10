@@ -1,0 +1,28 @@
+only in A: []
+only in B: ['keys_laguna.o']
+chooser.o: 618 changed text lines, 101 mov/movk-immediate only, 517 other; data DIFFERS
+console.o: identical
+el2_mmu.o: identical
+fdt.o: identical
+guard.o: identical
+laguna_usb.o: identical
+laguna_usb_dma.o: identical
+loader.o: identical
+lz4.o: identical
+menu_ui.o: identical
+mmu.o: identical
+probe.o: identical
+shim.o: identical
+stamp.o: 72 changed text lines, 72 mov/movk-immediate only, 0 other; data same
+start.o: identical
+tgl_cpm.o: identical
+tgl_dcs.o: identical
+tgl_display.o: identical
+tgl_display_power.o: identical
+tgl_ufs.o: identical
+tgl_ufs_handoff.o: identical
+tgl_ufs_host.o: identical
+tgl_ufs_link.o: identical
+tgl_ufs_route.o: 28 changed text lines, 28 mov/movk-immediate only, 0 other; data same
+tgl_usb_console.o: identical
+wdt.o: identical

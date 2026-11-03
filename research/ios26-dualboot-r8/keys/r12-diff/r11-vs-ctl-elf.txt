@@ -1,0 +1,19 @@
+# r11 shim.elf vs r12ctl-nokeys shim.elf (same switches, today's tree): changed lines that are not mov/movk immediates
+functions 274 274
+only in A: []
+only in B: []
+differ: ['tgl_chooser_run', 'tgl_stamp', 'tgl_stamp_boot_entry', 'tgl_stamp_el_drop_done', 'tgl_stamp_fail_current', 'tgl_stamp_last_stage', 'tgl_stamp_over_deadline', 'tgl_stamp_reason', 'tgl_stamp_reason_get', 'tgl_stamp_reason_handoff', 'tgl_ufs_route_after_link', 'tgl_ufs_route_link_guarded']
+== tgl_chooser_run: 10 changed lines
+== tgl_stamp: 8 changed lines
+== tgl_stamp_boot_entry: 8 changed lines
+== tgl_stamp_el_drop_done: 8 changed lines
+== tgl_stamp_fail_current: 8 changed lines
+== tgl_stamp_last_stage: 8 changed lines
+== tgl_stamp_over_deadline: 8 changed lines
+== tgl_stamp_reason: 8 changed lines
+== tgl_stamp_reason_get: 8 changed lines
+== tgl_stamp_reason_handoff: 8 changed lines
+== tgl_ufs_route_after_link: 18 changed lines
+== tgl_ufs_route_link_guarded: 10 changed lines
+non-mov/movk changed lines: 0
+.rodata: 14 differing bytes at offsets 8552..8567 (0-based; cmp -l prints 8553..8568), exactly the 16-byte UFS record nonce (r11 02b72e6c..., ctl c83894cc...; 2 bytes coincide). .data: 0 differing bytes.

@@ -37,6 +37,9 @@ recoverable. QEMU and host tools support development; they are not phone results
   LPCM off frames put the command in the wrong byte; r11 uses the vendor `send_lpcm_mail` field order and the stock
   vs_drm.ko quiesce (89d1741, 69b84d7). Volume keys not run yet. Receipts: `research/ios26-dualboot-r8/attempts/`
   (chooser-v1-r10-t1, r11-t1), `display-handback/SUSPEND-ORDER.md`.
+  Host only, not booted: volume-key poll (5bd6899) and `chooser-v1-r12` = r11 + `--keys --keys-poll`
+  (bccd5cf0…4870; steps `research/ios26-dualboot-r8/keys/BOOT-r12.md`); the iOS branch, one image with the XNU
+  payload and stock Android (291251d; `research/ios26-dualboot-r8/chooser-ios/DESIGN.md`, boots P0, C1-C4).
 - **Apps (QEMU, 2026-11-03):** H3 rejected as stated. Booting the root as a normal boot (`rd=ufsroot0`; `rd=md0`
   is launchd's restore-like "ramdisk" mode) runs the stock creator `usermanagerd --init` and removes the type-6 persona
   errors, but the user still has no personas and lsd aborts (`INVALID_PERSONA` -> `Could not get user container URL!`).

@@ -1,0 +1,82 @@
+273a274,313
+> extern volatile int probe_hit;
+> extern volatile uint64_t probe_esr, probe_far, probe_pa;
+> extern volatile unsigned probe_wr;
+> int probe_read32(uintptr_t pa, uint32_t *out);
+> int probe_read64(uintptr_t pa, uint64_t *out);
+> int probe_write32(uintptr_t pa, uint32_t v);
+> int probe_recover(uint64_t esr, uint64_t far_el1);
+> struct tgl_dpu_state {
+>  unsigned probed, id_ok, enabled;
+>  uint32_t chip_id, config, addr_lo, addr_hi, stride, size;
+>  uint32_t coord0_a, coord0_b;
+>  uint64_t esr, far, candidate;
+> };
+> void probe_dpu(struct tgl_dpu_state *st);
+> static int keys_ok;
+> static unsigned chooser_keys(void)
+> {
+>  uint32_t dn = 0, up = 0;
+>  if (!keys_ok) return 0;
+>  if (!probe_read32((uintptr_t)((0x05280000UL + (uint64_t)(51) * 0x1000u) + 0x10u), &dn) ||
+>      !probe_read32((uintptr_t)((0x05280000UL + (uint64_t)(52) * 0x1000u) + 0x10u), &up) || dn == 0xffffffffu || up == 0xffffffffu) {
+>   keys_ok = 0;
+>   return 0;
+>  }
+>  return ((dn & 1u) ? 0u : 2u) | ((up & 1u) ? 0u : 1u);
+> }
+> static const char *chooser_keys_start(uint64_t *arg)
+> {
+>  uint32_t dn = 0, up = 0;
+>  uint64_t daif, isr;
+>  __asm__ volatile("mrs %0, daif; msr daifset, #0xf; isb" : "=r"(daif) :: "memory");
+>  int r1 = probe_read32((uintptr_t)((0x05280000UL + (uint64_t)(51) * 0x1000u) + 0x10u), &dn);
+>  int r2 = r1 && probe_read32((uintptr_t)((0x05280000UL + (uint64_t)(52) * 0x1000u) + 0x10u), &up);
+>  __asm__ volatile("dsb sy; isb; mrs %0, isr_el1" : "=r"(isr) :: "memory");
+>  *arg = (uint64_t)dn << 32 | up;
+>  if (isr & 0x100) return "chooser: key pad read left an SError pending";
+>  keys_ok = r1 && r2 && dn != 0xffffffffu && up != 0xffffffffu && (dn & 1u) && (up & 1u);
+>  (void)daif;
+>  return 0;
+> }
+284a325,352
+> typedef int (*keys_rd32_fn)(uintptr_t pa, uint32_t *v);
+> struct keys_state {
+>  keys_rd32_fn rd;
+>  unsigned want;
+>  unsigned stable;
+>  unsigned live;
+>  unsigned cand;
+>  unsigned fault;
+>  uint32_t bad, reads, samples;
+>  uint32_t raw[3u];
+>  uint64_t cand_ms, quiet_ms, timeout_ms;
+> };
+> void keys_init(struct keys_state *s, keys_rd32_fn rd, unsigned want, uint64_t now_ms, uint64_t timeout_ms);
+> unsigned keys_poll(struct keys_state *s, uint64_t now_ms);
+> unsigned keys_raw_levels(const struct keys_state *s);
+> static struct keys_state chooser_ks;
+> static unsigned chooser_ks_last = ~0u;
+> static unsigned chooser_keys_db(void)
+> {
+>  unsigned r = keys_poll(&chooser_ks, now_ms());
+>  if (r != chooser_ks_last) {
+>   chooser_ks_last = r;
+>   tgl_stamp(0x00cfu, r & 0x200u ? 0x0010u : 0x0002u,
+>       (uint64_t)r << 48 | (uint64_t)keys_raw_levels(&chooser_ks) << 40 |
+>       (uint64_t)(chooser_ks.bad & 0xffu) << 32 | chooser_ks.samples);
+>  }
+>  return r & (1u | 2u);
+> }
+419a488,498
+>  }
+>  {
+>   uint64_t karg = 0;
+>   const char *kw = chooser_keys_start(&karg);
+>   tgl_stamp(0x00cdu, kw || !keys_ok ? 0x0010u : 0x0002u, karg);
+>   if (kw) return kw;
+>   if (keys_ok) keys = chooser_keys;
+>   if (keys_ok) {
+>    keys_init(&chooser_ks, probe_read32, 1u | 2u, now_ms(), 5000u);
+>    keys = chooser_keys_db;
+>   }

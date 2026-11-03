@@ -87,7 +87,9 @@ successful chain to Android. So the verification is what the owner sees on the p
 Stamps 0x00cd/0x00c4/0x00cf can only be read from a refusal/reset ramdump
 (`python3 -I tools/chooser_stamps.py <attempt>/ramdump/kernel.log`).
 
-a. Build (host). This needs a two-line `--keys-poll` switch in `tools/chooser_image.py`, which belongs to the tools
+a. **Done 2026-11-03:** `--keys-poll` is in `tools/chooser_image.py` (test `tools/test_chooser_image.py`), and chooser-v1-r12 is built.
+   Steps, panel renders and the diff against r11 are in `BOOT-r12.md`. Note on 5c: a press sets the countdown to max(left, 3 s), not always 3 s.
+   Original plan: build (host). This needs a two-line `--keys-poll` switch in `tools/chooser_image.py`, which belongs to the tools
    owner (the coordinator or agent D):
    `cflags += ' -DTGL_KEYS_POLL=1 -DTGL_CHOOSER_KEYS_POLL=1'` and `src += ' keys_laguna.c'` when `a.keys_poll`; refuse
    it without `--keys`; record `keys='pads 51/52 RXDATA, keys_laguna debounce'` in the manifest. Then:
