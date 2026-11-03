@@ -1,0 +1,1147 @@
+{
+  "items": [
+    {
+      "id": "probe:apple-services",
+      "subsystem": "apple",
+      "title": "Activation, iMessage, App Store purchases",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "DEFERRED",
+      "owner": "DEFERRED",
+      "approach": "needs Apple activation servers + network; not a hardware bring-up",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "None"
+      }
+    },
+    {
+      "id": "probe:biometrics",
+      "subsystem": "biometrics",
+      "title": "Fingerprint, Face ID",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "DEFERRED",
+      "owner": "DEFERRED",
+      "approach": "Face ID/fingerprint need the Secure Enclave + TrueDepth; parked",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "None"
+      }
+    },
+    {
+      "id": "probe:mac-link",
+      "subsystem": "mac",
+      "title": "Link to the Mac",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "DEFERRED",
+      "owner": "PARKED",
+      "approach": "depends on USB-net lane (parked)",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 15,
+        "test": "Native mux over the USB console transport; host-side pairing script can run unattended"
+      }
+    },
+    {
+      "id": "probe:uwb",
+      "subsystem": "uwb",
+      "title": "UWB",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "DEFERRED",
+      "owner": "DEFERRED",
+      "approach": "niche; parked until higher-value rows are done",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:app-blastdoor",
+      "subsystem": "app",
+      "title": "MessagesBlastDoorService stays up (milestone)",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": false,
+      "severity": "high",
+      "status": "FIXED-PENDING-VERIFY",
+      "owner": "INT3",
+      "approach": "fixed in int2 (sandbox self-check); confirm on int3 boot",
+      "evidence": "",
+      "next": {
+        "kind": "unattended",
+        "minutes": 5,
+        "test": "QEMU first with a sandbox stub that reports a real container profile; then any unattended int1 boot"
+      }
+    },
+    {
+      "id": "probe:app-settings-about",
+      "subsystem": "app",
+      "title": "Settings > About opens (milestone)",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": false,
+      "severity": "high",
+      "status": "FIXED-PENDING-VERIFY",
+      "owner": "ROOT-r5",
+      "approach": "int2 cover partial; r5 fixes at source",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:4259",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "int1 live boot with ui_settings_test.py tapping About; the probe reads CRASH Preferences and the tccd reply"
+      }
+    },
+    {
+      "id": "crash:22489cba6d",
+      "subsystem": "MobilePhone",
+      "title": "userabort:MobilePhone@0x2294c9498",
+      "kind": "crash",
+      "verdict": "not seen since: 1 later boot(s) ran MobilePhone without it; but MobilePhone still fails later as kill:MobilePhone:SIGKILL by runningboardd ns 10 code 0xdeadf",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "Phone white screen: restore MobilePhone.app + UI framework Assets.car",
+      "evidence": "live-20261103-224007-a7-int2-ui:9390",
+      "next": ""
+    },
+    {
+      "id": "crash:232eb130d5",
+      "subsystem": "Health",
+      "title": "crash:Health:ns 2 code 0x5",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "pruned-resource SIGABRT",
+      "evidence": "live-20261103-230031-a7-int2:4909",
+      "next": ""
+    },
+    {
+      "id": "crash:2444eb9e39",
+      "subsystem": "Photos",
+      "title": "crash:Photos:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
+      "evidence": "live-20261103-230031-a7-int2:5511",
+      "next": ""
+    },
+    {
+      "id": "crash:395127b17f",
+      "subsystem": "Magnifier",
+      "title": "kill:Magnifier:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MEM",
+      "approach": "0xdeadfa11 = jetsam; likely the 4 GiB memsize cap; re-check after full-RAM lands",
+      "evidence": "live-20261103-230031-a7-int2:8809",
+      "next": ""
+    },
+    {
+      "id": "crash:46e0b770ce",
+      "subsystem": "Journal",
+      "title": "crash:Journal:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
+      "evidence": "live-20261103-230031-a7-int2:5824",
+      "next": ""
+    },
+    {
+      "id": "crash:549209ba54",
+      "subsystem": "MobileCal",
+      "title": "kill:MobileCal:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MEM",
+      "approach": "0xdeadfa11 = jetsam; likely the 4 GiB memsize cap; re-check after full-RAM lands",
+      "evidence": "live-20261103-230031-a7-int2:5086",
+      "next": ""
+    },
+    {
+      "id": "crash:83081e1dfa",
+      "subsystem": "AppleVisionProAp",
+      "title": "crash:AppleVisionProAp:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
+      "evidence": "live-20261103-230031-a7-int2:5631",
+      "next": ""
+    },
+    {
+      "id": "crash:84baf75b8f",
+      "subsystem": "Weather",
+      "title": "kill:Weather:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MEM",
+      "approach": "0xdeadfa11 = jetsam; likely the 4 GiB memsize cap; re-check after full-RAM lands",
+      "evidence": "live-20261103-230031-a7-int2:8792",
+      "next": ""
+    },
+    {
+      "id": "crash:8b2c533a94",
+      "subsystem": "MobileSMS",
+      "title": "crash:MobileSMS:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "Messages app SIGABRT from pruned Assets.car",
+      "evidence": "live-20261103-230031-a7-int2:3803",
+      "next": ""
+    },
+    {
+      "id": "crash:8b6ef181c8",
+      "subsystem": "Preferences",
+      "title": "userabort:Preferences@0x233074728",
+      "kind": "crash",
+      "verdict": "not seen since: 1 later boot(s) ran Preferences without it; but Preferences still fails later as crash:Preferences:ns 2 code 0x6",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "About: restore MLSortMapTables.plist at its real path (not en.lproj)",
+      "evidence": "live-20261103-224007-a7-int2-ui:4566",
+      "next": "Settings > About: Preferences aborts (SIGABRT) right after tccd answers its kTCCServiceMediaLibrary request with generic_extension=\"invalid\" (no usable sandbox extension). ABOUT finding, int1."
+    },
+    {
+      "id": "crash:9cafb39ebf",
+      "subsystem": "Preferences",
+      "title": "crash:Preferences:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "About: restore MLSortMapTables.plist at its real path (not en.lproj)",
+      "evidence": "live-20261103-230031-a7-int2:4316",
+      "next": "Settings > About: Preferences aborts (SIGABRT) right after tccd answers its kTCCServiceMediaLibrary request with generic_extension=\"invalid\" (no usable sandbox extension). ABOUT finding, int1."
+    },
+    {
+      "id": "crash:9cb7f8e8da",
+      "subsystem": "MobilePhone",
+      "title": "kill:MobilePhone:SIGKILL by runningboardd ns 10 code 0xdeadfa11",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "Phone white screen: restore MobilePhone.app + UI framework Assets.car",
+      "evidence": "live-20261103-230031-a7-int2:8777",
+      "next": ""
+    },
+    {
+      "id": "crash:b3653ffec1",
+      "subsystem": "SpringBoard",
+      "title": "crash:SpringBoard:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
+      "evidence": "live-20261103-230031-a7-int2:10525",
+      "next": ""
+    },
+    {
+      "id": "crash:b976cb6869",
+      "subsystem": "VoiceMemos",
+      "title": "crash:VoiceMemos:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
+      "evidence": "live-20261103-230031-a7-int2:6062",
+      "next": ""
+    },
+    {
+      "id": "crash:c47563a3bc",
+      "subsystem": "FaceTime",
+      "title": "crash:FaceTime:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "pruned-resource SIGABRT",
+      "evidence": "live-20261103-230031-a7-int2:4630",
+      "next": ""
+    },
+    {
+      "id": "crash:f63f1df277",
+      "subsystem": "Freeform",
+      "title": "crash:Freeform:ns 2 code 0x6",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "app SIGABRT, same systemic prune (missing Assets.car/resources); r5 restores them",
+      "evidence": "live-20261103-230031-a7-int2:5712",
+      "next": ""
+    },
+    {
+      "id": "finding:app-prune-systemic",
+      "subsystem": "apps",
+      "title": "Many stock apps SIGABRT at boot from the root prune stripping Assets.car/model files (Phone white; Messages/About/FaceTime/Health crash)",
+      "kind": "finding",
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "ROOT-r5",
+      "approach": "r5 restores pruned resource classes for the full staged-app set",
+      "evidence": "live-20261103-230031-a7-int2 console: CRASH MobileSMS/Preferences/FaceTime/Health",
+      "next": "r5 root rebuild without resource pruning"
+    },
+    {
+      "id": "probe:a520-cores",
+      "subsystem": "a520",
+      "title": "2 A520 cores",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "CPU-CORES",
+      "approach": "start the A520 efficiency cluster",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 18,
+        "test": "cpus=6 boot after the CAS-workaround (bit9) fix; unattended 900 s"
+      }
+    },
+    {
+      "id": "probe:aoc",
+      "subsystem": "aoc",
+      "title": "Always-on chip",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "AOC",
+      "approach": "load+start AoC firmware (keystone)",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 10,
+        "test": "First AOC test is built; one unattended boot"
+      }
+    },
+    {
+      "id": "probe:aod",
+      "subsystem": "aod",
+      "title": "Always-on display, self-refresh",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "AOC",
+      "approach": "needs AoC + display self-refresh",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:audio",
+      "subsystem": "audio",
+      "title": "Speakers, microphones",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": false,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "AOC/AUDIO",
+      "approach": "aud1 built; real sound gated on AoC",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 0,
+        "test": "QEMU first; depends on the always-on chip"
+      }
+    },
+    {
+      "id": "probe:cameras",
+      "subsystem": "cameras",
+      "title": "Cameras, flash",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "CAMERA",
+      "approach": "sensor ID + flash LED first",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "None"
+      }
+    },
+    {
+      "id": "probe:cellular",
+      "subsystem": "cellular",
+      "title": "Cellular",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MODEM",
+      "approach": "modem link up; staged to attach",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 15,
+        "test": "PCIe0 link-up kernel; unattended boot logs link state"
+      }
+    },
+    {
+      "id": "probe:charging",
+      "subsystem": "charging",
+      "title": "Charging control",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "CHARGER",
+      "approach": "read charger IC; safe control (owner-approved writes)",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 10,
+        "test": "Log charger state (max77779 CHG registers) read-only; any unattended boot"
+      }
+    },
+    {
+      "id": "probe:fastboot-logs",
+      "subsystem": "fastboot",
+      "title": "Fastboot and logs",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "COORDINATOR",
+      "approach": "live console works; chooser/return-check in place",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Proved by every attempt"
+      }
+    },
+    {
+      "id": "probe:gps",
+      "subsystem": "gps",
+      "title": "GPS",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MODEM",
+      "approach": "GNSS via modem or separate block",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:gpu-firmware",
+      "subsystem": "gpu",
+      "title": "GPU firmware through Trusty",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "GPU",
+      "approach": "exercise GPU power-on/firmware/command stream",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 5,
+        "test": "GPU M3: first real command stream; unattended rung-7 boot that ends on purpose"
+      }
+    },
+    {
+      "id": "probe:gpu-id",
+      "subsystem": "gpu",
+      "title": "GPU power-on and ID",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "GPU",
+      "approach": "exercise GPU power-on/firmware/command stream",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Proved; keep as regression probe"
+      }
+    },
+    {
+      "id": "probe:hdr",
+      "subsystem": "hdr",
+      "title": "HDR, peak brightness, colour calibration",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "UNASSIGNED",
+      "approach": "follow the display/brightness lane",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:hz120",
+      "subsystem": "hz120",
+      "title": "120 Hz",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "PROMOTION",
+      "approach": "add 120 Hz panel mode",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 10,
+        "test": "int1 image with the panel profile at 120 Hz; unattended 300 s boot reads SWEET FB rate"
+      }
+    },
+    {
+      "id": "probe:idle-sleep",
+      "subsystem": "idle",
+      "title": "Idle sleep",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "UNASSIGNED",
+      "approach": "low priority; add a probe log line first",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 18,
+        "test": "Add a per-core WFI residency counter to the blazer-gov tick line; any unattended boot then proves it"
+      }
+    },
+    {
+      "id": "probe:metal",
+      "subsystem": "metal",
+      "title": "Metal drawing",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "GPU",
+      "approach": "first Metal/GPU command stream",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 5,
+        "test": "Same as GPU M3: first native command stream"
+      }
+    },
+    {
+      "id": "probe:nfc",
+      "subsystem": "nfc",
+      "title": "NFC",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "NFC",
+      "approach": "power-on + controller ID",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:power-key",
+      "subsystem": "power",
+      "title": "Power key",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "UIDRV",
+      "approach": "input path",
+      "evidence": "",
+      "next": {
+        "kind": "attended",
+        "minutes": 5,
+        "test": "Needs presses; regression only (pwr1 proved it)"
+      }
+    },
+    {
+      "id": "probe:ram-rest",
+      "subsystem": "ram",
+      "title": "The rest of the 16 GiB",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MEM",
+      "approach": "map full 16 GiB; hw.memsize capped at 4 GiB",
+      "evidence": "",
+      "next": {
+        "kind": "unattended",
+        "minutes": 25,
+        "test": "a7-ios-system-ramfull (int1 + blazer_mem=16), unattended 900 s boot; then a blazer_mem_test=4096 boot"
+      }
+    },
+    {
+      "id": "probe:scripted-input",
+      "subsystem": "scripted",
+      "title": "Scripted taps and keys",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "UIDRV",
+      "approach": "int2-ui input works; tune tap coords/scroll",
+      "evidence": "",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "int1 live session: usbcon --tap/--home loop with hk_screen=30 screenshots before and after each event"
+      }
+    },
+    {
+      "id": "probe:sim",
+      "subsystem": "sim",
+      "title": "SIM, eSIM",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "MODEM",
+      "approach": "SIM/eSIM via the modem",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 15,
+        "test": "Depends on the modem boot"
+      }
+    },
+    {
+      "id": "probe:tap-wake",
+      "subsystem": "tap",
+      "title": "Tap to wake, palm rejection",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "UIDRV",
+      "approach": "input / touch",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:usb-host",
+      "subsystem": "usb",
+      "title": "USB host, video out",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "USBHOST",
+      "approach": "host-mode enumerate; gate so the debug console survives",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "None"
+      }
+    },
+    {
+      "id": "probe:video",
+      "subsystem": "video",
+      "title": "Video encode and decode",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "GPU",
+      "approach": "codec after the command stream",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:volume-keys",
+      "subsystem": "volume",
+      "title": "Volume keys",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "UIDRV",
+      "approach": "input path",
+      "evidence": "",
+      "next": {
+        "kind": "attended",
+        "minutes": 5,
+        "test": "Needs presses; regression only (pwr1 proved it)"
+      }
+    },
+    {
+      "id": "probe:vrr",
+      "subsystem": "vrr",
+      "title": "Variable refresh down to low rates",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "PROMOTION",
+      "approach": "LTPO low-rate / VRR",
+      "evidence": "",
+      "next": {
+        "kind": "build",
+        "minutes": 10,
+        "test": "Idle-rate build not written; then one unattended idle boot"
+      }
+    },
+    {
+      "id": "probe:wifi",
+      "subsystem": "wifi",
+      "title": "Wi-Fi",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "WIFI",
+      "approach": "4-way handshake status 4 reason 14 on wifi-join-r4",
+      "evidence": "",
+      "next": {
+        "kind": "unattended",
+        "minutes": 15,
+        "test": "Boot a7-wifi-join-r4 (built 214641ba, Android .57.31 firmware + RX-ring witness); join and ping are logged"
+      }
+    },
+    {
+      "id": "probe:wireless-charging",
+      "subsystem": "wireless",
+      "title": "Wireless charging",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "CHARGER",
+      "approach": "detect wireless charger",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "Not assigned"
+      }
+    },
+    {
+      "id": "probe:x4-core",
+      "subsystem": "x4",
+      "title": "X4 core",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "IN-PROGRESS",
+      "owner": "CPU-CORES",
+      "approach": "start the X4 prime core",
+      "evidence": "",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "No test until the errata work exists"
+      }
+    },
+    {
+      "id": "crash:52b5b37fa0",
+      "subsystem": "SpringBoard",
+      "title": "message:SpringBoard:uncaught NSInvalidArgumentException: *** -[__NSPlaceholderArray initWithObjects:count:]: attempt to insert nil object from objects[N]",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "live-20261103-230031-a7-int2:10496",
+      "next": ""
+    },
+    {
+      "id": "crash:b04c256326",
+      "subsystem": "Magnifier",
+      "title": "crash:Magnifier:ns 2 code 0x5",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "live-20261103-230031-a7-int2:6188",
+      "next": ""
+    },
+    {
+      "id": "crash:e74f2df5b9",
+      "subsystem": "WidgetRenderer_Default",
+      "title": "kill:WidgetRenderer_Default:SIGKILL by runningboardd ns 15 code 0xb111b111",
+      "kind": "crash",
+      "verdict": "open (latest boot)",
+      "phone_only": true,
+      "severity": "high",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "live-20261103-230031-a7-int2:10533",
+      "next": ""
+    },
+    {
+      "id": "probe:chooser",
+      "subsystem": "chooser",
+      "title": "Android/iOS boot chooser",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "",
+      "next": {
+        "kind": "attended",
+        "minutes": 5,
+        "test": "Cold power-on through the installed menu needs hands on the phone; the chooser stamps (tools/chooser_stamps.py) are the log side"
+      }
+    },
+    {
+      "id": "probe:sensors",
+      "subsystem": "sensors",
+      "title": "Accelerometer, gyro, proximity, light, barometer",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": true,
+      "severity": "high",
+      "status": "TEST-ONLY",
+      "owner": "COORDINATOR",
+      "approach": "sens2 built; needs a boot",
+      "evidence": "",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "Boot a7-ios-system-sens2 (built, not booted): accel/gyro/orientation/compass samples are logged"
+      }
+    },
+    {
+      "id": "probe:ufs-write",
+      "subsystem": "ufs",
+      "title": "Writing (persistent /var)",
+      "kind": "readme-row",
+      "verdict": "none",
+      "phone_only": false,
+      "severity": "high",
+      "status": "TEST-ONLY",
+      "owner": "COORDINATOR",
+      "approach": "int1-persist built; attended ~75 min boot",
+      "evidence": "",
+      "next": {
+        "kind": "unattended",
+        "minutes": 25,
+        "test": "Boot a7-ios-system-int1-persist twice (900 s, then 300 s): the second boot must log the restore (image built, image_tool gate pending commit)"
+      }
+    },
+    {
+      "id": "finding:usbnet-kdp-blocked",
+      "subsystem": "debug",
+      "title": "Live root shell (USB-net) and kernel debugger (KDP) lanes stopped at the safety classifier on their low-level transport/glue",
+      "kind": "finding",
+      "severity": "med",
+      "status": "DEFERRED",
+      "owner": "PARKED",
+      "approach": "designs + hk-dbg12 merge branch kept; everything else routes around them",
+      "evidence": "ROOTSVC/KDP handoffs",
+      "next": "revisit only if the owner has a different approach"
+    },
+    {
+      "id": "probe:sep",
+      "subsystem": "sep",
+      "title": "Secure enclave",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": false,
+      "severity": "med",
+      "status": "DEFERRED",
+      "owner": "DEFERRED",
+      "approach": "gated on the SEP trust chain; park until a SEP bring-up lane exists",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:948",
+      "next": {
+        "kind": "none",
+        "minutes": 0,
+        "test": "None"
+      }
+    },
+    {
+      "id": "probe:brightness",
+      "subsystem": "brightness",
+      "title": "Brightness",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "IN-PROGRESS",
+      "owner": "UNASSIGNED",
+      "approach": "add a panel-brightness readback log line to promote to confirmed",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:3220",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "Scripted slider sweep (usbcon --tap on Control Center) with a DCS brightness readback (0x52) logged per send"
+      }
+    },
+    {
+      "id": "probe:hz60",
+      "subsystem": "hz60",
+      "title": "60 Hz mode and frame sync",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "IN-PROGRESS",
+      "owner": "PROMOTION",
+      "approach": "promote once 120 lands; already 60 confirmed",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:119",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "Re-run int1 300 s with a scripted swipe loop (usbcon --tap) and read the SWEET FB rate lines"
+      }
+    },
+    {
+      "id": "probe:battery",
+      "subsystem": "battery",
+      "title": "Battery gauge",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:809",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "int1 with hk_screen=30: fb_png screenshot of the status bar; compare against the HKBATT percent"
+      }
+    },
+    {
+      "id": "probe:cpu-high-clock",
+      "subsystem": "cpu",
+      "title": "Higher clocks, up to the 3052 MHz top",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:490",
+      "next": {
+        "kind": "build",
+        "minutes": 18,
+        "test": "Build int1 with gov cap above level 16 after checker admission; one unattended 900 s boot, thermal guard on"
+      }
+    },
+    {
+      "id": "probe:haptics",
+      "subsystem": "haptics",
+      "title": "Haptics",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:3768",
+      "next": {
+        "kind": "attended",
+        "minutes": 5,
+        "test": "Felt buzz is human-only; regression via the rc 0 lines"
+      }
+    },
+    {
+      "id": "probe:rtc",
+      "subsystem": "rtc",
+      "title": "Real date and time",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:139",
+      "next": {
+        "kind": "unattended",
+        "minutes": 10,
+        "test": "int1 with hk_screen=30: status-bar clock in the fb_png screenshot vs the blazer-rtc line"
+      }
+    },
+    {
+      "id": "probe:bluetooth",
+      "subsystem": "bluetooth",
+      "title": "Bluetooth",
+      "kind": "readme-row",
+      "verdict": "partial",
+      "phone_only": true,
+      "severity": "med",
+      "status": "TEST-ONLY",
+      "owner": "COORDINATOR",
+      "approach": "bt2 built; needs a boot + Settings>Bluetooth",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:1164",
+      "next": {
+        "kind": "build",
+        "minutes": 15,
+        "test": "B2/B3: bluetoothd allowed with the H4 transport; unattended boot logs HCI reset/version"
+      }
+    },
+    {
+      "id": "probe:usb-net",
+      "subsystem": "usb",
+      "title": "Network over USB",
+      "kind": "readme-row",
+      "verdict": "active",
+      "phone_only": true,
+      "severity": "low",
+      "status": "DEFERRED",
+      "owner": "PARKED",
+      "approach": "USB-net root shell lane classifier-blocked; parked",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:840",
+      "next": {
+        "kind": "build",
+        "minutes": 10,
+        "test": "ECM binding image; host pings the phone unattended"
+      }
+    },
+    {
+      "id": "probe:ufs-speed",
+      "subsystem": "ufs",
+      "title": "Maximum speed",
+      "kind": "readme-row",
+      "verdict": "active",
+      "phone_only": true,
+      "severity": "low",
+      "status": "OPEN",
+      "owner": "UNASSIGNED",
+      "approach": "",
+      "evidence": "research/laguna-usb-fix/attempts/live-20261103-230031-a7-int2/console.txt:206",
+      "next": {
+        "kind": "build",
+        "minutes": 5,
+        "test": "Print MB/s per stage from blazer-root (blocks*4 KiB/busy) and compare against the Android baseline; any unattended boot"
+      }
+    }
+  ],
+  "groups": {
+    "DEFERRED": 7,
+    "FIXED-PENDING-VERIFY": 2,
+    "IN-PROGRESS": 47,
+    "OPEN": 9,
+    "TEST-ONLY": 3
+  }
+}
