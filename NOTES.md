@@ -28,11 +28,11 @@ recoverable. QEMU and host tools support development; they are not phone results
   as a FAIL). `tools/gpt_plan.py` emits the attended shrink plan (userdata keeps its first LBA;
   `ios_system`/`ios_data` appended; options 69/24+8 and 61/24+16 GiB; sgdisk-verified on a 4K
   loop). Nothing written. Receipts: `research/ios26-dualboot-r8/`.
-- **Chooser (r8):** `shim/chooser.c` (gate `TGL_CHOOSER=1`) chain-loads the stock Android
-  kernel. Physical t1: EL2 entry with MMU off, placement 0xc9c00000, stock 6.12.81 boots with
-  ABL's Magisk init_boot ramdisk, but vold gets KeyMint -33 on the /data key (test-key boot
-  footer) and Android requests recovery. Candidate chooser-v1-r3 transplants the stock boot
-  vbmeta; not yet booted. lz4 decode with caches off takes 122 s. No visible menu yet.
+- **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of chooser-v1-r3 (`shim/chooser.c`, stock boot
+  vbmeta transplanted) chain-loads the stock Android kernel at EL2. Android completed boot 3 times in a row
+  (kernel at 0xc9c00000, /data decrypted, return checks PASS), plain boots follow. Not yet physical: the
+  on-panel menu (r7), volume keys (r8), cached decode (r4; decode takes ~2.5 min now). Receipts:
+  `research/ios26-dualboot-r8/attempts/A3-RESULT.md`.
 - **Apps (QEMU, 2026-11-02):** LaunchServices refuses every container-requiring
   restored app. App-Placeholder (H1) and MCM-container (H2) causes were tested and
   rejected; see `docs/IOS-APPS-IDENTITY.md`. With lsd's os_log mirrored to the console

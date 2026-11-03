@@ -6,8 +6,9 @@ it is not a second project journal.
 ## Next actions
 
 1. Done: phone back in Android, return check PASS (2026-11-03). pKVM prints "hVHE" on this kernel.
-2. With the owner present: boot chooser-v1-r3 (stock vbmeta transplanted) once; the
-   discriminator is vold mounting /data and `Kernel code` at 0xc9c00000 in `/proc/iomem`.
+2. A3 accepted for r3 (3 chains, `research/ios26-dualboot-r8/attempts/A3-RESULT.md`). Next, owner present,
+   one each: r4 (cached decode), r7 (visible menu), r8 (volume keys); boot with bare `fastboot boot`
+   (the runner's AVB gate refuses the transplanted vbmeta).
 3. Host: r4 (cached decode) and r6 (menu renderer) are built and QEMU-tested; next are the visible
    menu (r6 plus the `tgl_dcs_run` full-screen layer, `research/ios26-dualboot-r8/menu-ui/SCANOUT-PATH.md`),
    the volume-key pad read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).

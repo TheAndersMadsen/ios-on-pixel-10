@@ -21,14 +21,14 @@ its own `ios_system` / `ios_data` partitions. The run brief is `GOAL.md`; receip
   - **Physical t1:** chain works (stock 6.12.81, ABL's Magisk init_boot ramdisk, placement
     0xc9c00000). Android fails at vold: KeyMint -33 for the /data key, because the test-key
     boot footer changes the root of trust. Android then requested recovery.
-  - chooser-v1-r3 transplants the stock boot vbmeta; it waits for an attended boot.
+  - **Physical r3 (2026-11-03):** with the stock boot vbmeta transplanted, Android completed boot through the
+    chooser 3 times in a row (kernel at 0xc9c00000, return checks PASS); a plain boot follows.
 - The menu is not visible yet (the shim draws into plain RAM). The volume keys are not read.
   The decode takes 122 s with caches off.
 
 ## Remaining work, in order
 
-1. Attended r3 boot. Pass: vold mounts /data, boot completes, and Android's `/proc/iomem`
-   shows the kernel at the chooser's base.
+1. Attended r4 (cached decode), r7 (visible menu), r8 (volume keys), one at a time.
 2. Cached EL2 identity map for the decode; then the visible startup menu and the volume-key
    pad read, each as its own candidate.
 3. A6 migration (attended, packet), then A7: `ios_system` flash and an XNU writer bound to
