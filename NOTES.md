@@ -22,12 +22,11 @@ recoverable. QEMU and host tools support development; they are not phone results
   `tools/image_tool.py` refuses `userdata_exp.ai` and `blazer_persist` (b1d2971, ff9261d).
   XNU dd000c8 (release tree) writes persistence only to the GPT-resolved `ios_data`
   (type GUID, no overlap, above userdata, sealed guard); host and ARM64 object only.
-- **Storage (r8, 2026-11-02):** A0 captured the full LUN0 GPT read-only: both copies CRC-valid,
-  phone `sgdisk --verify` clean, 0 free LBAs. Strict `dualboot.py` still refuses it because
-  the backup header block repeats the entry array after byte 92 (observed on real bytes, kept
-  as a FAIL). `tools/gpt_plan.py` emits the attended shrink plan (userdata keeps its first LBA;
-  `ios_system`/`ios_data` appended; options 69/24+8 and 61/24+16 GiB; sgdisk-verified on a 4K
-  loop). Nothing written. Receipts: `research/ios26-dualboot-r8/`.
+- **Storage (2026-11-03, PHYSICAL):** migrated. After a no-op proof (identical bytes, reboot, return check
+  PASS), the owner-approved GPT write made userdata 69.3 GiB (LBA 4,597,990..22,757,375), `ios_system` 24 GiB
+  (sda36) and `ios_data` 8 GiB (sda37), project type GUID; `sgdisk --verify` clean; recovery factory reset;
+  Android /data 77.3 GiB, nothing mounts ios_*. Rollback copies: `research/ios26-dualboot-r8/gpt-plan/option-a-ios24+8/`.
+  Backup: `research/android-backup-20261103/`. Root (Magisk app) and the owner's data restore pending.
 - **Chooser (2026-11-03, PHYSICAL):** `fastboot boot` of chooser-v1-r3 (`shim/chooser.c`, stock boot
   vbmeta transplanted) chain-loads the stock Android kernel at EL2. Android completed boot 3 times in a row
   (kernel at 0xc9c00000, /data decrypted, return checks PASS), plain boots follow. r4 (cached decode)
