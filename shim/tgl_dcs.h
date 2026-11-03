@@ -40,6 +40,8 @@ void tgl_dcs_finish(int code, uint64_t esr, uint64_t far, uint64_t wdt_stop);
 void tgl_dcs_refuse(int stage, int code, uint32_t detail);
 /* TGL_DCS_MENU: kick the configured full-panel layer again (after the menu was redrawn). */
 int tgl_dcs_present(void);
+/* TGL_DCS_MENU: return the display domain to ABL's handoff state (off) before Linux. 0 or DCS_C_*. */
+int tgl_dcs_release(void);
 /* Nonce pattern: slots 2..5 of the frame sequence take their colour from the top 4 of these 6 bits. */
 static inline uint32_t tgl_dcs_pattern(uint64_t stamp_nonce) { return (uint32_t)(stamp_nonce >> 58) & 0x3fu; }
 #ifdef TGL_DCS_HOSTTEST

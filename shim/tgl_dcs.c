@@ -65,6 +65,10 @@
 #define LPB_NO_EFFECT 19u
 #define LPCM_DSI0_ON 0x01020001u
 #define LPCM_FE0_ON 0x01000001u
+/* Off forms for the chooser's release: same fields, last byte 0 (req 1 | sub<<16 | sswrp<<8 | on). Inference from the
+ * proven on-requests and LSION_CLI_PD_ON 0x01000401; chooser-v1-r9 is their first physical use. */
+#define LPCM_DSI0_OFF 0x01020000u
+#define LPCM_FE0_OFF 0x01000000u
 #define VS_CHIP_ID_9400 0x9400u
 #define FORCE_BE_CSR_RD_CNT 30u
 /* Compare PPS 0-88. Physical, r1a and r1b: byte 89 (second_line_bpg_offset, native 4:2:0 only) reads 0xff before and after we write 0. Recorded, not compared. */
@@ -155,7 +159,12 @@ static struct {
     uint32_t seq, seal, stop, started, quiet; uint64_t t0;
     uint32_t tx_mode; /* HDR_LP or 0 */
     int stage;
+    uint32_t held;   /* what this run asked CPM for, so tgl_dcs_release() can give exactly that back */
 } d;
+#define HELD_TOP 1u
+#define HELD_DSI0 2u
+#define HELD_CLK 4u
+#define HELD_FE0 8u
 
 static void rec32(uint32_t off, uint32_t v) { *(volatile uint32_t *)(void *)(dcs_port_record() + off) = v; }
 
@@ -318,6 +327,7 @@ static int stage_a(void)
     note(DCS_N_TOP_STATE_BEFORE, st);
     if ((rc = state_is(st, &on))) return rc;
     if (on) return 0;
+    d.held |= HELD_TOP;
     if ((rc = mba(LPB_SET, LPB_SSWRP_DPU, 1, 0, r))) return rc;
     note(DCS_N_MBA_R0, r[0]); note(DCS_N_MBA_R1, r[1]); note(DCS_N_MBA_R2, r[2]); note(DCS_N_MBA_R3, r[3]);
     note(DCS_N_TOP_SET_STATUS, r[2]);
@@ -339,6 +349,7 @@ static int stage_b(void)
 {
     uint32_t r[4] = {0}; int rc;
     stage(DCS_S_B_DSI0);
+    d.held |= HELD_DSI0;
     if ((rc = lpcm(LPCM_DSI0_ON, 0, r))) return rc;
     note(DCS_N_MBA_R0, r[0]); note(DCS_N_MBA_R1, r[1]);
     if (r[1] != 0) return stop_with(DCS_C_LPCM_REPLY, r[1]);
@@ -353,6 +364,7 @@ static int stage_c(void)
     note(DCS_N_RATE_PIX_BEFORE, r[1]);
     if ((rc = lpcm(REF_GET, 0, r))) return rc;
     note(DCS_N_RATE_REF_BEFORE, r[1]);
+    d.held |= HELD_CLK;
     if ((rc = lpcm(PIX_PREPARE, 1, r))) return rc;
     if (r[1] != 0) return stop_with(DCS_C_LPCM_REPLY, r[1]);
     if ((rc = lpcm(REF_PREPARE, 1, r))) return rc;
@@ -617,6 +629,7 @@ static int stage_h(void)
 {
     uint32_t r[4] = { 0 }; int rc;
     stage(DCS_S_H_FE0);
+    d.held |= HELD_FE0;
     if ((rc = lpcm(LPCM_FE0_ON, 0, r))) return rc;
     note(DCS_N_MBA_R0, r[0]); note(DCS_N_MBA_R1, r[1]);
     if (r[1] != 0) return stop_with(DCS_C_LPCM_REPLY, r[1]);
@@ -975,6 +988,36 @@ int tgl_dcs_run(void)
     return 0;
 }
 #if defined(TGL_DCS_MENU) && TGL_FRAME_RUNG >= 3
+/* chooser-v1-r7-t1: Linux panicked in sswrp_dpu_pd power_off (no CPM reply) because the ladder left the DPU domain
+ * on while ABL hands it over off. Give back, in reverse, exactly what this run asked CPM for, then wait for the
+ * domain to read off. Returns 0, or a DCS_C_* code; the record holds every reply. */
+int tgl_dcs_release(void)
+{
+    uint32_t r[4] = {0}, st = 0; int rc, on = 1;
+    if (!d.started) return 0;
+    d.stop = 0;
+    d.stage = DCS_S_N_DONE;
+    if (d.held & HELD_FE0) { if ((rc = lpcm(LPCM_FE0_OFF, 0, r))) return rc; note(DCS_N_MBA_R1, r[1]); }
+    if (d.held & HELD_CLK) {
+        if ((rc = lpcm(PIX_PREPARE, 0, r))) return rc;
+        note(DCS_N_MBA_R1, r[1]);
+        if ((rc = lpcm(REF_PREPARE, 0, r))) return rc;
+        note(DCS_N_MBA_R1, r[1]);
+    }
+    if (d.held & HELD_DSI0) { if ((rc = lpcm(LPCM_DSI0_OFF, 0, r))) return rc; note(DCS_N_MBA_R1, r[1]); }
+    if (d.held & HELD_TOP) {
+        if ((rc = mba(LPB_SET, LPB_SSWRP_DPU, 0, 0, r))) return rc;
+        note(DCS_N_TOP_SET_STATUS, r[2]);
+        for (unsigned i = 0; i < 400 && on; ++i) {
+            if ((rc = lpb_state(&st)) || (rc = state_is(st, &on))) return rc;
+            if (on) dcs_port_delay_us(5000);
+        }
+        note(DCS_N_TOP_STATE_AFTER, st);
+        if (on) return stop_with(DCS_C_TOP_STATE, st);
+    }
+    d.held = 0;
+    return 0;
+}
 int tgl_dcs_present(void)
 {
     if (!d.started || d.stop) return DCS_C_REFUSED_PA;

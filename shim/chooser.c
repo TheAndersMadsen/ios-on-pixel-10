@@ -436,6 +436,19 @@ const char *tgl_chooser_run(uint64_t dtb, const struct tgl_fdt_memory *m,
 	tgl_stamp(TGL_STAGE_CHOOSER_PICK, TGL_STAMP_F_DONE,
 	    (now_ms() - start) << 8 | r << 4 | s.why);
 	if (r != TGL_CHOOSE_ANDROID) return "chooser: iOS entry not built in this image";
+#if TGL_CHOOSER_DISPLAY
+	{
+		/* r7-t1: hand the display domain back as ABL left it (off), or Linux's pd driver panics. */
+		uint64_t isr, tr = now_ms();
+		unsigned rrc = (unsigned)tgl_dcs_release();
+		__asm__ volatile("dsb sy; isb; mrs %0, isr_el1" : "=r"(isr) :: "memory");
+		tgl_stamp(TGL_STAGE_CHOOSER_RELEASE, rrc ? TGL_STAMP_F_REFUSED : TGL_STAMP_F_DONE,
+		    (now_ms() - tr) << 32 | (uint64_t)(isr & 0x100) << 8 | rrc);
+		if (pat) pat();
+		if (isr & 0x100) return "chooser: display release left an SError pending";
+		if (rrc) return "chooser: display domain could not be returned to off";
+	}
+#endif
 #if !TGL_CHOOSER_UI
 	con_str("PICK", s.why == TGL_WHY_NO_IOS ? "Android (no iOS root yet)" : "Android");
 #endif
