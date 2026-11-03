@@ -1,0 +1,54 @@
+# hk_cycle expectations for a7-ios-system-pwr1 (research/ios26-phaseb-r1/pwr/PLAN.md rows). Same schema as int1.yaml.
+name: pwr1
+image: a7-ios-system-pwr1
+probes:
+  - id: boot.home
+    feature: Home up (SpringBoard + touch + buttons + frames)
+    need: ['(?:^|\s)exec SpringBoard$', 'SWEET HID: SweetHIDTouch open by', 'SWEET HID: SweetHIDButtons open by']
+    marker: HOME
+  - id: T
+    feature: real date and time (RTC published, Europe/Copenhagen localtime valid)
+    need: ['blazer-rtc: publish .* ok 1']
+    forbid: ['localtime link invalid']
+  - id: Bt
+    feature: battery gauge reaches the status bar
+    need: ['HKBATT: event=battery_view_set ']
+    values:
+      - {re: 'HKBATT: event=battery_view_set .* percent=(\d+)', agg: last, min: 1, max: 100}
+  - id: K.volume
+    feature: volume keys delivered to a client (consumer page 0xe9/0xea)
+    need: ['SWEET PHYSICAL: delivery enabled']
+    any: ['SWEET PHYSICAL: .* usage=0x(?:e9|ea) down clients=[1-9]']
+    forbid: ['forced release', 'ignored sample']
+    needs_input: true
+  - id: K.power
+    feature: power key armed and delivered (lock)
+    need: ['blazer-power-key: armed after stable release']
+    any: ['SWEET PHYSICAL: .* usage=0x30 down clients=[1-9]', 'blazer-power-key: pressed']
+    needs_input: true
+  - id: H
+    feature: tap haptics
+    need: ['blazer-haptic: native ROM service ready 1', 'blazer-haptic: tap feedback on']
+    values:
+      - {re: 'blazer-haptic: tap (\d+) rc 0', agg: count, min: 1}
+    needs_input: true
+  - id: B
+    feature: brightness slider moves the panel
+    need: ['tensor-dpu: bright transport sent_dbv \d+']
+    values:
+      - {re: 'tensor-dpu: bright transport sent_dbv (\d+)', agg: min, max: 2000}
+    needs_input: true
+    required: false
+    note: "pwr1 has no brt1: its 20261103-201639 dump never went below DBV 4336 although the owner saw the slider work; info only"
+  - id: S
+    feature: Settings opens and takes touches
+    need: ['(?:^|\s)exec Preferences$']
+    values:
+      - {re: 'HKMAIN: Preferences\[\d+\] .* ev touch=(\d+)', agg: max, min: 1}
+    forbid: ['^usertrap: Preferences\[', '^userabort: Preferences\[']
+    needs_input: true
+  - id: end.deadline
+    feature: the boot ended at its deadline
+    need: ['^panic\(.*blazer-root: deadline \d+ s']
+    source: dump
+    required: false

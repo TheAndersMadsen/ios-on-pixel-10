@@ -1,0 +1,336 @@
+28 attempt(s):
+  20261103-065526-chooser-v1-r3-t1: no readable logs
+  20261103-135606-a7-ios-system-r1: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-144712-a7-ios-system-r2: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-154441-a7-ios-system-r3: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-160613-chooser-ios-r1-ios: no readable logs
+  20261103-161332-a7-ios-system-r4-bl: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-162351-a7-ios-system-r5-accel: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-163533-a7-wifi-join-r1: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-165027-a7-ios-system-r5-dsp: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-165852-a7-ios-system-b1-aks: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-170531-a7-ios-system-r7-touch: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-183626-a7-ios-system-r8-settings: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-184333-a7-wifi-join-r2: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-185039-a7-ios-system-r9-apps-ufs: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-193247-installed-ios-crash: no readable logs
+  20261103-193846-a7-ios-system-r6-gpu: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-194531-a7-ios-system-r10-perf: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-201639-a7-ios-system-pwr1: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-203419-a7-wifi-join-r3: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-204609-a7-ios-system-dbg5-screen-m1box: msgbuf(ignored); msgbuf: freshness unverified: no reader.txt verdict (ignored)
+  20261103-205316-a7-ios-system-gpu2: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  20261103-205514-a7-ios-system-int1: reader, live, fastboot, fastboot, reader, reader, abl, msgbuf
+  live-20261103-213112-a7-int1-live: console, console
+  20261103-213511-a7-int1-dbg: reader, live, fastboot, fastboot, reader, reader, abl; msgbuf: no mirror header
+  live-20261103-213815-a7-int1-live: console, console
+  live-20261103-213911-a7-int1-live: console, console
+  live-20261103-213954-a7-int1-live: console, console
+  20261103-214001-a7-int1-live: reader, live, fastboot, fastboot, reader, reader, abl; msgbuf: no mirror header
+
+✅ 5 A725 cores: works [20261103-205514-a7-ios-system-int1] (status ✅ works; agree)
+    + five cores up: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:125: SWEET CPU: 5/5 CPUs initialized, SGI1 verified
+    + ran 15 min: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:6671: panic(cpu 0 caller 0xfffffe00079fe060): blazer-root: deadline 900 s, stage pid1_exec, 52810 reads, 310534 blocks, busy 9197 ms, last lba 24470778 @hakios.blazer
+    note: Ran 900 s under iOS on 5 cores, no kernel crash (20261103-205514-a7-ios-system-int1)
+✅ CPU clock control: works [20261103-205514-a7-ios-system-int1] (status ✅ works; agree)
+    + blazer-gov: running, (?P<cores>\d+) cores: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:423: blazer-gov: running, 5 cores, cap level 16, tick 4000 us
+    + three or more clock levels: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:424: blazer-gov: write domain 1 level 18, 729 MHz
+    + three or more clock levels: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:425: blazer-gov: write domain 1 level 16, 1075 MHz
+    + clock reads (85-87 per 900 s boot): research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:429: blazer-clock: cpu 3 mpidr 0x81000500 level 16 want 1075 cycles 5376167 ticks 192007 mhz 1075
+    + clock reads (85-87 per 900 s boot): research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:430: blazer-clock: cpu 4 mpidr 0x81000600 level 16 want 1075 cycles 5376094 ticks 192006 mhz 1075
+    + blazer-root: deadline (?P<deadline>\d+) s, stage: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:6671: panic(cpu 0 caller 0xfffffe00079fe060): blazer-root: deadline 900 s, stage pid1_exec, 52810 reads, 310534 blocks, busy 9197 ms, last lba 24470778 @hakios.blazer
+    note: Governor ran 900 s under iOS, clock levels up to 533/729/1075 MHz on demand (20261103-205514-a7-ios-system-int1)
+🟡 Higher clocks, up to the 3052 MHz top: partial [live-20261103-213954-a7-int1-live] (status 🟡 partial; agree)
+    + blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:447: 21:40:37.128 [    0.38] blazer-gov: write domain 1 level 16, 1075 MHz
+    + blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:446: 21:40:37.128 [    0.38] blazer-gov: write domain 1 level 18, 729 MHz
+· 2 A520 cores: no log verdict (status 🟡 partial; unsupported-here)
+· X4 core: no log probe (status 🚫 out; out)
+· Idle sleep: no log probe (status ✅ works; no-log-probe)
+✅ Memory and shared cluster clocks: works [20261103-205514-a7-ios-system-int1] (status ✅ works; agree)
+    + blazer-gov: write dsu level (?P<dsu>\d+): research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:428: blazer-gov: write dsu level 19
+    + blazer-gov: write dsu level (?P<dsu>\d+): research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:3544: blazer-gov: write dsu level 21
+    + blazer-gov: t=\d+ .* dsu (?P<dsu_now>\d+) gmc (?P<gmc>\d+) memss (?P<memss>\d+): research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:3025: blazer-gov: t=134 R0 cap 16 soft 16 budget 16; d1 16 1000 d2 16 1000; dsu 19 gmc 8 memss 4; BIG_MID 40 MID 41 LITTLE 39 MEM 39 C; limits 50 55 60; est 846 mW; s
+    + blazer-gov: t=\d+ .* dsu (?P<dsu_now>\d+) gmc (?P<gmc>\d+) memss (?P<memss>\d+): research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:3654: blazer-gov: t=164 R0 cap 16 soft 16 budget 16; d1 20 37 d2 20 0; dsu 21 gmc 13 memss 7; BIG_MID 36 MID 36 LITTLE 37 MEM 37 C; limits 50 55 60; est 801 mW; switc
+    + blazer-root: deadline (?P<deadline>\d+) s, stage: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:6671: panic(cpu 0 caller 0xfffffe00079fe060): blazer-root: deadline 900 s, stage pid1_exec, 52810 reads, 310534 blocks, busy 9197 ms, last lba 24470778 @hakios.blazer
+    note: DSU/GMC/MEMSS raised under iOS for 900 s (20261103-205514-a7-ios-system-int1)
+✅ RAM: works [20261103-205514-a7-ios-system-int1] (status ✅ works; agree)
+    + memory window: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:7: blazer-mem: window 0x882000000 + 0x33b000000, was + 0x100000000, hw.memsize 0x100000000
+    + blazer-root: deadline (?P<deadline>\d+) s, stage: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:6671: panic(cpu 0 caller 0xfffffe00079fe060): blazer-root: deadline 900 s, stage pid1_exec, 52810 reads, 310534 blocks, busy 9197 ms, last lba 24470778 @hakios.blazer
+    note: Window 0x33b000000 under iOS for 900 s (20261103-205514-a7-ios-system-int1)
+· The rest of the 16 GiB: no log verdict (status ❌ open; agree)
+✅ Full 1280x2856 picture: works [live-20261103-213954-a7-int1-live] (status ✅ works; agree)
+    + tensor-dpu: scale attached: source (?P<src>\d+x\d+) to \d+,\d+ (?P<dst>1280x2856): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:127: 21:40:36.872 [    0.12] tensor-dpu: scale attached: source 1125x2511 to 0,0 1280x2856 factor 0xe0f9 0xe110 sram 0 on filter 0
+    + frames completed: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1453: 21:40:46.554 [    9.76] tensor-dpu: frames kicks 1 dones 1 underrun first 0 later 0 nofetch 0 frame_us last 9155 max 9155 status 0x2000003 fe 0x40 refusal 0
+    + frames completed: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3807: 21:41:27.810 [   51.06] tensor-dpu: frames kicks 257 dones 257 underrun first 0 later 11 nofetch 0 frame_us last 6835 max 14328 status 0x2000003 fe 0x40 refusal
+    note: Scaled from 1125x2511 to 1280x2856, frames completed (live-20261103-213954-a7-int1-live)
+· 120 Hz: no log verdict (status 🟡 partial; unsupported-here)
+🟡 60 Hz mode and frame sync: partial [live-20261103-213954-a7-int1-live] (status 🔧 built; promote)
+    + SWEET FB: refresh asked 60, running 60: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:128: 21:40:36.872 [    0.12] SWEET FB: refresh asked 60, running 60, flip 0, interval 0
+    + tensor-dpu: frames kicks \d+ dones [1-9]\d*: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1453: 21:40:46.554 [    9.76] tensor-dpu: frames kicks 1 dones 1 underrun first 0 later 0 nofetch 0 frame_us last 9155 max 9155 status 0x2000003 fe 0x40 refusal 0
+    + tensor-dpu: frames kicks \d+ dones [1-9]\d*: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3807: 21:41:27.810 [   51.06] tensor-dpu: frames kicks 257 dones 257 underrun first 0 later 11 nofetch 0 frame_us last 6835 max 14328 status 0x2000003 fe 0x40 refusal
+    + measured swap rate: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:8602: 21:55:27.364 [  890.61] SWEET FB: rate swaps 39.4/s kicks 39.4/s max_gap_us 32008 changed 409,352 474x103 unsaid 0
+    + measured swap rate: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:2392: 21:41:03.392 [   26.64] SWEET FB: rate swaps 0.2/s kicks 0.1/s max_gap_us 16298312 changed 0,0 1125x2511 unsaid 2
+    note: 60 Hz panel mode; completed frames measured at up to 39.4 swaps/s (live-20261103-213954-a7-int1-live)
+· Variable refresh down to low rates: no log verdict (status ❌ open; agree)
+🟡 Brightness: partial [live-20261103-213954-a7-int1-live]; log reaches works pending confirmation [live-20261103-213954-a7-int1-live] (status ✅ works; log-short-of-confirmed)
+    + requests reach the kernel: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3195: 21:41:09.235 [   32.46] SWEET BL: request backboardd route brightness-nits raw 9173691 rc 0 (queued for DCS)
+    + requests reach the kernel: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3197: 21:41:09.235 [   32.48] SWEET BL: request backboardd route IOMFBBrightnessLevel raw 9173691 rc 0 (queued for DCS)
+    ? requests queued for DCS: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3195: 21:41:09.235 [   32.46] SWEET BL: request backboardd route brightness-nits raw 9173691 rc 0 (queued for DCS)
+    ? SWEET BL sends across the range: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3528: 21:41:14.221 [   37.47] tensor-dpu: bright transport sent_dbv 3187 (~62.0 nits) cap 140 acl_off 1 rc 0 n 73 (no panel readback)
+    - blocker refused requests (x33, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1337: 21:40:46.296 [    9.50] SWEET BL: request backboardd route unknown raw 0 rc 0xe00002c7 (refused)
+    - blocker no panel readback (log cannot see the panel) (x73, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3196: 21:41:09.235 [   32.48] tensor-dpu: bright transport sent_dbv 4635 (~139.9 nits) cap 140 acl_off 0 rc 0 n 1 (no panel readback)
+· HDR, peak brightness, colour calibration: no log probe (status ❌ open; no-log-probe)
+· Always-on display, self-refresh: no log probe (status ❌ open; no-log-probe)
+✅ GPU power-on and ID: works [20261103-205316-a7-ios-system-gpu2] (status ✅ works; agree)
+    + blazer-gpu: reg CORE_ID \+0x20 (?P<core_id>0x[0-9a-f]+): research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:390: blazer-gpu: reg CORE_ID +0x20 0x00470002099004bc
+    + blazer-gpu: vote \d+ reply: research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:218: blazer-gpu: vote 1 reply 0xf 0x12 0x14 after 1 ms
+    note: GPU answers: core id 0x00470002099004bc read from XNU (20261103-205316-a7-ios-system-gpu2)
+✅ GPU firmware through Trusty: works [20261103-205316-a7-ios-system-gpu2] (status ✅ works; agree)
+    + firmware running (rung 6 health): research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:450: HK GPUTA: rung 6 PASS, firmware running (smcs 499)
+    - blocker process_st_info failed (x1, 20261103-205316-a7-ios-system-gpu2): research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:449: HK GPUTA: TA| gpu-secure-trusty: 771: process_st_info() failed (278)
+    - blocker KM/FW version mismatch (x1, 20261103-205316-a7-ios-system-gpu2): research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:448: HK GPUTA: TA| gpu-secure-trusty: 108: RGXValidateFWHeaderVersion2: KM and FW version mismatch (expected: 24.2, found: 26.1)
+    note: Firmware health rung 6 PASS (20261103-205316-a7-ios-system-gpu2)
+⏳ Metal drawing: active [20261103-205316-a7-ios-system-gpu2] (status ⏳ active; agree)
+    + HK GPUTA: rung \d+ PASS: research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:450: HK GPUTA: rung 6 PASS, firmware running (smcs 499)
+    + HK GPUTA: rung \d+ PASS: research/ios26-phaseb-r1/verify/msgbuf/20261103-205316-a7-ios-system-gpu2.msgbuf.txt:461: panic(cpu 0 caller 0xfffffe0007a32c9c): HK GPUTA: rung 6 PASS, boot ended on purpose @blazer_gpu_tipc.c:933
+· Video encode and decode: no log probe (status ❌ open; no-log-probe)
+✅ Reading: works [live-20261103-213954-a7-int1-live] (status ✅ works; agree)
+    + blazer-ufs: "ios_system" on LUN \d+: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:200: 21:40:36.920 [    0.17] blazer-ufs: "ios_system" on LUN 0: first block 15b4000, 24576 MiB, read only, DMA at 88a0ac000
+    + blazer-root: watch t \d+ ms stage \S+ reads (?P<reads>\d+) blocks (?P<blocks>\d+): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:8522: 21:55:15.058 [  878.30] blazer-root: watch t 880185 ms stage pid1_exec reads 53276 blocks 313585 busy 9261 ms max 10702 us last lba 24136257
+    + blazer-root: watch t \d+ ms stage \S+ reads (?P<reads>\d+) blocks (?P<blocks>\d+): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1239: 21:40:44.987 [    8.20] blazer-root: watch t 10001 ms stage pid1_exec reads 28468 blocks 173313 busy 5080 ms max 10702 us last lba 22856272
+    note: Multi-block reads: 53276 reads, 313585 blocks, 0 errors (live-20261103-213954-a7-int1-live)
+· Writing (persistent /var): not exercised by these attempts (status 🟡 partial; not-exercised)
+⏳ Maximum speed: active [live-20261103-213954-a7-int1-live] (status ⏳ active; agree)
+    + blazer-root: stage t (?P<ms>\d+) ms stage mounted reads \d+ blocks (?P<blocks>\d+) busy (?P<busy>\d+) ms: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:205: 21:40:36.923 [    0.17] blazer-root: stage t 91 ms stage mounted reads 16 blocks 66 busy 2 ms max 240 us last lba 22757409
+✅ Android/iOS boot chooser: works [20261103-205514-a7-ios-system-int1] (status ✅ works; agree)
+    + Darwin Kernel Version: research/ios26-phaseb-r1/verify/msgbuf/20261103-205514-a7-ios-system-int1.msgbuf.txt:20: Darwin Kernel Version 25.5.0: Sun Nov  1 23:52:38 CET 2026; andersmadsen:obj/DEVELOPMENT_ARM64_BLAZER
+    + confirmed (owner): /srv/dev/.t3/worktrees/hackios/t3-06b9b643/docs/owner_confirmations.txt:14: int1 installed as the menu's iOS (LEDGER 21:13); iOS from a real power-on through the menu was chooser-ios-r3 (LEDGER 20:07, no dump)
+    note: iOS from a cold power-on through the installed menu (20261103-205514-a7-ios-system-int1)
+✅ Isolated iOS partitions: works [live-20261103-213954-a7-int1-live] (status ✅ works; agree)
+    + blazer-ufs: "ios_system" on LUN \d+: first block \S+, (?P<mib>\d+) MiB, read only: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:200: 21:40:36.920 [    0.17] blazer-ufs: "ios_system" on LUN 0: first block 15b4000, 24576 MiB, read only, DMA at 88a0ac000
+    + hfs: mounted iOSRoot on device: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:204: 21:40:36.920 [    0.17] hfs: mounted iOSRoot on device b(1, 0)
+    note: ios_system (24576 MiB) mounted as the root (live-20261103-213954-a7-int1-live)
+✅ Touch: works [live-20261103-213954-a7-int1-live] (status ✅ works; agree)
+    + controller reports: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3547: 21:41:17.081 [   40.33] blazer-touch: tcm: finger 0 down at 5535, 2879
+    + controller reports: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3554: 21:41:17.648 [   40.90] blazer-touch: tcm: finger 0 down at 11679, 6709
+    + delivered to an iOS HID client: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3548: 21:41:17.081 [   40.33] SWEET HID: touch 0 down at 108,125 (1 clients)
+    + delivered to an iOS HID client: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3555: 21:41:17.649 [   40.90] SWEET HID: touch 0 down at 227,292 (1 clients)
+    note: Touches delivered to 1 iOS HID client(s) (live-20261103-213954-a7-int1-live)
+· Scripted taps and keys: no log verdict (status 🟡 partial; unsupported-here)
+✅ Volume keys: works [20261103-201639-a7-ios-system-pwr1] (status ✅ works; agree)
+    + Vol Up to an iOS client: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2215: SWEET PHYSICAL: epoch=3 key=1 usage=0xe9 down clients=1 callback
+    + Vol Down to an iOS client: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2156: SWEET PHYSICAL: epoch=3 key=2 usage=0xea down clients=1 callback
+    + Vol Down to an iOS client: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2163: SWEET PHYSICAL: epoch=3 key=2 usage=0xea down clients=1 callback
+    note: Vol Up/Down (usage 0xe9/0xea) delivered to iOS HID clients (20261103-201639-a7-ios-system-pwr1)
+✅ Power key: works [20261103-201639-a7-ios-system-pwr1] (status ✅ works; agree)
+    + power key to an iOS client: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2231: SWEET PHYSICAL: epoch=3 key=0 usage=0x30 down clients=1 callback
+    + power key to an iOS client: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2273: SWEET PHYSICAL: epoch=3 key=0 usage=0x30 down clients=1 callback
+    + lock then wake: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2230: blazer-power-key: pressed
+    + lock then wake: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2248: SWEET FB: display off
+    note: Power key locks and wakes under iOS (display off/on) (20261103-201639-a7-ios-system-pwr1)
+· Tap to wake, palm rejection: no log probe (status ❌ open; no-log-probe)
+🟡 Wi-Fi: partial [20261103-203419-a7-wifi-join-r3] (status 🟡 partial; agree)
+    + blazer-wifi: scan: ended, status 0, \d+ ms: \d+ results, (?P<networks>\d+) networks: research/ios26-phaseb-r1/verify/msgbuf/20261103-203419-a7-wifi-join-r3.msgbuf.txt:4980: blazer-wifi: scan: ended, status 0, 6560 ms: 37 results, 32 networks: 19 on 2.4 GHz, 12 on 5 GHz, 1 on 6 GHz, 0 more past the table, 0 unreadable. Events: 3 oth
+    + blazer-wifi: join: association: status 0: research/ios26-phaseb-r1/verify/msgbuf/20261103-203419-a7-wifi-join-r3.msgbuf.txt:5026: blazer-wifi: join: association: status 0, reason 0
+    + blazer-wifi: join: association: status 0: research/ios26-phaseb-r1/verify/msgbuf/20261103-203419-a7-wifi-join-r3.msgbuf.txt:5732: blazer-wifi: join: association: status 0, reason 0
+    + blazer-wifi: scan: ended: research/ios26-phaseb-r1/verify/msgbuf/20261103-203419-a7-wifi-join-r3.msgbuf.txt:4980: blazer-wifi: scan: ended, status 0, 6560 ms: 37 results, 32 networks: 19 on 2.4 GHz, 12 on 5 GHz, 1 on 6 GHz, 0 more past the table, 0 unreadable. Events: 3 oth
+    - blocker 4-way handshake failed (x2, 20261103-203419-a7-wifi-join-r3): research/ios26-phaseb-r1/verify/msgbuf/20261103-203419-a7-wifi-join-r3.msgbuf.txt:5573: blazer-wifi: join: the 4-way handshake failed: status 4, reason 14: the firmware never answered M1: it had no key it could use
+    - blocker deauthenticated (x4, 20261103-203419-a7-wifi-join-r3): research/ios26-phaseb-r1/verify/msgbuf/20261103-203419-a7-wifi-join-r3.msgbuf.txt:5572: blazer-wifi: join: deauth by the network: status 0, reason 15
+    note: BCM4390 under iOS: scan found 32 networks (20261103-203419-a7-wifi-join-r3)
+🟡 Bluetooth: partial [live-20261103-213954-a7-int1-live] (status 🟡 partial; agree)
+    + keychain path answered: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1205: 21:40:43.371 [    6.62] SWEET AKS: bluetoothuserd sel 0 arg0 0 in 0/0 out 0/0 -> 0x0
+    + keychain path answered: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1206: 21:40:43.371 [    6.62] SWEET AKS: bluetoothuserd sel 7 arg0 0 in 1/0 out 1/0 -> 0x0
+· Cellular: not exercised by these attempts (status ⏳ active; not-exercised)
+· SIM, eSIM: not exercised by these attempts (status ⏳ active; not-exercised)
+· GPS: no log probe (status ❌ open; no-log-probe)
+· NFC: no log probe (status ❌ open; no-log-probe)
+· UWB: no log probe (status ❌ open; no-log-probe)
+✅ Fastboot and logs: works [20261103-205514-a7-ios-system-int1] (status ✅ works; agree)
+    + Booting\s+OKAY: research/laguna-usb-fix/attempts/20261103-205514-a7-ios-system-int1/boot.log:2: Booting                                            OKAY [  0.006s]
+    + current-fresh=yes: research/laguna-usb-fix/attempts/20261103-205514-a7-ios-system-int1/reader.txt:16: XNU-MSGBUF mirror: fmt=v2 hdr@pmsg+0x3f800 ring@pmsg+0x40000 valid=yes seq=539332 size=0x100000 write=0x83ac3 total=539331 tail=0x0/0x83ac3 reconstructed=yes te
+✅ Live console: works [live-20261103-213954-a7-int1-live] (status ✅ works; agree)
+    + usbcon: connected: nonce: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:5: 21:40:36.774 usbcon: connected: nonce 0x8bc64d7181cbb83c, entry 0x186130eb5, stream 31971 bytes, ring 1048576
+    + live kernel lines: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:6: 21:40:36.797 [    0.05] TEGU-XNU EARLY 1: arm_init entered (MMU on)
+    + live kernel lines: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:7: 21:40:36.797 [    0.05] TEGU-XNU EARLY 2: PE_init_platform done
+· Link to the Mac: no log verdict (status ⏳ active; unsupported-here)
+⏳ Network over USB: active [live-20261103-213954-a7-int1-live] (status ⏳ active; agree)
+    + blazer-netstack: IONetworkStack opened by configd: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:830: 21:40:40.942 [    4.19] blazer-netstack: IONetworkStack opened by configd[31] type 0, IOKit root busy 0
+    + blazer-usbnet: IONetworkStack published: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:188: 21:40:36.911 [    0.16] blazer-usbnet: IONetworkStack published
+· USB host, video out: no log probe (status 🚫 out; out)
+· Speakers, microphones: no log probe (status ⏳ active; no-log-probe)
+✅ Haptics: works [20261103-201639-a7-ios-system-pwr1] (status ✅ works; agree)
+    + effects on touch: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2137: blazer-haptic: tap 1 rc 0 (skipped 0)
+    + effects on touch: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2330: blazer-haptic: tap 2 rc 0 (skipped 0)
+    + confirmed (owner): /srv/dev/.t3/worktrees/hackios/t3-06b9b643/docs/owner_confirmations.txt:13: vibration on touch (LEDGER 20:32)
+    note: Buzz on touch under iOS: 50 effects, rc 0 (20261103-201639-a7-ios-system-pwr1)
+· Accelerometer, gyro, proximity, light, barometer: not exercised by these attempts (status ⏳ active; not-exercised)
+· Always-on chip: not exercised by these attempts (status ⏳ active; not-exercised)
+✅ Temperature and thermal guard: works [live-20261103-213954-a7-int1-live] (status ✅ works; agree)
+    + live temperatures: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:182: 21:40:36.904 [    0.15] blazer-thermal: poll 1 max 40 C BIG; 40 39 39 40 0 0 0 0 40 39; strays 0
+    + live temperatures: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:4232: 21:41:33.327 [   56.58] blazer-thermal: poll 30 max 42 C BIG; 42 41 41 42 0 0 0 0 42 41; strays 0
+    + guard armed: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:142: 21:40:36.879 [    0.13] blazer-thermal: mode 2, limit 70 C
+    note: Live temperatures (max 45 C), guard armed at 70 C (live-20261103-213954-a7-int1-live)
+✅ Battery gauge: works [20261103-201639-a7-ios-system-pwr1] (status ✅ works; agree)
+    + SpringBoard battery view value set: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:1616: HKBATT: event=battery_view_set pid=28 role=2 now_ns=102904655598 view=0x14ba03480 ui_scope=unproved value=0.94999999999999996 notify_rc=0 state=0x9005f percent=
+    + SpringBoard battery view value set: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2029: HKBATT: event=battery_view_set pid=28 role=2 now_ns=111552139401 view=0x14ea61e00 ui_scope=unproved value=0.94999999999999996 notify_rc=0 state=0x9005f percent=
+    + gauge sample: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:735: blazer-battery: sample 1 SOC(95), VCELL(4385), INOW(-21), IAVG(-20), TEMP(3231), raw soc 5f24 vcell db44 i ffe5 iavg ffe6 t 2050 fstat 0408 dev 5100
+    + gauge sample: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:2479: blazer-battery: sample 2 SOC(95), VCELL(4385), INOW(-24), IAVG(-23), TEMP(3236), raw soc 5f24 vcell db48 i ffe1 iavg ffe2 t 205d fstat 0408 dev 5100
+    + confirmed (owner): /srv/dev/.t3/worktrees/hackios/t3-06b9b643/docs/owner_confirmations.txt:11: 95% battery shown (LEDGER 20:32)
+    note: 95% set on the SpringBoard battery view from the gauge (95%) (20261103-201639-a7-ios-system-pwr1)
+· Charging control: no log probe (status ❌ open; no-log-probe)
+· Wireless charging: no log probe (status ❌ open; no-log-probe)
+✅ Real date and time: works [20261103-201639-a7-ios-system-pwr1] (status ✅ works; agree)
+    + blazer-rtc: publish want \d+ calendar \d+ .*ok 1: research/ios26-phaseb-r1/verify/msgbuf/20261103-201639-a7-ios-system-pwr1.msgbuf.txt:132: blazer-rtc: publish want 1793733431 calendar 1793733430 usec 997598 gap_s 1 repaired 0 ok 1 sample_up 69250 ms
+    + confirmed (owner): /srv/dev/.t3/worktrees/hackios/t3-06b9b643/docs/owner_confirmations.txt:12: clock 8.20 correct (LEDGER 20:32)
+    - blocker RTC value refused (x1, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:136: 21:40:36.878 [    0.13] blazer-rtc: refused 173 s since 2020: outside 2025..2040, calendar left alone
+    note: RTC time published and shown (20261103-201639-a7-ios-system-pwr1)
+· Cameras, flash: no log probe (status 🚫 out; out)
+· Fingerprint, Face ID: no log probe (status 🚫 out; out)
+🟡 Secure enclave: partial [live-20261103-213954-a7-int1-live] (status 🚫 out; out)
+    + software key store wrap: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:991: 21:40:43.037 [    6.28] SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/128 -> 0x0
+    + software key store wrap: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:993: 21:40:43.037 [    6.29] SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/128 -> 0x0
+    + software key store unwrap: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:1973: 21:40:53.414 [   16.66] SWEET AKS: securityd sel 11 arg0 0 in 2/52 out 0/32 -> 0x0
+    + software key store unwrap: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:2532: 21:41:04.068 [   27.32] SWEET AKS: securityd sel 11 arg0 0 in 2/52 out 0/32 -> 0x0
+· Activation, iMessage, App Store purchases: no log probe (status 🚫 out; out)
+✅ Home screen (milestone): works [live-20261103-213954-a7-int1-live]
+    + touch client (TOUCH_CLIENT): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:857: 21:40:41.388 [    4.64] SWEET HID: SweetHIDTouch open by IOHIDEventServiceUserClient -> 1
+    + button client (BUTTON_CLIENT): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:860: 21:40:41.388 [    4.64] SWEET HID: SweetHIDButtons open by IOHIDEventServiceUserClient -> 1
+    + frames (FRAMES): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:2392: 21:41:03.392 [   26.64] SWEET FB: rate swaps 0.2/s kicks 0.1/s max_gap_us 16298312 changed 0,0 1125x2511 unsaid 2
+    + frames (FRAMES): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3188: 21:41:09.163 [   32.41] SWEET FB: rate swaps 16.0/s kicks 16.0/s max_gap_us 3930230 changed 0,0 1125x2511 unsaid 91
+    + fallback: SpringBoard status-bar battery view installed: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:821: 21:40:40.678 [    3.93] HKBATT: event=battery_view_installed pid=28
+    + fallback: SpringBoard battery view updated: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3128: 21:41:08.332 [   31.58] HKBATT: event=battery_view_set pid=28 role=2 now_ns=204356348046 view=0x1441f6f80 ui_scope=unproved value=0.94999999999999996 notify_rc=
+    + fallback: SpringBoard battery view updated: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3581: 21:41:17.925 [   41.17] HKBATT: event=battery_view_set pid=28 role=2 now_ns=213948404166 view=0x14ce5d400 ui_scope=unproved value=0.94999999999999996 notify_rc=
+    note: Home: touch and button clients, frames, SpringBoard UI up (live-20261103-213954-a7-int1-live)
+🟡 Settings > About opens (milestone): partial [live-20261103-213954-a7-int1-live]
+    + Settings main thread responsive: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:8366: 21:54:56.305 [  859.55] HKMAIN: Preferences[2767] t=10 pings=9 wait=0 state=0 ev touch=22 press=0 other=0 stalls=0
+    + Settings main thread responsive: research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:8481: 21:55:06.333 [  869.58] HKMAIN: Preferences[2767] t=20 pings=20 wait=0 state=1 ev touch=22 press=0 other=0 stalls=0
+    - blocker About: MediaLibrary TCC request, then SIGABRT (ABOUT; this log shows authValue=2 with generic_extension="invalid") (x1, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3765: 21:41:27.475 [   50.72] 	service="kTCCServiceMediaLibrary"
+    - blocker Settings SIGABRT (x2, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3794: 21:41:27.496 [   50.75] CRASH Preferences reason ns 2 code 0x6: (none)
+· AccessibilityUIServer stays up (milestone): no log verdict
+    - blocker AccessibilityUIServer SIGABRT loop (ABOUT: root prune deleted AXSSPunctuationModel.momd; not visible in the log) (x10, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:3359: 21:41:09.768 [   32.99] CRASH AccessibilityUIS reason ns 2 code 0x6: (none)
+· MessagesBlastDoorService stays up (milestone): no log verdict
+    - blocker BlastDoor EXC_GUARD then SIGTRAP (ABOUT: Sandbox.swift trap because the SWEET sandbox stub returns 0) (x1, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:2693: 21:41:04.563 [   27.81] ERROR: [MessagesBlastDoorService:156] EXC_GUARD AST: type=0x1 flavor=0x0 target=0x0 code=0x2000000000000000 subcode=0x0
+    - blocker BlastDoor SIGTRAP (x8, live-20261103-213954-a7-int1-live): research/laguna-usb-fix/attempts/live-20261103-213954-a7-int1-live/console.txt:2695: 21:41:04.717 [   27.97] CRASH MessagesBlastDoo reason ns 2 code 0x5: (none)
+
+== promote (1)
+  60 Hz mode and frame sync: status built / log partial [live-20261103-213954-a7-int1-live]
+      proposed: built -> partial; note: 60 Hz panel mode; completed frames measured at up to 39.4 swaps/s (live-20261103-213954-a7-int1-live)
+
+== log-short-of-confirmed (1)
+  Brightness: status works / log partial, pending works [live-20261103-213954-a7-int1-live]
+
+== unsupported-here (4)
+  2 A520 cores: status partial / log -
+  120 Hz: status partial / log -
+  Scripted taps and keys: status partial / log -
+  Link to the Mac: status active / log -
+
+== not-exercised (5)
+  Writing (persistent /var): status partial / log -
+  Cellular: status active / log -
+  SIM, eSIM: status active / log -
+  Accelerometer, gyro, proximity, light, barometer: status active / log -
+  Always-on chip: status active / log -
+
+== agree (27)
+  5 A725 cores: status works / log works [20261103-205514-a7-ios-system-int1]
+  CPU clock control: status works / log works [20261103-205514-a7-ios-system-int1]
+  Higher clocks, up to the 3052 MHz top: status partial / log partial [live-20261103-213954-a7-int1-live]
+  Memory and shared cluster clocks: status works / log works [20261103-205514-a7-ios-system-int1]
+  RAM: status works / log works [20261103-205514-a7-ios-system-int1]
+  The rest of the 16 GiB: status open / log -
+  Full 1280x2856 picture: status works / log works [live-20261103-213954-a7-int1-live]
+  Variable refresh down to low rates: status open / log -
+  GPU power-on and ID: status works / log works [20261103-205316-a7-ios-system-gpu2]
+  GPU firmware through Trusty: status works / log works [20261103-205316-a7-ios-system-gpu2]
+  Metal drawing: status active / log active [20261103-205316-a7-ios-system-gpu2]
+  Reading: status works / log works [live-20261103-213954-a7-int1-live]
+  Maximum speed: status active / log active [live-20261103-213954-a7-int1-live]
+  Android/iOS boot chooser: status works / log works [20261103-205514-a7-ios-system-int1]
+  Isolated iOS partitions: status works / log works [live-20261103-213954-a7-int1-live]
+  Touch: status works / log works [live-20261103-213954-a7-int1-live]
+  Volume keys: status works / log works [20261103-201639-a7-ios-system-pwr1]
+  Power key: status works / log works [20261103-201639-a7-ios-system-pwr1]
+  Wi-Fi: status partial / log partial [20261103-203419-a7-wifi-join-r3]
+  Bluetooth: status partial / log partial [live-20261103-213954-a7-int1-live]
+  Fastboot and logs: status works / log works [20261103-205514-a7-ios-system-int1]
+  Live console: status works / log works [live-20261103-213954-a7-int1-live]
+  Network over USB: status active / log active [live-20261103-213954-a7-int1-live]
+  Haptics: status works / log works [20261103-201639-a7-ios-system-pwr1]
+  Temperature and thermal guard: status works / log works [live-20261103-213954-a7-int1-live]
+  Battery gauge: status works / log works [20261103-201639-a7-ios-system-pwr1]
+  Real date and time: status works / log works [20261103-201639-a7-ios-system-pwr1]
+
+== no-log-probe (11)
+  Idle sleep: status works / log -
+  HDR, peak brightness, colour calibration: status open / log -
+  Always-on display, self-refresh: status open / log -
+  Video encode and decode: status open / log -
+  Tap to wake, palm rejection: status open / log -
+  GPS: status open / log -
+  NFC: status open / log -
+  UWB: status open / log -
+  Speakers, microphones: status active / log -
+  Charging control: status open / log -
+  Wireless charging: status open / log -
+
+== out (6)
+  X4 core: status out / log -
+  USB host, video out: status out / log -
+  Cameras, flash: status out / log -
+  Fingerprint, Face ID: status out / log -
+  Secure enclave: status out / log partial [live-20261103-213954-a7-int1-live]
+  Activation, iMessage, App Store purchases: status out / log -
+
+(proposal only; nothing written. --apply writes the promotions)
+
+== next tests (cheapest first; unattended before build before attended)
+   1. Scripted taps and keys (partial) [unattended, ~10 min, +40 pts -> works]: int1 live session: usbcon --tap/--home loop with hk_screen=30 screenshots before and after each event
+   2. Wi-Fi (partial) [unattended, ~15 min, +40 pts -> works]: Boot a7-wifi-join-r4 (built 214641ba, Android .57.31 firmware + RX-ring witness); join and ping are logged
+   3. 60 Hz mode and frame sync (built) [unattended, ~10 min, +25 pts -> partial]: Re-run int1 300 s with a scripted swipe loop (usbcon --tap) and read the SWEET FB rate lines
+   4. Writing (persistent /var) (partial) [unattended, ~25 min, +40 pts -> works]: Boot a7-ios-system-int1-persist twice (900 s, then 300 s): the second boot must log the restore (image built, image_tool gate pending commit)
+   5. Accelerometer, gyro, proximity, light, barometer (active) [unattended, ~10 min, +15 pts -> built]: Boot a7-ios-system-sens2 (built, not booted): accel/gyro/orientation/compass samples are logged
+   6. Speakers, microphones (active) [build, ~0 min, +15 pts -> built]: QEMU first; depends on the always-on chip
+   7. 120 Hz (partial) [build, ~10 min, +40 pts -> works]: int1 image with the panel profile at 120 Hz; unattended 300 s boot reads SWEET FB rate
+   8. Maximum speed (active) [build, ~5 min, +15 pts -> built]: Print MB/s per stage from blazer-root (blocks*4 KiB/busy) and compare against the Android baseline; any unattended boot
+   9. Metal drawing (active) [build, ~5 min, +15 pts -> built]: Same as GPU M3: first native command stream
+  10. Bluetooth (partial) [build, ~15 min, +40 pts -> works]: B2/B3: bluetoothd allowed with the H4 transport; unattended boot logs HCI reset/version
+  11. 2 A520 cores (partial) [build, ~18 min, +40 pts -> works]: cpus=6 boot after the CAS-workaround (bit9) fix; unattended 900 s
+  12. Higher clocks, up to the 3052 MHz top (partial) [build, ~18 min, +40 pts -> works]: Build int1 with gov cap above level 16 after checker admission; one unattended 900 s boot, thermal guard on
+  13. Charging control (open) [build, ~10 min, +20 pts -> active]: Log charger state (max77779 CHG registers) read-only; any unattended boot
+  14. Variable refresh down to low rates (open) [build, ~10 min, +20 pts -> active]: Idle-rate build not written; then one unattended idle boot
+  15. Always-on chip (active) [build, ~10 min, +15 pts -> built]: First AOC test is built; one unattended boot
+  16. Network over USB (active) [build, ~10 min, +15 pts -> built]: ECM binding image; host pings the phone unattended
+  17. The rest of the 16 GiB (open) [build, ~18 min, +20 pts -> active]: Kernel with the carve-out map extended; unattended 900 s boot plus the memory test
+  18. Cellular (active) [build, ~15 min, +15 pts -> built]: PCIe0 link-up kernel; unattended boot logs link state
+  19. Link to the Mac (active) [build, ~15 min, +15 pts -> built]: Native mux over the USB console transport; host-side pairing script can run unattended
+  20. SIM, eSIM (active) [build, ~15 min, +15 pts -> built]: Depends on the modem boot
+  21. Battery gauge (works) [done/none]: int1 with hk_screen=30: fb_png screenshot of the status bar; compare against the HKBATT percent
+  22. Brightness (works) [done/none]: Scripted slider sweep (usbcon --tap on Control Center) with a DCS brightness readback (0x52) logged per send
+  23. Real date and time (works) [done/none]: int1 with hk_screen=30: status-bar clock in the fb_png screenshot vs the blazer-rtc line
+  24. GPU firmware through Trusty (works) [done/none]: GPU M3: first real command stream; unattended rung-7 boot that ends on purpose
+  25. Idle sleep (works) [done/none]: Add a per-core WFI residency counter to the blazer-gov tick line; any unattended boot then proves it
+  26. Android/iOS boot chooser (works) [done/none]: Cold power-on through the installed menu needs hands on the phone; the chooser stamps (tools/chooser_stamps.py) are the log side
+  27. Haptics (works) [done/none]: Felt buzz is human-only; regression via the rc 0 lines
+  28. Power key (works) [done/none]: Needs presses; regression only (pwr1 proved it)
+  29. Volume keys (works) [done/none]: Needs presses; regression only (pwr1 proved it)
+  30. Always-on display, self-refresh (open) [done/none]: Not assigned
+  31. GPS (open) [done/none]: Not assigned
+  32. HDR, peak brightness, colour calibration (open) [done/none]: Not assigned
+  33. NFC (open) [done/none]: Not assigned
+  34. Tap to wake, palm rejection (open) [done/none]: Not assigned
+  35. UWB (open) [done/none]: Not assigned
+  36. Video encode and decode (open) [done/none]: Not assigned
+  37. Wireless charging (open) [done/none]: Not assigned
+  38. 5 A725 cores (works) [done/none]: Proved by every 900 s boot; keep as regression probe
+  39. CPU clock control (works) [done/none]: Proved; keep as regression probe
+  40. Fastboot and logs (works) [done/none]: Proved by every attempt
+  41. Full 1280x2856 picture (works) [done/none]: Proved; hk_screen=30 screenshots keep it checked unattended
+  42. GPU power-on and ID (works) [done/none]: Proved; keep as regression probe
+  43. Isolated iOS partitions (works) [done/none]: Proved; keep as regression probe
+  44. Live console (works) [done/none]: Proved; add a live-vs-mirror byte compare to live_boot.sh for the zero-loss claim
+  45. Memory and shared cluster clocks (works) [done/none]: Proved; keep as regression probe
+  46. RAM (works) [done/none]: Proved; keep as regression probe
+  47. Reading (works) [done/none]: Proved; keep as regression probe
+  48. Temperature and thermal guard (works) [done/none]: Proved; guard trip at a test limit stays a separate regression
+  49. Touch (works) [done/none]: Proved on int1; keep as regression probe

@@ -1,0 +1,690 @@
+{
+ "preflight": {
+  "image": {
+   "dir": "/srv/dev/repos/personal/hackios/research/images/a7-ios-system-int1",
+   "name": "a7-ios-system-int1",
+   "image": "f67220f8fada32b0795548bb4974a875c9801a6936d9ac6ed03307df947b066c",
+   "mach": "0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf",
+   "cmdline": "debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 blazer_touch=1 blazer_touch_bars=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 hk_fb_refresh=60 hk_overlay=0xA0080081 blazer_battery=1 blazer_mem=13 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 blazer_gov=1 blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 blazer_usbcon=1 blazer_usbcon_ch9=1 blazer_rtc=1 blazer_rtc_bounds=1 blazer_battery_status=1 hk_bright=140 blazer_aks_wrap=1 blazer_keys=1 blazer_power_key=1 blazer_key_delivery=1 blazer_haptic_tap=1 blazer_netstack=1 hk_ustack=Preferences,MobilePhone blazer_bootcpu=0x200",
+   "var_overlay": {
+    "bytes": 661680,
+    "groups": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     27,
+     28,
+     29,
+     30,
+     31
+    ],
+    "mask": 2684878977,
+    "path": "research/ios26-phaseb-r1/int/overlays/int1-r1.ovl",
+    "placed": [
+     "0x884dac000",
+     "0xa4000"
+    ],
+    "sha256": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e"
+   },
+   "route": "ufs",
+   "phone_root": true,
+   "cpus": 5
+  },
+  "kernel": {
+   "path": "/srv/dev/repos/personal/hackios/research/ios26-phaseb-r1/int/build/kernel.int1",
+   "sha": "0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf",
+   "version": "Darwin Kernel Version 25.5.0: Sun Nov  1 23:52:38 CET 2026; andersmadsen:obj/DEVELOPMENT_ARM64_BLAZER",
+   "rebuild": "not needed: phone build runs on the rig ADT"
+  },
+  "expect": [
+   "/srv/dev/repos/personal/hackios/tools/qemu_preflight.expect.yaml"
+  ],
+  "tool_sha": "e1144dcac3313d32407340ddab53a9413ce1da2fc91af73f1234c4c5a3aa58ca",
+  "expect_sha": {
+   "/srv/dev/repos/personal/hackios/tools/qemu_preflight.expect.yaml": "8e30526095f6fa46981df67975f975f307bf22a24be32c992e4063eb05deb9dc"
+  },
+  "overlay": {
+   "path": "/tmp/qfarm-neg/int1-r1-bitflip.ovl",
+   "sha": "816ce735087cff596b2dd4c2fa9827831b99f089ae0b87284f629957bbf5e32a",
+   "mask": 2684878977,
+   "override": true,
+   "manifest_sha": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e"
+  },
+  "translation": [
+   [
+    "debug=0x8",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "serial=3",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "cpus=5",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "rd=ufsroot0",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "msgbuf=1048576",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "varfs=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_ufs=2",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_live=1",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_root=ios_system",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_lun=0",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_deadline=900",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "launchd_unsecure_cache=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "unentitled_ios_sim_launch=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "ignition_level=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "launchd_disable_all_timeouts=1",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "sweetarm64e=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "autounlock=0",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "interrupt-masked-debug-mode=0",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_panic=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_fb_scanout=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "sweetfb_noconsole=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "sweetfb_hz=60",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_touch=1",
+    "drop",
+    "phone-only: touch controller (SPI/Laguna)"
+   ],
+   [
+    "blazer_touch_bars=1",
+    "drop",
+    "phone-only: touch controller (SPI/Laguna)"
+   ],
+   [
+    "atm_diagnostic_config=0x400",
+    "keep-new",
+    "ATM diagnostics config (software); first use on the rig"
+   ],
+   [
+    "blazer_ufs_multi=1",
+    "drop",
+    "phone-only: real UFS host queueing"
+   ],
+   [
+    "blazer_ufs_spin_us=300",
+    "drop",
+    "phone-only: real UFS host polling"
+   ],
+   [
+    "blazer_ufs_hold=1",
+    "drop",
+    "phone-only: real UFS link hold"
+   ],
+   [
+    "blazer_ssbs=3",
+    "drop",
+    "phone-only: Tensor CPU SSBS errata"
+   ],
+   [
+    "hk_fb_scale=1",
+    "drop",
+    "phone-only: DPU scaler"
+   ],
+   [
+    "hk_fb_fast=1",
+    "drop",
+    "phone-only: DPU fast path"
+   ],
+   [
+    "hk_fb_refresh=60",
+    "drop",
+    "phone-only: DPU refresh"
+   ],
+   [
+    "hk_overlay=0xA0080081",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_battery=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "blazer_mem=13",
+    "drop",
+    "phone-only: phone DRAM map"
+   ],
+   [
+    "blazer_thermal=2",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_thermal_fast=1",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_thermal_panic_c=70",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_gov=1",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_cap=16",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_stages=15",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_b=40",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_usbcon=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "blazer_usbcon_ch9=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "blazer_rtc=1",
+    "drop",
+    "phone-only: PMIC RTC"
+   ],
+   [
+    "blazer_rtc_bounds=1",
+    "drop",
+    "phone-only: PMIC RTC"
+   ],
+   [
+    "blazer_battery_status=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "hk_bright=140",
+    "drop",
+    "phone-only: panel backlight / DCS"
+   ],
+   [
+    "blazer_aks_wrap=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_keys=1",
+    "drop",
+    "phone-only: GPIO volume keys"
+   ],
+   [
+    "blazer_power_key=1",
+    "drop",
+    "phone-only: PMIC power key"
+   ],
+   [
+    "blazer_key_delivery=1",
+    "drop",
+    "phone-only: key HID delivery (needs blazer_keys)"
+   ],
+   [
+    "blazer_haptic_tap=1",
+    "drop",
+    "phone-only: haptics driver (CS40L)"
+   ],
+   [
+    "blazer_netstack=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_ustack=Preferences,MobilePhone",
+    "keep-new",
+    "user-stack sampler on process names (hk_ustack.c starts on names alone, INT1.md); first use on the rig"
+   ],
+   [
+    "blazer_bootcpu=0x200",
+    "drop",
+    "phone-only: phone boot cluster id"
+   ],
+   [
+    "sched_preemption_disable_debug_mode=0",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "wdt=-1",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "hk_usertrace=1",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "hk_top=30",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ]
+  ],
+  "qemu_args": "varfs=1 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 atm_diagnostic_config=0x400 hk_overlay=0xA0080081 blazer_aks_wrap=1 blazer_netstack=1 hk_ustack=Preferences,MobilePhone sched_preemption_disable_debug_mode=0 wdt=-1 hk_usertrace=1 hk_top=30",
+  "root": "/data/hackios-qemu/research/ios26-root-r1/build-r3/ios26-phone-r3.img",
+  "seconds": 180,
+  "phone_deadline": "900",
+  "phone_cpus": "5"
+ },
+ "result": {
+  "run": "/data/hackios-qemu/research/ios26-apps-r1/runs/qf-int1-neg-bitflip-r1",
+  "console_lines": 141,
+  "exit": {
+   "ended": "guest stopped",
+   "elapsed": 2.1090438609999183,
+   "exit": 0,
+   "root_unchanged": true
+  },
+  "last_host_s": 2.0,
+  "milestones": {
+   "kernel": {
+    "label": "XNU arm_init",
+    "reached": true,
+    "host_s": 0.0
+   },
+   "root": {
+    "label": "root mounted, pid 1 exec",
+    "reached": false,
+    "host_s": null
+   },
+   "overlay": {
+    "label": "var overlay applied",
+    "reached": false,
+    "host_s": null
+   },
+   "launchd": {
+    "label": "launchd",
+    "reached": false,
+    "host_s": null
+   },
+   "usermanagerd": {
+    "label": "boot tasks: usermanagerd",
+    "reached": false,
+    "host_s": null
+   },
+   "backboardd": {
+    "label": "backboardd",
+    "reached": false,
+    "host_s": null
+   },
+   "SpringBoard": {
+    "label": "SpringBoard",
+    "reached": false,
+    "host_s": null
+   },
+   "display": {
+    "label": "SWEET FB display on",
+    "reached": false,
+    "host_s": null
+   },
+   "PosterBoard": {
+    "label": "PosterBoard (phone: first frame ~10 s)",
+    "reached": false,
+    "host_s": null
+   },
+   "iconservicesagent": {
+    "label": "iconservicesagent (phone: Home-time)",
+    "reached": false,
+    "host_s": null
+   }
+  },
+  "daemons": {},
+  "deadline_end": null,
+  "panics": [
+   {
+    "host_s": 2.0,
+    "line": "panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739"
+   }
+  ],
+  "overlay": {
+   "mask_line": null,
+   "applied": null,
+   "bad": [
+    "panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739"
+   ],
+   "missing": [],
+   "host_decode_error": "bad size/checksum"
+  },
+  "hk_top": {
+   "samples": 0,
+   "frames": 0
+  },
+  "home_equivalent": {
+   "reached": false,
+   "host_s": null,
+   "needs": [
+    "launchd",
+    "backboardd",
+    "SpringBoard",
+    "PosterBoard",
+    "iconservicesagent"
+   ],
+   "ui_stable": true,
+   "note": "QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame."
+  },
+  "expect": [
+   {
+    "id": "root-on-ufs",
+    "feature": "root mounted from the UFS LUN",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [
+     "blazer-root: stage t \\d+ ms stage pid1_exec"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "overlay-applied",
+    "feature": "var overlay parsed and applied",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [
+     "varfs-overlay: [1-9]\\d* applied"
+    ],
+    "forbidden": [
+     {
+      "re": "varfs-overlay: bad overlay",
+      "source": "live",
+      "line": "panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739"
+     }
+    ],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "launchd",
+    "feature": "launchd",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [
+     "(?:^|[^\\w\\n])exec launchd[ \\t]*$"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "usermanagerd",
+    "feature": "boot tasks reach usermanagerd",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [
+     "(?:^|[^\\w\\n])exec usermanagerd[ \\t]*$"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "backboardd",
+    "feature": "backboardd runs once",
+    "required": true,
+    "note": "phone A7 r1/p32: 7-8 respawns (CoreBrightness NULL read)",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec (backboardd)[ \\t]*$",
+      "source": "value",
+      "line": "count((?:^|[^\\w\\n])exec (backboardd)[ \\t]*$) = 0 <= 1"
+     }
+    ],
+    "missing": [
+     "(?:^|[^\\w\\n])exec backboardd[ \\t]*$"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "SpringBoard",
+    "feature": "SpringBoard runs once",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec (SpringBoard)[ \\t]*$",
+      "source": "value",
+      "line": "count((?:^|[^\\w\\n])exec (SpringBoard)[ \\t]*$) = 0 <= 1"
+     }
+    ],
+    "missing": [
+     "(?:^|[^\\w\\n])exec SpringBoard[ \\t]*$"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "home-daemons",
+    "feature": "Home-time daemons (QEMU Home proxy)",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [
+     "(?:^|[^\\w\\n])exec PosterBoard[ \\t]*$",
+     "(?:^|[^\\w\\n])exec iconservicesagent[ \\t]*$"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "no-lsd-abort",
+    "feature": "lsd has a user container",
+    "required": true,
+    "note": "INVALID_PERSONA -> Could not get user container URL",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-NSURL-nil",
+    "feature": "backboardd NSURL-nil abort absent",
+    "required": false,
+    "note": "physical only so far (LANE1); QEMU never showed it",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-panic",
+    "feature": "no kernel panic",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [
+     {
+      "re": "panic\\(cpu(?!.*blazer-root: deadline)",
+      "source": "live",
+      "line": "panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739"
+     }
+    ],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "netstack-published",
+    "feature": "configd IONetworkStack stand-in",
+    "required": true,
+    "note": "QEMU-proven in cfg1-qemu-b",
+    "evidence": [
+     {
+      "re": "blazer-netstack: published alone",
+      "source": "live",
+      "line": "blazer-netstack: published alone (blazer_netstack=1)"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "frame-display",
+    "feature": "first frame on the panel",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "power-key-armed",
+    "feature": "power key",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "haptic-ready",
+    "feature": "haptics",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "rtc-publish",
+    "feature": "RTC time",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "backlight-dcs",
+    "feature": "backlight calibration",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   }
+  ],
+  "evaluator": "tools/hk_cycle.py evaluate (sha 1a398d112d7af363)",
+  "findings": [
+   "panic at host 2.0 s: panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739",
+   "overlay rejected: panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739",
+   "overlay does not decode on the host either: bad size/checksum",
+   "milestone not reached in 2.0 s: root (root mounted, pid 1 exec)",
+   "milestone not reached in 2.0 s: overlay (var overlay applied)",
+   "milestone not reached in 2.0 s: launchd (launchd)",
+   "milestone not reached in 2.0 s: usermanagerd (boot tasks: usermanagerd)",
+   "milestone not reached in 2.0 s: backboardd (backboardd)",
+   "milestone not reached in 2.0 s: SpringBoard (SpringBoard)",
+   "milestone not reached in 2.0 s: display (SWEET FB display on)",
+   "milestone not reached in 2.0 s: PosterBoard (PosterBoard (phone: first frame ~10 s))",
+   "milestone not reached in 2.0 s: iconservicesagent (iconservicesagent (phone: Home-time))",
+   "expect root-on-ufs FAIL: missing: blazer-root: stage t \\d+ ms stage pid1_exec",
+   "expect overlay-applied FAIL: forbidden: panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739; missing: varfs-overlay: [1-9]\\d* applied",
+   "expect launchd FAIL: missing: (?:^|[^\\w\\n])exec launchd[ \\t]*$",
+   "expect usermanagerd FAIL: missing: (?:^|[^\\w\\n])exec usermanagerd[ \\t]*$",
+   "expect backboardd FAIL: missing: (?:^|[^\\w\\n])exec backboardd[ \\t]*$",
+   "expect SpringBoard FAIL: missing: (?:^|[^\\w\\n])exec SpringBoard[ \\t]*$",
+   "expect home-daemons FAIL: missing: (?:^|[^\\w\\n])exec PosterBoard[ \\t]*$; missing: (?:^|[^\\w\\n])exec iconservicesagent[ \\t]*$",
+   "expect no-panic FAIL: forbidden: panic(cpu 0 caller 0xfffffe0007aba22c): varfs-overlay: bad overlay at pa 0xc02e00000, 671744 bytes: hash differs @varfs_seed.c:739"
+  ]
+ },
+ "verdict": "FAIL"
+}

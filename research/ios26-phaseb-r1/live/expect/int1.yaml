@@ -1,0 +1,78 @@
+# hk_cycle expectations for a7-ios-system-int1 (research/ios26-phaseb-r1/int/INT1.md section 6 read-out).
+# Schema: the probes row schema (HARNESS.md "Expect / probes schema"); docs/probes.yaml rows may be pasted in unchanged.
+# Patterns are taken from real lines in the pwr1 (20261103-201639) and int1 (20261103-205514) ramdumps.
+# needs_input: the row needs a tap/key/slider; without a UI run (or --attended) a missing line is NOT_EXERCISED, not FAIL.
+name: int1
+image: a7-ios-system-int1
+probes:
+  - id: boot.root
+    feature: XNU rooted on ios_system, launchd running
+    need: ['blazer-root: .*rooting on|BSD root: ', '(?:^|\s)exec launchd$']
+  - id: boot.home
+    feature: Home up (SpringBoard + touch + buttons + frames)
+    need: ['(?:^|\s)exec SpringBoard$', 'SWEET HID: SweetHIDTouch open by', 'SWEET HID: SweetHIDButtons open by']
+    marker: HOME
+    forbid: ['\((?:[^\s()]*/)?(?:backboardd|SpringBoard) \[\d+\]\).*service has crashed [3-9] times in a row']
+  - id: S
+    feature: Settings responsive (configd netstack, Preferences main thread answering, touches reach it)
+    need: ['blazer-netstack: published alone', 'blazer-netstack: IONetworkStack opened by configd\[\d+\]', '(?:^|\s)exec Preferences$']
+    values:
+      - {re: 'HKMAIN: Preferences\[\d+\] t=\d+ pings=(\d+)', agg: max, min: 5}
+      - {re: 'HKMAIN: Preferences\[\d+\] .* ev touch=(\d+)', agg: max, min: 1}
+    forbid: ['^CRASH Preferences ', '^usertrap: Preferences\[', '^userabort: Preferences\[']
+    needs_input: true
+    note: "pings growing with t and touch > 0 = interactive; HKMAIN stall frames name a blocking call (crash table)"
+  - id: S.iokit_busy
+    feature: InterfaceNamer answered at once (IOKit root busy 0 at the netstack open)
+    values:
+      - {re: 'IONetworkStack opened by configd\[\d+\] type \d+, IOKit root busy (\d+)', agg: max, max: 0}
+    required: false
+  - id: Ph
+    feature: Phone opens (MobilePhone runs, no trap)
+    need: ['(?:^|\s)exec MobilePhone$']
+    any: ['HK USTACK: MobilePhone\[\d+\] r=', 'identifier=com\.apple\.mobilephone']
+    forbid: ['^usertrap: MobilePhone\[', '^userabort: MobilePhone\[', '^CRASH MobilePhone ']
+    needs_input: true
+  - id: A
+    feature: Settings > General > About opens
+    ui: about
+    forbid: ['^CRASH Preferences ', '^usertrap: Preferences\[']
+    needs_input: true
+    note: "no About-specific console line exists; judged by the UI runner's 'about' step (screen change) or the screenshots"
+  - id: ustack
+    feature: hk_ustack samples Settings
+    need: ['HK USTACK: every \d+ s', 'HK USTACK: Preferences\[\d+\] r=\d+ t=']
+    required: false
+  - id: T
+    feature: RTC published, local time zone valid
+    need: ['blazer-rtc: publish .* ok 1']
+    forbid: ['localtime link invalid']
+  - id: Bt
+    feature: battery percentage reaches the status bar view
+    need: ['HKBATT: event=battery_view_set ']
+    values:
+      - {re: 'HKBATT: event=battery_view_set .* percent=(\d+)', agg: last, min: 1, max: 100}
+  - id: K
+    feature: volume and power keys delivered
+    need: ['SWEET PHYSICAL: delivery enabled', 'blazer-power-key: armed after stable release']
+    any: ['SWEET PHYSICAL: .* usage=0x(?:e9|ea) down clients=[1-9]']
+    forbid: ['forced release', 'ignored sample']
+    needs_input: true
+  - id: H
+    feature: tap haptics
+    need: ['blazer-haptic: native ROM service ready 1', 'blazer-haptic: tap feedback on']
+    values:
+      - {re: 'blazer-haptic: tap (\d+) rc 0', agg: count, min: 1}
+    needs_input: true
+  - id: B
+    feature: brightness follows the slider (DBV falls well below the boot level)
+    need: ['SWEET BL: calibration \d+ table entries', 'tensor-dpu: bright transport sent_dbv \d+']
+    values:
+      - {re: 'tensor-dpu: bright transport sent_dbv (\d+)', agg: min, max: 2000}
+    needs_input: true
+  - id: end.deadline
+    feature: the boot ended at its deadline (not a real panic)
+    need: ['^panic\(.*blazer-root: deadline \d+ s']
+    forbid: ['^panic\((?!.*blazer-root: deadline)']
+    source: dump
+    required: false

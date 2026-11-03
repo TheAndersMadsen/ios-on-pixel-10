@@ -1,0 +1,27 @@
+2026-11-03T22:04:00+01:00
+host: m1box (host test, fakes; no device)
+tools/hk_cycle.py 30961ec6aa7b52ff9d2899a8b56937190b7f3be3c35843209b6ea5a23acd8de2
+tools/test_hk_cycle.py c1956db334ecba22947bb0698fe6134dd8463be94296741501688b5253e1e586
+research/ios26-phaseb-r1/live/expect/int1.yaml 37ce4c175ed3102cd57c922ce32c39ceec60b7d31212c7b9168b25d0a3da46fb
+research/ios26-phaseb-r1/live/expect/pwr1.yaml c143daad1af07e6244b34110023f5922992e61a87e9e819fb9c40224310928dc
+test_bootios_cycle_from_android_passes_and_returns (__main__.CycleTests.test_bootios_cycle_from_android_passes_and_returns) ... ok
+test_console_refused_returns_to_android (__main__.CycleTests.test_console_refused_returns_to_android) ... ok
+test_ctrl_c_twice_abandons_boot_and_still_returns (__main__.CycleTests.test_ctrl_c_twice_abandons_boot_and_still_returns) ... ok
+test_different_mac_copy_refused_then_overwritten (__main__.CycleTests.test_different_mac_copy_refused_then_overwritten) ... ok
+test_image_check_failure_is_refused (__main__.CycleTests.test_image_check_failure_is_refused) ... ok
+test_kernel_not_in_image_is_refused (__main__.CycleTests.test_kernel_not_in_image_is_refused) ... ok
+test_mac_down_is_refused (__main__.CycleTests.test_mac_down_is_refused) ... ok
+test_never_parks_leaves_ios_and_says_so (__main__.CycleTests.test_never_parks_leaves_ios_and_says_so) ... ok
+test_phone_in_ios_is_refused_untouched (__main__.CycleTests.test_phone_in_ios_is_refused_untouched) ... ok
+test_plain_chooser_to_android_disarms_force_fastboot (__main__.CycleTests.test_plain_chooser_to_android_disarms_force_fastboot) ... ok
+test_plain_mode_chooser_parks_captures_returns (__main__.CycleTests.test_plain_mode_chooser_parks_captures_returns) ... ok
+test_report_only_reanalyses (__main__.CycleTests.test_report_only_reanalyses) ... ok
+test_dump_text_and_console_analysis (__main__.UnitTests.test_dump_text_and_console_analysis) ... ok
+test_evaluate_kinds (__main__.UnitTests.test_evaluate_kinds) ... ok
+test_home_rule_without_ui_ready (__main__.UnitTests.test_home_rule_without_ui_ready) ... ok
+test_int1_rows_on_the_real_int1_dump (__main__.UnitTests.test_int1_rows_on_the_real_int1_dump) ... ok
+test_load_expect_rejects_bad_rows (__main__.UnitTests.test_load_expect_rejects_bad_rows) ... ok
+test_redact (__main__.UnitTests.test_redact) ... ok
+test_shipped_expect_files_parse (__main__.UnitTests.test_shipped_expect_files_parse) ... ok
+Ran 19 tests in 41.466s
+OK

@@ -1,0 +1,899 @@
+# Evidence probes: one entry per README feature row (docs/status.json "features").
+#
+# tools/probe_eval.py reads this file, runs every probe over one or more boot
+# attempts (fastboot attempt directories, live-console directories or plain log
+# files) and prints a per-row verdict with file:line evidence. --propose-status
+# compares the verdicts with docs/status.json; --apply writes the proposal.
+#
+# Sources searched (an attempt directory may hold several):
+#   msgbuf   ramdump/kernel.log, XNU-MSGBUF mirror (current boot only: counted when
+#            reader.txt says current-fresh=yes, see tools/read-ramdump.py)
+#   live     live.log (shim USB diagnostic console)
+#   console  console.txt (tools/live_boot.sh live console)
+#   reader   reader.txt (tools/read-ramdump.py verdict and milestones)
+#   fastboot boot.log, capture.log
+#   abl      ramdump/abl.log.txt (bootloader log; Android residue possible)
+#
+# Probe fields:
+#   id       short slug; row: the exact status.json feature name
+#   phone_only  true when QEMU cannot exercise the row (tools/qemu_preflight.py skips it;
+#            probe_eval.py --qemu does the same)
+#   milestone   true for probes that are not README rows (Home, app launches); never
+#            compared with status.json
+#   needs    what an image must contain for the probe to say anything:
+#              boot_args: regexes matched against launchd's "boot-args =" line
+#              markers:   regexes; at least one must appear, or the row is
+#                         "not exercised" in that attempt (never a failure)
+#              image:     free text for the image builder (not machine checked)
+#   works / partial / built / active
+#            a level is proved in an attempt when every "all" check passes and,
+#            if given, at least one "any" check passes. confirm: owner|screenshot|
+#            owner_or_screenshot means the log alone stops one level lower until a
+#            confirmation line exists (docs/owner_confirmations.txt or the attempt's
+#            confirm.txt). note: template for the proposed status note ({group}
+#            names come from the checks' named regex groups, {attempt} = run name).
+#   fails    checks that prove a named failure (the ❌ evidence). They never
+#            demote a row; they are reported as blockers.
+#   screenshot  optional automatic check on screen*.png (nonblack = mean luma above
+#            the threshold); content (e.g. the battery percentage) needs review.
+#   owner    the question to ask when no log proof exists.
+#   next     the cheapest unattended test that moves the row forward:
+#            kind unattended|attended|build|none, minutes of phone time, test.
+#
+# Check fields: re (Python regex, one line), min (default 1), max, src (list),
+#   group + distinct_min / span_min / ge / le (numeric tests on a named group),
+#   seq (regexes that must appear in that order), label.
+# Patterns come from the 2026-11-03 boot dumps (research/laguna-usb-fix/attempts/
+# 20261103-*); a pattern marked "planned" is not printed by any kernel yet.
+
+version: 1
+
+common:
+  # A panic that is not the planned end of a boot (deadline, or a GPU rung ending on purpose).
+  unplanned_panic: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)'
+  deadline: 'blazer-root: deadline (?P<deadline>\d+) s, stage'
+
+probes:
+  # ---------------------------------------------------------------- CPU
+  - id: a725-cores
+    phone_only: true
+    row: 5 A725 cores
+    needs:
+      markers: ['SWEET CPU: \d+/\d+ CPUs initialized']
+      boot_args: ['cpus=5']
+    works:
+      all:
+        - {re: 'SWEET CPU: (?P<cpus>5)/5 CPUs initialized', label: five cores up}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900, label: ran 15 min}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0, label: no unplanned panic}
+      note: 'Ran {deadline} s under iOS on 5 cores, no kernel crash ({attempt})'
+    partial:
+      all:
+        - {re: 'SWEET CPU: 5/5 CPUs initialized'}
+    fails:
+      - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', label: unplanned panic}
+    owner: 'Did the phone stay up for the whole run with five cores?'
+    next: {kind: none, minutes: 0, test: 'Proved by every 900 s boot; keep as regression probe'}
+
+  - id: cpu-clock
+    phone_only: true
+    row: CPU clock control
+    needs:
+      markers: ['blazer-gov: running']
+    works:
+      all:
+        - {re: 'blazer-gov: running, (?P<cores>\d+) cores'}
+        - {re: 'blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz', group: mhz, distinct_min: 3, label: three or more clock levels}
+        - {re: 'blazer-clock: cpu \d+ mpidr \S+ level \d+ want \d+ cycles \d+ ticks \d+ mhz \d+', min: 50, label: 'clock reads (85-87 per 900 s boot)'}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+      note: 'Governor ran {deadline} s under iOS, clock levels up to {mhz} MHz on demand ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-gov: write domain \d+ level \d+, \d+ MHz'}
+    owner: 'None needed: the clock reads are the proof'
+    next: {kind: none, minutes: 0, test: 'Proved; keep as regression probe'}
+
+  - id: cpu-high-clock
+    phone_only: true
+    row: Higher clocks, up to the 3052 MHz top
+    needs:
+      markers: ['blazer-gov: running']
+      image: 'governor cap above level 16 (1075 MHz) and the health checker admitted'
+    works:
+      all:
+        - {re: 'blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz', group: mhz, ge: 2500, label: '>= 2500 MHz written'}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
+      note: 'Up to {mhz} MHz sustained {deadline} s under iOS ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz', group: mhz, ge: 1075}
+    owner: 'None: needs a boot with a higher governor cap'
+    next: {kind: build, minutes: 18, test: 'Build int1 with gov cap above level 16 after checker admission; one unattended 900 s boot, thermal guard on'}
+
+  - id: a520-cores
+    phone_only: true
+    row: 2 A520 cores
+    needs:
+      markers: ['SWEET CPU: requested=']
+      boot_args: ['cpus=[67]']
+    works:
+      all:
+        - {re: 'SWEET CPU: (?P<cpus>[67])/[67] CPUs initialized'}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
+      note: '{cpus} cores incl. A520 ran {deadline} s under iOS ({attempt})'
+    partial:
+      all:
+        - {re: 'SWEET CPU: cpu=[56] mpidr=\S+ came alive', label: an A520 came alive}
+    owner: 'None: host audit (tools/cpu_audit.py) is the current evidence'
+    next: {kind: build, minutes: 18, test: 'cpus=6 boot after the CAS-workaround (bit9) fix; unattended 900 s'}
+
+  - id: x4-core
+    phone_only: true
+    row: X4 core
+    owner: 'Out of reach for now: errata not fixed'
+    next: {kind: none, minutes: 0, test: 'No test until the errata work exists'}
+
+  - id: idle-sleep
+    phone_only: true
+    row: Idle sleep
+    owner: 'Code-reading claim (WFI idle); no log marker exists'
+    next: {kind: build, minutes: 18, test: 'Add a per-core WFI residency counter to the blazer-gov tick line; any unattended boot then proves it'}
+
+  # ---------------------------------------------------------------- Memory
+  - id: mem-clocks
+    phone_only: true
+    row: Memory and shared cluster clocks
+    needs:
+      markers: ['blazer-gov: write dsu level']
+    works:
+      all:
+        - {re: 'blazer-gov: write dsu level (?P<dsu>\d+)'}
+        - {re: 'blazer-gov: t=\d+ .* dsu (?P<dsu_now>\d+) gmc (?P<gmc>\d+) memss (?P<memss>\d+)', min: 2}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+      note: 'DSU/GMC/MEMSS raised under iOS for {deadline} s ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-gov: write dsu level \d+'}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; keep as regression probe'}
+
+  - id: ram
+    phone_only: true
+    row: RAM
+    needs:
+      markers: ['blazer-mem: window']
+    works:
+      all:
+        - {re: 'blazer-mem: window 0x[0-9a-f]+ \+ (?P<window>0x[0-9a-f]+)', label: memory window}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
+      note: 'Window {window} under iOS for {deadline} s ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-mem: window'}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; keep as regression probe'}
+
+  - id: ram-rest
+    phone_only: true
+    row: The rest of the 16 GiB
+    needs:
+      markers: ['blazer-mem: window']
+    partial:
+      all:
+        - {re: 'blazer-mem: window 0x[0-9a-f]+ \+ (?P<window>0x3[c-f][0-9a-f]{7}|0x[4-9a-f][0-9a-f]{8})', label: window above 15 GiB}
+    owner: 'None'
+    next: {kind: build, minutes: 18, test: 'Kernel with the carve-out map extended; unattended 900 s boot plus the memory test'}
+
+  # ---------------------------------------------------------------- Display
+  - id: picture
+    phone_only: true
+    row: Full 1280x2856 picture
+    needs:
+      markers: ['tensor-dpu: scale attached']
+    works:
+      all:
+        - {re: 'tensor-dpu: scale attached: source (?P<src>\d+x\d+) to \d+,\d+ (?P<dst>1280x2856)'}
+        - {re: 'tensor-dpu: frames kicks \d+ dones (?P<dones>[1-9]\d*)', label: frames completed}
+      note: 'Scaled from {src} to {dst}, frames completed ({attempt})'
+    partial:
+      all:
+        - {re: 'tensor-dpu: attached: layer'}
+    screenshot: {file: 'screen*.png', check: nonblack, expect: 'Home or boot picture, not black'}
+    owner: 'Does the panel show a full-screen picture?'
+    next: {kind: none, minutes: 0, test: 'Proved; hk_screen=30 screenshots keep it checked unattended'}
+
+  - id: hz120
+    phone_only: true
+    row: 120 Hz
+    needs:
+      markers: ['SWEET FB: refresh asked']
+    works:
+      all:
+        - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 100, label: '>= 100 completed swaps/s'}
+        - {re: 'SWEET FB: refresh asked 120, running 120'}
+      note: 'Measured {swaps} swaps/s at 120 Hz ({attempt})'
+    partial:
+      any:
+        - {re: 'SWEET FB: refresh asked \d+, running 120'}
+    owner: 'None: the swap-rate line measures it'
+    next: {kind: build, minutes: 10, test: 'int1 image with the panel profile at 120 Hz; unattended 300 s boot reads SWEET FB rate'}
+
+  - id: hz60
+    phone_only: true
+    row: 60 Hz mode and frame sync
+    needs:
+      markers: ['SWEET FB: refresh asked']
+    works:
+      all:
+        - {re: 'SWEET FB: refresh asked 60, running 60'}
+        - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 55, label: '>= 55 completed swaps/s'}
+      note: '60 Hz: {swaps} completed swaps/s ({attempt})'
+    partial:
+      all:
+        - {re: 'SWEET FB: refresh asked 60, running 60'}
+        - {re: 'tensor-dpu: frames kicks \d+ dones [1-9]\d*'}
+        - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 1, label: measured swap rate}
+      note: '60 Hz panel mode; completed frames measured at up to {swaps} swaps/s ({attempt})'
+    fails:
+      - {re: 'tensor-dpu: underrun in frame \d+', min: 10, label: DPU underruns}
+    owner: 'None'
+    next: {kind: unattended, minutes: 10, test: 'Re-run int1 300 s with a scripted swipe loop (usbcon --tap) and read the SWEET FB rate lines'}
+
+  - id: vrr
+    phone_only: true
+    row: Variable refresh down to low rates
+    needs:
+      markers: ['SWEET FB: refresh asked']
+    partial:
+      all:
+        - {re: 'SWEET FB: refresh asked (?P<hz>\d+), running (?P<run>\d+)', group: run, le: 30, label: running at 30 Hz or lower}
+    owner: 'None'
+    next: {kind: build, minutes: 10, test: 'Idle-rate build not written; then one unattended idle boot'}
+
+  - id: brightness
+    phone_only: true
+    row: Brightness
+    needs:
+      markers: ['SWEET BL: AppleARMBacklight published']
+    works:
+      all:
+        - {re: 'SWEET BL: request backboardd route (?:IOMFBBrightnessLevel|brightness-nits) raw \d+ rc 0 \(queued for DCS\)', min: 2, label: requests queued for DCS}
+        - {re: 'tensor-dpu: bright transport sent_dbv (?P<dbv>\d+) .*rc 0', group: dbv, span_min: 1000, label: 'SWEET BL sends across the range'}
+      confirm: owner_or_screenshot
+      note: 'Slider requests reach the panel: DBV {dbv} sent over DCS ({attempt})'
+    partial:
+      all:
+        - {re: 'SWEET BL: request backboardd route (?:IOMFBBrightnessLevel|brightness-nits) raw \d+ rc 0', label: requests reach the kernel}
+    fails:
+      - {re: 'SWEET BL: request backboardd route \S+ raw \d+ rc 0x[0-9a-f]+ \(refused\)', min: 1, label: refused requests}
+      - {re: 'tensor-dpu: bright transport .*\(no panel readback\)', label: no panel readback (log cannot see the panel)}
+    owner: 'Does moving the Settings slider visibly change the panel brightness?'
+    next: {kind: unattended, minutes: 10, test: 'Scripted slider sweep (usbcon --tap on Control Center) with a DCS brightness readback (0x52) logged per send'}
+
+  - id: hdr
+    phone_only: true
+    row: HDR, peak brightness, colour calibration
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  - id: aod
+    phone_only: true
+    row: Always-on display, self-refresh
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  # ---------------------------------------------------------------- Graphics
+  - id: gpu-id
+    phone_only: true
+    row: GPU power-on and ID
+    needs:
+      markers: ['blazer-gpu: ']
+    works:
+      all:
+        - {re: 'blazer-gpu: reg CORE_ID \+0x20 (?P<core_id>0x[0-9a-f]+)'}
+        - {re: 'blazer-gpu: vote \d+ reply'}
+      note: 'GPU answers: core id {core_id} read from XNU ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-gpu: vote \d+ reply'}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; keep as regression probe'}
+
+  - id: gpu-firmware
+    phone_only: true
+    row: GPU firmware through Trusty
+    needs:
+      markers: ['HK GPUTA: ']
+    works:
+      all:
+        - {re: 'HK GPUTA: rung (?P<rung>\d+) PASS, firmware running', group: rung, ge: 6, label: firmware running (rung 6 health)}
+      note: 'Firmware health rung {rung} PASS ({attempt})'
+    partial:
+      any:
+        - {re: 'HK GPUTA: SEND_FIRMWARE_IMAGE .* result 0'}
+        - {re: 'HK GPUTA: SMC START'}
+        - {re: 'HK GPUTA: tipc online'}
+    fails:
+      - {re: 'HK GPUTA: TA\| gpu-secure-trusty: \d+: process_st_info\(\) failed', label: process_st_info failed}
+      - {re: 'HK GPUTA: TA\| gpu-secure-trusty: \d+: RGXValidateFWHeaderVersion2: KM and FW version mismatch', label: KM/FW version mismatch}
+    owner: 'None'
+    next: {kind: build, minutes: 5, test: 'GPU M3: first real command stream; unattended rung-7 boot that ends on purpose'}
+
+  - id: metal
+    phone_only: true
+    row: Metal drawing
+    needs:
+      markers: ['HK GPUTA: |HKACCEL: ']
+    works:
+      all:
+        - {re: 'HK GPUTA: command stream \d+ (done|complete)', label: 'planned: native command stream completed'}
+        - {re: 'tensor-dpu: frames kicks \d+ dones [1-9]\d*'}
+      confirm: owner_or_screenshot
+    partial:
+      all:
+        - {re: 'HK GPUTA: command stream \d+ (done|complete)', label: planned}
+    active:
+      any:
+        - {re: 'HK GPUTA: rung \d+ PASS'}
+    owner: 'Does an app draw with Metal (not the CPU path)?'
+    next: {kind: build, minutes: 5, test: 'Same as GPU M3: first native command stream'}
+
+  - id: video
+    phone_only: true
+    row: Video encode and decode
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  # ---------------------------------------------------------------- Storage
+  - id: ufs-read
+    phone_only: false
+    row: Reading
+    needs:
+      markers: ['blazer-ufs: ']
+    works:
+      all:
+        - {re: 'blazer-ufs: "ios_system" on LUN \d+'}
+        - {re: 'blazer-root: watch t \d+ ms stage \S+ reads (?P<reads>\d+) blocks (?P<blocks>\d+)', group: reads, ge: 1000}
+        - {re: 'blazer-ufs: .*(error|timeout|fatal)', min: 0, max: 0, label: no UFS errors}
+      note: 'Multi-block reads: {reads} reads, {blocks} blocks, 0 errors ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-ufs: "ios_system" on LUN \d+'}
+    fails:
+      - {re: 'blazer-ufs: .*(error|timeout|fatal)', label: UFS error}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; keep as regression probe'}
+
+  - id: ufs-write
+    phone_only: false
+    row: Writing (persistent /var)
+    needs:
+      markers: ['blazer-persist: ']
+      boot_args: ['blazer_persist=1']
+      image: 'a7-ios-system-int1-persist (built 84f993b6, not booted)'
+    works:
+      all:
+        - {re: 'blazer-persist: ios_data at LBA (?P<lba>\d+)'}
+        - {re: 'blazer-persist: .*sav(e|ed)', min: 2, label: saves}
+        - {re: 'blazer-persist: .*restor', label: 'restore after reset (second boot)'}
+      note: 'ios_data at LBA {lba}: saves and restore across a reset ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-persist: ios_data at LBA (?P<lba>\d+)'}
+    fails:
+      - {re: 'blazer-persist: refused', label: writer refused}
+    owner: 'Does a changed setting survive a reboot?'
+    next: {kind: unattended, minutes: 25, test: 'Boot a7-ios-system-int1-persist twice (900 s, then 300 s): the second boot must log the restore (image built, image_tool gate pending commit)'}
+
+  - id: ufs-speed
+    phone_only: true
+    row: Maximum speed
+    needs:
+      markers: ['blazer-root: stage t ']
+    partial:
+      all:
+        - {re: 'blazer-(?:root|ufs): .*(?P<mbps>\d+(?:\.\d+)?) MB/s', label: 'planned: throughput line'}
+    active:
+      all:
+        - {re: 'blazer-root: stage t (?P<ms>\d+) ms stage mounted reads \d+ blocks (?P<blocks>\d+) busy (?P<busy>\d+) ms'}
+    owner: 'None: needs a throughput line'
+    next: {kind: build, minutes: 5, test: 'Print MB/s per stage from blazer-root (blocks*4 KiB/busy) and compare against the Android baseline; any unattended boot'}
+
+  - id: chooser
+    phone_only: true
+    row: Android/iOS boot chooser
+    needs:
+      markers: ['TGL CHOOSER|chooser', 'Darwin Kernel Version']
+    works:
+      all:
+        - {re: 'Darwin Kernel Version', src: [msgbuf]}
+      confirm: owner
+      note: 'iOS from a cold power-on through the installed menu ({attempt})'
+    partial:
+      any:
+        - {re: 'Darwin Kernel Version', src: [msgbuf]}
+    owner: 'From a cold power-on, does the installed menu boot iOS and Android?'
+    next: {kind: attended, minutes: 5, test: 'Cold power-on through the installed menu needs hands on the phone; the chooser stamps (tools/chooser_stamps.py) are the log side'}
+
+  - id: partitions
+    phone_only: false
+    row: Isolated iOS partitions
+    needs:
+      markers: ['blazer-ufs: "ios_system"']
+    works:
+      all:
+        - {re: 'blazer-ufs: "ios_system" on LUN \d+: first block \S+, (?P<mib>\d+) MiB, read only', group: mib, ge: 24576}
+        - {re: 'hfs: mounted iOSRoot on device'}
+      note: 'ios_system ({mib} MiB) mounted as the root ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-ufs: "ios_system" on LUN \d+'}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; keep as regression probe'}
+
+  # ---------------------------------------------------------------- Input
+  - id: touch
+    phone_only: true
+    row: Touch
+    needs:
+      markers: ['blazer-touch: ']
+    works:
+      all:
+        - {re: 'blazer-touch: tcm: finger \d+ down', label: controller reports}
+        - {re: 'SWEET HID: touch \d+ down at \d+,\d+.*\((?P<clients>[1-9]\d*) clients\)', min: 3, label: delivered to an iOS HID client}
+      note: 'Touches delivered to {clients} iOS HID client(s) ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-touch: tcm: finger \d+ down'}
+    owner: 'Do taps open apps and work inside them?'
+    next: {kind: none, minutes: 0, test: 'Proved on int1; keep as regression probe'}
+
+  - id: scripted-input
+    phone_only: true
+    row: Scripted taps and keys
+    needs:
+      markers: ['SWEET HID: ', 'blazer-usbcon: ']
+    works:
+      all:
+        - {re: 'SWEET (?:HID|REMOTE): .*(?:remote|TAP|HOME).*accepted', min: 2, label: 'planned: remote TAP/HOME accepted'}
+      confirm: owner_or_screenshot
+    partial:
+      any:
+        - {re: 'SWEET (?:HID|REMOTE): .*(?:remote|TAP|HOME)', label: planned remote event marker}
+    owner: 'Did the scripted TAP land without manual recovery?'
+    next: {kind: unattended, minutes: 10, test: 'int1 live session: usbcon --tap/--home loop with hk_screen=30 screenshots before and after each event'}
+
+  - id: volume-keys
+    phone_only: true
+    row: Volume keys
+    needs:
+      markers: ['blazer-keys: ']
+    works:
+      all:
+        - {re: 'SWEET PHYSICAL: .*usage=0xe9 down clients=[1-9]', label: Vol Up to an iOS client}
+        - {re: 'SWEET PHYSICAL: .*usage=0xea down clients=[1-9]', label: Vol Down to an iOS client}
+      note: 'Vol Up/Down (usage 0xe9/0xea) delivered to iOS HID clients ({attempt})'
+    partial:
+      any:
+        - {re: 'blazer-keys: volume (?:up|down) pressed'}
+    owner: 'Do the volume keys change the volume under iOS?'
+    next: {kind: attended, minutes: 5, test: 'Needs presses; regression only (pwr1 proved it)'}
+
+  - id: power-key
+    phone_only: true
+    row: Power key
+    needs:
+      markers: ['blazer-power-key: ']
+    works:
+      all:
+        - {re: 'SWEET PHYSICAL: .*usage=0x30 down clients=[1-9]', label: power key to an iOS client}
+        - {seq: ['blazer-power-key: pressed', 'SWEET FB: display off', 'blazer-power-key: pressed', 'SWEET FB: display on'], label: lock then wake}
+      note: 'Power key locks and wakes under iOS (display off/on) ({attempt})'
+    partial:
+      any:
+        - {re: 'blazer-power-key: pressed'}
+    owner: 'Does the power key lock and wake the phone?'
+    next: {kind: attended, minutes: 5, test: 'Needs presses; regression only (pwr1 proved it)'}
+
+  - id: tap-wake
+    phone_only: true
+    row: Tap to wake, palm rejection
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  # ---------------------------------------------------------------- Connectivity
+  - id: wifi
+    phone_only: true
+    row: Wi-Fi
+    needs:
+      markers: ['blazer-wifi: ']
+      image: 'hk-wifi-join kernel and a staged network'
+    works:
+      all:
+        - {re: 'blazer-wifi: join: joined', label: 'planned: 4-way handshake done'}
+        - {re: 'gateway answered a ping', label: 'planned: packet traffic'}
+      note: 'Joined and the gateway answered a ping ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-wifi: scan: ended, status 0, \d+ ms: \d+ results, (?P<networks>\d+) networks', group: networks, ge: 1}
+      any:
+        - {re: 'blazer-wifi: join: association: status 0'}
+        - {re: 'blazer-wifi: scan: ended'}
+      note: 'BCM4390 under iOS: scan found {networks} networks ({attempt})'
+    fails:
+      - {re: 'blazer-wifi: join: the 4-way handshake failed: status (?P<hs_status>\d+), reason (?P<hs_reason>\d+)', label: 4-way handshake failed}
+      - {re: 'blazer-wifi: join: deauth by the network', label: deauthenticated}
+    owner: 'Does Settings show the phone joined to the network?'
+    next: {kind: unattended, minutes: 15, test: 'Boot a7-wifi-join-r4 (built 214641ba, Android .57.31 firmware + RX-ring witness); join and ping are logged'}
+
+  - id: bluetooth
+    phone_only: true
+    row: Bluetooth
+    needs:
+      markers: ['SWEET AKS: bluetoothuserd|blazer-bt|bluetoothd']
+    works:
+      all:
+        - {re: 'blazer-bt: .*HCI .*attached', label: 'planned: native HCI attachment'}
+      confirm: owner_or_screenshot
+    partial:
+      any:
+        - {re: 'SWEET AKS: bluetoothuserd sel \d+ .*-> 0x0', label: keychain path answered}
+    owner: 'Does Settings > Bluetooth list nearby devices?'
+    next: {kind: build, minutes: 15, test: 'B2/B3: bluetoothd allowed with the H4 transport; unattended boot logs HCI reset/version'}
+
+  - id: cellular
+    phone_only: true
+    row: Cellular
+    needs:
+      markers: ['cell: |blazer-modem|s5400']
+    works:
+      all:
+        - {re: 'cell: the data session is up'}
+      confirm: owner
+    partial:
+      any:
+        - {re: 'blazer-modem: .*boot(ed)?', label: planned modem boot}
+    owner: 'Does the status bar show a carrier?'
+    next: {kind: build, minutes: 15, test: 'PCIe0 link-up kernel; unattended boot logs link state'}
+
+  - id: sim
+    phone_only: true
+    row: SIM, eSIM
+    needs:
+      markers: ['blazer-sim|cell: ']
+    partial:
+      any:
+        - {re: 'blazer-sim: .*ATR', label: planned SIM ATR}
+    owner: 'Is the SIM read?'
+    next: {kind: build, minutes: 15, test: 'Depends on the modem boot'}
+
+  - id: gps
+    phone_only: true
+    row: GPS
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  - id: nfc
+    phone_only: true
+    row: NFC
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  - id: uwb
+    phone_only: true
+    row: UWB
+    owner: 'Not assigned; presence unconfirmed'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  # ---------------------------------------------------------------- USB
+  - id: fastboot-logs
+    phone_only: true
+    row: Fastboot and logs
+    needs:
+      markers: ['Booting|current-fresh']
+    works:
+      all:
+        - {re: 'Booting\s+OKAY', src: [fastboot]}
+        - {re: 'current-fresh=yes', src: [reader]}
+      note: ''
+    partial:
+      any:
+        - {re: 'Booting\s+OKAY', src: [fastboot]}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved by every attempt'}
+
+  - id: live-console
+    phone_only: true
+    row: Live console
+    needs:
+      markers: ['usbcon: connected|Tegu USB diagnostic connected']
+    works:
+      all:
+        - {re: 'usbcon: connected: nonce', src: [console]}
+        - {re: '^\d\d:\d\d:\d\d\.\d+ \[\s*\d+\.\d+\] ', src: [console], min: 1000, label: live kernel lines}
+      note: ''
+    partial:
+      any:
+        - {re: 'Tegu USB diagnostic connected', src: [live]}
+        - {re: 'usbcon: connected: nonce', src: [console]}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; add a live-vs-mirror byte compare to live_boot.sh for the zero-loss claim'}
+
+  - id: mac-link
+    phone_only: true
+    row: Link to the Mac
+    needs:
+      markers: ['lockdownd|usbmuxd|remoted']
+    works:
+      all:
+        - {re: 'lockdownd.*[Pp]air(ing)? (complete|succeeded)', label: planned pairing marker}
+    partial:
+      any:
+        - {re: 'usbmuxd|remoted.*(listening|connected)'}
+    owner: 'Does Finder/Xcode see the phone?'
+    next: {kind: build, minutes: 15, test: 'Native mux over the USB console transport; host-side pairing script can run unattended'}
+
+  - id: usb-net
+    phone_only: true
+    row: Network over USB
+    needs:
+      markers: ['blazer-usbnet: |blazer-netstack: |blazer-ecm']
+    works:
+      all:
+        - {re: 'blazer-ecm: .*(rx|received) [1-9]', label: planned ECM traffic}
+    partial:
+      any:
+        - {re: 'blazer-ecm: .*bound', label: planned ECM binding}
+    active:
+      any:
+        - {re: 'blazer-netstack: IONetworkStack opened by configd'}
+        - {re: 'blazer-usbnet: IONetworkStack published'}
+    owner: 'Does the Mac see a USB Ethernet interface and ping the phone?'
+    next: {kind: build, minutes: 10, test: 'ECM binding image; host pings the phone unattended'}
+
+  - id: usb-host
+    phone_only: true
+    row: USB host, video out
+    owner: 'Out of reach: no host stack in open XNU'
+    next: {kind: none, minutes: 0, test: 'None'}
+
+  # ---------------------------------------------------------------- Audio
+  - id: audio
+    phone_only: false
+    row: Speakers, microphones
+    owner: 'Not run on the phone'
+    next: {kind: build, minutes: 0, test: 'QEMU first; depends on the always-on chip'}
+
+  - id: haptics
+    phone_only: true
+    row: Haptics
+    needs:
+      markers: ['blazer-haptic: ']
+    works:
+      all:
+        - {re: 'blazer-haptic: tap (?P<taps>\d+) rc 0', min: 2, label: effects on touch}
+      confirm: owner
+      note: 'Buzz on touch under iOS: {taps} effects, rc 0 ({attempt})'
+    partial:
+      any:
+        - {re: 'blazer-haptic: trigger rom \d+'}
+        - {re: 'blazer-haptic: tap \d+ rc 0'}
+    owner: 'Did you feel a buzz on touch?'
+    next: {kind: attended, minutes: 5, test: 'Felt buzz is human-only; regression via the rc 0 lines'}
+
+  # ---------------------------------------------------------------- Sensors
+  - id: sensors
+    phone_only: true
+    row: Accelerometer, gyro, proximity, light, barometer
+    needs:
+      markers: ['blazer-sens|SWEET SENS|blazer-chre']
+      image: 'a7-ios-system-sens2 (built 85664fb3, blazer_sensors=2 + mag)'
+    works:
+      all:
+        - {re: '(?:blazer-sens\w*|SWEET SENS\w*): .*accel', min: 10}
+        - {re: '(?:blazer-sens\w*|SWEET SENS\w*): .*gyro', min: 10}
+        - {re: '(?:blazer-sens\w*|SWEET SENS\w*): .*(prox|light|baro)', label: planned remaining sensors}
+    partial:
+      any:
+        - {re: '(?:blazer-sens\w*|SWEET SENS\w*): .*(accel|gyro)'}
+    owner: 'Does the screen rotate when the phone turns?'
+    next: {kind: unattended, minutes: 10, test: 'Boot a7-ios-system-sens2 (built, not booted): accel/gyro/orientation/compass samples are logged'}
+
+  - id: aoc
+    phone_only: true
+    row: Always-on chip
+    needs:
+      markers: ['blazer-aoc|aoc: ']
+    partial:
+      any:
+        - {re: 'blazer-aoc: .*(running|online)', label: planned AOC online}
+    owner: 'None'
+    next: {kind: build, minutes: 10, test: 'First AOC test is built; one unattended boot'}
+
+  # ---------------------------------------------------------------- Power
+  - id: thermal
+    phone_only: true
+    row: Temperature and thermal guard
+    needs:
+      markers: ['blazer-thermal: ']
+    works:
+      all:
+        - {re: 'blazer-thermal: poll \d+ max (?P<max_c>\d+) C', min: 10, label: live temperatures}
+        - {re: 'blazer-thermal: mode \d+, limit (?P<limit_c>\d+) C', label: guard armed}
+      note: 'Live temperatures (max {max_c} C), guard armed at {limit_c} C ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-thermal: GET_TEMP zone'}
+    owner: 'None'
+    next: {kind: none, minutes: 0, test: 'Proved; guard trip at a test limit stays a separate regression'}
+
+  - id: battery
+    phone_only: true
+    row: Battery gauge
+    needs:
+      markers: ['blazer-battery: |HKBATT: ']
+    works:
+      all:
+        - {re: 'HKBATT: event=battery_view_set .*value=(?P<view>[0-9.]+) .*percent=(?P<percent>\d+)', label: SpringBoard battery view value set}
+        - {re: 'blazer-battery: sample \d+ SOC\((?P<soc>\d+)\)', label: gauge sample}
+      confirm: owner_or_screenshot
+      note: '{percent}% set on the SpringBoard battery view from the gauge ({soc}%) ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-battery: sample \d+ SOC\((?P<soc>\d+)\), VCELL\((?P<mv>\d+)\)'}
+      any:
+        - {re: 'HKBATT: event=powerd_percent_post pid=\d+ rc=0'}
+        - {re: 'HKBATT: event=battery_view_set'}
+      note: 'Gauge {soc}% / {mv} mV reaches powerd ({attempt})'
+    screenshot: {file: 'screen*.png', check: nonblack, expect: 'status bar shows the battery percentage'}
+    owner: 'Is the battery percentage shown in the status bar?'
+    next: {kind: unattended, minutes: 10, test: 'int1 with hk_screen=30: fb_png screenshot of the status bar; compare against the HKBATT percent'}
+
+  - id: charging
+    phone_only: true
+    row: Charging control
+    owner: 'Left at the bootloader settings'
+    next: {kind: build, minutes: 10, test: 'Log charger state (max77779 CHG registers) read-only; any unattended boot'}
+
+  - id: wireless-charging
+    phone_only: true
+    row: Wireless charging
+    owner: 'Not assigned'
+    next: {kind: none, minutes: 0, test: 'Not assigned'}
+
+  - id: rtc
+    phone_only: true
+    row: Real date and time
+    needs:
+      markers: ['blazer-rtc: ']
+    works:
+      all:
+        - {re: 'blazer-rtc: publish want \d+ calendar \d+ .*ok 1'}
+      confirm: owner_or_screenshot
+      note: 'RTC time published and shown ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-rtc: read \d+ s since \d+, unix \d+, (?P<utc>[\d-]+ [\d:]+) UTC'}
+      note: 'RTC read {utc} UTC ({attempt})'
+    fails:
+      - {re: 'blazer-rtc: refused', label: RTC value refused}
+    screenshot: {file: 'screen*.png', check: nonblack, expect: 'status bar clock matches the RTC line'}
+    owner: 'Is the correct local time shown?'
+    next: {kind: unattended, minutes: 10, test: 'int1 with hk_screen=30: status-bar clock in the fb_png screenshot vs the blazer-rtc line'}
+
+  # ---------------------------------------------------------------- Cameras, Security, Apple services
+  - id: cameras
+    phone_only: true
+    row: Cameras, flash
+    owner: 'Out of reach: sensor details are not public'
+    next: {kind: none, minutes: 0, test: 'None'}
+
+  - id: biometrics
+    phone_only: true
+    row: Fingerprint, Face ID
+    owner: 'Out of reach: tied to the security chip'
+    next: {kind: none, minutes: 0, test: 'None'}
+
+  - id: sep
+    phone_only: false
+    row: Secure enclave
+    needs:
+      markers: ['SWEET AKS: ']
+    partial:
+      all:
+        - {re: 'SWEET AKS: \S+ sel 10 .*-> 0x0', label: software key store wrap}
+        - {re: 'SWEET AKS: \S+ sel 11 .*-> 0x0', label: software key store unwrap}
+    owner: 'Out of reach (Apple SEP absent); software key store only'
+    next: {kind: none, minutes: 0, test: 'None'}
+
+  - id: apple-services
+    phone_only: true
+    row: Activation, iMessage, App Store purchases
+    owner: 'Out of reach: needs a real iPhone identity'
+    next: {kind: none, minutes: 0, test: 'None'}
+
+  # ---------------------------------------------------------------- milestones (not README rows)
+  # milestone: true probes are evaluated like rows but never compared with status.json.
+  # tools/hk_cycle.py and tools/qemu_preflight.py read them by id.
+
+  - id: home
+    phone_only: false
+    milestone: true
+    row: Home screen (milestone)
+    needs:
+      markers: ['exec SpringBoard|Successfully spawned \(SpringBoard\)']
+    works:
+      all:
+        - {re: 'SWEET HID: SweetHIDTouch open by', label: touch client (TOUCH_CLIENT)}
+        - {re: 'SWEET HID: SweetHIDButtons open by', label: button client (BUTTON_CLIENT)}
+        - {re: 'HK TOP: t=\d+ frames\+[1-9]\d*|SWEET FB: rate swaps (?P<swaps>[1-9][\d.]*|0\.[1-9])/s', label: frames (FRAMES)}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH SpringBoard', min: 0, max: 0, label: no SpringBoard crash}
+      any:
+        - {re: 'Successfully spawned \(SpringBoard\)\[', label: SPRINGBOARD (launchd spawn line)}
+        - {re: 'HKBATT: event=battery_view_installed pid=\d+', label: 'fallback: SpringBoard status-bar battery view installed'}
+        - {re: 'HKBATT: event=battery_view_set ', label: 'fallback: SpringBoard battery view updated'}
+      note: 'Home: touch and button clients, frames, SpringBoard UI up ({attempt})'
+    partial:
+      all:
+        - {re: 'exec SpringBoard'}
+    fails:
+      - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH SpringBoard', label: SpringBoard crashed}
+    owner: 'Is the Home screen shown?'
+    next: {kind: unattended, minutes: 10, test: 'Any int1 live boot; live_boot.sh UI_READY needs the SPRINGBOARD line, which int1 never prints: use this probe (battery-view fallback) instead'}
+
+  - id: app-settings-about
+    phone_only: false
+    milestone: true
+    row: Settings > About opens (milestone)
+    needs:
+      markers: ['exec Preferences|Preferences\[\d+\]|CRASH Preferences']
+    works:
+      all:
+        - {re: 'service="kTCCServiceMediaLibrary"', label: About path ran (its MediaLibrary TCC request)}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH Preferences', min: 0, max: 0, label: no Settings crash}
+      confirm: owner_or_screenshot
+      note: 'Settings > About opened without a crash ({attempt})'
+    partial:
+      any:
+        - {re: 'HKMAIN: Preferences\[\d+\] .*stalls=0', label: Settings main thread responsive}
+    fails:
+      - {seq: ['service="kTCCServiceMediaLibrary"', 'AUTHREQ_RESULT: msgID=\d+\.\d+, authValue=\d+', 'generic_extension="invalid"', 'CRASH Preferences reason ns 2 code 0x6'], label: 'About: MediaLibrary TCC request, then SIGABRT (ABOUT; this log shows authValue=2 with generic_extension="invalid")'}
+      - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH Preferences reason ns 2 code 0x6', label: Settings SIGABRT}
+    owner: 'Does Settings > General > About open?'
+    next: {kind: unattended, minutes: 10, test: 'int1 live boot with ui_settings_test.py tapping About; the probe reads CRASH Preferences and the tccd reply'}
+
+  - id: app-accessibility-ui
+    phone_only: false
+    milestone: true
+    row: AccessibilityUIServer stays up (milestone)
+    needs:
+      markers: ['exec AccessibilityUIServer|CRASH AccessibilityUIS']
+    works:
+      all:
+        - {re: 'exec AccessibilityUIServer'}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH AccessibilityUIS', min: 0, max: 0, label: no AccessibilityUIServer crash}
+    fails:
+      - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH AccessibilityUIS\S* reason ns 2 code 0x6', label: 'AccessibilityUIServer SIGABRT loop (ABOUT: root prune deleted AXSSPunctuationModel.momd; not visible in the log)'}
+      - {re: 'AXSSPunctuationModel', label: 'AXSSPunctuationModel named in the log'}
+    owner: 'None'
+    next: {kind: unattended, minutes: 5, test: 'QEMU first (restore AXSSPunctuationModel.momd in the root); then any unattended int1 boot'}
+
+  - id: app-blastdoor
+    phone_only: false
+    milestone: true
+    row: MessagesBlastDoorService stays up (milestone)
+    needs:
+      markers: ['exec MessagesBlastDoorService|CRASH MessagesBlastDoo|MessagesBlastDoorService:\d+\]']
+    works:
+      all:
+        - {re: 'exec MessagesBlastDoorService'}
+        - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH MessagesBlastDoo', min: 0, max: 0, label: no BlastDoor crash}
+        - {re: 'MessagesBlastDoorService:\d+\] EXC_GUARD', min: 0, max: 0, label: no EXC_GUARD}
+    fails:
+      - {seq: ['MessagesBlastDoorService:\d+\] EXC_GUARD AST', 'CRASH MessagesBlastDoo\S* reason ns 2 code 0x5'], label: 'BlastDoor EXC_GUARD then SIGTRAP (ABOUT: Sandbox.swift trap because the SWEET sandbox stub returns 0)'}
+      - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH MessagesBlastDoo\S* reason ns 2 code 0x5', label: BlastDoor SIGTRAP}
+    owner: 'None'
+    next: {kind: unattended, minutes: 5, test: 'QEMU first with a sandbox stub that reports a real container profile; then any unattended int1 boot'}

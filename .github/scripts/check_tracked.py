@@ -53,6 +53,9 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-gpu-r1/m2/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log|patch)
   | ios26-gpu-r1/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log)
   | ios26-phaseb-r1/fast-start/[A-Za-z0-9_.-]+\.md
+  | ios26-phaseb-r1/(verify|crashdoc)/[A-Za-z0-9_.-]+\.(md|txt|json)
+  | ios26-phaseb-r1/qfarm/(receipts/)?[A-Za-z0-9_.-]+\.(md|txt|json)
+  | ios26-phaseb-r1/live/(expect|receipts)/[A-Za-z0-9_.-]+\.(yaml|txt|json)
   | ios26-phaseb-r1/accel-wait/build-mac/(receipts/|overlays/)?[A-Za-z0-9_.-]+\.(c|py|sh|txt|json)
   | ios26-phaseb-r1/accel-wait/((src|test)/)?[A-Za-z0-9_.-]+\.(md|py|sh|c|h|tbd)
   | ios26-phaseb-r1/corebrightness/([a-z]+/)?[A-Za-z0-9_.-]+\.(md|patch|h|c|cpp|py)

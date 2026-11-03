@@ -1,0 +1,14 @@
+# Owner and screenshot confirmations read by tools/probe_eval.py.
+#
+# One per line: <attempt name or glob> <probe id> <level> <owner|screenshot>: <what was seen; source>
+# A confirmation only completes a level whose log checks already pass in that
+# attempt (docs/probes.yaml "confirm:"); it never stands in for missing log proof.
+# An attempt directory's own confirm.txt uses the same format.
+#
+# Seeded from research/ios26-phaseb-r1/LEDGER.md (2026-11-03, owner present).
+
+*-a7-ios-system-pwr1 brightness works owner: brightness slider in Settings works (LEDGER 20:32)
+*-a7-ios-system-pwr1 battery works owner: 95% battery shown (LEDGER 20:32)
+*-a7-ios-system-pwr1 rtc works owner: clock 8.20 correct (LEDGER 20:32)
+*-a7-ios-system-pwr1 haptics works owner: vibration on touch (LEDGER 20:32)
+*-a7-ios-system-int1 chooser works owner: int1 installed as the menu's iOS (LEDGER 21:13); iOS from a real power-on through the menu was chooser-ios-r3 (LEDGER 20:07, no dump)

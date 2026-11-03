@@ -1,0 +1,34 @@
+# QEMU pre-flight probes, in the shared probe-row format (VERIFY docs/probes.yaml schema, tools/probe_eval.py; the same
+# rows tools/hk_cycle.py evaluates): id, feature, need/any/forbid (regex lists, re.M over the console), values
+# ({re with one group, agg max|min|last|count, min, max}), required, note, source.
+# phone_only: true -> listed, not evaluated in QEMU.  if_arg: TOKEN -> N/A unless the QEMU line holds TOKEN.
+# An image directory's own expect.yaml is added after this file and replaces rows by id.
+respawn_max: 2            # per daemon: more than 2 respawns (exec count - 1) in one boot is a crash loop
+respawn_allow:
+  fairplayd.H2: 400       # QEMU: relaunches without FairPlay hardware (app2-r26: 47 execs in 600 s)
+  com.apple.datamigrator: 10
+expect:
+  # boot order (phone: home-budget BUDGET.md section 4; QEMU: m1box-rig CALIBRATION.md)
+  - {id: root-on-ufs, feature: root mounted from the UFS LUN, need: ['blazer-root: stage t \d+ ms stage pid1_exec']}
+  - {id: overlay-applied, feature: var overlay parsed and applied, need: ['varfs-overlay: [1-9]\d* applied'],
+     forbid: ['varfs-overlay: bad overlay', 'varfs-overlay: hk_overlay=0x[0-9a-f]+ (needs|and no|, this overlay)']}
+  - {id: launchd, feature: launchd, need: ['(?:^|[^\w\n])exec launchd[ \t]*$']}
+  - {id: usermanagerd, feature: boot tasks reach usermanagerd, need: ['(?:^|[^\w\n])exec usermanagerd[ \t]*$']}
+  - {id: backboardd, feature: backboardd runs once, need: ['(?:^|[^\w\n])exec backboardd[ \t]*$'],
+     values: [{re: '(?:^|[^\w\n])exec (backboardd)[ \t]*$', agg: count, max: 1}], forbid: ['usertrap: backboardd\[', 'userabort: backboardd\['],
+     note: 'phone A7 r1/p32: 7-8 respawns (CoreBrightness NULL read)'}
+  - {id: SpringBoard, feature: SpringBoard runs once, need: ['(?:^|[^\w\n])exec SpringBoard[ \t]*$'],
+     values: [{re: '(?:^|[^\w\n])exec (SpringBoard)[ \t]*$', agg: count, max: 1}], forbid: ['usertrap: SpringBoard\[', 'userabort: SpringBoard\[']}
+  - {id: home-daemons, feature: Home-time daemons (QEMU Home proxy), need: ['(?:^|[^\w\n])exec PosterBoard[ \t]*$', '(?:^|[^\w\n])exec iconservicesagent[ \t]*$']}
+  - {id: no-lsd-abort, feature: lsd has a user container, forbid: ['userabort: lsd\['], note: 'INVALID_PERSONA -> Could not get user container URL'}
+  - {id: no-NSURL-nil, feature: backboardd NSURL-nil abort absent, forbid: ['initFileURLWithPath'], required: false,
+     note: 'physical only so far (LANE1); QEMU never showed it'}
+  - {id: no-panic, feature: no kernel panic, forbid: ['panic\(cpu(?!.*blazer-root: deadline)', 'Synchronous exception', 'kernel trap']}
+  - {id: netstack-published, feature: configd IONetworkStack stand-in, if_arg: blazer_netstack=1, need: ['blazer-netstack: published alone'],
+     note: 'QEMU-proven in cfg1-qemu-b'}
+  # phone-only: the hardware these need is not in QEMU
+  - {id: frame-display, feature: first frame on the panel, phone_only: true, need: ['tensor-dpu: .*display on']}
+  - {id: power-key-armed, feature: power key, phone_only: true, need: ['blazer-power-key: armed']}
+  - {id: haptic-ready, feature: haptics, phone_only: true, need: ['native ROM service ready']}
+  - {id: rtc-publish, feature: RTC time, phone_only: true, need: ['blazer-rtc: .*publish']}
+  - {id: backlight-dcs, feature: backlight calibration, phone_only: true, need: ['SWEET BL: .*queued for DCS']}
