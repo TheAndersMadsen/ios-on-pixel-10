@@ -5,9 +5,11 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Attended, owner present: `a7-ios-system-r2` = r1 with only `--phone-deadline 1800` (A7-READY step 6). The black
-   screen was the 300 s deadline: Home came at about 10 min with deadline 1800 (2026-11-01). backboardd's
-   CoreBrightness NULL read (unslid 0x1e2746924) is the same as in p32 and is not the blocker. `research/ios26-phaseb-r1/A7.md`.
+1. Attended, owner present: `a7-ios-system-r3` = r2 (one core, deadline 1800) without `hk_bright=140`. The black
+   screen is backboardd's CoreBrightness NULL read, which happens only when the kernel publishes `AppleARMBacklight`
+   (hk_bright) without `backlight-calibration-parameters`: 0 crashes in every boot without it, including the 11-01 Home
+   boot; 14-18 in every boot with it (`research/ios26-phaseb-r1/corebrightness/FINDINGS.md`). r2 (deadline 1800) still drew
+   0 frames. The proper fix, the 0001 kernel patch publishing the calibration, still needs the XNU compile.
 2. Physical, attended: chooser volume keys (r8 line) and the iOS entry from the chooser (r11 display handback works).
 3. After a visible A7 boot: a physical ios_data persist test (QEMU negative test PASS,
    `research/ios26-dualboot-r8/ios-data-persist/NEGATIVE-r1.md`); `image_tool` refuses `blazer_persist` until then.
