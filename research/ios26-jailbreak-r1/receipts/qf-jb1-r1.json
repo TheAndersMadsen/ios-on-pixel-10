@@ -1,0 +1,1800 @@
+{
+ "preflight": {
+  "image": {
+   "dir": "/srv/dev/repos/personal/hackios/research/images/a7-ios-system-jb1",
+   "name": "a7-ios-system-jb1",
+   "image": "72ee1fe9ae124e52634de31f230357b4ee7b86b39da3104109bad3bfd9fb7b7e",
+   "mach": "12118733acf1d8d70090708068c0e5fdc8a67b0dac7e51447ec7cbb2e167a764",
+   "cmdline": "debug=0x8 serial=3 cpus=5 rd=ufsroot0 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 blazer_touch=1 blazer_touch_bars=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 hk_fb_refresh=60 hk_overlay=0xA0080081 blazer_battery=1 blazer_mem=13 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 blazer_gov=1 blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 blazer_usbcon=1 blazer_usbcon_ch9=1 blazer_rtc=1 blazer_rtc_bounds=1 blazer_battery_status=1 hk_bright=140 blazer_aks_wrap=1 blazer_keys=1 blazer_power_key=1 blazer_key_delivery=1 blazer_haptic_tap=1 blazer_netstack=1 hk_ustack=Preferences,MobilePhone blazer_bootcpu=0x200",
+   "var_overlay": {
+    "bytes": 725856,
+    "groups": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     27,
+     28,
+     29,
+     30,
+     31
+    ],
+    "mask": 2684878977,
+    "path": "research/ios26-jailbreak-r1/overlays/jb1-r1.ovl",
+    "placed": [
+     "0x884dac000",
+     "0xb4000"
+    ],
+    "sha256": "a37e4257c7cc6d8858c304c4ebd34b329746e6d9d28299300271a0e514144957"
+   },
+   "route": "ufs",
+   "phone_root": true,
+   "cpus": 5
+  },
+  "kernel": {
+   "path": "/srv/dev/repos/personal/hackios/research/ios26-jailbreak-r1/build/kernel.jb1",
+   "sha": "12118733acf1d8d70090708068c0e5fdc8a67b0dac7e51447ec7cbb2e167a764",
+   "version": "Darwin Kernel Version 25.5.0: Sun Nov  1 23:52:38 CET 2026; andersmadsen:obj/DEVELOPMENT_ARM64_BLAZER",
+   "rebuild": "not needed: phone build runs on the rig ADT"
+  },
+  "expect": [
+   "tools/qemu_preflight.expect.yaml",
+   "research/ios26-jailbreak-r1/tools/qemu_jb1.expect.yaml"
+  ],
+  "tool_sha": "ff08a381a49ee4ca058c21137c60d59f2ef0994ced7fddae0ae5aeb728f2e9ae",
+  "expect_sha": {
+   "tools/qemu_preflight.expect.yaml": "8e30526095f6fa46981df67975f975f307bf22a24be32c992e4063eb05deb9dc",
+   "research/ios26-jailbreak-r1/tools/qemu_jb1.expect.yaml": "7b1611168311c5257357ca73b0bc81b69a5e357bcf1b129636b45bbea208e341"
+  },
+  "overlay": {
+   "path": "/srv/dev/repos/personal/hackios/research/ios26-jailbreak-r1/overlays/jb1-r1.ovl",
+   "sha": "a37e4257c7cc6d8858c304c4ebd34b329746e6d9d28299300271a0e514144957",
+   "mask": 2684878977,
+   "override": false,
+   "manifest_sha": "a37e4257c7cc6d8858c304c4ebd34b329746e6d9d28299300271a0e514144957"
+  },
+  "translation": [
+   [
+    "debug=0x8",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "serial=3",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "cpus=5",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "rd=ufsroot0",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "msgbuf=1048576",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "varfs=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_ufs=2",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_live=1",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_root=ios_system",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_lun=0",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_deadline=900",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "launchd_unsecure_cache=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "unentitled_ios_sim_launch=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "ignition_level=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "launchd_disable_all_timeouts=1",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "sweetarm64e=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "autounlock=0",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "interrupt-masked-debug-mode=0",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_panic=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_fb_scanout=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "sweetfb_noconsole=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "sweetfb_hz=60",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_touch=1",
+    "drop",
+    "phone-only: touch controller (SPI/Laguna)"
+   ],
+   [
+    "blazer_touch_bars=1",
+    "drop",
+    "phone-only: touch controller (SPI/Laguna)"
+   ],
+   [
+    "atm_diagnostic_config=0x400",
+    "keep-new",
+    "ATM diagnostics config (software); first use on the rig"
+   ],
+   [
+    "blazer_ufs_multi=1",
+    "drop",
+    "phone-only: real UFS host queueing"
+   ],
+   [
+    "blazer_ufs_spin_us=300",
+    "drop",
+    "phone-only: real UFS host polling"
+   ],
+   [
+    "blazer_ufs_hold=1",
+    "drop",
+    "phone-only: real UFS link hold"
+   ],
+   [
+    "blazer_ssbs=3",
+    "drop",
+    "phone-only: Tensor CPU SSBS errata"
+   ],
+   [
+    "hk_fb_scale=1",
+    "drop",
+    "phone-only: DPU scaler"
+   ],
+   [
+    "hk_fb_fast=1",
+    "drop",
+    "phone-only: DPU fast path"
+   ],
+   [
+    "hk_fb_refresh=60",
+    "drop",
+    "phone-only: DPU refresh"
+   ],
+   [
+    "hk_overlay=0xA0080081",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_battery=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "blazer_mem=13",
+    "drop",
+    "phone-only: phone DRAM map"
+   ],
+   [
+    "blazer_thermal=2",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_thermal_fast=1",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_thermal_panic_c=70",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_gov=1",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_cap=16",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_stages=15",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_b=40",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_usbcon=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "blazer_usbcon_ch9=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "blazer_rtc=1",
+    "drop",
+    "phone-only: PMIC RTC"
+   ],
+   [
+    "blazer_rtc_bounds=1",
+    "drop",
+    "phone-only: PMIC RTC"
+   ],
+   [
+    "blazer_battery_status=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "hk_bright=140",
+    "drop",
+    "phone-only: panel backlight / DCS"
+   ],
+   [
+    "blazer_aks_wrap=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_keys=1",
+    "drop",
+    "phone-only: GPIO volume keys"
+   ],
+   [
+    "blazer_power_key=1",
+    "drop",
+    "phone-only: PMIC power key"
+   ],
+   [
+    "blazer_key_delivery=1",
+    "drop",
+    "phone-only: key HID delivery (needs blazer_keys)"
+   ],
+   [
+    "blazer_haptic_tap=1",
+    "drop",
+    "phone-only: haptics driver (CS40L)"
+   ],
+   [
+    "blazer_netstack=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_ustack=Preferences,MobilePhone",
+    "keep-new",
+    "user-stack sampler on process names (hk_ustack.c starts on names alone, INT1.md); first use on the rig"
+   ],
+   [
+    "blazer_bootcpu=0x200",
+    "drop",
+    "phone-only: phone boot cluster id"
+   ],
+   [
+    "sched_preemption_disable_debug_mode=0",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "wdt=-1",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "hk_usertrace=1",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "hk_top=30",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ]
+  ],
+  "qemu_args": "varfs=1 blazer_deadline=900 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 atm_diagnostic_config=0x400 hk_overlay=0xA0080081 blazer_aks_wrap=1 blazer_netstack=1 hk_ustack=Preferences,MobilePhone sched_preemption_disable_debug_mode=0 wdt=-1 hk_usertrace=1 hk_top=30",
+  "root": "/data/hackios-qemu/research/ios26-root-r1/build-r3/ios26-phone-r3.img",
+  "seconds": 600,
+  "phone_deadline": "900",
+  "phone_cpus": "5"
+ },
+ "result": {
+  "run": "/data/hackios-qemu/research/ios26-apps-r1/runs/qf-jb1-full-r1",
+  "console_lines": 3045,
+  "exit": {
+   "elapsed": 600.3791397189998,
+   "exit": 0,
+   "root_unchanged": true
+  },
+  "last_host_s": 599.0,
+  "milestones": {
+   "kernel": {
+    "label": "XNU arm_init",
+    "reached": true,
+    "host_s": 0.0
+   },
+   "root": {
+    "label": "root mounted, pid 1 exec",
+    "reached": true,
+    "host_s": 1.0
+   },
+   "overlay": {
+    "label": "var overlay applied",
+    "reached": true,
+    "host_s": 1.0
+   },
+   "launchd": {
+    "label": "launchd",
+    "reached": true,
+    "host_s": 1.0
+   },
+   "usermanagerd": {
+    "label": "boot tasks: usermanagerd",
+    "reached": true,
+    "host_s": 5.0
+   },
+   "backboardd": {
+    "label": "backboardd",
+    "reached": true,
+    "host_s": 19.0
+   },
+   "SpringBoard": {
+    "label": "SpringBoard",
+    "reached": true,
+    "host_s": 11.0
+   },
+   "display": {
+    "label": "SWEET FB display on",
+    "reached": true,
+    "host_s": 32.0
+   },
+   "PosterBoard": {
+    "label": "PosterBoard (phone: first frame ~10 s)",
+    "reached": true,
+    "host_s": 88.0
+   },
+   "iconservicesagent": {
+    "label": "iconservicesagent (phone: Home-time)",
+    "reached": true,
+    "host_s": 43.0
+   }
+  },
+  "daemons": {
+   "ABDatabaseDoctor": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "ACCHWComponentAuthService": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "AccessibilityUIServer": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "AppleCredentialManagerDaemon": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "AudioConverterService": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "CommCenterMobileHelper": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "DumpPanic": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "FinishRestoreFromBackup": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "IOMFB_FDR_Loader": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "MSUEarlyBootTask": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "ManagedSettingsAgent": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "MobileAssetEarlyBootTask": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "MobileGestaltHelper": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "PerfPowerTelemetryClientRegistra": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "PosterBoard": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "SpringBoard": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "UserEventAgent": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "UserFontManager": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "WidgetRenderer_Default": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "accountsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "akd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "amfid": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "amsaccountsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "aonsensed": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "apfs_boot_util": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "apfs_iosd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "applekeystored": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "appprotectiond": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "apsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "atc": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "audioaccessoryd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "audiomxd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "auearlyboot": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "automationmode-writer": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "backboardd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "betaenrollmentd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "bluetoothuserd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "budd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "calaccessd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "callservicesd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "cameracaptured": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "cc_fips_test": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "cfprefsd": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "chronod": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "clipserviced": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "com.apple.FaceTime.FTConversatio": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "com.apple.MobileInstallationHelp": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "com.apple.NeighborhoodActivityCo": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "com.apple.datamigrator": {
+    "execs": 4,
+    "respawns": 3,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "configd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "contactsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "containermanagerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "containermanagerd_system": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "coreauthd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "corecaptured": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "coreduetd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "dataaccessd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "deviceaccessd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "dirs_cleaner": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "distnoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "dmd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "donotdisturbd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "driverkitd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "fairplayd.H2": {
+    "execs": 32,
+    "respawns": 31,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "featureaccessd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "finish_demo_restore": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "fontservicesd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "fsck": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "fseventsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "iconservicesagent": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "init_exclavekit": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "init_featureflags": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "installd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "intelligentroutingd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "keybagd": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "languageassetd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "launchd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "launchd_cache_loader": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "linkd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "liveactivitiesd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "localizationswitcherd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "lockdownd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "logd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "lsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mDNSResponder": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "magicswitchd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "managedappdistributiond": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mediaremoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "migrationd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "misagent": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "misd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mobile_obliterator": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mobileactivationd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mobiletimerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mount": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mount_hfs": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mtmergeprops": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "nanoregistryd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "nehelper": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "nesessionmanager": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "networkserviceproxy": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "notifyd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "nsurlsessiond": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "passd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "peakpowermanagerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "pfd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "pkd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "powerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "powerexceptionsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "privacyaccountingd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "prng_seedctl": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "profiled": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "ptpd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "rapportd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "remoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "remotepairingdeviced": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "runningboardd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "safetyalertsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "securityd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "seputil": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "sharingd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "siriactionsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "sleepd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "swcd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "symptomsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "sysstatuscheck": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "systemstatusd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "tailspind": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "tccd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "thermalmonitord": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "timed": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "tvremoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "tzinit": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "useractivityd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "usermanagerd": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "usernotificationsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "wcd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "webinspectord": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "xpcproxy": {
+    "execs": 151,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "xpcroleaccountd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   }
+  },
+  "deadline_end": null,
+  "panics": [],
+  "overlay": {
+   "mask_line": "varfs-overlay: mask 0xa0080081 of groups 0xf8ffffff, 66 entries, 725856 bytes, hash 5cfb848d2e78da82",
+   "applied": 19,
+   "bad": [],
+   "missing": [
+    "f /private/var/hk/hgltrack.dylib"
+   ],
+   "mask": "0xa0080081",
+   "entries": 66,
+   "expected_listed": 19
+  },
+  "hk_top": {
+   "samples": 19,
+   "frames": 28
+  },
+  "home_equivalent": {
+   "reached": true,
+   "host_s": 88.0,
+   "needs": [
+    "launchd",
+    "backboardd",
+    "SpringBoard",
+    "PosterBoard",
+    "iconservicesagent"
+   ],
+   "ui_stable": true,
+   "note": "QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame."
+  },
+  "expect": [
+   {
+    "id": "root-on-ufs",
+    "feature": "root mounted from the UFS LUN",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "blazer-root: stage t \\d+ ms stage pid1_exec",
+      "source": "live",
+      "line": "blazer-root: stage t 366 ms stage pid1_exec reads 426 blocks 426 busy 1 ms max 1138 us last lba 3850346"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "overlay-applied",
+    "feature": "var overlay parsed and applied",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "varfs-overlay: [1-9]\\d* applied",
+      "source": "live",
+      "line": "varfs-overlay: 19 applied"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "launchd",
+    "feature": "launchd",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec launchd[ \\t]*$",
+      "source": "live",
+      "line": "exec launchd"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "usermanagerd",
+    "feature": "boot tasks reach usermanagerd",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec usermanagerd[ \\t]*$",
+      "source": "live",
+      "line": "exec usermanagerd"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "backboardd",
+    "feature": "backboardd runs once",
+    "required": true,
+    "note": "phone A7 r1/p32: 7-8 respawns (CoreBrightness NULL read)",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec backboardd[ \\t]*$",
+      "source": "live",
+      "line": "exec backboardd"
+     },
+     {
+      "re": "(?:^|[^\\w\\n])exec (backboardd)[ \\t]*$",
+      "source": "value",
+      "line": "count((?:^|[^\\w\\n])exec (backboardd)[ \\t]*$) = 0 <= 1"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "SpringBoard",
+    "feature": "SpringBoard runs once",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec SpringBoard[ \\t]*$",
+      "source": "live",
+      "line": "exec SpringBoard"
+     },
+     {
+      "re": "(?:^|[^\\w\\n])exec (SpringBoard)[ \\t]*$",
+      "source": "value",
+      "line": "count((?:^|[^\\w\\n])exec (SpringBoard)[ \\t]*$) = 0 <= 1"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "home-daemons",
+    "feature": "Home-time daemons (QEMU Home proxy)",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec PosterBoard[ \\t]*$",
+      "source": "live",
+      "line": "exec PosterBoard"
+     },
+     {
+      "re": "(?:^|[^\\w\\n])exec iconservicesagent[ \\t]*$",
+      "source": "live",
+      "line": "exec iconservicesagent"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-lsd-abort",
+    "feature": "lsd has a user container",
+    "required": true,
+    "note": "INVALID_PERSONA -> Could not get user container URL",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-NSURL-nil",
+    "feature": "backboardd NSURL-nil abort absent",
+    "required": false,
+    "note": "physical only so far (LANE1); QEMU never showed it",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-panic",
+    "feature": "no kernel panic",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "netstack-published",
+    "feature": "configd IONetworkStack stand-in",
+    "required": true,
+    "note": "QEMU-proven in cfg1-qemu-b",
+    "evidence": [
+     {
+      "re": "blazer-netstack: published alone",
+      "source": "live",
+      "line": "blazer-netstack: published alone (blazer_netstack=1)"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "frame-display",
+    "feature": "first frame on the panel",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "power-key-armed",
+    "feature": "power key",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "haptic-ready",
+    "feature": "haptics",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "rtc-publish",
+    "feature": "RTC time",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "backlight-dcs",
+    "feature": "backlight calibration",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "inject-tccd-unprofiled",
+    "feature": "probe loads in tccd; no embedded profile means unsandboxed self=0 and real operation allow=0",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "HKINJECT: tccd\\[[0-9]+\\] loaded self=0 operation=0",
+      "source": "live",
+      "line": "HKINJECT: tccd[32] loaded self=0 operation=0"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "inject-container-profiled",
+    "feature": "probe loads in containermanagerd; embedded profile means sandboxed self=1 and real operation allow=0",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "HKINJECT: containermanagerd?\\[[0-9]+\\] loaded self=1 operation=0",
+      "source": "live",
+      "line": "HKINJECT: containermanagerd[52] loaded self=1 operation=0"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "sandbox-profile-self-log",
+    "feature": "non-BlastDoor embedded profile reaches the generalized kernel self-check path",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "SWEET Sandbox: containermanager\\[[0-9]+\\] self-check: sandboxed",
+      "source": "live",
+      "line": "SWEET Sandbox: containermanager[52] self-check: sandboxed"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "tccd-exec-once",
+    "feature": "tccd executes once with no trap, abort or launchd crash",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec tccd[ \\t]*$",
+      "source": "live",
+      "line": "exec tccd"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "container-exec-once",
+    "feature": "containermanagerd executes once with no trap, abort or launchd crash",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec containermanagerd[ \\t]*$",
+      "source": "live",
+      "line": "exec containermanagerd"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-blastdoor-sandbox-crash",
+    "feature": "no BlastDoor unsandboxed fatalError/SIGTRAP or crash respawn",
+    "required": true,
+    "note": "If MessagesBlastDoorService did not exec in TCG this is a zero-event check, not a runtime launch proof.",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-preferences-crash",
+    "feature": "no Preferences crash (ABOUT resource covers remain applied; no sandbox crash)",
+    "required": true,
+    "note": "TCG does not launch Settings UI; this is a zero-event check, not an About-page interaction.",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "extension-noop-preserved",
+    "feature": "containermanager extension issue still uses libsandbox no-op token path without NULL-token failures",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "SWEET Sandbox: containermanager op 5",
+      "source": "live",
+      "line": "SWEET Sandbox: containermanager op 5"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "tccd-entitlements-preserved",
+    "feature": "signed XML entitlements still drive TCC grants after the sandbox change",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "Granting .* via entitlement",
+      "source": "live",
+      "line": "1970-01-01 01:01:29.707316+0100 tccd[32:766] [access] Granting TCCDProcess: identifier=com.apple.rapportd, pid=61, auid=501, euid=501, binary_path=/usr/libexec/rapportd access to kTCCServiceWillow via entitlement 'com.ap"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   }
+  ],
+  "evaluator": "tools/hk_cycle.py evaluate (sha eacb1d523520022d)",
+  "findings": [
+   "note (not a fault): applied count 19 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']"
+  ]
+ },
+ "verdict": "PASS"
+}

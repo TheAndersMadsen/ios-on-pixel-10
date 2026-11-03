@@ -1,0 +1,19 @@
+phone-bridge: m1box is at e43b3d3589, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: uncommitted on m1box and different on the Mac (the Mac's version runs): dualboot/validate.py .github/scripts/check_tracked.py .github/scripts/ci-tests.sh research/ios26-apps-r1/root-r4/PLAN.md research/ios26-audio-r1/inputs/hk-int1/kern/hk_exec_rules.h research/ios26-audio-r1/inputs/hk-int1/miscfs/ramfs/varfs_overlay.h research/ios26-audio-r1/inputs/hk-int1/miscfs/ramfs/varfs_tsv.h research/ios26-audio-r1/PLAN.md research/ios26-audio-r1/qemu/aud1-q-r1/audio-lines.txt research/ios26-audio-r1/qemu/aud1-q-r1/exit.json research/ios26-audio-r1/qemu/aud1-q-r1/intent.json research/ios26-audio-r1/qemu/INTENT-aud1-q-r1.md research/ios26-audio-r1/qemu/RESULT-aud1-q-r1.md research/ios26-audio-r1/receipts/aud1/host-tests.txt research/ios26-audio-r1/receipts/aud1/image_tool_aud1.patch research/ios26-audio-r1/receipts/aud1/overlay.json research/ios26-audio-r1/receipts/aud1/SHA256SUMS.m1box research/ios26-audio-r1/tests/aud1_consumer.c research/ios26-audio-r1/tests/mutants_aud1.py research/ios26-audio-r1/tests/test_aud1_overlay.py research/ios26-audio-r1/tests/test_image_tool_aud1.py research/ios26-audio-r1/tools/aud1_overlay.py research/ios26-connectivity-r1/wifi/receipts/image_tool-w1.txt research/ios26-connectivity-r1/wifi/receipts/tests.txt research/ios26-phaseb-r1/about/FIX.md research/ios26-phaseb-r1/about/receipts/build_int2_about.out research/ios26-phaseb-r1/about/receipts/cc_amfi.txt research/ios26-phaseb-r1/about/receipts/image-check.txt research/ios26-phaseb-r1/about/receipts/kernel-verify.txt research/ios26-phaseb-r1/about/receipts/overlay-check.txt research/ios26-phaseb-r1/about/receipts/overlay.json research/ios26-phaseb-r1/about/receipts/r5-filelist.txt research/ios26-phaseb-r1/about/tools/about_overlay.py research/ios26-phaseb-r1/about/tools/check_overlay.c tools/image_tool.py tools/live_boot.sh tools/test_image_tool.py tools/test_usbcon_tool.py tools/usbcon.py 
+22:30:44 waiting for build slot lock
+22:30:44 lock held
+22:30:44 tree branch p1 HEAD b228c4f4e5b1753034e2e3d7e6ba8a7ce64361f1
+22:30:44 checked out hk-jailbreak-r1 508218953db46f984859f7e57ad08048fc5faed0
+22:31:31 build jb1-build rc 0
+22:31:31 12118733acf1d8d70090708068c0e5fdc8a67b0dac7e51447ec7cbb2e167a764  kernel.jb1
+22:31:31 dd420ea3d19e7e154bd07aa94d697dde33332cb82e345ff8e802f85673881352  kernel.jb1.unstripped
+22:31:31 76aca17cf763249bf2007af4b5a78847c727ab96f9423703ad7eac95ebe74408  sweet_amfi.o (/bsd/DEVELOPMENT/sweet_amfi.o)
+22:31:31 7d9f2972c38827f83b6c78edf18c5336254dbddb85173471eec544876e67e2b6  kern_cs.o (/bsd/DEVELOPMENT/kern_cs.o)
+22:31:31 cb639fbac685b70d9e717a5ac8d6963667aafeef6d5a41c8631fe25f06275f5b  kern_codesigning.o (/bsd/DEVELOPMENT/kern_codesigning.o)
+22:31:31 b6b9f8f62b7825ca3e5642adaf9a9751e96fd956a2e9b1a0bba24256c8bc56f9  hk_ustack.o (/osfmk/DEVELOPMENT/hk_ustack.o)
+22:31:31 14b42cd022c41c5b68c442aaddec070aa48a830ddf925970ad01936c5ca4f15a  ramfs.o (/bsd/DEVELOPMENT/ramfs.o)
+22:31:31 restored branch p1 HEAD b228c4f4e5b1753034e2e3d7e6ba8a7ce64361f1
+22:32:17 build jb1-restore-p1-build rc 0
+22:32:17 obj kernel after restore 32cbc175075eb58797c96cb16da59e2a3c553fa422add5d11ea38fbd02af1f04
+22:32:17 restored p1 kernel has generalized sandbox string: False
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-jailbreak-r1/build/

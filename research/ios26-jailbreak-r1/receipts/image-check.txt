@@ -1,0 +1,2 @@
+OK a7-ios-system-jb1 bootable 72ee1fe9ae124e52634de31f230357b4ee7b86b39da3104109bad3bfd9fb7b7e
+shared tools/image_tool.py: OK a7-ios-system-jb1 bootable 72ee1fe9ae124e52634de31f230357b4ee7b86b39da3104109bad3bfd9fb7b7e

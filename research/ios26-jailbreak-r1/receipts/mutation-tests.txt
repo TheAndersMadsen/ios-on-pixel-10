@@ -1,0 +1,7 @@
+blastdoor-only: KILLED (rc 1)
+null-profile-sandboxed: KILLED (rc 1)
+drop-self-pid: KILLED (rc 1)
+drop-null-operation: KILLED (rc 1)
+drop-filter-type: KILLED (rc 1)
+drop-result-pointer-check: KILLED (rc 1)
+PASS: 6/6 mutations killed

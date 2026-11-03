@@ -1,0 +1,3 @@
+hkov_check: ok, 66 entries, 725856 bytes, hash 5cfb848d2e78da82
+groups 0xf8ffffff, mask 0xa0080081, mask & ~groups = 0x0
+hkov_cover_check: ok, covers 4

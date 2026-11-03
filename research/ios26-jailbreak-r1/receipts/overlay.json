@@ -1,0 +1,21 @@
+{
+  "base_sha256": "edbd799a3bc1651b03e3e4eb0bec0024aac69a80a663541104052543a3f795af",
+  "output_sha256": "a37e4257c7cc6d8858c304c4ebd34b329746e6d9d28299300271a0e514144957",
+  "bytes": 725856,
+  "records": 66,
+  "mask": "0xa0080081",
+  "record_39_hk_env_bytes_with_nul": 974,
+  "record_39_hk_env_capacity_remaining": 50,
+  "longest_variable_with_nul": 137,
+  "tccd_rule": "tccd:DYLD_INSERT_LIBRARIES=/private/var/hk/hk_stderr_console.dylib:/private/var/hk/hk_inject_probe.dylib;HK_STDERR_CONSOLE=1;OS_ACTIVITY_DT_MODE=YES;HK_INJECT_PROBE=1",
+  "containermanagerd_rule": "containermanagerd:DYLD_INSERT_LIBRARIES=/private/var/hk/hk_inject_probe.dylib;HK_INJECT_PROBE=1",
+  "appended": {
+    "/private/var/hk/hk_inject_probe.dylib": {
+      "group": 29,
+      "mode": "0755",
+      "sha256": "86f29d511b45a5da3f50460b788a77df70c1825fab6e922570b23463952446ec",
+      "bytes": 50208
+    }
+  },
+  "other_records_byte_identical": 64
+}

@@ -1,0 +1,16 @@
+sweet sandbox: generalize profile self-check result semantics
+
+Build on ABOUT's op-2 result path. libsystem_sandbox initializes sandbox_check's result to zero and returns result != 0 after a
+successful syscall. A real operation check therefore means allowed with result zero, while the op NULL, type 0, own-pid query uses
+the same word to ask whether the process is sandboxed. The old stand-in never wrote it, so BlastDoor's Sandbox.swift fatalError fired.
+
+Generalize ABOUT's profile-prefix exception to its underlying declaration: every process with a nonempty
+com.apple.private.sandbox.profile:embedded entitlement gets result 1 for its own self-query. Processes without a profile remain
+unsandboxed. Cross-pid and real operation checks retain the permissive zero answer; this is not a blanket deny or a new allow stub.
+Every successful op-2 call now writes an explicit 0/1 result, a null result pointer returns EINVAL, and copyin/copyout errors
+propagate instead of silently looking allowed. Op 5 still returns libsandbox's no-op "invalid" token and op 6 behavior is unchanged.
+
+Also make op 0x43's documented boolean outputs one byte each rather than overwriting eight bytes per pointer. Log successful
+profiled self-checks with a bounded 64-line receipt. No boot argument is added.
+
+Co-Authored-By: Kimi K3.1 Pro Highspeed <noreply@moonshot.ai>

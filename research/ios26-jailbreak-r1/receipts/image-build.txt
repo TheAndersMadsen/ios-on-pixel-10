@@ -1,0 +1,2 @@
+a7-ios-system-jb1 bootable 72ee1fe9ae124e52634de31f230357b4ee7b86b39da3104109bad3bfd9fb7b7e payload 26195088 margin 39865200
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-jb1/manifest.json

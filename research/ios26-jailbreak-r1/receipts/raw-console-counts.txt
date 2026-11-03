@@ -1,0 +1,7 @@
+tccd probe lines: 1
+containermanagerd probe lines: 1
+tccd exec lines: 1
+containermanagerd exec lines (excluding containermanagerd_system): 1
+BlastDoor exec lines (TCG launch coverage): 0
+Preferences exec lines (TCG launch coverage): 0
+BlastDoor/Preferences crash lines: 0

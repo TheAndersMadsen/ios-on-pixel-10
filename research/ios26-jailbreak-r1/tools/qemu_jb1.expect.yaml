@@ -1,0 +1,40 @@
+# jb1 QEMU probes, loaded after tools/qemu_preflight.expect.yaml.
+respawn_allow:
+  tccd: 0
+  containermanagerd: 0
+  Preferences: 0
+  MessagesBlastDoo: 0
+expect:
+  - id: inject-tccd-unprofiled
+    feature: probe loads in tccd; no embedded profile means unsandboxed self=0 and real operation allow=0
+    need: ['HKINJECT: tccd\[[0-9]+\] loaded self=0 operation=0']
+  - id: inject-container-profiled
+    feature: probe loads in containermanagerd; embedded profile means sandboxed self=1 and real operation allow=0
+    need: ['HKINJECT: containermanagerd?\[[0-9]+\] loaded self=1 operation=0']
+    forbid: ['HKINJECT: (?!tccd\[|containermanagerd?\[)']
+  - id: sandbox-profile-self-log
+    feature: non-BlastDoor embedded profile reaches the generalized kernel self-check path
+    need: ['SWEET Sandbox: containermanager\[[0-9]+\] self-check: sandboxed']
+  - id: tccd-exec-once
+    feature: tccd executes once with no trap, abort or launchd crash
+    need: ['(?:^|[^\w\n])exec tccd[ \t]*$']
+    forbid: ['usertrap: tccd\[', 'userabort: tccd\[', 'CRASH tccd reason ns ', '\(tccd( \[[0-9]+\])?\) <Notice>: exited due to ']
+  - id: container-exec-once
+    feature: containermanagerd executes once with no trap, abort or launchd crash
+    need: ['(?:^|[^\w\n])exec containermanagerd[ \t]*$']
+    forbid: ['usertrap: containermanager\[', 'userabort: containermanager\[', 'CRASH containermanager reason ns ', '\(containermanagerd( \[[0-9]+\])?\) <Notice>: exited due to ']
+  - id: no-blastdoor-sandbox-crash
+    feature: no BlastDoor unsandboxed fatalError/SIGTRAP or crash respawn
+    forbid: ['BlastDoor cannot run unsandboxed', 'CRASH MessagesBlastDoo', 'usertrap: MessagesBlastDoo', 'userabort: MessagesBlastDoo']
+    note: 'If MessagesBlastDoorService did not exec in TCG this is a zero-event check, not a runtime launch proof.'
+  - id: no-preferences-crash
+    feature: no Preferences crash (ABOUT resource covers remain applied; no sandbox crash)
+    forbid: ['CRASH Preferences', 'usertrap: Preferences\[', 'userabort: Preferences\[']
+    note: 'TCG does not launch Settings UI; this is a zero-event check, not an About-page interaction.'
+  - id: extension-noop-preserved
+    feature: containermanager extension issue still uses libsandbox no-op token path without NULL-token failures
+    need: ['SWEET Sandbox: containermanager op 5']
+    forbid: ['Failed to issue sandbox extension for class']
+  - id: tccd-entitlements-preserved
+    feature: signed XML entitlements still drive TCC grants after the sandbox change
+    need: ['Granting .* via entitlement']

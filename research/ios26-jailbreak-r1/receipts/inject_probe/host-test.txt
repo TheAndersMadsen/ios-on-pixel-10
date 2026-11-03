@@ -1,0 +1,4 @@
+gate off/0 console bytes: 0 (want 0)
+PASS off
+  HKINJECT: driver[50903] loaded self=0 operation=0
+PASS load and direct-console receipt

@@ -1,0 +1,10 @@
+___stack_chk_fail
+___stack_chk_guard
+_close
+_getenv
+_getpid
+_getprogname
+_open
+_sandbox_check
+_snprintf
+_write

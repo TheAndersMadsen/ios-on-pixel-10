@@ -1,0 +1,4 @@
+research/ios26-jailbreak-r1/build/kernel.jb1: OK
+research/ios26-jailbreak-r1/overlays/jb1-r1.ovl: OK
+research/ios26-phaseb-r1/about/build/int2-about-r1.ovl: OK
+research/ios26-jailbreak-r1/out/hk_inject_probe.dylib: OK

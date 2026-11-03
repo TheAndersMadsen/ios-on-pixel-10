@@ -1,0 +1,5 @@
+shell syntax OK: test_host.sh build_inject_probe.sh mkimg_jb1.sh
+overlay regeneration: byte-identical
+72ee1fe9ae124e52634de31f230357b4ee7b86b39da3104109bad3bfd9fb7b7e  research/images/a7-ios-system-jb1/boot.img
+a37e4257c7cc6d8858c304c4ebd34b329746e6d9d28299300271a0e514144957  research/ios26-jailbreak-r1/overlays/jb1-r1.ovl
+a37e4257c7cc6d8858c304c4ebd34b329746e6d9d28299300271a0e514144957  /tmp/opencode/jb1-repro.VDKqdk/repro.ovl

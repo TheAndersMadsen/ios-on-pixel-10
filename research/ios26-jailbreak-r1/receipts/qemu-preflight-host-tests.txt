@@ -1,0 +1,6 @@
+..........qemu_preflight: chooser ch: embedded iOS image zz does not match /tmp/tmp_91f69j1/ios/manifest.json
+....
+----------------------------------------------------------------------
+Ran 14 tests in 0.339s
+
+OK

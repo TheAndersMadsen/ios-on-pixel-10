@@ -1,0 +1,9 @@
+5082189 (hk-jailbreak-r1) sweet sandbox: generalize profile self-check result semantics
+48b613b (hk-int2-about) sweet sandbox: sandbox_check self-query answers "sandboxed" for BlastDoor profiles
+484717f (hk-int1) blazer gpu: blazer_gpu=3 read-only register survey and timer tick check after stage 1's CORE_ID PASS
+ bsd/kern/sweet_amfi.c          | 47 ++++++++++++++++++++++++------------------
+ bsd/kern/sweet_sandbox_check.h | 32 ++++++++--------------------
+ 2 files changed, 36 insertions(+), 43 deletions(-)
+7dbb0ad5ccac123d76caf81956834fcb354231efdb6bfcd56972a751bdfd968a  -
+f4582f17f233f2538f85766d08ad12d16a1e425d21d55a8e4298239d2ddd0b65  -
+## p1

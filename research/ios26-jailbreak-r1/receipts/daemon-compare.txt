@@ -1,0 +1,5 @@
+respawn increases (name: base -> candidate; exec base -> candidate):
+  none
+crash-count increases:
+  none
+PASS: 0 unallowed respawn increases, 0 unallowed crash increases

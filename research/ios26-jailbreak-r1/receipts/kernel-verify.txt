@@ -1,0 +1,202 @@
+branch hk-jailbreak-r1 508218953db46f984859f7e57ad08048fc5faed0
+parent hk-int2-about 48b613bae1245516ef8197f9c0f4ddbc09963836
+12118733acf1d8d70090708068c0e5fdc8a67b0dac7e51447ec7cbb2e167a764  research/ios26-jailbreak-r1/build/kernel.jb1
+dd420ea3d19e7e154bd07aa94d697dde33332cb82e345ff8e802f85673881352  research/ios26-jailbreak-r1/build/kernel.jb1.unstripped
+76aca17cf763249bf2007af4b5a78847c727ab96f9423703ad7eac95ebe74408  research/ios26-jailbreak-r1/build/obj/sweet_amfi.o
+research/ios26-jailbreak-r1/build/obj/sweet_amfi.o: Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+unstripped undefined symbols: 0
+fffffe00077b61e0 S _hk_ustack_start
+fffffe0007ab3a10 s _ramfs_renamex
+fffffe000871ec48 b _sweet_sandbox_self_logged
+fffffe0007d31510 s _sweet_sandbox_syscall
+SWEET Sandbox: %s[%d] self-check: sandboxed
+
+research/ios26-jailbreak-r1/build/obj/sweet_amfi.o:	file format mach-o arm64
+
+Disassembly of section __TEXT,__text:
+
+00000000000005a0 <_sweet_sandbox_syscall>:
+     5a0: d10303ff     	sub	sp, sp, #0xc0
+     5a4: a90957f6     	stp	x22, x21, [sp, #0x90]
+     5a8: a90a4ff4     	stp	x20, x19, [sp, #0xa0]
+     5ac: a90b7bfd     	stp	x29, x30, [sp, #0xb0]
+     5b0: 9102c3fd     	add	x29, sp, #0xb0
+     5b4: 90000008     	adrp	x8, 0x0 <ltmp0>
+     5b8: f9400108     	ldr	x8, [x8]
+     5bc: 2a0103f3     	mov	w19, w1
+     5c0: 7100fc3f     	cmp	w1, #0x3f
+     5c4: f9400108     	ldr	x8, [x8]
+     5c8: f81d83a8     	stur	x8, [x29, #-0x28]
+     5cc: 540000e8     	b.hi	0x5e8 <_sweet_sandbox_syscall+0x48>
+     5d0: 90000008     	adrp	x8, 0x0 <ltmp0>
+     5d4: f9400109     	ldr	x9, [x8]
+     5d8: 5280002a     	mov	w10, #0x1               ; =1
+     5dc: 9ad3214a     	lsl	x10, x10, x19
+     5e0: ea0a013f     	tst	x9, x10
+     5e4: 540003c0     	b.eq	0x65c <_sweet_sandbox_syscall+0xbc>
+     5e8: 7100127f     	cmp	w19, #0x4
+     5ec: 5400060d     	b.le	0x6ac <_sweet_sandbox_syscall+0x10c>
+     5f0: 7100167f     	cmp	w19, #0x5
+     5f4: 540006a0     	b.eq	0x6c8 <_sweet_sandbox_syscall+0x128>
+     5f8: 71001a7f     	cmp	w19, #0x6
+     5fc: 54000860     	b.eq	0x708 <_sweet_sandbox_syscall+0x168>
+     600: 71010e7f     	cmp	w19, #0x43
+     604: 54000da1     	b.ne	0x7b8 <_sweet_sandbox_syscall+0x218>
+     608: 910083e1     	add	x1, sp, #0x20
+     60c: aa0203e0     	mov	x0, x2
+     610: 52800202     	mov	w2, #0x10               ; =16
+     614: a9027fff     	stp	xzr, xzr, [sp, #0x20]
+     618: 381b03bf     	sturb	wzr, [x29, #-0x50]
+     61c: 910083f3     	add	x19, sp, #0x20
+     620: 94000000     	bl	0x620 <_sweet_sandbox_syscall+0x80>
+     624: 35001140     	cbnz	w0, 0x84c <_sweet_sandbox_syscall+0x2ac>
+     628: aa1f03f4     	mov	x20, xzr
+     62c: 14000008     	b	0x64c <_sweet_sandbox_syscall+0xac>
+     630: d10143a0     	sub	x0, x29, #0x50
+     634: 52800022     	mov	w2, #0x1                ; =1
+     638: 94000000     	bl	0x638 <_sweet_sandbox_syscall+0x98>
+     63c: 91000688     	add	x8, x20, #0x1
+     640: 2a140009     	orr	w9, w0, w20
+     644: aa0803f4     	mov	x20, x8
+     648: 35001029     	cbnz	w9, 0x84c <_sweet_sandbox_syscall+0x2ac>
+     64c: f8747a61     	ldr	x1, [x19, x20, lsl #3]
+     650: b5ffff01     	cbnz	x1, 0x630 <_sweet_sandbox_syscall+0x90>
+     654: 2a1f03e0     	mov	w0, wzr
+     658: 17fffff9     	b	0x63c <_sweet_sandbox_syscall+0x9c>
+     65c: 6f00e400     	movi.2d	v0, #0000000000000000
+     660: aa0a0129     	orr	x9, x9, x10
+     664: aa0003f4     	mov	x20, x0
+     668: aa0203f5     	mov	x21, x2
+     66c: f9000109     	str	x9, [x8]
+     670: ad0103e0     	stp	q0, q0, [sp, #0x20]
+     674: 94000000     	bl	0x674 <_sweet_sandbox_syscall+0xd4>
+     678: 910083e1     	add	x1, sp, #0x20
+     67c: 52800402     	mov	w2, #0x20               ; =32
+     680: 910083f6     	add	x22, sp, #0x20
+     684: 94000000     	bl	0x684 <_sweet_sandbox_syscall+0xe4>
+     688: 2a1303e8     	mov	w8, w19
+     68c: 90000000     	adrp	x0, 0x0 <ltmp0>
+     690: 91000000     	add	x0, x0, #0x0
+     694: a90023f6     	stp	x22, x8, [sp]
+     698: 94000000     	bl	0x698 <_sweet_sandbox_syscall+0xf8>
+     69c: aa1503e2     	mov	x2, x21
+     6a0: aa1403e0     	mov	x0, x20
+     6a4: 7100127f     	cmp	w19, #0x4
+     6a8: 54fffa4c     	b.gt	0x5f0 <_sweet_sandbox_syscall+0x50>
+     6ac: 71000a7f     	cmp	w19, #0x2
+     6b0: 54000300     	b.eq	0x710 <_sweet_sandbox_syscall+0x170>
+     6b4: 7100127f     	cmp	w19, #0x4
+     6b8: 54000801     	b.ne	0x7b8 <_sweet_sandbox_syscall+0x218>
+     6bc: aa0203e0     	mov	x0, x2
+     6c0: 94000000     	bl	0x6c0 <_sweet_sandbox_syscall+0x120>
+     6c4: 14000062     	b	0x84c <_sweet_sandbox_syscall+0x2ac>
+     6c8: 6f00e400     	movi.2d	v0, #0000000000000000
+     6cc: 910083e1     	add	x1, sp, #0x20
+     6d0: aa0203e0     	mov	x0, x2
+     6d4: 52800702     	mov	w2, #0x38               ; =56
+     6d8: f9002bff     	str	xzr, [sp, #0x50]
+     6dc: ad0183e0     	stp	q0, q0, [sp, #0x30]
+     6e0: 3d800be0     	str	q0, [sp, #0x20]
+     6e4: 94000000     	bl	0x6e4 <_sweet_sandbox_syscall+0x144>
+     6e8: 35000b20     	cbnz	w0, 0x84c <_sweet_sandbox_syscall+0x2ac>
+     6ec: f94023e1     	ldr	x1, [sp, #0x40]
+     6f0: b4000681     	cbz	x1, 0x7c0 <_sweet_sandbox_syscall+0x220>
+     6f4: 90000000     	adrp	x0, 0x0 <ltmp0>
+     6f8: 91000000     	add	x0, x0, #0x0
+     6fc: 52800102     	mov	w2, #0x8                ; =8
+     700: 94000000     	bl	0x700 <_sweet_sandbox_syscall+0x160>
+     704: 14000052     	b	0x84c <_sweet_sandbox_syscall+0x2ac>
+     708: 52800040     	mov	w0, #0x2                ; =2
+     70c: 14000050     	b	0x84c <_sweet_sandbox_syscall+0x2ac>
+     710: 6f00e400     	movi.2d	v0, #0000000000000000
+     714: aa0003f3     	mov	x19, x0
+     718: 910083e1     	add	x1, sp, #0x20
+     71c: aa0203e0     	mov	x0, x2
+     720: 52800402     	mov	w2, #0x20               ; =32
+     724: f9000fff     	str	xzr, [sp, #0x18]
+     728: ad0103e0     	stp	q0, q0, [sp, #0x20]
+     72c: 94000000     	bl	0x72c <_sweet_sandbox_syscall+0x18c>
+     730: 350008e0     	cbnz	w0, 0x84c <_sweet_sandbox_syscall+0x2ac>
+     734: f94013e8     	ldr	x8, [sp, #0x20]
+     738: b4000448     	cbz	x8, 0x7c0 <_sweet_sandbox_syscall+0x220>
+     73c: aa1303e0     	mov	x0, x19
+     740: 94000000     	bl	0x740 <_sweet_sandbox_syscall+0x1a0>
+     744: f94013e8     	ldr	x8, [sp, #0x20]
+     748: 12800014     	mov	w20, #-0x1              ; =-1
+     74c: b4000428     	cbz	x8, 0x7d0 <_sweet_sandbox_syscall+0x230>
+     750: f9401be8     	ldr	x8, [sp, #0x30]
+     754: b50003e8     	cbnz	x8, 0x7d0 <_sweet_sandbox_syscall+0x230>
+     758: f9401fe8     	ldr	x8, [sp, #0x38]
+     75c: b50003a8     	cbnz	x8, 0x7d0 <_sweet_sandbox_syscall+0x230>
+     760: f94017e8     	ldr	x8, [sp, #0x28]
+     764: 93407c09     	sxtw	x9, w0
+     768: eb09011f     	cmp	x8, x9
+     76c: 54000321     	b.ne	0x7d0 <_sweet_sandbox_syscall+0x230>
+     770: 90000000     	adrp	x0, 0x0 <ltmp0>
+     774: 91000000     	add	x0, x0, #0x0
+     778: 94000000     	bl	0x778 <_sweet_sandbox_syscall+0x1d8>
+     77c: b4000260     	cbz	x0, 0x7c8 <_sweet_sandbox_syscall+0x228>
+     780: 39400008     	ldrb	w8, [x0]
+     784: aa0003f4     	mov	x20, x0
+     788: 7100011f     	cmp	w8, #0x0
+     78c: 1a9f07e8     	cset	w8, ne
+     790: f9000fe8     	str	x8, [sp, #0x18]
+     794: 94000000     	bl	0x794 <_sweet_sandbox_syscall+0x1f4>
+     798: 90000008     	adrp	x8, 0x0 <ltmp0>
+     79c: f9400108     	ldr	x8, [x8]
+     7a0: 91000402     	add	x2, x0, #0x1
+     7a4: aa1403e1     	mov	x1, x20
+     7a8: aa0803e0     	mov	x0, x8
+     7ac: 94000000     	bl	0x7ac <_sweet_sandbox_syscall+0x20c>
+     7b0: 2a1f03f4     	mov	w20, wzr
+     7b4: 14000007     	b	0x7d0 <_sweet_sandbox_syscall+0x230>
+     7b8: 2a1f03e0     	mov	w0, wzr
+     7bc: 14000024     	b	0x84c <_sweet_sandbox_syscall+0x2ac>
+     7c0: 528002c0     	mov	w0, #0x16               ; =22
+     7c4: 14000022     	b	0x84c <_sweet_sandbox_syscall+0x2ac>
+     7c8: 2a1f03f4     	mov	w20, wzr
+     7cc: f9000fff     	str	xzr, [sp, #0x18]
+     7d0: f94013e1     	ldr	x1, [sp, #0x20]
+     7d4: 910063e0     	add	x0, sp, #0x18
+     7d8: 52800102     	mov	w2, #0x8                ; =8
+     7dc: 94000000     	bl	0x7dc <_sweet_sandbox_syscall+0x23c>
+     7e0: 2a140008     	orr	w8, w0, w20
+     7e4: 35000348     	cbnz	w8, 0x84c <_sweet_sandbox_syscall+0x2ac>
+     7e8: f9400fe8     	ldr	x8, [sp, #0x18]
+     7ec: b4000308     	cbz	x8, 0x84c <_sweet_sandbox_syscall+0x2ac>
+     7f0: 90000008     	adrp	x8, 0x0 <ltmp0>
+     7f4: b9400109     	ldr	w9, [x8]
+     7f8: 7100fd3f     	cmp	w9, #0x3f
+     7fc: 54000288     	b.hi	0x84c <_sweet_sandbox_syscall+0x2ac>
+     800: 6f00e400     	movi.2d	v0, #0000000000000000
+     804: 11000529     	add	w9, w9, #0x1
+     808: 2a0003f4     	mov	w20, w0
+     80c: aa1303e0     	mov	x0, x19
+     810: b9000109     	str	w9, [x8]
+     814: ad3d83a0     	stp	q0, q0, [x29, #-0x50]
+     818: 94000000     	bl	0x818 <_sweet_sandbox_syscall+0x278>
+     81c: d10143a1     	sub	x1, x29, #0x50
+     820: 52800402     	mov	w2, #0x20               ; =32
+     824: d10143b5     	sub	x21, x29, #0x50
+     828: 94000000     	bl	0x828 <_sweet_sandbox_syscall+0x288>
+     82c: aa1303e0     	mov	x0, x19
+     830: 94000000     	bl	0x830 <_sweet_sandbox_syscall+0x290>
+     834: 2a0003e8     	mov	w8, w0
+     838: 90000000     	adrp	x0, 0x0 <ltmp0>
+     83c: 91000000     	add	x0, x0, #0x0
+     840: a90023f5     	stp	x21, x8, [sp]
+     844: 94000000     	bl	0x844 <_sweet_sandbox_syscall+0x2a4>
+     848: 2a1403e0     	mov	w0, w20
+     84c: 90000008     	adrp	x8, 0x0 <ltmp0>
+     850: f9400108     	ldr	x8, [x8]
+     854: f85d83a9     	ldur	x9, [x29, #-0x28]
+     858: f9400108     	ldr	x8, [x8]
+     85c: eb09011f     	cmp	x8, x9
+     860: 540000c1     	b.ne	0x878 <_sweet_sandbox_syscall+0x2d8>
+     864: a94b7bfd     	ldp	x29, x30, [sp, #0xb0]
+     868: a94a4ff4     	ldp	x20, x19, [sp, #0xa0]
+     86c: a94957f6     	ldp	x22, x21, [sp, #0x90]
+     870: 910303ff     	add	sp, sp, #0xc0
+     874: d65f03c0     	ret
+     878: 94000000     	bl	0x878 <_sweet_sandbox_syscall+0x2d8>
+     87c: d503201f     	nop
