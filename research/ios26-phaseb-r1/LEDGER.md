@@ -24,3 +24,7 @@ One line per run: time (CET), lane, run id, the one variable, result, next varia
 | 16:02 | dual boot | chooser-v1-r12 x2 (PHYSICAL) | volume-key poll | FAIL: ring never moves; Android chain 0xc9c00000 PASS | diag r13 (agent K) |
 | 16:12 | dual boot | chooser-ios-r1-ios C2 (PHYSICAL) | menu + iOS payload, default iOS | **PASS: menu offered iOS and Android, iOS ran to Home with Settings (owner)** | keys fix, then C1 and the boot_b install |
 | 16:20 | display | a7-ios-system-r4-bl (PHYSICAL) | calibrated backlight kernel + hk_bright=140 | 0 traps, frames+208, brightness requests "(queue only)"; return check PASS | owner: does the slider change the panel? |
+| 17:05 | bluetooth | a7-ios-system-b1-aks (PHYSICAL) | software AKS wrap/unwrap | PASS: sel 10 ok 28 / fail 0, sel 11 ok 8 | bluetoothd allowed (B2/B3) |
+| 17:11 | touch | a7-ios-system-r7-touch (PHYSICAL) | IsDisplayIntegrated=1 | Settings still frozen (taps, scroll); blocked on missing services (wifi.manager ×8) | agent SET |
+| 17:13 | dual boot | chooser-v1-r13-diag (PHYSICAL) | keys sampled per row | **PASS: owner switches the ring with Vol Up/Down** | chooser-ios-r2 |
+| 17:15 | dual boot | chooser-ios-r2 C3a (PHYSICAL) | menu + iOS + keys, default Android | **PASS: owner picked iOS with Vol Down, iOS booted** | C1 (timeout → Android), C3b, then the boot_b install decision |

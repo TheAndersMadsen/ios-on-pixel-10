@@ -1,0 +1,36 @@
+2,3c2,3
+< 	Section __const: 4113008
+< 	Section __cstring: 1207488
+---
+> 	Section __const: 4113056
+> 	Section __cstring: 1207670
+8c8
+< 	total 5596605
+---
+> 	total 5596835
+10c10
+< 	Section __const: 1459232
+---
+> 	Section __const: 1459296
+19,21c19,21
+< 	total 1884492
+< Segment __TEXT_EXEC: 10780672
+< 	Section __text: 10774576
+---
+> 	total 1884556
+> Segment __TEXT_EXEC: 10797056
+> 	Section __text: 10778400
+24c24
+< 	total 10780560
+---
+> 	total 10784384
+54,55c54,55
+< 	Section __bss: 4809024 (zerofill)
+< 	total 5886196
+---
+> 	Section __bss: 4809104 (zerofill)
+> 	total 5886276
+88c88
+< total 35487744
+---
+> total 35504128

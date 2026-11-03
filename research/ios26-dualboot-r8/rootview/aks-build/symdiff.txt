@@ -1,0 +1,6 @@
+__TEXT_EXEC,__text symbols: 50845 vs 50848
+removed: []
+added: [('__DATA,__bss', '__ZL14sweet_aks_wrap'), ('__DATA_CONST,__const', '__ZZL14aw_status_nameiE5names'), ('__TEXT,__const', '__ZZL7aw_initP6aw_ctxPFvPKhmS2_mPhES2_E9enc_label'), ('__TEXT,__const', '__ZZL7aw_initP6aw_ctxPFvPKhmS2_mPhES2_E9mac_label'), ('__TEXT_EXEC,__text', '__ZL14sweet_aks_hmacPKhmS0_mPh'), ('__TEXT_EXEC,__text', '__ZL6aw_tagPK6aw_ctxPKhyyS3_jPh'), ('__TEXT_EXEC,__text', '__ZL6aw_xorPK6aw_ctxPKhS3_Phj')]
+__text size changes: 2
+  __ZN13AppleKeyStore5startEP9IOService: 128 -> 496
+  __ZN23AppleKeyStoreUserClient14externalMethodEjP25IOExternalMethodArgumentsP24IOExternalMethodDispatchP8OSObjectPv: 944 -> 3088
