@@ -1,0 +1,6 @@
+PASS test_aks_usersession
+killed: s/if (bag_in\[i\] != want\[i\]) {/if (0) {/
+killed: s/c->scalar_in\[0\] != AUS_USER_HANDLE/0/
+killed: s/if (c->struct_out_cap < AUS_BAG_LEN) {/if (0) {/
+killed: s/return sel == 2 || sel == 3/return sel == 10 || sel == 2 || sel == 3/
+PASS

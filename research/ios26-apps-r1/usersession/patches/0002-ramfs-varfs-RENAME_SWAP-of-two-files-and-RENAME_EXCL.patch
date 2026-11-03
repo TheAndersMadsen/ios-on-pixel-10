@@ -1,0 +1,106 @@
+From cc422959eae4b482e3dbcbac4af6065d3a178aeb Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 17:51:44 +0100
+Subject: [PATCH 2/2] ramfs (varfs): RENAME_SWAP of two files and RENAME_EXCL
+ (vnop_renamex)
+
+Foundation's atomic writes replace an existing file with renamex_np(RENAME_SWAP). varfs had no vnop_renamex and no
+vnop_exchange, so the SWEET HFS fallback (0052) could not help and every such save on /private/var failed with
+ENOTSUP (usermanagerd's usersession.kb/persona.kb). Directory swaps and other flags stay ENOTSUP.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ bsd/miscfs/ramfs/ramfs.c | 70 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/bsd/miscfs/ramfs/ramfs.c b/bsd/miscfs/ramfs/ramfs.c
+index bdbd85b..ad3fb58 100644
+--- a/bsd/miscfs/ramfs/ramfs.c
++++ b/bsd/miscfs/ramfs/ramfs.c
+@@ -1026,6 +1026,75 @@ out:
+ 	return error;
+ }
+ 
++/*
++ * hackios: renamex_np(2) flags. RENAME_SWAP of two non-directories exchanges the files behind two names atomically
++ * (Foundation's atomic writes replace an existing file this way; without it usermanagerd cannot save
++ * usersession.kb/persona.kb over the previous copy on /private/var: errno 45). RENAME_EXCL fails when the target exists,
++ * otherwise renames. Directory swaps and every other flag stay ENOTSUP, as before this existed.
++ */
++static int
++ramfs_renamex(struct vnop_renamex_args *ap)
++{
++	struct vnop_rename_args ra = {
++		.a_desc = &vnop_rename_desc, .a_fdvp = ap->a_fdvp, .a_fvp = ap->a_fvp, .a_fcnp = ap->a_fcnp,
++		.a_tdvp = ap->a_tdvp, .a_tvp = ap->a_tvp, .a_tcnp = ap->a_tcnp, .a_context = ap->a_context,
++	};
++	struct ramfs_node *fdir, *tdir, *fnode, *tnode;
++	struct ramfs_dirent *fde, *tde;
++	struct ramfs_mount *rm;
++	struct componentname *fcnp = ap->a_fcnp, *tcnp = ap->a_tcnp;
++	int error = 0;
++
++	if (ap->a_flags == 0) {
++		return ramfs_rename(&ra);
++	}
++	if (ap->a_flags == VFS_RENAME_EXCL) {
++		return ap->a_tvp != NULLVP ? EEXIST : ramfs_rename(&ra);
++	}
++	if (ap->a_flags != VFS_RENAME_SWAP) {
++		return ENOTSUP;
++	}
++	if (ap->a_tvp == NULLVP) {
++		return ENOENT;
++	}
++	fdir = RAMFS_NODE(ap->a_fdvp);
++	tdir = RAMFS_NODE(ap->a_tdvp);
++	fnode = RAMFS_NODE(ap->a_fvp);
++	tnode = RAMFS_NODE(ap->a_tvp);
++	rm = fnode->rn_mount;
++	if (fnode->rn_type == VDIR || tnode->rn_type == VDIR) {
++		return ENOTSUP;
++	}
++	if (fnode == tnode) {
++		return 0;
++	}
++
++	lck_mtx_lock(&rm->rm_lock);
++	fde = ramfs_dir_find(fdir, fcnp->cn_nameptr, (size_t)fcnp->cn_namelen);
++	tde = ramfs_dir_find(tdir, tcnp->cn_nameptr, (size_t)tcnp->cn_namelen);
++	if (fde == NULL || tde == NULL || fde->rd_node != fnode || tde->rd_node != tnode ||
++	    fdir->rn_nlink == 0 || tdir->rn_nlink == 0) {
++		error = ENOENT;
++	} else {
++		fde->rd_node = tnode;
++		tde->rd_node = fnode;
++		ramfs_touch(fdir, true);
++		if (tdir != fdir) {
++			ramfs_touch(tdir, true);
++		}
++		ramfs_touch(fnode, false);
++		ramfs_touch(tnode, false);
++	}
++	lck_mtx_unlock(&rm->rm_lock);
++	if (!error) {
++		vnode_update_identity(ap->a_fvp, ap->a_tdvp, tcnp->cn_nameptr, tcnp->cn_namelen, tcnp->cn_hash,
++		    VNODE_UPDATE_PARENT | VNODE_UPDATE_NAME);
++		vnode_update_identity(ap->a_tvp, ap->a_fdvp, fcnp->cn_nameptr, fcnp->cn_namelen, fcnp->cn_hash,
++		    VNODE_UPDATE_PARENT | VNODE_UPDATE_NAME);
++	}
++	return error;
++}
++
+ static int
+ ramfs_open(__unused struct vnop_open_args *ap)
+ {
+@@ -1783,6 +1852,7 @@ const struct vnodeopv_entry_desc ramfs_vnodeop_entries[] = {
+ 	{ .opve_op = &vnop_remove_desc, .opve_impl = (VOPFUNC)ramfs_remove },
+ 	{ .opve_op = &vnop_link_desc, .opve_impl = (VOPFUNC)ramfs_link },
+ 	{ .opve_op = &vnop_rename_desc, .opve_impl = (VOPFUNC)ramfs_rename },
++	{ .opve_op = &vnop_renamex_desc, .opve_impl = (VOPFUNC)ramfs_renamex },
+ 	{ .opve_op = &vnop_mkdir_desc, .opve_impl = (VOPFUNC)ramfs_mkdir },
+ 	{ .opve_op = &vnop_rmdir_desc, .opve_impl = (VOPFUNC)ramfs_rmdir },
+ 	{ .opve_op = &vnop_symlink_desc, .opve_impl = (VOPFUNC)ramfs_symlink },
+-- 
+2.54.0 (Apple Git-157)
+

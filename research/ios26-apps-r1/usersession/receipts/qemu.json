@@ -1,0 +1,237 @@
+{
+ "scope": "QEMU only (m1box TCG, qemu 11.1.3)",
+ "root": "apps-logmirror-r14.img f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55 unless stated",
+ "overlay": "hgltrack-rebuilt.ovl 61c38161\u2026",
+ "route": "rd=ufsroot0 (harness)",
+ "runs": {
+  "usersession-diag-r18": {
+   "what": "void: hk_env=usermanagerd:OS_ACTIVITY_DT_MODE=YES (kernel.rootview, r14 root); no --init os_log line; ended on uart idle 90 s",
+   "kernel_sha": "ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3",
+   "root_sha": "f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793723397 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 hk_env=usermanagerd:OS_ACTIVITY_DT_MODE=YES blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "exit": {
+    "ended": "uart idle 90s",
+    "elapsed": 90.76873181998963,
+    "exit": 0,
+    "root_unchanged": true
+   },
+   "counters": {
+    "persona_alloc_uid501": "0",
+    "persona_alloc_total": "0",
+    "INVALID_PERSONA": "14",
+    "lsd_abort": "7",
+    "no_personas": "0",
+    "session_notfound": "0",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 0,
+   "lsd_processes": 7,
+   "mi_gather_done": false,
+   "mi_scanned_apps": [],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-umdlog-r19": {
+   "what": "void: root apps-umdlog-r19 (40089577\u2026) = r14 + varfs symlinks usermanagerd{,_init}.log -> /dev/console; no --init line",
+   "kernel_sha": "ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3",
+   "root_sha": "40089577b22922e1b557bc4b93a612c108a9d3548f28c09fab0b73561d67d28f",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793723613 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "exit": {
+    "elapsed": 420.71319271897664,
+    "exit": 0,
+    "root_unchanged": true
+   },
+   "counters": {
+    "persona_alloc_uid501": "0",
+    "persona_alloc_total": "0",
+    "INVALID_PERSONA": "38",
+    "lsd_abort": "19",
+    "no_personas": "3",
+    "session_notfound": "3",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 0,
+   "lsd_processes": 19,
+   "mi_gather_done": false,
+   "mi_scanned_apps": [],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-umdlog-r20": {
+   "what": "void: r19 + hk_env OS_ACTIVITY_DT_MODE=YES;OS_ACTIVITY_MODE=debug, 150 s; no --init line",
+   "kernel_sha": "ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3",
+   "root_sha": "40089577b22922e1b557bc4b93a612c108a9d3548f28c09fab0b73561d67d28f",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793723774 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 hk_env=usermanagerd:OS_ACTIVITY_DT_MODE=YES;OS_ACTIVITY_MODE=debug blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "exit": {
+    "elapsed": 150.08469006299856,
+    "exit": 0,
+    "root_unchanged": true
+   },
+   "counters": {
+    "persona_alloc_uid501": "0",
+    "persona_alloc_total": "0",
+    "INVALID_PERSONA": "26",
+    "lsd_abort": "13",
+    "no_personas": "0",
+    "session_notfound": "0",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 0,
+   "lsd_processes": 13,
+   "mi_gather_done": false,
+   "mi_scanned_apps": [],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-ctl-r21": {
+   "what": "control: kernel us (0745526e) + blazer_persona_log=1, r14 root, 600 s",
+   "kernel_sha": "0745526e39f4cdbb80e773b4efc08e6cc592f1ab27152770f57e15a02b84e5b6",
+   "root_sha": "f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793724563 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_persona_log=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "exit": {
+    "elapsed": 600.0343374819786,
+    "exit": 0,
+    "root_unchanged": true
+   },
+   "counters": {
+    "persona_alloc_uid501": "3",
+    "persona_alloc_total": "5",
+    "INVALID_PERSONA": "40",
+    "lsd_abort": "20",
+    "no_personas": "3",
+    "session_notfound": "3",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 0,
+   "lsd_processes": 20,
+   "mi_gather_done": false,
+   "mi_scanned_apps": [],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-on-r22": {
+   "what": "r21 + blazer_aks_wrap=1 blazer_aks_usersession=1",
+   "kernel_sha": "0745526e39f4cdbb80e773b4efc08e6cc592f1ab27152770f57e15a02b84e5b6",
+   "root_sha": "f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793724583 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_persona_log=1 blazer_aks_wrap=1 blazer_aks_usersession=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "exit": {
+    "elapsed": 600.1416177350038,
+    "exit": 0,
+    "root_unchanged": true
+   },
+   "counters": {
+    "persona_alloc_uid501": "3",
+    "persona_alloc_total": "5",
+    "INVALID_PERSONA": "40",
+    "lsd_abort": "20",
+    "no_personas": "3",
+    "session_notfound": "3",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 0,
+   "lsd_processes": 20,
+   "mi_gather_done": false,
+   "mi_scanned_apps": [],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-swap-r23": {
+   "what": "kernel us2 (d7f47431, + ramfs RENAME_SWAP) + blazer_persona_log=1, 600 s",
+   "kernel_sha": "d7f47431164650c96cbab32dde384a288c321f67adcaf69f37eccc3116133186",
+   "root_sha": "f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793724818 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_persona_log=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "exit": {
+    "elapsed": 600.3287195989978,
+    "exit": 0,
+    "root_unchanged": true
+   },
+   "counters": {
+    "persona_alloc_uid501": "3",
+    "persona_alloc_total": "5",
+    "INVALID_PERSONA": "0",
+    "lsd_abort": "0",
+    "no_personas": "0",
+    "session_notfound": "3",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 37,
+   "lsd_processes": 1,
+   "mi_gather_done": true,
+   "mi_scanned_apps": [
+    "253"
+   ],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-swap-long-r24": {
+   "what": "r23 for 1800 s; killed with its launcher at guest ~16:22 (no exit.json)",
+   "kernel_sha": "d7f47431164650c96cbab32dde384a288c321f67adcaf69f37eccc3116133186",
+   "root_sha": "f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793725915 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_persona_log=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "counters": {
+    "persona_alloc_uid501": "3",
+    "persona_alloc_total": "5",
+    "INVALID_PERSONA": "0",
+    "lsd_abort": "0",
+    "no_personas": "0",
+    "session_notfound": "4",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 37,
+   "lsd_processes": 1,
+   "mi_gather_done": true,
+   "mi_scanned_apps": [
+    "253"
+   ],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  },
+  "usersession-swap-aks-long-r25": {
+   "what": "r24 + blazer_aks_wrap=1 blazer_aks_usersession=1; killed likewise at guest ~16:22",
+   "kernel_sha": "d7f47431164650c96cbab32dde384a288c321f67adcaf69f37eccc3116133186",
+   "root_sha": "f67e3bc9ff8ddbf67a130481318b75851ffd47bf88cbfc5a15ab784b12809c55",
+   "args": "debug=0x8 serial=3 cpus=1 rd=ufsroot0 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 rootfstype=hfs msgbuf=1048576 launchd_disable_all_timeouts=1 epoch=1793725945 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 varfs=1 blazer_deadline=1800 interrupt-masked-debug-mode=0 sched_preemption_disable_debug_mode=0 wdt=-1 hk_top=30 hk_overlay=0xA0080081 hk_ui_trace=1 blazer_persona_log=1 blazer_aks_wrap=1 blazer_aks_usersession=1 blazer_ufs_fake=0xa02e00000 blazer_ufs_fake_size=21474836480",
+   "counters": {
+    "persona_alloc_uid501": "3",
+    "persona_alloc_total": "5",
+    "INVALID_PERSONA": "0",
+    "lsd_abort": "0",
+    "no_personas": "0",
+    "session_notfound": "4",
+    "swapfail": "0",
+    "us_sel": "0",
+    "us_refused": "0",
+    "type6_err": "0",
+    "registered": "0"
+   },
+   "apps_seen_by_lsd": 37,
+   "lsd_processes": 1,
+   "mi_gather_done": true,
+   "mi_scanned_apps": [
+    "253"
+   ],
+   "registrar_last": "HKAPPS: {\"event\":\"phase\",\"phase\":\"all_applications_enter\",\"pid\":49,\"bundle_id\":\"com.apple.calculator\"}"
+  }
+ }
+}
