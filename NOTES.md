@@ -50,6 +50,9 @@ recoverable. QEMU and host tools support development; they are not phone results
 - **ios_data persist (QEMU, 2026-11-03):** XNU dd000c8 on a GPT-bearing fake LUN (kernel b228c4f) resolved ios_data,
   saved 12 times and changed only 20 blocks, all inside ios_data's table; nothing else on the medium changed
   (`research/ios26-dualboot-r8/ios-data-persist/NEGATIVE-r1.md`). Not physical.
+  Physical plan ready, not run (`research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md`): `image_tool
+  --persist-ios-data` admits `blazer_persist=1` only for `kernel.rootview` (ddf874fb) on ios_system; `tools/persist_check.py`
+  hashes partitions on the phone before and after. It needs a visible A7 Home first.
 - **QEMU rig:** QEMU runs on m1box (`/data/hackios-qemu`, adopted in `research/ios26-apps-r1/tools/m1box/`): TCG matches
   the Mac's boot order and is faster; KVM does not boot XNU (`receipts/m1box-rig/CALIBRATION.md`).
 - **Not complete:** native Metal, stable compositing, strict GPT, chooser volume keys and the iOS entry, a

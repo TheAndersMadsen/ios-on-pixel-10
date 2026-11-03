@@ -196,6 +196,44 @@ def phone_extra(text, *, cpu_health=False):
         if 'blazer_usbcon=1' not in toks: die('readback requires blazer_usbcon=1')
         if any(n.startswith('blazer_persist') for n in names): die('readback capture cannot enable persistence writes')
     return toks
+# --persist-ios-data: the one gate for blazer_persist on the phone (research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md).
+# Admitted only for this kernel: release tree 7227fe7 = dd000c8 (persist writes only to the GPT-resolved ios_data) + the
+# ios_system root view. QEMU NEGATIVE-r1 ran this tree plus the fake-LUN patch (off without blazer_ufs_fake_lun); A7 booted
+# this exact kernel from ios_system physically. Mode 1 and a period in the kernel's own range (15..3600) only.
+PERSIST_KERNEL_SHA = 'ddf874fb41cf4871f39336a1bb3a7c77686d6f075e2fd8b7260a86707bd0b5f3'  # research/ios26-dualboot-r8/rootview/kernel.rootview
+PERSIST_KERNEL_NEEDS = (b'blazer-persist: ios_data at LBA', b'refused root "%s": userdata')
+PERSIST_KERNEL_REFUSED = {
+    '052d00f8680e1632fb680f62ecf2369457d10f82a3e4384eb93f6203606eafc8': 'kernel.p32-iosdata-dd000c8 predates 7227fe7: its root view is pinned to the 8 GiB userdata_exp.ai extent, so it cannot root on ios_system (A7-READY section 3)',
+    '3563a0406a24d51080f1afd41a22447a5baf57d243ca062e264d28b57f5b6e7e': 'kernel.fakelun-b228c4f carries the QEMU fake-LUN mode: QEMU only'}
+PERSIST_PERIOD = r'blazer_persist_period=(1[5-9]|[2-9][0-9]|[1-9][0-9]{2}|[12][0-9]{3}|3[0-5][0-9]{2}|3600)'
+def persist_ios_data(a, c):
+    """None unless --persist-ios-data. Then every condition or die; returns the record for the manifest."""
+    if not getattr(a, 'persist_ios_data', False): return None
+    why = PERSIST_KERNEL_REFUSED.get(a.kernel_sha)
+    if why: die(f'--persist-ios-data: {why}')
+    if a.kernel_sha != PERSIST_KERNEL_SHA or sha(a.kernel) != PERSIST_KERNEL_SHA: die(f'--persist-ios-data: kernel must be {PERSIST_KERNEL_SHA} (kernel.rootview, dd000c8 + 7227fe7)')
+    buf = Path(a.kernel).read_bytes()
+    if any(t not in buf for t in PERSIST_KERNEL_NEEDS) or b'blazer_ufs_fake_lun' in buf: die('--persist-ios-data: kernel lacks the ios_data writer or the userdata refusal, or carries the QEMU fake-LUN mode')
+    if not a.phone_root or a.preflight or a.test_kernel or a.first_boot or a.second_boot or a.soak is not None or a.fullcheck or a.readback \
+            or getattr(a, 'persist', None) or getattr(a, 'persist_table', None) or getattr(a, 'expect_test_block', None):
+        die('--persist-ios-data goes with --phone-root alone: no preflight, test kernel, first/second boot, soak, fullcheck, readback or --persist')
+    toks = c.split()
+    roots = [t for t in toks if t.startswith('blazer_ufs_root=')]
+    if roots != ['blazer_ufs_root=ios_system'] or toks.count('blazer_ufs_lun=0') != 1: die(f'--persist-ios-data needs exactly blazer_ufs_root=ios_system on LUN 0, line has {roots}')
+    if any(t.startswith(('blazer_ufs_test', 'blazer_ufs_fake', 'rootrw', 'rw', 'blazer_usb_readback')) for t in toks): die('--persist-ios-data: a test, fake, read-write or readback token is on the line')
+    p = [t for t in toks if re.match(r'blazer_persist(_\w+)?=', t)]
+    if 'blazer_persist=1' not in p: die('--persist-ios-data needs blazer_persist=1 in --phone-args')
+    bad = [t for t in p if t != 'blazer_persist=1' and not re.fullmatch(PERSIST_PERIOD, t)]
+    if bad or len(p) != len(set(t.split('=')[0] for t in p)): die(f'--persist-ios-data admits blazer_persist=1 and blazer_persist_period=15..3600 only, not {bad or p}')
+    return dict(kernel_sha256=PERSIST_KERNEL_SHA, tokens=p, target='ios_data', root='ios_system', plan='research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md')
+def check_persist(m):
+    """check: a line with blazer_persist must carry the gate's record, for the pinned kernel and ios_system, and agree with it."""
+    toks = m.get('cmdline', '').split(); p = [t for t in toks if re.match(r'blazer_persist(_\w+)?=', t)]; rec = m.get('persist_ios_data')
+    if not p and not rec: return
+    if not rec or m.get('mach') != PERSIST_KERNEL_SHA or rec.get('kernel_sha256') != PERSIST_KERNEL_SHA or rec.get('tokens') != p \
+            or [t for t in toks if t.startswith('blazer_ufs_root=')] != ['blazer_ufs_root=ios_system'] or 'blazer_persist=1' not in p:
+        sys.exit('MISMATCH persist: blazer_persist on the line without the --persist-ios-data record, kernel or ios_system root')
+    print('persist ios_data:', ' '.join(p), 'kernel', PERSIST_KERNEL_SHA[:16])
 PHONE_KERNEL_NEEDS = (b'ramfs', b'hk_fb_scanout', b'var.skel')
 SECOND_ARGS = 'hk_fb_scanout=1 sweetfb_noconsole=1 hk_fb_probe=1'  # parent, STATUS 2026-11-01
 FIRST_MD0 = (R/'laguna-usb-fix/native-fleet-20261031/N419-ioctl-phone-package/admission/artifacts/root.hfs', '3cd4dcb5a505783157d5a1612916e6834ee270edd1139d0c830022986a462780')
@@ -390,7 +428,8 @@ def build(a):
         if p_expect and (p_mode or p_table): die('--expect-test-block is for a kernel with no mask, after the test')
     epoch = int(time.time()); c = cmdline(a, epoch)
     if 'userdata_exp.ai' in c: die('command line names userdata_exp.ai, a member of Android /data: bind ios_system (GOAL.md A7)')
-    if re.search(r'(^|\s)blazer_persist(_\w+)?=', c): die('blazer_persist is bound at compile time to LBA 2500838 (userdata_exp.ai, now Android /data): no persistence until the ios_data writer exists (GOAL.md A7)')
+    persist = persist_ios_data(a, c)  # None unless --persist-ios-data, which dies on anything but its one profile
+    if re.search(r'(^|\s)blazer_persist(_\w+)?=', c) and not persist: die('blazer_persist is bound at compile time to LBA 2500838 (userdata_exp.ai, now Android /data): no persistence until the ios_data writer exists (GOAL.md A7)')
     if a.bootcpu:  # the same line plus the token. --first-boot and --second-boot lines also get the reset path and the per-core report
         if a.bootcpu not in BOOTCPUS or not 1 <= a.cpus <= 5: die(f'--bootcpu: one of {BOOTCPUS}, at cpus 1 to 5')
         if b'blazer_bootcpu' not in Path(a.kernel).read_bytes(): die('kernel has no blazer_bootcpu gate')
@@ -479,6 +518,7 @@ def build(a):
                tests={k: m.group(0) for k, m in tests.items()}, avb=avbt.strip().splitlines()[-1], decode=f'python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/{name}/manifest.json',
                shim_copy=tree(SHIM), tools={n: sha(X/n) for n in ('adt.py', 'image_tool.py', 'mkadt.py', 'mkbootimg.py', 'mkpayload.py')})
     if window != PHYS: rec['window_base'] = hex(window)
+    if persist: rec['persist_ios_data'] = persist
     if audit: rec['cpu_audit'] = dict(mode=1, core=0, read_only=True, a520_support_accepted=False)
     if many: rec.update(cpus=len(order) if order else a.cpus, **({'cpu_order': order} if order else {}))  # no shape, no new keys
     if health:
@@ -639,6 +679,7 @@ def check(d):
     if 'cpus' in m: check_cpu_line((d/'laguna.adt').read_bytes(), m['cmdline'])
     check_cpu_health(m, (d/'laguna.adt').read_bytes(), (d/'payload-usb.bin').read_bytes())
     check_cpu_health_artifact(d, m, (d/'payload-usb.bin').read_bytes())
+    check_persist(m)
     print('OK', m['name'], 'bootable' if m['bootable'] else 'NOT BOOTABLE', m['image'])
 
 if __name__ == '__main__':
@@ -647,7 +688,7 @@ if __name__ == '__main__':
     i.add_argument('--cpu-audit', action='store_true', help='read-only cpu0 firmware audit on baseline five A725s; docs/CPU.md')
     i.add_argument('--cpu-health', action='store_true', help='frozen p30 cap16 common health acceptance profile; supplies exact phone arguments; docs/CPU.md')
     i.add_argument('--route', choices=['ufs', 'md'], default='ufs'); i.add_argument('--md0'); i.add_argument('--md1'); i.add_argument('--cpus', type=int, default=1); i.add_argument('--cpu-order', help='cores for cpus=N in logical order, e.g. 5,6,2,3,4,1,0. handoffs/smp.md'); i.add_argument('--dpu', action='store_true')
-    i.add_argument('--canvas'); i.add_argument('--gamut'); i.add_argument('--args'); i.add_argument('--test-kernel', action='store_true'); i.add_argument('--legacy-base', action='store_true'); i.add_argument('--phone-root', action='store_true', help='PHONE-ROOT.md: --route ufs on ios26-phone-r1'); i.add_argument('--soak', type=int, help='N read-only passes, not a phone-run image; 0: the not-live line'); i.add_argument('--preflight', action='store_true', help='--phone-root line on the old partition content, labelled, not bootable'); i.add_argument('--touch', action='store_true', help='--phone-root plus blazer_touch=1, nothing else'); i.add_argument('--phone-deadline', type=int, help='1800, or 3600 with blazer_thermal=2: handoffs/cpmlock.md'); i.add_argument('--soak-whole', help='whole crc the passes must give, hex'); i.add_argument('--phone-args', help='extra tokens for --phone-root, allow-list only'); i.add_argument('--var-overlay', help='overlay file for hk_overlay=MASK'); i.add_argument('--var-overlay-sha'); i.add_argument('--bootcpu', help='0x200, 0x300 or 0x500: run XNU on that core, ios26-fastcore-r1. Parent only, after speed-probe-r3'); i.add_argument('--qemu-run'); i.add_argument('--phone-route'); i.add_argument('--readback', help='root image: sample its blocks for read-back'); i.add_argument('--readback-sha'); i.add_argument('--fullcheck', help='same root as --readback: read all of it and log CRCs'); i.add_argument('--persist', type=int, choices=[2, 3], help='with --fullcheck: blazer_persist=N, handoffs/persist.md'); i.add_argument('--persist-table', help='table.json: the pass skips its blocks, blazer_ufs_fullcheck=2, and so does the list'); i.add_argument('--expect-test-block', help='TABLE.json:A or :B: the list for a kernel with no mask after blazer_persist=2 wrote that pattern'); i.add_argument('--window-base', choices=(hex(PHYS), '0x882000000'), help='kernel RAM base, handoffs/ram.md'); i.add_argument('--second-boot', action='store_true', help='first-boot contract plus shim DPU stage, disp0 and the scanout arguments'); i.add_argument('--first-boot', action='store_true', help="blazer's first phone boot contract: headless ADT, md0 only, fixed base and command line")
+    i.add_argument('--canvas'); i.add_argument('--gamut'); i.add_argument('--args'); i.add_argument('--test-kernel', action='store_true'); i.add_argument('--legacy-base', action='store_true'); i.add_argument('--phone-root', action='store_true', help='PHONE-ROOT.md: --route ufs on ios26-phone-r1'); i.add_argument('--soak', type=int, help='N read-only passes, not a phone-run image; 0: the not-live line'); i.add_argument('--preflight', action='store_true', help='--phone-root line on the old partition content, labelled, not bootable'); i.add_argument('--touch', action='store_true', help='--phone-root plus blazer_touch=1, nothing else'); i.add_argument('--phone-deadline', type=int, help='1800, or 3600 with blazer_thermal=2: handoffs/cpmlock.md'); i.add_argument('--soak-whole', help='whole crc the passes must give, hex'); i.add_argument('--phone-args', help='extra tokens for --phone-root, allow-list only'); i.add_argument('--var-overlay', help='overlay file for hk_overlay=MASK'); i.add_argument('--var-overlay-sha'); i.add_argument('--bootcpu', help='0x200, 0x300 or 0x500: run XNU on that core, ios26-fastcore-r1. Parent only, after speed-probe-r3'); i.add_argument('--qemu-run'); i.add_argument('--phone-route'); i.add_argument('--readback', help='root image: sample its blocks for read-back'); i.add_argument('--readback-sha'); i.add_argument('--fullcheck', help='same root as --readback: read all of it and log CRCs'); i.add_argument('--persist-ios-data', action='store_true', help='admit blazer_persist=1 [blazer_persist_period=15..3600] for the pinned kernel.rootview on ios_system only: ios-data-persist/PHYSICAL-PLAN.md'); i.add_argument('--persist', type=int, choices=[2, 3], help='with --fullcheck: blazer_persist=N, handoffs/persist.md'); i.add_argument('--persist-table', help='table.json: the pass skips its blocks, blazer_ufs_fullcheck=2, and so does the list'); i.add_argument('--expect-test-block', help='TABLE.json:A or :B: the list for a kernel with no mask after blazer_persist=2 wrote that pattern'); i.add_argument('--window-base', choices=(hex(PHYS), '0x882000000'), help='kernel RAM base, handoffs/ram.md'); i.add_argument('--second-boot', action='store_true', help='first-boot contract plus shim DPU stage, disp0 and the scanout arguments'); i.add_argument('--first-boot', action='store_true', help="blazer's first phone boot contract: headless ADT, md0 only, fixed base and command line")
     c = sub.add_parser('check'); c.add_argument('dir')
     a = ap.parse_args()
     build(a) if a.cmd == 'image' else check(a.dir)

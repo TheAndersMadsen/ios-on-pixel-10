@@ -149,7 +149,7 @@ class TwoShapes(unittest.TestCase):
         for t in ('hk_fb_refresh=90', 'blazer_gov_cap=20', 'blazer_gov_stages=2', 'blazer_gov_b=60', 'hk_bright=1000', 'blazer_rtc_bounds=2'):
             with self.assertRaises(SystemExit, msg=t): T.phone_extra(t)
         src = Path(T.__file__).read_text()  # the build-time refusals A7 relies on stay in place
-        self.assertIn("if 'userdata_exp.ai' in c: die(", src); self.assertIn("if re.search(r'(^|\\s)blazer_persist(_\\w+)?=', c): die(", src)
+        self.assertIn("if 'userdata_exp.ai' in c: die(", src); self.assertIn("if re.search(r'(^|\\s)blazer_persist(_\\w+)?=', c) and not persist: die(", src)
     def test_window_base(self):
         d = T.adt_facts(adt.serialize(mkadt.build(seed=b'S' * 256, headless=True, disp0=True, phys_base=0x882000000)))['dram']; self.assertEqual(d[0], '0x882000000')
         self.assertEqual(adt.serialize(mkadt.build(seed=b'S' * 256, phys_base=T.PHYS)), adt.serialize(mkadt.build(seed=b'S' * 256)))
@@ -203,6 +203,93 @@ class TwoShapes(unittest.TestCase):
     def test_no_shape_adt_is_cpus_prefix(self):
         for k in (dict(), dict(headless=True, disp0=True), dict(cpus=8), dict(boot_mpidr=0x300)):
             self.assertEqual(adt.serialize(mkadt.build(seed=b'S' * 256, **k)), adt.serialize(mkadt.build(seed=b'S' * 256, cpu_order=None, **k)))
+
+class PersistIosData(unittest.TestCase):
+    """--persist-ios-data: blazer_persist=1 (+ period 15..3600) for the pinned kernel.rootview on ios_system, nothing else."""
+    LINE = T.PHONE_ARGS.replace('ROUTE', T.PHONE_ROUTES['md0-mountroot'])
+    def kernel(self, *need, fake_lun=False):
+        p = Path(tempfile.mkdtemp())/'k'
+        p.write_bytes(macho() + b'\0'.join((b'ramfs', b'hk_fb_scanout', b'var.skel', b'rooting on ufsroot0', b'blazer_persist', b'blazer_persist_period') + (need or T.PERSIST_KERNEL_NEEDS) + ((b'blazer_ufs_fake_lun',) if fake_lun else ())))
+        return str(p), T.sha(p)
+    def ns(self, kernel=None, **k):
+        path, digest = kernel or self.kernel()
+        d = dict(persist_ios_data=True, kernel=path, kernel_sha=digest, phone_root=True, preflight=False, test_kernel=False, first_boot=False, second_boot=False, soak=None, fullcheck=None, readback=None, persist=None, persist_table=None, expect_test_block=None)
+        d.update(k); return T.argparse.Namespace(**d)
+    def gate(self, extra, line=None, kernel=None, pin=True, **k):
+        kernel = kernel or self.kernel(); a = self.ns(kernel, **k); c = (line or self.LINE) + ' ' + extra
+        with patch.object(T, 'PERSIST_KERNEL_SHA', kernel[1] if pin else T.PERSIST_KERNEL_SHA): return T.persist_ios_data(a, c)
+    def refused(self, why, extra='blazer_persist=1', **k):
+        with self.assertRaises(SystemExit, msg=f'{extra} {k}') as e: self.gate(extra, **k)
+        self.assertIn(why, str(e.exception))
+    def test_admitted(self):
+        for extra, toks in (('blazer_persist=1', ['blazer_persist=1']), ('blazer_persist=1 blazer_persist_period=15', ['blazer_persist=1', 'blazer_persist_period=15']),
+                            ('blazer_persist_period=3600 blazer_persist=1', ['blazer_persist_period=3600', 'blazer_persist=1']), ('blazer_persist=1 blazer_persist_period=60', None)):
+            r = self.gate(extra); self.assertEqual(r['target'], 'ios_data'); self.assertEqual(r['root'], 'ios_system')
+            if toks: self.assertEqual(r['tokens'], toks)
+        for n in (15, 16, 19, 20, 99, 100, 999, 1000, 2999, 3000, 3599, 3600): self.assertTrue(self.gate(f'blazer_persist=1 blazer_persist_period={n}'))
+    def test_off_without_the_flag(self):
+        self.assertIsNone(T.persist_ios_data(self.ns(persist_ios_data=False), self.LINE + ' blazer_persist=1'))
+        self.assertIsNone(T.persist_ios_data(T.argparse.Namespace(), self.LINE + ' blazer_persist=1'))
+    def test_tokens_refused(self):
+        self.refused('needs blazer_persist=1', extra='')
+        self.refused('needs blazer_persist=1', extra='blazer_persist_period=15')
+        for extra in ('blazer_persist=1 blazer_persist=1', 'blazer_persist=1 blazer_persist_period=15 blazer_persist_period=16'):
+            self.refused('admits blazer_persist=1', extra=extra)
+        for extra in ('blazer_persist=2', 'blazer_persist=3', 'blazer_persist=0', 'blazer_persist=01'):
+            self.refused('needs blazer_persist=1', extra=extra)
+        for t in ('blazer_persist_fresh=1', 'blazer_persist_selftest=1', 'blazer_persist_stable=1', 'blazer_persist=3', 'blazer_persist_x=1',
+                  'blazer_persist_period=14', 'blazer_persist_period=10', 'blazer_persist_period=0', 'blazer_persist_period=3601', 'blazer_persist_period=9999', 'blazer_persist_period=015', 'blazer_persist_period=60s'):
+            self.refused('admits blazer_persist=1', extra='blazer_persist=1 ' + t)
+    def test_root_refused(self):
+        for line, why in ((self.LINE.replace('blazer_ufs_root=ios_system', 'blazer_ufs_root=userdata_exp.ai'), 'exactly blazer_ufs_root=ios_system'),
+                          (self.LINE.replace('blazer_ufs_root=ios_system', 'blazer_ufs_root=ios_data'), 'exactly blazer_ufs_root=ios_system'),
+                          (self.LINE.replace('blazer_ufs_root=ios_system', 'blazer_ufs_root=userdata'), 'exactly blazer_ufs_root=ios_system'),
+                          (self.LINE.replace(' blazer_ufs_root=ios_system', ''), 'exactly blazer_ufs_root=ios_system'),
+                          (self.LINE + ' blazer_ufs_root=ios_system', 'exactly blazer_ufs_root=ios_system'),
+                          (self.LINE.replace('blazer_ufs_lun=0', 'blazer_ufs_lun=1'), 'on LUN 0'),
+                          (self.LINE + ' blazer_ufs_test=1', 'test, fake, read-write'), (self.LINE + ' blazer_ufs_fake_lun=1', 'test, fake, read-write'),
+                          (self.LINE + ' rw', 'test, fake, read-write'), (self.LINE + ' blazer_usb_readback=1', 'test, fake, read-write')):
+            with self.assertRaises(SystemExit, msg=line[-40:]) as e: self.gate('blazer_persist=1', line=line)
+            self.assertIn(why, str(e.exception))
+    def test_kernel_refused(self):
+        self.refused('kernel must be', pin=False)  # any kernel but the pinned one
+        self.refused('kernel lacks the ios_data writer', kernel=self.kernel(b'blazer-persist: ios_data at LBA'))
+        self.refused('kernel lacks the ios_data writer', kernel=self.kernel(b'refused root "%s": userdata'))
+        self.refused('fake-LUN', kernel=self.kernel(fake_lun=True))
+        for digest, why in (('052d00f8680e1632fb680f62ecf2369457d10f82a3e4384eb93f6203606eafc8', '7227fe7'), ('3563a0406a24d51080f1afd41a22447a5baf57d243ca062e264d28b57f5b6e7e', 'QEMU only')):
+            with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(self.kernel()[0], digest)), self.LINE + ' blazer_persist=1')
+            self.assertIn(why, str(e.exception))
+        path, _ = self.kernel()  # the claimed sha is the pin, the file is not
+        with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(path, T.PERSIST_KERNEL_SHA)), self.LINE + ' blazer_persist=1')
+        self.assertIn('kernel must be', str(e.exception))
+    def test_profile_refused(self):
+        for k in (dict(phone_root=False), dict(preflight=True), dict(test_kernel=True), dict(first_boot=True), dict(second_boot=True), dict(soak=0), dict(fullcheck='x'),
+                  dict(readback='x'), dict(persist=3), dict(persist_table='t.json'), dict(expect_test_block='t.json:A')):
+            self.refused('--phone-root alone', **k)
+    def test_real_kernels(self):
+        rv, p32 = T.R/'ios26-dualboot-r8/rootview/kernel.rootview', T.R/'ios26-dualboot-r8/ios-data-persist/kernel.p32-iosdata-dd000c8'
+        if not rv.exists() or not p32.exists(): self.skipTest('kernels absent')
+        r = T.persist_ios_data(self.ns(kernel=(str(rv), T.sha(rv))), self.LINE + ' blazer_persist=1 blazer_persist_period=15')
+        self.assertEqual(r['kernel_sha256'], T.PERSIST_KERNEL_SHA)
+        with self.assertRaises(SystemExit) as e: T.persist_ios_data(self.ns(kernel=(str(p32), T.sha(p32))), self.LINE + ' blazer_persist=1')
+        self.assertIn('8 GiB userdata_exp.ai', str(e.exception))
+    def test_build_still_refuses_without_the_flag(self):
+        b = TwoShapes(); kernel = self.kernel()
+        for extra in ('blazer_persist=1', 'blazer_persist=1 blazer_persist_period=15', 'blazer_persist=3'):
+            with self.assertRaises(SystemExit) as e: T.build(b.ns(phone_args=extra, kernel=kernel[0], kernel_sha=kernel[1]))
+            self.assertIn('blazer_persist is bound at compile time', str(e.exception))
+        with patch.object(T, 'PERSIST_KERNEL_SHA', kernel[1]):  # the flag, but a preflight image: refused at the gate
+            with self.assertRaises(SystemExit) as e: T.build(b.ns(phone_args='blazer_persist=1', persist_ios_data=True, kernel=kernel[0], kernel_sha=kernel[1]))
+            self.assertIn('--phone-root alone', str(e.exception))
+        self.assertFalse((T.RUN/'phone-preflight-t2').exists())
+    def test_check_manifest(self):
+        rec = dict(kernel_sha256=T.PERSIST_KERNEL_SHA, tokens=['blazer_persist=1'], target='ios_data', root='ios_system')
+        T.check_persist(dict(cmdline=self.LINE)); T.check_persist(dict(cmdline=self.LINE + ' blazer_persist=1', mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec))
+        for m in (dict(cmdline=self.LINE + ' blazer_persist=1', mach=T.PERSIST_KERNEL_SHA), dict(cmdline=self.LINE + ' blazer_persist=1', mach='0' * 64, persist_ios_data=rec),
+                  dict(cmdline=self.LINE + ' blazer_persist=1 blazer_persist_period=15', mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec),
+                  dict(cmdline=self.LINE.replace('ios_system', 'userdata_exp.ai') + ' blazer_persist=1', mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec),
+                  dict(cmdline=self.LINE, mach=T.PERSIST_KERNEL_SHA, persist_ios_data=rec)):
+            with self.assertRaises(SystemExit): T.check_persist(m)
 
 class FirstBootContract(unittest.TestCase):
     def test_headless_adt(self):
