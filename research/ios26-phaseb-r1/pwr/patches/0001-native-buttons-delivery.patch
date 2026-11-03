@@ -1,0 +1,518 @@
+--- a/bsd/dev/hakios.blazer_keys.c
++++ b/bsd/dev/hakios.blazer_keys.c
+@@ -7,16 +7,17 @@
+  *
+  * Not a CPM client: RXDATA reads only, no mailbox, so it takes no part in the queue owner's lock.
+  *
+- * HELD. No AP read of 0x052b0000 is recorded on our boot path, and STATUS.md bars a first read of an unvoted
+- * peripheral, even guarded. No vote can clear it: laguna.dtb gives pinctrl@5280000 no power domain and no clock,
+- * so there is nothing to vote (research/ios26-cpmlock-r1/KEYS-RULE.md). Only a physical read can: BLAZER_KEYS_PROBE_PASSED
+- * stays 0 until research/ios26-stability-r1/KEYS-PROBE.md has passed; at 0 this object has no mapping, no read and
+- * no address of the pads.
++ * 0651 records the physical keys-probe-r1 read proof. Keep the compile-time
++ * probe gate: at 0 this object has no pad mapping, read, address or HID call.
++ * Volume-only mode retains that proof boundary and changes no pad ownership.
+  */
+ #ifndef BLAZER_KEYS_PROBE_PASSED
+ #define BLAZER_KEYS_PROBE_PASSED 1      /* 0651: keys-probe-r1 passed on the phone, attempt in handoffs/keysclock.md */
+ #endif
+ 
++#ifndef BLAZER_KEY_DELIVERY
++#define BLAZER_KEY_DELIVERY 1
++#endif
+ #include <kern/clock.h>
+ #include <kern/thread.h>
+ #include <libkern/libkern.h>
+@@ -55,19 +56,152 @@
+ 	{ .pad = 52, .name = "volume up", .hid = 1 },
+ };
+ static uint32_t keys_bad_samples, keys_bad_lines;
++/* Volume-only acceptance route. No power HID reports or power policy changes. */
++static bool keys_volume_mode;
++#if BLAZER_KEY_DELIVERY
++static void keys_emit(int key, int down);
++#else
++#define keys_emit sweet_hid_key
++#endif
++/* Power-only lifecycle, opt-in blazer_power_key=1. MIT.
++ * One polling thread owns this state. No hardware write or synthetic long press.
++ * 30 ms is our conservative policy, not a measured PMIC debounce requirement.
++ */
++#define POWER_STABLE_MS 30
++#define POWER_GAP_MS 150
++#define POWER_BAD_MS 1000
++static bool power_key_enabled;
++static struct {
++ bool seen, candidate, armed, down, bad;
++ uint64_t last_ms, candidate_ms, bad_ms;
++} power_key;
++
++static void
++power_key_reset(void)
++{
++ if (power_key.down) {
++  keys_emit(0, 0);
++  printf("blazer-power-key: forced release; rearm required\n");
++ }
++ power_key.down = false;
++ power_key.armed = false;
++ power_key.seen = false;
++}
++
++static void
++power_key_sample(bool valid, bool pressed, uint64_t ms)
++{
++ if (power_key.seen && (ms < power_key.last_ms || ms - power_key.last_ms > POWER_GAP_MS)) {
++  power_key_reset();
++ }
++ power_key.last_ms = ms;
++ if (!valid) {
++  power_key.seen = false; /* No debounce interval may span an invalid read. */
++  if (!power_key.bad || ms < power_key.bad_ms) {
++   power_key.bad = true;
++   power_key.bad_ms = ms;
++  } else if (ms - power_key.bad_ms >= POWER_BAD_MS) {
++   power_key_reset();
++  }
++  return;
++ }
++ /* A long invalid span must expire even if this first valid read is late. */
++ if (power_key.bad && (ms < power_key.bad_ms || ms - power_key.bad_ms >= POWER_BAD_MS)) {
++  power_key_reset();
++ }
++ power_key.bad = false;
++ if (!power_key.seen || pressed != power_key.candidate) {
++  power_key.seen = true;
++  power_key.candidate = pressed;
++  power_key.candidate_ms = ms;
++  return;
++ }
++ if (ms - power_key.candidate_ms < POWER_STABLE_MS) return;
++ if (!power_key.armed) {
++  if (!pressed) {
++   power_key.armed = true;
++   printf("blazer-power-key: armed after stable release\n");
++  }
++  return;
++ }
++ if (pressed != power_key.down) {
++  power_key.down = pressed;
++  printf("blazer-power-key: %s\n", pressed ? "pressed" : "released");
++  keys_emit(0, pressed);
++ }
++}
++
++
++static uint64_t volume_since_ns[2];
++
++static uint64_t
++volume_now_ns(void)
++{
++	uint64_t ns;
++	absolutetime_to_nanoseconds(mach_absolute_time(), &ns);
++	return ns;
++}
++
++#if BLAZER_KEY_DELIVERY
++/* MIT. Physical source only; existing remote/scripted HID entry points stay intact. */
++extern uint64_t sweet_hid_keys_epoch(bool rearm);
++extern bool sweet_hid_key_checked(int key, int down, uint64_t epoch);
++static bool keys_delivery_mode, keys_delivery_lost;
++static uint64_t keys_delivery_epoch;
++
++static void
++keys_emit(int key, int down)
++{
++ if (keys_delivery_mode) {
++  if (!sweet_hid_key_checked(key, down, keys_delivery_epoch)) keys_delivery_lost = true;
++ } else sweet_hid_key(key, down);
++}
++
++static bool
++keys_delivery_ready(void)
++{
++ uint64_t epoch = sweet_hid_keys_epoch(keys_delivery_lost || keys_delivery_epoch == 0);
++ if (!epoch || epoch != keys_delivery_epoch || keys_delivery_lost) {
++  /* Never replay held keys into a newly opened client. The receiver has
++   * released its old admitted DOWNs before changing client membership. */
++  for (unsigned i = 0; i < KEY_COUNT; i++) {
++   blazer_keys[i].same = 0;
++   blazer_keys[i].last = blazer_keys[i].live = blazer_keys[i].down = false;
++  }
++  bzero(&power_key, sizeof(power_key));
++  bzero(volume_since_ns, sizeof(volume_since_ns));
++  keys_bad_samples = 0;
++  keys_delivery_epoch = epoch;
++  keys_delivery_lost = false;
++ }
++ return epoch != 0;
++}
++#else
++#define keys_emit sweet_hid_key
++#endif
+ 
+ static void
+ key_look(struct blazer_key *k, bool pressed)
+ {
++	if (keys_volume_mode && k->hid == 0) {
++		return;
++	}
+ 	if (pressed != k->last) {
++		if (keys_volume_mode) volume_since_ns[k->hid - 1] = volume_now_ns();
+ 		k->last = pressed;
+ 		k->same = 1;
+ 		return;
+ 	}
++	if (keys_volume_mode && k->same == 0)
++		volume_since_ns[k->hid - 1] = volume_now_ns();
+ 	if (k->same < KEY_STEADY_SAMPLES) {
+ 		k->same++;
+ 	}
+ 	if (k->same < KEY_STEADY_SAMPLES) {
++		return;
++	}
++	if (keys_volume_mode &&
++	    volume_now_ns() - volume_since_ns[k->hid - 1] < 30 * NSEC_PER_MSEC) {
+ 		return;
+ 	}
+ 	if (!k->live) {
+@@ -83,7 +217,7 @@
+ 	}
+ 	k->down = pressed;
+ 	printf("blazer-keys: %s %s\n", k->name, pressed ? "pressed" : "released");
+-	sweet_hid_key(k->hid, pressed);
++	keys_emit(k->hid, pressed);
+ }
+ 
+ /* One look at the three RXDATA words. */
+@@ -91,15 +225,24 @@
+ keys_sample(const uint32_t raw[KEY_COUNT])
+ {
+ 	bool bad = false, all_low = true;
+-
++#if BLAZER_KEY_DELIVERY
++ if (keys_delivery_mode && !keys_delivery_ready()) return;
++#endif
+ 	for (unsigned i = 0; i < KEY_COUNT; i++) {
+ 		bad = bad || raw[i] == PAD_UNREADABLE;
+ 		all_low = all_low && (raw[i] & 1) == 0;
+ 	}
++ if (power_key_enabled) {
++  uint64_t ns;
++  absolutetime_to_nanoseconds(mach_absolute_time(), &ns);
++  power_key_sample(!bad && !all_low, (raw[0] & 1) == 0, ns / NSEC_PER_MSEC);
++ }
+ 	if (bad || all_low) {
+ 		/* An unclocked block reads as all ones or all zeros; three keys at once look the same. */
+ 		for (unsigned i = 0; i < KEY_COUNT; i++) {
+ 			blazer_keys[i].same = 0;
++			if (keys_volume_mode && blazer_keys[i].hid != 0)
++				volume_since_ns[blazer_keys[i].hid - 1] = volume_now_ns();
+ 		}
+ 		if (keys_bad_lines < 8) {
+ 			keys_bad_lines++;
+@@ -109,7 +252,7 @@
+ 			for (unsigned i = 0; i < KEY_COUNT; i++) {
+ 				if (blazer_keys[i].down) {
+ 					blazer_keys[i].down = false;
+-					sweet_hid_key(blazer_keys[i].hid, 0);
++					keys_emit(blazer_keys[i].hid, 0);
+ 				}
+ 				blazer_keys[i].live = false;
+ 			}
+@@ -119,6 +262,7 @@
+ 	}
+ 	keys_bad_samples = 0;
+ 	for (unsigned i = 0; i < KEY_COUNT; i++) {
++  if (power_key_enabled && i == 0) continue;
+ 		key_look(&blazer_keys[i], (raw[i] & 1) == 0);   /* active low */
+ 	}
+ }
+@@ -141,7 +285,9 @@
+ 
+ 	for (;;) {
+ 		keys_poll(pads);
+-		delay_for_interval(blazer_sleep_keys_ms(KEY_POLL_MS), NSEC_PER_MSEC);
++		/* Keep volume latency independent of the optional sleep polling policy. */
++		delay_for_interval(keys_volume_mode ? KEY_POLL_MS :
++		    blazer_sleep_keys_ms(KEY_POLL_MS), NSEC_PER_MSEC);
+ 	}
+ }
+ #endif /* BLAZER_KEYS_PROBE_PASSED */
+@@ -149,12 +295,30 @@
+ void
+ hakios_blazer_keys_init(void)
+ {
+-	uint32_t on = 0;
+-
+-	if (!PE_parse_boot_argn("blazer_keys", &on, sizeof(on)) || on != 1) {
++	uint32_t on = 0, volume = 0;
++
++	PE_parse_boot_argn("blazer_keys", &on, sizeof(on));
++	PE_parse_boot_argn("blazer_volume_keys", &volume, sizeof(volume));
++	if (on != 1 && volume != 1) {
+ 		return;
+ 	}
+ #if BLAZER_KEYS_PROBE_PASSED
++	/* Legacy full-key mode wins if both args are present. Read the same three
++	 * proven pads for the all-low validity guard, but never report power in
++	 * volume mode. No mux, clock vote, reset or PMIC operation is added. */
++	keys_volume_mode = on != 1;
++ uint32_t power = 0;
++ power_key_enabled = !keys_volume_mode &&
++     PE_parse_boot_argn("blazer_power_key", &power, sizeof(power)) && power == 1;
++#if BLAZER_KEY_DELIVERY
++ uint32_t delivery = 0;
++ keys_delivery_mode = PE_parse_boot_argn("blazer_key_delivery", &delivery, sizeof(delivery)) && delivery == 1;
++ if (keys_delivery_mode && !keys_volume_mode && !power_key_enabled) {
++  printf("blazer-keys: delivery requires reviewed power lifecycle; no pad mapped\n");
++  return;
++ }
++#endif
++	printf("blazer-keys: %s mode\n", keys_volume_mode ? "volume-only" : "legacy");
+ 	vm_offset_t pads = ml_io_map((vm_offset_t)PAD_PA(PAD_FIRST), (vm_size_t)(PAD_PA(PAD_LAST + 1) - PAD_PA(PAD_FIRST)));
+ 	thread_t thread;
+ 
+--- a/iokit/Kernel/arm/hid/SweetHID.cpp
++++ b/iokit/Kernel/arm/hid/SweetHID.cpp
+@@ -23,6 +23,9 @@
+ #include <pexpert/pexpert.h>
+ #include <kern/debug.h>
+ #if defined(BLAZER)
++#ifndef BLAZER_KEY_DELIVERY
++#define BLAZER_KEY_DELIVERY 1
++#endif
+ #include <kern/clock.h>
+ #include "hk_ui_trace.h"
+ #include <kern/locks.h>
+@@ -357,6 +360,18 @@
+ 	void key(UInt32 usage, bool down);
+ #if defined(BLAZER)
+  virtual void stop(IOService *provider) APPLE_KEXT_OVERRIDE;
++#if BLAZER_KEY_DELIVERY
++ virtual bool handleOpen(IOService *, IOOptionBits, void *) APPLE_KEXT_OVERRIDE;
++ virtual void handleClose(IOService *, IOOptionBits) APPLE_KEXT_OVERRIDE;
++ void physicalStart(void);
++ void physicalStop(void);
++ uint64_t physicalRequest(int key, int down, uint64_t epoch);
++ static IOReturn physicalGated(OSObject *, void *, void *, void *, void *);
++ void physicalReset(void);
++ bool fPhysicalEnabled, fPhysicalStopping;
++ uint64_t fPhysicalEpoch;
++ IOHIDEvent *fPhysicalUp[3];
++#endif
+  void liveStart(void);
+  uint32_t liveSubmit(const struct hk_live_command *command);
+  void liveCancel(uint32_t generation);
+@@ -474,6 +489,9 @@
+ static SweetHIDButtons *gLiveButtons;
+ static SweetHIDTouch *gLiveTouch;
+ #include "hk_live_hid.inc"
++#if BLAZER_KEY_DELIVERY
++#include "hk_physical_keys.inc"
++#endif
+ #endif
+ 
+ bool
+@@ -524,6 +542,9 @@
+ 	}
+ #if defined(BLAZER)
+ 	liveStart();
++#if BLAZER_KEY_DELIVERY
++ physicalStart();
++#endif
+ #endif
+ 	gSweetButtons = this;
+ 	registerService();
+--- a/iokit/Kernel/arm/hid/hk_live_hid.inc
++++ b/iokit/Kernel/arm/hid/hk_live_hid.inc
+@@ -198,6 +198,9 @@
+ void
+ SweetHIDButtons::stop(IOService *provider)
+ {
++#if BLAZER_KEY_DELIVERY
++ physicalStop();
++#endif
+  lck_mtx_lock(&sweet_live_lock);
+  fLiveStopping = true;
+  if (gLiveButtons == this) gLiveButtons = NULL;
+--- /dev/null
++++ b/iokit/Kernel/arm/hid/hk_physical_keys.inc
+@@ -0,0 +1,177 @@
++/* SPDX-License-Identifier: MIT
++ * Native GPIO -> existing SweetHID consumer events. No new user-client ABI.
++ * All state/callbacks run on the existing HID workloop. The real user client
++ * inherits this provider's workloop (IOService::getWorkLoop) and gates open,
++ * close and event enqueue there. Never hold sweet_live_lock across runAction.
++ */
++static SweetHIDButtons *gPhysicalButtons;
++static uint64_t gPhysicalEpoch;
++static uint64_t
++sweet_physical_next_epoch(void)
++{
++ /* A recreated service must not alias a generation the polling source still
++  * remembers. The same lock protects endpoint publication and this counter. */
++ lck_mtx_lock(&sweet_live_lock);
++ uint64_t epoch = gPhysicalEpoch == UINT64_MAX ? 0 : ++gPhysicalEpoch;
++ lck_mtx_unlock(&sweet_live_lock);
++ return epoch;
++}
++struct sweet_physical_request {
++ int key, down;                 /* -1 query, -2 stop; 0..2 physical edges only */
++ uint64_t epoch, result;
++ IOService *client;
++ IOOptionBits options;
++ void *argument;
++};
++
++void
++SweetHIDButtons::physicalReset(void)
++{
++ /* UPs were reserved before DOWN. Old clients get them before membership
++  * changes; a newly opened client never receives an orphan old UP. */
++ for (unsigned i = 0; i < 3; i++) {
++  if (fPhysicalUp[i]) {
++   fPhysicalUp[i]->setTimeStamp(mach_absolute_time());
++   dispatchEvent(fPhysicalUp[i]);
++   IOLog("SWEET PHYSICAL: epoch=%llu key=%u up reset callback\n", fPhysicalEpoch, i);
++   OSSafeReleaseNULL(fPhysicalUp[i]);
++  }
++ }
++ fPhysicalEpoch = sweet_physical_next_epoch();
++ if (!fPhysicalEpoch) fPhysicalStopping = true; /* refuse epoch wrap */
++}
++
++IOReturn
++SweetHIDButtons::physicalGated(OSObject *owner, void *arg, void *, void *, void *)
++{
++ SweetHIDButtons *self = (SweetHIDButtons *)owner;
++ sweet_physical_request *r = (sweet_physical_request *)arg;
++ if (r->key == -2) {
++  self->fPhysicalStopping = true;
++  self->physicalReset();
++  return kIOReturnSuccess;
++ }
++ if (r->key == -3 || r->key == -4) {
++  /* The actual IOHIDEventServiceUserClient callbacks are on this same gate.
++   * Failed/duplicate opens also invalidate the physical generation safely. */
++  self->physicalReset();
++  if (r->key == -3)
++   r->result = self->IOHIDEventService::handleOpen(r->client, r->options, r->argument);
++  else self->IOHIDEventService::handleClose(r->client, r->options);
++  return kIOReturnSuccess;
++ }
++ if (!self->fPhysicalEnabled || self->fPhysicalStopping || self->fUi || self->fTest ||
++     !self->liveHasClients()) return kIOReturnSuccess;
++ if (r->key == -1) {
++  /* The source lost readiness (including gate refusal): clear any old admitted
++   * DOWN before returning a fresh release-to-arm generation. No DOWN replay. */
++  if (r->down) self->physicalReset();
++  r->result = self->fPhysicalEpoch;
++  return kIOReturnSuccess;
++ }
++ if (r->key < 0 || r->key >= 3 || r->epoch != self->fPhysicalEpoch) return kIOReturnSuccess;
++ static const UInt32 usages[] = {
++  kHIDUsage_Csmr_Power, kHIDUsage_Csmr_VolumeIncrement, kHIDUsage_Csmr_VolumeDecrement
++ };
++ if (r->down) {
++  if (self->fPhysicalUp[r->key]) return kIOReturnSuccess; /* no repeat */
++  IOHIDEvent *down = IOHIDEvent::keyboardEvent(mach_absolute_time(), kHIDPage_Consumer, usages[r->key], true);
++  IOHIDEvent *up = IOHIDEvent::keyboardEvent(mach_absolute_time(), kHIDPage_Consumer, usages[r->key], false);
++  if (!down || !up) {
++   OSSafeReleaseNULL(down);
++   OSSafeReleaseNULL(up);
++   self->physicalReset(); /* other keys also require release after allocation loss */
++   return kIOReturnSuccess;
++  }
++  self->fPhysicalUp[r->key] = up;
++  self->dispatchEvent(down);
++  down->release();
++ } else {
++  IOHIDEvent *up = self->fPhysicalUp[r->key];
++  if (!up) return kIOReturnSuccess;
++  self->fPhysicalUp[r->key] = NULL;
++  up->setTimeStamp(mach_absolute_time());
++  self->dispatchEvent(up);
++  up->release();
++ }
++ r->result = 1; /* callback invocation, NOT queue/UI acknowledgement */
++ IOLog("SWEET PHYSICAL: epoch=%llu key=%d usage=0x%x %s clients=%u callback\n", r->epoch, r->key,
++     (unsigned)usages[r->key], r->down ? "down" : "up", self->_clients->getCount());
++ return kIOReturnSuccess;
++}
++
++bool
++SweetHIDButtons::handleOpen(IOService *client, IOOptionBits options, void *argument)
++{
++ if (!fPhysicalEnabled) return IOHIDEventService::handleOpen(client, options, argument);
++ sweet_physical_request r = { .key = -3, .client = client, .options = options, .argument = argument };
++ if (_hidGate->runAction(&SweetHIDButtons::physicalGated, &r) != kIOReturnSuccess) return false;
++ return r.result != 0;
++}
++
++void
++SweetHIDButtons::handleClose(IOService *client, IOOptionBits options)
++{
++ if (!fPhysicalEnabled) { IOHIDEventService::handleClose(client, options); return; }
++ sweet_physical_request r = { .key = -4, .client = client, .options = options };
++ _hidGate->runAction(&SweetHIDButtons::physicalGated, &r);
++}
++
++void
++SweetHIDButtons::physicalStart(void)
++{
++ uint32_t on = 0;
++ fPhysicalEnabled = PE_parse_boot_argn("blazer_key_delivery", &on, sizeof(on)) && on == 1;
++ if (!fPhysicalEnabled) return;
++ fPhysicalEpoch = sweet_physical_next_epoch();
++ if (!fPhysicalEpoch) fPhysicalStopping = true;
++ lck_mtx_lock(&sweet_live_lock);
++ if (!gPhysicalButtons) gPhysicalButtons = this;
++ else fPhysicalStopping = true;
++ lck_mtx_unlock(&sweet_live_lock);
++ IOLog("SWEET PHYSICAL: delivery enabled; release required after client change\n");
++}
++
++void
++SweetHIDButtons::physicalStop(void)
++{
++ if (!fPhysicalEnabled) return;
++ lck_mtx_lock(&sweet_live_lock);
++ if (gPhysicalButtons == this) gPhysicalButtons = NULL;
++ lck_mtx_unlock(&sweet_live_lock);
++ sweet_physical_request r = { .key = -2 };
++ _hidGate->runAction(&SweetHIDButtons::physicalGated, &r);
++}
++
++uint64_t
++SweetHIDButtons::physicalRequest(int key, int down, uint64_t epoch)
++{
++ sweet_physical_request r = { .key = key, .down = down, .epoch = epoch };
++ if (_hidGate->runAction(&SweetHIDButtons::physicalGated, &r) != kIOReturnSuccess) return 0;
++ return r.result;
++}
++
++static uint64_t
++sweet_physical_request(int key, int down, uint64_t epoch)
++{
++ lck_mtx_lock(&sweet_live_lock);
++ SweetHIDButtons *self = gPhysicalButtons;
++ if (self) self->retain();
++ lck_mtx_unlock(&sweet_live_lock);
++ uint64_t result = self ? self->physicalRequest(key, down, epoch) : 0;
++ if (self) self->release();
++ return result;
++}
++
++extern "C" uint64_t
++sweet_hid_keys_epoch(bool rearm)
++{
++ return sweet_physical_request(-1, rearm, 0);
++}
++
++extern "C" bool
++sweet_hid_key_checked(int key, int down, uint64_t epoch)
++{
++ if (key < 0 || key >= 3) return false; /* HOME is owned by its existing path */
++ return sweet_physical_request(key, down != 0, epoch) != 0;
++}

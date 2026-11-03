@@ -1,0 +1,4 @@
+tap policy host test: 28 checks, 0 failed
+0832 harness on the applied hw.c:
+ALL PASS
+PASS actual native API refusal/error/latch paths under host lock model

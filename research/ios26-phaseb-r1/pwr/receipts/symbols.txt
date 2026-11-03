@@ -1,0 +1,63 @@
+blazer_haptic.o:      Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+hakios.blazer_keys.o: Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+SweetHID.cpo:         Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+== build/blazer_haptic.o
+0000000000000110 (__TEXT,__text) external _blazer_haptic_init
+0000000000000030 (__TEXT,__text) external _blazer_haptic_play_rom
+0000000000000000 (__TEXT,__text) external _blazer_haptic_tap
+00000000000002f0 (__TEXT,__text) non-external _haptic_thread
+-- undefined:
+_assert_wait
+_clear_wait
+_thread_wakeup_prim
+== build/hakios.blazer_keys.o
+0000000000000000 (__TEXT,__text) external _hakios_blazer_keys_init
+0000000000000180 (__TEXT,__text) non-external _keys_thread
+-- undefined:
+_sweet_hid_key
+_sweet_hid_key_checked
+_sweet_hid_keys_epoch
+== build/SweetHID.cpo
+0000000000004570 (__TEXT,__text) external __ZN13SweetHIDTouch5touchEibii
+0000000000002590 (__TEXT,__text) external __ZN15SweetHIDButtons12physicalStopEv
+0000000000002bc0 (__TEXT,__text) external __ZN15SweetHIDButtons13physicalGatedEP8OSObjectPvS2_S2_S2_
+0000000000002a10 (__TEXT,__text) external __ZN15SweetHIDButtons13physicalResetEv
+0000000000002f10 (__TEXT,__text) external __ZN15SweetHIDButtons13physicalStartEv
+0000000000003000 (__TEXT,__text) external __ZN15SweetHIDButtons15physicalRequestEiiy
+0000000000003130 (__TEXT,__text) external _sweet_hid_key_checked
+0000000000003060 (__TEXT,__text) external _sweet_hid_keys_epoch
+-- undefined:
+_blazer_haptic_tap
+== kernel.pwr1.unstripped
+0
+blazer-haptic: tap feedback on                          1
+native ROM service ready                                1
+blazer-keys: delivery requires reviewed power lifecycle 1
+blazer-power-key: armed                                 1
+blazer_haptic_tap                                       2
+blazer_key_delivery                                     1
+blazer_power_key                                        1
+SWEET PHYSICAL                                          3
+direct touches                                          0
+blazer_aks_wrap                                         1
+llvm-objdump: error: unknown argument '--uuid'
+== kernel.pwr1.unstripped (llvm-nm -m)
+fffffe00080840e0 (__TEXT_EXEC,__text) external __ZN13SweetHIDTouch5touchEibii
+fffffe0007a22ff0 (__TEXT_EXEC,__text) external _blazer_haptic_play_rom
+fffffe0007a22fc0 (__TEXT_EXEC,__text) external _blazer_haptic_tap
+fffffe0007a39980 (__TEXT_EXEC,__text) external _hakios_blazer_keys_init
+fffffe0007a232b0 (__TEXT_EXEC,__text) non-external _haptic_thread
+fffffe0007a217d0 (__TEXT_EXEC,__text) external _hh_play_rom
+fffffe0007ab17c0 (__TEXT_EXEC,__text) non-external _ramfs_renamex
+fffffe0008082ca0 (__TEXT_EXEC,__text) external _sweet_hid_key_checked
+fffffe0008082bd0 (__TEXT_EXEC,__text) external _sweet_hid_keys_epoch
+undefined: 0
+"%s touches" strings: 1
+    uuid B9D0EC84-1663-3832-B79A-7D59C6363B61
+    uuid B9D0EC84-1663-3832-B79A-7D59C6363B61
+163-    47d8:      	bl	0x47d8 <__ZN13SweetHIDTouch5touchEibii+0x268>
+164:		00000000000047d8:  ARM64_RELOC_BRANCH26	_blazer_haptic_tap
+      1 		0000000000000538:  ARM64_RELOC_BRANCH26	_thread_block
+      1 		0000000000000544:  ARM64_RELOC_BRANCH26	_assert_wait
+      1 		000000000000055c:  ARM64_RELOC_BRANCH26	_clear_wait
+      1 		000000000000079c:  ARM64_RELOC_BRANCH26	_thread_block

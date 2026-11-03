@@ -1,0 +1,9 @@
+c798a68 BLAZER build: BLAZER_KEY_DELIVERY=1 BLAZER_HAPTIC_SERVICE=1 (both still default off at boot)
+52f0299 blazer haptic: blazer_haptic_tap=1, one ROM effect per new touch contact from a worker thread
+b9f96eb blazer haptic: bounded native ROM-effect service (blazer_haptic_service=1, ID-only stage) (feature-haptics 0832)
+e1d1768 SweetHID/blazer keys: checked physical key delivery and the reviewed power-key lifecycle (buttons_integration 0001)
+ad12d3d ramfs (varfs): RENAME_SWAP of two files and RENAME_EXCL (vnop_renamex)
+23ea0a2 SweetKeyStore: gated AKS user-session selectors (blazer_aks_usersession=1); persona alloc log (blazer_persona_log=1)
+6ec2724 SweetKeyStore: gated AKS wrap/unwrap (blazer_aks_wrap=1), BLAZER_AKS_WRAP=1 in the BLAZER build
+p1
+       0

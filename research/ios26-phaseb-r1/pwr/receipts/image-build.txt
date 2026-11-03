@@ -1,0 +1,2 @@
+a7-ios-system-pwr1 bootable 719f69d3534ddbc2cebfee55c1fd4b3d95e395c7f02fa7d213c4f19d12283f96 payload 26062608 margin 39997680
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-pwr1/manifest.json

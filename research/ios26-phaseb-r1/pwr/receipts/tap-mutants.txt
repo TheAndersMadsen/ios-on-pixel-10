@@ -1,0 +1,5 @@
+no-gap caught FAIL line 20: hh_tap_due(&t, HH_TAP_GAP_MS - 1) == 0
+ebusy-is-fatal caught FAIL line 28: !t.off && t.sent == 2 && t.last_ms == HH_TAP_GAP_MS && t.skipped == 2
+no-budget SURVIVED tap policy host test: 28 checks, 0 failed
+error-keeps-on caught FAIL line 36: e.off && e.refused == 1 && e.sent == 0 && e.last_rc == errs[i]
+mutants 3/4 caught

@@ -1,0 +1,187 @@
+diff --git a/bsd/dev/blazer_haptic.c b/bsd/dev/blazer_haptic.c
+--- a/bsd/dev/blazer_haptic.c
++++ b/bsd/dev/blazer_haptic.c
+@@ -2,6 +2,12 @@
+ /* SPDX-License-Identifier: MIT
+  * XNU's part: boot args, mappings, one thread that runs once. Off unless blazer_haptic=N.
+  * Polled CPM frames take blazer_cpmq_enter/exit, the lock touch and thermal hold. The start delay is only to keep clear of bring-up: blazer_haptic_delay=, default 45 s, minimum 30. */
++#ifndef BLAZER_HAPTIC_SERVICE
++#define BLAZER_HAPTIC_SERVICE 0
++#endif
++#include <kern/locks.h>
++#include <sys/errno.h>
++#include "blazer_haptic_service.h"
+ #include <kern/clock.h>
+ #include <kern/sched_prim.h>
+ #include <kern/thread.h>
+@@ -21,6 +27,33 @@
+ 	{ 0x05250000ULL, 0 }, { 0x05272000ULL, 0 }, { 0x3a330000ULL, 0 }, { 0x3a331000ULL, 0 }, { 0x3a210000ULL, 0 }, { 0x3a211000ULL, 0 }, { 0x3a21f000ULL, 0 },
+ };
+ static struct hh haptic;
++#if BLAZER_HAPTIC_SERVICE
++static LCK_GRP_DECLARE(haptic_group, "blazer-haptic");
++static LCK_MTX_DECLARE(haptic_lock, &haptic_group);
++static unsigned service_on;
++static bool service_ready;
++#endif
++
++/* Thread context only, synchronous, at most 100ms effect + bounded bus polls.
++ * No user client/PCM endpoint: Actuator waveforms need a real waveform backend. */
++int
++blazer_haptic_play_rom(uint32_t index, uint32_t amplitude, uint32_t duration_ms)
++{
++#if BLAZER_HAPTIC_SERVICE
++ int rc;
++ if (service_on != 1) return ENXIO;
++ if (!lck_mtx_try_lock(&haptic_lock)) return EBUSY;
++ if (!service_ready) { lck_mtx_unlock(&haptic_lock); return ENXIO; }
++ rc = hh_play_rom(&haptic, index, amplitude, duration_ms);
++ if (rc > 0) service_ready = false; /* any hardware fault requires a fresh boot */
++ lck_mtx_unlock(&haptic_lock);
++ return rc == HHS_INVALID ? EINVAL : rc == HHS_UNSUPPORTED ? ENOTSUP :
++     rc == HHS_NOT_READY ? ENXIO : rc > 0 ? EIO : 0;
++#else
++ (void)index; (void)amplitude; (void)duration_ms;
++ return ENXIO;
++#endif
++}
+ static struct hh_cfg boot_cfg;
+ static uint32_t boot_delay_s = 45;
+ 
+@@ -104,6 +137,12 @@
+ 	hh_init(&haptic, &ops, &boot_cfg);
+ 	(void)hh_run(&haptic);
+ 	printf("blazer-haptic: ends: %s, sent %d stopped %d\n", hh_stop_name(haptic.stop), haptic.effect_sent, haptic.effect_stopped);
++#if BLAZER_HAPTIC_SERVICE
++	lck_mtx_lock(&haptic_lock);
++	service_ready = service_on == 1 && haptic.stop == HH_OK;
++	if (service_on == 1) printf("blazer-haptic: native ROM service ready %u, nominal only\n", service_ready);
++	lck_mtx_unlock(&haptic_lock);
++#endif
+ 	(void)thread_terminate(current_thread());
+ 	thread_block(THREAD_CONTINUE_NULL);
+ }
+@@ -116,6 +155,11 @@
+ 	if (!PE_parse_boot_argn("blazer_haptic", &boot_cfg.stage, sizeof(boot_cfg.stage)) || boot_cfg.stage == 0) {
+ 		return;
+ 	}
++#if BLAZER_HAPTIC_SERVICE
++	(void)PE_parse_boot_argn("blazer_haptic_service", &service_on, sizeof(service_on));
++	/* Service activation never creates a boot buzz. Explicit ID-only stage required. */
++	if (service_on != 0 && (service_on != 1 || boot_cfg.stage != HH_STAGE_ID)) return;
++#endif
+ 	(void)PE_parse_boot_argn("blazer_haptic_ms", &boot_cfg.effect_ms, sizeof(boot_cfg.effect_ms));
+ 	(void)PE_parse_boot_argn("blazer_haptic_index", &boot_cfg.rom_index, sizeof(boot_cfg.rom_index));
+ 	(void)PE_parse_boot_argn("blazer_haptic_delay", &boot_delay_s, sizeof(boot_delay_s));
+diff --git a/bsd/dev/blazer_haptic_hw.c b/bsd/dev/blazer_haptic_hw.c
+--- a/bsd/dev/blazer_haptic_hw.c
++++ b/bsd/dev/blazer_haptic_hw.c
+@@ -690,7 +690,11 @@
+ 
+ 	if (chip_set_bits(h, R_REFCLK_INPUT, REFCLK_OPEN_LOOP) ||       /* source: the DSP may lock up on a trigger with the PLL closed-loop */
+ 	    chip_wr(h, h->rom->event_map, GPI_DISABLE) || chip_wr(h, h->rom->event_map + 4, GPI_DISABLE) ||
+-	    chip_set_bits(h, R_TST_DAC, DAC_HIZ) || mbox(h, MB_PREVENT_HIBER)) {
++	    chip_set_bits(h, R_TST_DAC, DAC_HIZ)) {
++		return (int)h->stop;
++	}
++	h->wake_attempted = true; /* even a lost wake ack must release the vote */
++	if (mbox(h, MB_PREVENT_HIBER)) {
+ 		return (int)h->stop;
+ 	}
+ 	if (chip_rd(h, h->rom->pm_cur_state, &h->pm_state) || chip_rd(h, h->rom->halo_state, &h->halo)) {
+@@ -726,22 +730,24 @@
+ 	return 0;
+ }
+ 
+-/* Any fault after the trigger: one more try at stop and standby, whatever failed */
++/* Any fault after wake was attempted: independent best-effort STOP/standby. */
+ static void
+ effect_fail_safe(struct hh *h)
+ {
+ 	uint32_t saved = h->stop, detail = h->stop_detail;
+ 
+-	if (!h->effect_sent || h->effect_stopped || saved == HH_OK || !h->bus_on) {
++	if (!h->wake_attempted || saved == HH_OK || !h->bus_on) {
+ 		return;
+ 	}
+ 	h->stop = HH_OK;
+-	(void)chip_wr(h, R_MBOX, MB_STOP);
+-	if (h->stop == HH_OK) {
+-		h->effect_stopped = true;
++	if (h->effect_sent && !h->effect_stopped) {
++		(void)chip_wr(h, R_MBOX, MB_STOP);
++		if (h->stop == HH_OK) h->effect_stopped = true;
+ 		h->ops.delay_us(h->ops.ctx, CHIP_RETRY_US);
+-		(void)chip_wr(h, R_MBOX, MB_ALLOW_HIBER);
+-	}
++	}
++	/* Standby is independent of STOP success. Keep the first failure visible. */
++	h->stop = HH_OK;
++	(void)chip_wr(h, R_MBOX, MB_ALLOW_HIBER);
+ 	h->stop = saved;
+ 	h->stop_detail = detail;
+ }
+@@ -777,4 +783,25 @@
+ 	bus_down(h);
+ 	return (int)h->stop;
+ }
++int
++hh_play_rom(struct hh *h, uint32_t index, uint32_t amplitude, uint32_t duration_ms)
++{
++	if (index >= ROM_WAVES || duration_ms == 0 || duration_ms > 100 || amplitude > 10000)
++		return HHS_INVALID;
++	if (amplitude != 0 && amplitude != 10000) return HHS_UNSUPPORTED;
++	if (h->stop != HH_OK || h->devid == 0 || h->bus_on) return HHS_NOT_READY;
++	if (amplitude == 0) return 0; /* silence must never trigger the motor */
++	h->cfg.stage = HH_STAGE_EFFECT;
++	h->cfg.rom_index = index;
++	h->cfg.effect_ms = duration_ms;
++	h->effect_sent = h->effect_stopped = h->wake_attempted = false;
++	/* Probe already acquired votes. Revalidate the block/bus/chip on each call;
++	 * do not acquire another SMC/CPM vote on every effect. Faults latch stopped. */
++	if (!block_check(h) && !reset_pad(h) && !bus_up(h) && !identify(h)) {
++		(void)one_effect(h);
++		effect_fail_safe(h);
++	}
++	bus_down(h);
++	return (int)h->stop;
++}
+ #endif /* BLAZER */
+diff --git a/bsd/dev/blazer_haptic_hw.h b/bsd/dev/blazer_haptic_hw.h
+--- a/bsd/dev/blazer_haptic_hw.h
++++ b/bsd/dev/blazer_haptic_hw.h
+@@ -35,10 +35,16 @@
+ 	uint32_t stop, stop_detail;
+ 	uint32_t devid, revid, halo, pm_state, abort_source;
+ 	const struct hh_rom *rom;
+-	bool bus_on, effect_sent, effect_stopped;
++	bool bus_on, effect_sent, effect_stopped, wake_attempted;
+ };
+ 
+ void hh_init(struct hh *h, const struct hh_ops *ops, const struct hh_cfg *cfg);
+ int hh_run(struct hh *h);       /* up to cfg.stage. 0, or an HH_STOP_*. The controller is disabled on every way out */
++/* Caller serializes against hh_run; requires successful ID probe on this h.
++ * Nominal ROM level only: gain is NOT calibrated and duration is a stop deadline,
++ * not a promise that the ROM waveform lasts this long. Negative API errors do no I/O.
++ */
++enum { HHS_INVALID = -1, HHS_UNSUPPORTED = -2, HHS_NOT_READY = -3 };
++int hh_play_rom(struct hh *h, uint32_t index, uint32_t amplitude, uint32_t duration_ms);
+ const char *hh_stop_name(uint32_t stop);
+ #endif
+diff --git a/bsd/dev/blazer_haptic_service.h b/bsd/dev/blazer_haptic_service.h
+new file mode 100644
+--- /dev/null
++++ b/bsd/dev/blazer_haptic_service.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: MIT */
++#ifndef BLAZER_HAPTIC_SERVICE_H
++#define BLAZER_HAPTIC_SERVICE_H
++#include <stdint.h>
++/* Native kernel ROM effect API, thread context only. Index 0..38, duration_ms
++ * 1..100 stop deadline. Amplitude 0 = silence, 10000 = uncalibrated ROM nominal;
++ * intermediate amplitudes return ENOTSUP. Success is command/cleanup success,
++ * never physical-motion confirmation. Default compile gate and boot gate off.
++ * EBUSY if another request owns controller; ENXIO if unready; EIO latches off.
++ */
++int blazer_haptic_play_rom(uint32_t index, uint32_t amplitude, uint32_t duration_ms);
++#endif

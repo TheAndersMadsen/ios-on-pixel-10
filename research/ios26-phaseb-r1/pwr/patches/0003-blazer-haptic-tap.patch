@@ -1,0 +1,224 @@
+diff --git a/bsd/dev/blazer_haptic.c b/bsd/dev/blazer_haptic.c
+index 6b6d472..a067373 100644
+--- a/bsd/dev/blazer_haptic.c
++++ b/bsd/dev/blazer_haptic.c
+@@ -16,6 +16,8 @@
+ #include <sys/systm.h>
+ #include "blazer_haptic_hw.h"
+ #include "blazer_cpmq_xnu.h"
++#include "blazer_haptic_tap.h"
++#include <os/atomic_private.h>
+ 
+ extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
+ extern kern_return_t thread_terminate(thread_t thread);
+@@ -32,8 +34,27 @@ static LCK_GRP_DECLARE(haptic_group, "blazer-haptic");
+ static LCK_MTX_DECLARE(haptic_lock, &haptic_group);
+ static unsigned service_on;
+ static bool service_ready;
++/* blazer_haptic_tap=1: one ROM effect per new touch contact (SweetHIDTouch::touch), from a worker thread. */
++static uint32_t tap_on;
++static uint32_t tap_armed;      /* set once the ID stage has made the service ready */
++static uint32_t tap_pending;
++static struct hh_tap tap;
+ #endif
+ 
++/* SweetHIDTouch::touch on a new contact, under its IOLock: no wait and no bus work here, only a wakeup. */
++void blazer_haptic_tap(void);
++void
++blazer_haptic_tap(void)
++{
++#if BLAZER_HAPTIC_SERVICE
++	if (os_atomic_load(&tap_armed, acquire) == 0) {
++		return;
++	}
++	os_atomic_store(&tap_pending, 1, release);
++	thread_wakeup((event_t)&tap_pending);
++#endif
++}
++
+ /* Thread context only, synchronous, at most 100ms effect + bounded bus polls.
+  * No user client/PCM endpoint: Actuator waveforms need a real waveform backend. */
+ int
+@@ -124,6 +145,54 @@ k_log(__unused void *ctx, const char *format, ...)
+ static void k_cpm_enter(__unused void *ctx) { blazer_cpmq_enter(); }
+ static void k_cpm_exit(__unused void *ctx) { blazer_cpmq_exit(); }
+ 
++#if BLAZER_HAPTIC_SERVICE
++static uint64_t
++tap_now_ms(void)
++{
++	uint64_t ns = 0;
++
++	absolutetime_to_nanoseconds(mach_absolute_time(), &ns);
++	return ns / NSEC_PER_MSEC;
++}
++
++/* Runs on the haptic thread after the ID stage. Never returns while tap feedback is on. */
++static void
++tap_worker(void)
++{
++	/* The physically commanded effect of haptic-3-r2 unless blazer_haptic_index/_ms say otherwise; the service caps at 100 ms */
++	uint32_t index = boot_cfg.rom_index < 39 ? boot_cfg.rom_index : 0;
++	uint32_t ms = boot_cfg.effect_ms >= 1 && boot_cfg.effect_ms <= 100 ? boot_cfg.effect_ms : 100;
++
++	printf("blazer-haptic: tap feedback on: rom %u, %u ms, gap %u ms, at most %u\n", index, ms, HH_TAP_GAP_MS, HH_TAP_MAX);
++	os_atomic_store(&tap_armed, 1, release);
++	for (;;) {
++		assert_wait((event_t)&tap_pending, THREAD_UNINT);
++		if (os_atomic_xchg(&tap_pending, 0, acq_rel) == 0) {
++			(void)thread_block(THREAD_CONTINUE_NULL);
++			continue;
++		}
++		clear_wait(current_thread(), THREAD_AWAKENED);
++		uint64_t now = tap_now_ms();
++		if (!hh_tap_due(&tap, now)) {
++			if (tap.off) {
++				break;
++			}
++			continue;
++		}
++		int rc = blazer_haptic_play_rom(index, 10000, ms);
++		hh_tap_done(&tap, now, rc);
++		if (tap.sent <= 8 || tap.sent % 25 == 0 || rc != 0) {
++			printf("blazer-haptic: tap %u rc %d (skipped %u)\n", tap.sent, rc, tap.skipped);
++		}
++		if (tap.off) {
++			break;
++		}
++	}
++	os_atomic_store(&tap_armed, 0, release);
++	printf("blazer-haptic: tap feedback off: sent %u skipped %u refused %u last rc %d\n", tap.sent, tap.skipped, tap.refused, tap.last_rc);
++}
++#endif
++
+ static void
+ haptic_thread(__unused void *parameter, __unused wait_result_t result)
+ {
+@@ -141,7 +210,11 @@ haptic_thread(__unused void *parameter, __unused wait_result_t result)
+ 	lck_mtx_lock(&haptic_lock);
+ 	service_ready = service_on == 1 && haptic.stop == HH_OK;
+ 	if (service_on == 1) printf("blazer-haptic: native ROM service ready %u, nominal only\n", service_ready);
++	bool tap_go = tap_on == 1 && service_ready;
+ 	lck_mtx_unlock(&haptic_lock);
++	if (tap_go) {
++		tap_worker();
++	}
+ #endif
+ 	(void)thread_terminate(current_thread());
+ 	thread_block(THREAD_CONTINUE_NULL);
+@@ -152,11 +225,28 @@ blazer_haptic_init(void)
+ {
+ 	thread_t thread;
+ 
+-	if (!PE_parse_boot_argn("blazer_haptic", &boot_cfg.stage, sizeof(boot_cfg.stage)) || boot_cfg.stage == 0) {
++#if BLAZER_HAPTIC_SERVICE
++	/* blazer_haptic_tap=1 alone is the whole profile: the ID-only stage (no boot buzz) plus the service. */
++	if (PE_parse_boot_argn("blazer_haptic_tap", &tap_on, sizeof(tap_on)) && tap_on == 1) {
++		uint32_t stage = HH_STAGE_ID, service = 1;
++		if ((PE_parse_boot_argn("blazer_haptic", &stage, sizeof(stage)) && stage != HH_STAGE_ID) ||
++		    (PE_parse_boot_argn("blazer_haptic_service", &service, sizeof(service)) && service != 1)) {
++			printf("blazer-haptic: tap needs stage 1 and service 1, off\n");
++			return;
++		}
++		boot_cfg.stage = HH_STAGE_ID;
++		service_on = 1;
++	} else {
++		tap_on = 0;
++	}
++#endif
++	if (boot_cfg.stage == 0 && (!PE_parse_boot_argn("blazer_haptic", &boot_cfg.stage, sizeof(boot_cfg.stage)) || boot_cfg.stage == 0)) {
+ 		return;
+ 	}
+ #if BLAZER_HAPTIC_SERVICE
+-	(void)PE_parse_boot_argn("blazer_haptic_service", &service_on, sizeof(service_on));
++	if (tap_on != 1) {
++		(void)PE_parse_boot_argn("blazer_haptic_service", &service_on, sizeof(service_on));
++	}
+ 	/* Service activation never creates a boot buzz. Explicit ID-only stage required. */
+ 	if (service_on != 0 && (service_on != 1 || boot_cfg.stage != HH_STAGE_ID)) return;
+ #endif
+diff --git a/bsd/dev/blazer_haptic_tap.h b/bsd/dev/blazer_haptic_tap.h
+new file mode 100644
+index 0000000..a747272
+--- /dev/null
++++ b/bsd/dev/blazer_haptic_tap.h
+@@ -0,0 +1,55 @@
++/* SPDX-License-Identifier: MIT
++ * Tap feedback policy for blazer_haptic_tap=1, no XNU types: the host test runs this exact logic.
++ * A new touch contact asks for one ROM effect. The worker plays it through blazer_haptic_play_rom() (0832), at most one
++ * per HH_TAP_GAP_MS and HH_TAP_MAX per boot. EBUSY skips that tap; any other error turns tap feedback off for the boot. */
++#ifndef BLAZER_HAPTIC_TAP_H
++#define BLAZER_HAPTIC_TAP_H
++#include <stdbool.h>
++#include <stdint.h>
++
++#define HH_TAP_GAP_MS   250u    /* a fast double tap gives one buzz, not two overlapping 100 ms effects */
++#define HH_TAP_MAX      300u    /* bound for one attended boot */
++#define HH_TAP_EBUSY    16      /* errno values, as sys/errno.h */
++
++struct hh_tap {
++	uint64_t last_ms;
++	uint32_t sent, skipped, refused;
++	int last_rc;
++	bool played, off;
++};
++
++/* 1: play now. 0: drop this request (too soon after the last one, budget used, or off). */
++static inline int
++hh_tap_due(struct hh_tap *t, uint64_t now_ms)
++{
++	if (t->off || t->sent >= HH_TAP_MAX) {
++		t->skipped++;
++		return 0;
++	}
++	if (t->played && now_ms - t->last_ms < HH_TAP_GAP_MS) {
++		t->skipped++;
++		return 0;
++	}
++	return 1;
++}
++
++/* After blazer_haptic_play_rom(): rc 0 played, EBUSY skipped, anything else ends tap feedback. */
++static inline void
++hh_tap_done(struct hh_tap *t, uint64_t now_ms, int rc)
++{
++	t->last_rc = rc;
++	if (rc == 0) {
++		t->sent++;
++		t->played = true;
++		t->last_ms = now_ms;
++	} else if (rc == HH_TAP_EBUSY) {
++		t->skipped++;
++	} else {
++		t->refused++;
++		t->off = true;
++	}
++	if (t->sent >= HH_TAP_MAX) {
++		t->off = true;
++	}
++}
++#endif
+diff --git a/iokit/Kernel/arm/hid/SweetHID.cpp b/iokit/Kernel/arm/hid/SweetHID.cpp
+index 1fb99b0..0d7e98e 100644
+--- a/iokit/Kernel/arm/hid/SweetHID.cpp
++++ b/iokit/Kernel/arm/hid/SweetHID.cpp
+@@ -346,6 +346,9 @@ IOHIDEventService::newUserClient(task_t owningTask, void *securityID, UInt32 typ
+ #if defined(TEGU)
+ #include "tegu_gesture_replay.h"
+ extern "C" void sweet_hid_touch(int,int,int,int);
++#if defined(BLAZER)
++extern "C" void blazer_haptic_tap(void);   /* bsd/dev/blazer_haptic.c */
++#endif
+ #endif
+ #include "hk_ui_replay.h"
+ #if defined(BLAZER)
+@@ -795,6 +798,9 @@ SweetHIDTouch::touch(int finger, bool down, int x, int y)
+ 		return;
+ 	}
+ 	if (!was && down) {
++#if defined(BLAZER)
++		blazer_haptic_tap();    /* blazer_haptic_tap=1: one buzz per new contact; a no-op wakeup otherwise */
++#endif
+ 		fEdge[finger] = x < SWEET_TOUCH_EDGE_PX || x > SWEET_TOUCH_PANEL_W - 1 - SWEET_TOUCH_EDGE_PX ||
+ 		    y < SWEET_TOUCH_EDGE_PX || y > SWEET_TOUCH_PANEL_H - 1 - SWEET_TOUCH_EDGE_PX;
+ 	}

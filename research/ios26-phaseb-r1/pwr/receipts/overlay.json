@@ -1,0 +1,18 @@
+{
+  "base_sha256": "95701ed9bf56e7e7b13d9b50af02d05daf007206fc10ad5aed861879ee883e55",
+  "output_sha256": "d0804b36bb540b1e63eeda033654e252ff4da8359b5c0f1d6f6d1af631b27b97",
+  "bytes": 611256,
+  "records": 50,
+  "mask": "0xa0080081",
+  "replaced": {
+    "0 springboard.plist": "-SBDontLockEver, 24 -> 23 keys, 793 -> 774 B, sha256 b3941b70fcdc12e84424c2bbb248d7f6df5795cb232202ebc832723ca00521d4"
+  },
+  "appended": {
+    "/private/var/db/timezone/localtime": {
+      "group": 0,
+      "type": "l",
+      "target": "/var/db/timezone/zoneinfo/Europe/Copenhagen"
+    }
+  },
+  "other_records_byte_identical": 48
+}

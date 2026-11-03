@@ -1,0 +1,1 @@
+PASS: kernel consumers (e731e68); one record changed (springboard.plist), one appended (localtime -> /var/db/timezone/zoneinfo/Europe/Copenhagen), exec rules identical; 233 checks
