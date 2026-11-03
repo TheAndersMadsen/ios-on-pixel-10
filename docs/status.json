@@ -424,5 +424,22 @@
         ]
       ]
     }
+  ],
+  "hero": [
+    {
+      "value": "5/5",
+      "unit": "",
+      "label": "fast cores under iOS"
+    },
+    {
+      "value": "12.92",
+      "unit": "GiB",
+      "label": "RAM under iOS"
+    },
+    {
+      "value": "42",
+      "unit": "s",
+      "label": "to Android via chooser"
+    }
   ]
 }

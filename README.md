@@ -2,30 +2,20 @@
 
 <p align="center"><img src="docs/assets/hero.svg" alt="iOS 26 on Pixel 10 Pro: 47% of reachable hardware" width="100%"></p>
 
-<h2 align="center">A phone that was never meant to do this.</h2>
-<p align="center">Apple's open-source kernel. iOS 26's own userland. Google's Tensor G5.<br>Custom drivers, written block by block, for one extraordinary piece of hardware.</p>
-
-<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 47% estimate"> <img src="docs/assets/badge-stage.svg" alt="stage: experimental"> <img src="docs/assets/badge-target.svg" alt="target: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377, iOS 26"> <img src="docs/assets/badge-boot.svg" alt="boot: RAM only"> <img src="docs/assets/badge-repo.svg" alt="repo: private"> <img src="docs/assets/badge-licence.svg" alt="licence: none granted"></p>
+<p align="center"><img src="docs/assets/badge-progress.svg" alt="progress: 47%"> <img src="docs/assets/badge-target.svg" alt="device: Pixel 10 Pro"> <img src="docs/assets/badge-software.svg" alt="running: XNU 12377 · iOS 26"></p>
 <p align="center"><a href="#progress">Progress</a> · <a href="#quick-start">Quick start</a> · <a href="#roadmap">Roadmap</a> · <a href="#how-it-boots">How it boots</a> · <a href="#documentation">Docs</a> · <a href="#contributing">Contributing</a> · <a href="#licensing">Licensing</a> · <a href="#credits">Credits</a></p>
 
 <p align="center"><img src="docs/assets/stats.svg" alt="Measured on the phone" width="100%"></p>
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>47%</b> across 49 reachable features. Updated 2026-11-03.</p>
+<p align="center"><b>47%</b> of 49 reachable features · updated 2026-11-03</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
-| | Status | Features | Counts as |
-| --- | --- | ---: | ---: |
-| ✅ | Works on the phone | 12 | 100% |
-| 🟡 | Partly working | 14 | 60% |
-| 🔧 | Built, not run | 1 | 35% |
-| ⏳ | In progress | 11 | 20% |
-| ❌ | Not started | 11 | 0% |
-| 🚫 | Likely out of reach | 6 | not counted |
+<p align="center"><sub>✅ Works on the phone 12 · 🟡 Partly working 14 · 🔧 Built, not run 1 · ⏳ In progress 11 · ❌ Not started 11 · 🚫 Likely out of reach 6</sub></p>
 
-<details><summary><b>See every feature</b></summary>
+<details><summary><b>Every feature</b></summary>
 
 | Block | Feature | Status |
 | --- | --- | --- |
@@ -85,11 +75,11 @@
 |  | Secure enclave | 🚫 Apple SEP is absent; the current key-store provider cannot wrap keys. Native data-protection support remains incomplete |
 | **Apple services** | Activation, iMessage, App Store purchases | 🚫 Need a real iPhone's identity |
 
+<sub>Scores: works on the phone 100%, partly working 60%, built, not run 35%, in progress 20%, not started 0%. A planning estimate, not a benchmark. Rebuild with `python3 -I tools/readme_status.py` after editing `docs/status.json`.</sub>
+
 </details>
 
-<sub>Percentages are a progress estimate from the table above, not a benchmark. Measured figures come from single test boots of one phone, and their notes say which were short tests or estimates. Rebuild with `python3 -I tools/readme_status.py` after editing `docs/status.json`.</sub>
-
-> **What this is.** An experimental research bring-up on the owner's own phone, not a usable phone OS and not a product. Nothing here is for sale. It isn't affiliated with or endorsed by Apple or Google. No Apple software or firmware is distributed here. Apple's security model is largely switched off, so the phone isn't safe for real data.
+> **What this is.** An experimental research bring-up on the owner's own phone, not a product. Not affiliated with or endorsed by Apple or Google. No Apple software or firmware is distributed here. Apple's security model is largely switched off, so the phone isn't safe for real data.
 
 <!-- status:end -->
 
