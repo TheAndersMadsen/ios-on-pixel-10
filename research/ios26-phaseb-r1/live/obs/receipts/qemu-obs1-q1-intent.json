@@ -1,0 +1,5 @@
+{"run": "obs1-q1", "scope": "QEMU only (m1box TCG, side by side with another owner's aud1-q-r1 under --slots 3)",
+ "setup": "aud1-q-r1's: root research/ios26-root-r1/build-r3/ios26-phone-r3.img (read only), the same argument tail without blazer_audio",
+ "changes": ["kernel kernel.obs1 f923e828 (hk-obs1 d3cec04 = hk-int1 484717f + 0001-hk-obs1.patch)", "overlay obs1-r1 8b4fc793 (the phone image's own)"],
+ "expect": ["HKOBS <seq> tick t=N lines every 10 s (wifi/bt off, usb off in QEMU, con, proc)", "hk_env: Preferences/SpringBoard ... rules' libraries in one DYLD_INSERT_LIBRARIES if they launch", "HKL <prog>[pid] -- mirror on lines for the mirrored daemons that run (configd, lsd, tccd, locationd, CommCenter, wifid ...)", "no panic other than the harness end"],
+ "stop": "guest abnormal exit or root changed; no retry with the same inputs"}

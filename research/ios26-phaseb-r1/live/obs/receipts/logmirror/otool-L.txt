@@ -1,0 +1,3 @@
+research/ios26-phaseb-r1/live/obs/build/hk_logmirror.dylib:
+	/private/var/hk/hk_logmirror.dylib (compatibility version 0.0.0, current version 0.0.0)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)

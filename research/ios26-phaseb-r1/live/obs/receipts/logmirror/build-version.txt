@@ -1,0 +1,10 @@
+research/ios26-phaseb-r1/live/obs/build/hk_logmirror.dylib:
+Load command 10
+      cmd LC_BUILD_VERSION
+  cmdsize 32
+ platform IOS
+    minos 26.0
+      sdk 27.1
+   ntools 1
+     tool LD
+  version 27037.1

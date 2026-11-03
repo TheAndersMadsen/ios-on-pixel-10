@@ -1,0 +1,38 @@
+== kernel headers (hk_env_merge.h, hk_obs.h)
+PASS: 68 checks, 0 failed
+PASS test_hk_obs
+== logmirror line format
+PASS: 22 checks, 0 failed
+PASS test_logmirror_fmt
+== logmirror injected into a program
+PASS gate 0: console empty, stderr untouched
+PASS no gate: console empty
+PASS gate 1: banner + 10 tagged lines, stderr empty
+PASS gate 1: pid in the tag is the program's
+PASS default budget: 500 fast lines -> the burst of 64
+PASS HK_LOGMIRROR=00: no per-program limit, all 500
+PASS HK_LOGMIRROR=5,10: 10 lines
+PASS flood: 300000 lines never block the program (rc 0, < 10 s)
+SKIP os_log and SIGPIPE checks (macOS only)
+PASS run_logmirror
+== env per program, from the obs1-r1 overlay's hk_env
+PASS env_per_program
+== tools/hklog.py
+Ran 12 tests in 0.016s
+
+OK
+PASS test_hklog
+== mutants (each must FAIL test_hk_obs)
+caught first-rule-wins
+caught no-dedup
+caught dyld-twice
+caught cut-library
+caught no-mirror-flag
+caught bucket-no-refill
+caught bucket-past-burst
+caught prefix-match
+caught status-signal
+caught line-overrun
+caught table-overflow
+
+ALL PASS

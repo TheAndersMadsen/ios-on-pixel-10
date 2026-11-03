@@ -1,0 +1,18 @@
+phone root: /private/tmp/hk-live-root on the Mac = read-only attach of research/ios26-root-r1/build-r3/ios26-phone-r3.img (hdiutil info: image-path .../ios26-phone-r3.img -> /dev/disk18 /private/tmp/hk-live-root; mount: hfs, local, read-only, nobrowse). Checked 2026-11-03 21:53.
+present /usr/sbin/wifid
+ABSENT  /usr/sbin/airportd
+ABSENT  /usr/libexec/airportd
+present /usr/libexec/configd
+present /usr/sbin/bluetoothd
+present /usr/sbin/WirelessRadioManagerd
+present /System/Library/Frameworks/CoreTelephony.framework/Support/CommCenter
+present /usr/libexec/locationd
+present /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+present /usr/libexec/lsd
+present /System/Library/CoreServices/SpringBoard.app/SpringBoard
+present /Applications/MobilePhone.app/MobilePhone
+present /Applications/Preferences.app/Preferences
+present /usr/libexec/wifianalyticsd
+present /usr/libexec/wifip2pd
+present /usr/libexec/wifivelocityd
+LaunchDaemons matching airport: 0

@@ -1,0 +1,11 @@
+PASS gate 0: console empty, stderr untouched
+PASS no gate: console empty
+PASS gate 1: banner + 10 tagged lines, stderr empty
+PASS gate 1: pid in the tag is the program's
+PASS default budget: 500 fast lines -> the burst of 64
+PASS HK_LOGMIRROR=00: no per-program limit, all 500
+PASS HK_LOGMIRROR=5,10: 10 lines
+PASS flood: 300000 lines never block the program (rc 0, < 10 s)
+PASS os_log under DT mode: 5 tagged lines, date and head dropped
+  sample: HKL drv[59737] OSLOG-MARKER 0
+PASS the program closes the reader's fd: no SIGPIPE, rc 0

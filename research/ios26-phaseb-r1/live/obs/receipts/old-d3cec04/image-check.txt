@@ -1,0 +1,2 @@
+OK a7-ios-system-obs1 bootable bef7ceddf17c6f0f16f1bf65e8816d16707b22e5fad25260ddbe3f2a087c486b
+shared tools/image_tool.py: OK a7-ios-system-obs1 bootable bef7ceddf17c6f0f16f1bf65e8816d16707b22e5fad25260ddbe3f2a087c486b

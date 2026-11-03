@@ -1,0 +1,17 @@
+run obs1-q2 (QEMU m1box TCG), kernel kernel.obs1 2841211 b8f00379 (final), overlay obs1-r1 8b4fc793, root ios26-phone-r3.img read only
+stopped by hand at guest 120 s: the one change from q1 (t= base) was shown
+t= vs watch:
+blazer-root: watch t 10021 ms stage pid1_exec reads 23534 blocks 23534 busy 46 ms max 1664 us last lba 2544166
+HKOBS 1 tick t=10 con: budget 2048 B/s burst 32768, ok 0 lines 0 B (not in the table 0), dropped 0 lines 0 B
+blazer-root: watch t 20023 ms stage pid1_exec reads 61285 blocks 61285 busy 112 ms max 2219 us last lba 354378
+HKOBS 2 tick t=20 con: budget 2048 B/s burst 32768, ok 1 lines 86 B (not in the table 0), dropped 0 lines 0 B
+blazer-root: watch t 30025 ms stage pid1_exec reads 84061 blocks 84061 busy 250 ms max 79297 us last lba 28562
+HKOBS 3 tick t=30 con: budget 2048 B/s burst 32768, ok 6 lines 1116 B (not in the table 0), dropped 0 lines 0 
+HKL lines per program:
+    131 configd
+    296 lsd
+      8 SpringBoard
+    288 tccd
+hk_env: SpringBoard: 2 rules' libraries in one DYLD_INSERT_LIBRARIES
+panic/usertrap lines: 0
+HKOBS 11 tick t=110 proc: SpringBoard 1/0 - l8 d0 configd 1/0 - l130 d0 backboardd 1/0 - powerd 1/0 - lsd 1/0 - l231 d0 iconservicesagent 1/0 - tccd 1/0 - l244 d0

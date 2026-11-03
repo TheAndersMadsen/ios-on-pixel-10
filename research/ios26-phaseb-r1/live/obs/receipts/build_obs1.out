@@ -1,0 +1,25 @@
+21:45:50 waiting for build slot lock
+21:45:50 lock held
+21:45:50 tree branch p1 HEAD b228c4f
+21:45:51 hk-obs1 at d3cec042410477184b1f81ab8448912e9d745815 was made from an earlier patch: replaced
+21:45:52 hk-obs1 = 284121116f90c6549c8a3bc35250579c9cd9f155 (on 484717f)
+21:45:52 checked out hk-obs1 284121116f90c6549c8a3bc35250579c9cd9f155
+21:46:31 build obs1-build rc 0
+21:46:31 b8f00379d9a9f7a51e2b49a322d8ec6d661e7c36c997bab3f31f8a3335cd53c4  kernel.obs1
+21:46:31 51a9d1a184f337bb32f4ee6c42258e100508308010c3509e2ef0246cfddb3c4f  kernel.obs1.unstripped
+21:46:31 fcd6d4b2b01a92e25b8a63c5bb25f654433bf97fc617b6bd95adc685fda9eebd  hk_obs.o (/bsd/DEVELOPMENT/hk_obs.o)
+21:46:31 36110490c82f70638c7347d2258123b93dc14fa47ea3cb0c2ec86a1933d002a3  kern_exec.o (/bsd/DEVELOPMENT/kern_exec.o)
+21:46:31 289c757aac29bd6628416de4e308b51b79cf847d31a77f4e69797bd214a222b7  kern_exit.o (/bsd/DEVELOPMENT/kern_exit.o)
+21:46:31 d621719e1aa357028c7d13f5ff8fd474228e7bafe0d2639db9d92d973a589529  cons.o (/bsd/DEVELOPMENT/cons.o)
+21:46:31 248ebed10dc5328a4e21051f209b66df4b9f51d6cba318d2335d73bc9228254e  debug.o (/osfmk/DEVELOPMENT/debug.o)
+21:46:31 83faca0f862990187456776e516bb46222c14bb4f77cc1312b3bbe24f4294ff5  blazer_wifi.o (/bsd/DEVELOPMENT/blazer_wifi.o)
+21:46:31 563889662390493acc295f0865afa53d161588ef3a0895fe0c44310cd7564d13  blazer_bcm4390.o (/bsd/DEVELOPMENT/blazer_bcm4390.o)
+21:46:31 f82654369eaebe679897786648bf17a92593ee156cf30eb33335634e16247fc6  blazer_bcm4390_scan.o (/bsd/DEVELOPMENT/blazer_bcm4390_scan.o)
+21:46:31 d0379b94d394616656c2ba533cd10bcbc00de9020247525abdd900896d59922b  blazer_bt_bridge.o (/bsd/DEVELOPMENT/blazer_bt_bridge.o)
+21:46:31 4f16bd96c2d54e1809526fe7245752db0eaebf023e02c7dcd6a1b7a41ce21d42  blazer_btuart.o (/bsd/DEVELOPMENT/blazer_btuart.o)
+21:46:31 a8e5abe287d52fec340d4c18fee7a9b512f9f8dcbee416e843dcf3b95eb7c38b  blazer_usbcon.o (/osfmk/DEVELOPMENT/blazer_usbcon.o)
+21:46:31 7e28cb942c9c41f6debf4a4c33c1c98c80a14254776e797fc3eb37afafb8d74e  hakios.blazer_ufs.o (/bsd/DEVELOPMENT/hakios.blazer_ufs.o)
+21:46:32 restored branch p1 HEAD b228c4f
+21:47:09 build obs1-restore-p1-build rc 0
+21:47:09 obj kernel after restore 046007d7acb1e3ec47dc60850c06ff2eeedac3777b7973cad43c6b521bf23ba6
+21:47:09 restored p1 kernel has the HKOBS string: False

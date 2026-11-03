@@ -1,0 +1,75 @@
+hk_env text 919 bytes (+NUL), hk_env_check OK
+wifid:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+configd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+bluetoothd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+WirelessRadioManagerd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+CommCenter:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+locationd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+tccd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+lsd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+SpringBoard:
+    FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib:/private/var/hk/hk_logmirror.dylib
+    HK_BATTERY_TRACE=1
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 5 variables, mirrored yes, DYLD rules 2, libraries lost 0
+MobilePhone:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hk_logmirror.dylib
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 3 variables, mirrored yes, DYLD rules 1, libraries lost 0
+Preferences:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib:/private/var/hk/hk_mainwatch.dylib:/private/var/hk/hk_logmirror.dylib
+    HK_SETTINGS_ARTWORK=1
+    HK_MAINWATCH=1
+    HK_LOGMIRROR=1
+    OS_ACTIVITY_DT_MODE=YES
+  = 5 variables, mirrored yes, DYLD rules 2, libraries lost 0
+backboardd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib
+    HK_CONTAINER_READY=probe
+    HK_ACCEL_ONCE=skip
+  = 3 variables, mirrored no, DYLD rules 1, libraries lost 0
+powerd:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+    HK_BATTERY_TRACE=1
+  = 2 variables, mirrored no, DYLD rules 1, libraries lost 0
+iconservicesagent:
+    DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+    HK_SETTINGS_ARTWORK=1
+  = 2 variables, mirrored no, DYLD rules 1, libraries lost 0
+airportd:
+  = 0 variables, mirrored no, DYLD rules 0, libraries lost 0

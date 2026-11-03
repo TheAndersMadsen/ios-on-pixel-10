@@ -1,0 +1,23 @@
+run obs1-q1 (QEMU m1box TCG), kernel kernel.obs1 d3cec04 f923e828, overlay obs1-r1 8b4fc793, root ios26-phone-r3.img read only
+{"elapsed": 900.8732070030001, "exit": 0, "root_unchanged": true}
+console.log 654002 B
+HKOBS lines: 192, ticks: 74
+HKL lines per program:
+    141 configd
+   2754 lsd
+     89 SpringBoard
+    586 tccd
+merge lines:
+hk_env: SpringBoard: 2 rules' libraries in one DYLD_INSERT_LIBRARIES
+HKBATT lines: 23
+panic/usertrap lines: 0
+last con/proc:
+HKOBS 88 tick t=870 con: budget 2048 B/s burst 32768, ok 3570 lines 418901 B (not in the table 0), dropped 0 lines 0 B
+HKOBS 87 tick t=860 proc: SpringBoard 1/0 - l89 d0 backboardd 1/0 - powerd 1/0 - configd 1/0 - l141 d0 lsd 1/0 - l2754 d0 iconservicesagent 1/0 - tccd 1/0 - l552 d0
+HKOBS 88 tick t=870 proc: SpringBoard 1/0 - l89 d0 backboardd 1/0 - powerd 1/0 - configd 1/0 - l141 d0 lsd 1/0 - l2754 d0 iconservicesagent 1/0 - tccd 1/0 - l586 d0
+first HKOBS group:
+HKOBS 1 tick t=0 wifi: off (no blazer_wifi=1)
+HKOBS 1 tick t=0 bt: off (no blazer_bt=)
+HKOBS 1 tick t=0 usb: off (no blazer_usbcon=)
+HKOBS 1 tick t=0 con: budget 2048 B/s burst 32768, ok 0 lines 0 B (not in the table 0), dropped 0 lines 0 B
+HKOBS 1 tick t=0 proc: none yet

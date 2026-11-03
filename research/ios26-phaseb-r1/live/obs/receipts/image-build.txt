@@ -1,0 +1,2 @@
+a7-ios-system-obs1 bootable 3deb4bab27710cfee4e62c2161a0f8fac6d9dd2b85f9ec0bb90dc9e9329d9412 payload 26150176 margin 39910112
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-obs1/manifest.json

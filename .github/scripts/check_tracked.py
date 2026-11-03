@@ -53,6 +53,7 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-gpu-r1/m2/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log|patch)
   | ios26-gpu-r1/((src|tests|tools|receipts)/)?[A-Za-z0-9_.-]+\.(md|c|h|sh|py|txt|diff|json|log)
   | ios26-phaseb-r1/fast-start/[A-Za-z0-9_.-]+\.md
+  | ios26-phaseb-r1/live/obs/([A-Za-z0-9_.-]+/){0,2}[A-Za-z0-9_.-]+\.(md|c|h|py|sh|txt|json|patch|out)
   | ios26-phaseb-r1/about/([A-Za-z0-9_.-]+/){0,2}[A-Za-z0-9_.-]+\.(md|c|h|py|sh|txt|json|patch|out)
   | ios26-audio-r1/([A-Za-z0-9_.-]+/){0,4}[A-Za-z0-9_.-]+\.(md|c|h|m|py|sh|txt|json|patch|inc)
   | ios26-phaseb-r1/(verify|crashdoc)/[A-Za-z0-9_.-]+\.(md|txt|json)

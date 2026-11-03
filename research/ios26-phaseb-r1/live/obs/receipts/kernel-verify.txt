@@ -1,0 +1,43 @@
+kernel 51a9d1a184f337bb32f4ee6c42258e100508308010c3509e2ef0246cfddb3c4f  research/ios26-phaseb-r1/live/obs/build/kernel.obs1.unstripped
+branch hk-obs1 284121116f90c6549c8a3bc35250579c9cd9f155 parent 484717fc194d599cfd28985012b19e7bf0be9748
+undefined symbols: 0
+-- symbols
+_hk_obs_start              fffffe0007daf2c0 S
+_hk_obs_exec               fffffe0007daeb40 S
+_hk_obs_exit               fffffe0007daedc0 S
+_hk_obs_console            fffffe0007daeee0 S
+_hk_obs_tick               fffffe0007daf3b0 S
+_hk_obs_final              fffffe0007db0700 S
+_hk_obs_panic              fffffe0007db07f0 S
+_blazer_wifi_obs           fffffe0007a19a50 S
+_blazer_wifi_obs_fw        fffffe0007a19d40 S
+_blazer_bt_obs             fffffe0007a29e80 S
+_blazer_bt_bridge_obs      fffffe0007a2bfc0 S
+_blazer_usbcon_obs         fffffe0007981890 S
+-- strings
+HKOBS %u %s t=%llu %s: %s                        1
+HKOBS %u %s t=%llu proc:%s%s                     1
+rules' libraries in one DYLD_INSERT_LIBRARIES    1
+budget %u B/s burst %u                           1
+off (no blazer_wifi=1)                           1
+off (no blazer_bt=)                              1
+off (no blazer_usbcon=)                          1
+bridge %s%s, level %d                            1
+hk_conlim                                        1
+hk_conburst                                      1
+console %s%s%s, stream %llu B                    1
+-- callers (bl or a tail-call b to the hook, in the function that should call it)
+_cnwrite                     -> _hk_obs_console        1
+_proc_exit                   -> _hk_obs_exit           1
+_hk_exec_env_add             -> _hk_obs_exec           1
+_panic_trap_to_debugger      -> _hk_obs_panic          1
+_ufs_root_watch              -> _hk_obs_tick           1
+_ufs_root_watch              -> _hk_obs_final          1
+_hk_obs_report               -> _blazer_wifi_obs       1
+_hk_obs_report               -> _blazer_bt_obs         1
+_hk_obs_report               -> _blazer_usbcon_obs     1
+_blazer_bt_obs               -> _blazer_bt_bridge_obs  1
+_hakios_blazer_watch_start   -> _hk_obs_start          1
+-- hk_exec_env_add present as a function (noinline): 1
+-- build warnings in changed files
+(end of warnings)

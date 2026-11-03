@@ -1,0 +1,26 @@
+hklog: /tmp/obs1/hk-int1-r: 6666 lines (end of file; boot ended: panic line (the end of this boot; what follows is older))
+hklog summary, 2026-11-03 21:53:04
+
+input: ramdump/raw; 539359 bytes read; stopped: panic line (the end of this boot; what follows is older)
+
+lines per file:
+  all.log                      6666
+  apps.log                     712
+  bt.log                       2
+  display.log                  421
+  hkl/tccd.log                 622
+  input.log                    116
+  launchd.log                  789
+  net.log                      3
+  other.log                    1833
+  panic.log                    1
+  power.log                    340
+  proc.log                     104
+  security.log                 2276
+  status.log                   159
+  usb.log                      19
+
+last HKOBS status per subsystem:
+
+HKL lines seen here, per program (pids):
+  tccd                         622  pids 32
