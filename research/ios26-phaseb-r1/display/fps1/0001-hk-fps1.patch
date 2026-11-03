@@ -1,0 +1,452 @@
+diff -ruN a/iokit/Kernel/arm/sweet_fb_refresh.h b/iokit/Kernel/arm/sweet_fb_refresh.h
+--- a/iokit/Kernel/arm/sweet_fb_refresh.h	2026-11-04 00:15:08.694130643 +0100
++++ b/iokit/Kernel/arm/sweet_fb_refresh.h	2026-11-04 00:26:02.401272831 +0100
+@@ -84,10 +84,12 @@
+ 	return left;
+ }
+ 
+-/* One line every 5 s with swaps in it: what CA sent, what reached the DPU, and where it changed. */
++/* One line every 5 s with swaps in it: what CA sent, what reached the DPU, and where it changed.
++ * busy: SwapWait answers of Busy (CoreAnimation held back by the kernel). staged: frames copied while the previous one was still being sent (hk_fb_fast=2). */
+ struct sweet_fb_rate {
+ 	uint64_t since_us, last_us;
+ 	uint32_t swaps, kicks, unsaid, max_gap_us;
++	uint32_t busy, staged;
+ 	struct sweet_fb_rect changed;
+ };
+ 
+@@ -112,6 +114,7 @@
+ {
+ 	r->since_us = now_us;
+ 	r->swaps = r->kicks = r->unsaid = r->max_gap_us = 0;
++	r->busy = r->staged = 0;
+ 	r->changed.x = r->changed.y = r->changed.w = r->changed.h = 0;
+ }
+ 
+@@ -121,4 +124,44 @@
+ {
+ 	return span_us == 0 ? 0 : (uint32_t)((uint64_t)n * 10000000ULL / span_us);
+ }
++/*
++ * hk_fb_fast=2: the fast copy (as 1) plus a second panel buffer. A copy can't go into the buffer being sent, so with one buffer every frame waits for
++ * FRM_DONE before its 1.6-2.1 ms copy, and SwapWait holds CoreAnimation all that time (physical fb120: kicks <= 65/s while swaps reached 69.5/s, then
++ * ~25/s for whole-canvas motion). With two, the next frame is copied into the idle buffer while the last one is sent, and FRM_DONE only kicks it.
++ * Only with 120 by copy: not with flip (the pool's first slot is the second buffer), dirty copy (one damage history), or VRR (DCS only with nothing in flight).
++ */
++#define SWEET_FB_FAST_DBUF 2u
++static inline const char *
++sweet_fb_dbuf_refusal(uint32_t fast, uint32_t running, bool flip, bool dirty, bool vrr, bool scanout)
++{
++	if (fast != SWEET_FB_FAST_DBUF) return "not asked";
++	if (running != 120) return "refresh not 120";
++	if (flip) return "flip on";
++	if (dirty) return "dirty copy on";
++	if (vrr) return "vrr on";
++	if (!scanout) return "no scaled scanout";
++	return 0;
++}
++
++/* What the workloop does on a tick. Frames go out in order: a frame already staged is never replaced, so none is copied and then dropped. */
++enum sweet_fb_dbuf_act {
++	SWEET_FB_DBUF_NONE = 0,
++	SWEET_FB_DBUF_KICK,         /* the staged frame goes out now */
++	SWEET_FB_DBUF_COPY_KICK,    /* nothing in flight, nothing staged: copy into the idle buffer and kick it */
++	SWEET_FB_DBUF_STAGE,        /* a frame is in flight: copy the waiting one into the idle buffer */
++};
++static inline enum sweet_fb_dbuf_act
++sweet_fb_dbuf_step(bool ready, bool dirty, bool staged)
++{
++	if (ready) return staged ? SWEET_FB_DBUF_KICK : dirty ? SWEET_FB_DBUF_COPY_KICK : SWEET_FB_DBUF_NONE;
++	return dirty && !staged ? SWEET_FB_DBUF_STAGE : SWEET_FB_DBUF_NONE;
++}
++
++/* paceNextUS with a frame in flight: stage a waiting frame at once, else poll for FRM_DONE as 120 by copy does (a staged frame counts as waiting). */
++static inline uint32_t
++sweet_fb_dbuf_poll_us(uint32_t left, bool dirty, bool staged)
++{
++	if (dirty && !staged) return 1;
++	return sweet_fb_pace_poll_us(left, 120, dirty || staged);
++}
+ #endif
+diff -ruN a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp	2026-11-04 00:15:08.689686793 +0100
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp	2026-11-04 00:26:02.396646027 +0100
+@@ -124,6 +124,8 @@
+ #define SWEET_FB_POOL_SLOTS             4
+ #define SWEET_FB_DIRTY_HEAL             256     /* every Nth copy is whole, whatever the rectangles say */
+ #define SWEET_FB_STATS_EVERY            64
++#define SWEET_FB_PRESENT_DRAWN          1u
++#define SWEET_FB_PRESENT_PANEL          2u
+ 
+ class IOMobileFramebuffer : public IOService {
+ 	OSDeclareDefaultStructors(IOMobileFramebuffer);
+@@ -199,6 +201,14 @@
+ 	uint64_t      fDamageEpoch, fPresentDamageEpoch; /* ZC: never consume damage queued after this frame was taken */
+ 	uint32_t      fFlipHeal[SWEET_FB_POOL_SLOTS];  /* hk_dpu ZC: flips of the slot since its last whole clean */
+ 	struct hk_vrr fVrr;        /* hk_dpu VRR: the workloop steps it, swap/input stamps it, both under fLock; DCS outside */
++	/* hk_fb_fast=2 (sweet_fb_refresh.h): two panel buffers. Buffer state is the workloop's alone; paceNextUS reads it there too. */
++	bool          fDbuf;
++	uintptr_t     fBackPixels;    /* the second buffer, device memory as fPixels, same stride */
++	IOMemoryMap  *fBackMap;
++	uint32_t      fCur;           /* the buffer the last copy-path kick sent: 0 fPixels, 1 fBackPixels */
++	bool          fStaged;        /* fStagedBuf holds a whole frame not yet kicked */
++	uint32_t      fStagedBuf;     /* normally 1 - fCur; fCur when nothing was copied (a resend), 0 when the panel's own surface was presented */
++	struct sweet_present_stamp fStagedTrace;
+ 	void          vrrRun(enum sweet_vrr_act a, uint64_t now_us);
+ 
+ 	bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
+@@ -206,7 +216,9 @@
+ 	void removeClient(IOMobileFramebufferUserClient *client);
+ 	void stop(IOService *provider) APPLE_KEXT_OVERRIDE;
+ 	void swap(const uint8_t *rec, const struct sweet_fb_rect *changed);
+-	void present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace);
++	uint32_t present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace, uintptr_t dst);
++	void dbufStart(void);
++	bool pendingUsesPanel(void);
+ 	bool presentFlip(const uint8_t *rec, sweet_fb_pending_surfaces *surfaces, const struct sweet_present_stamp *trace);
+ 	void muteConsoleOnce(void);
+ 	void publishPlanes(void);
+@@ -585,6 +597,13 @@
+ 	fTimerAdded = false;
+ 	fDirty = false;
+ 	fPendingTrace = {};
++	fDbuf = false;
++	fBackPixels = 0;
++	fBackMap = NULL;
++	fCur = 0;
++	fStaged = false;
++	fStagedBuf = 0;
++	fStagedTrace = {};
+ 	sweet_fb_swap_lifecycle_init(&fSwapLifecycle);
+ 
+ 	if (!IOService::start(provider)) {
+@@ -674,7 +693,7 @@
+ 	gate = sweet_dpu_refresh_ask(fDpu, refresh_arg, gate);  /* no hk_dpu: gate as parsed */
+ 	if (refresh_arg || gate != 0) {
+ 		fRefreshAsked = gate;
+-		fRefresh = sweet_fb_refresh_decide(gate, fFlip, sweet_fb_fast == 1);
++		fRefresh = sweet_fb_refresh_decide(gate, fFlip, sweet_fb_fast != 0);
+ 		if (fRefresh != 0) {
+ 			uint32_t ticks = sweet_fb_refresh_ticks(fRefresh);
+ 			fPace = true;
+@@ -733,6 +752,7 @@
+ 		}
+         if ((vrr_bits & HK_DPU_VRR) && !fVrr.on) IOLog("SWEET FB: vrr disabled: busy rate %u or inactive scanout\n", panel_hz);
+ 	}
++	dbufStart();
+ 	if (fDpu != 0) {
+ 		IOLog("SWEET FB: dpu bits %#x zc %d flip %d dirty %d refresh %u\n", fDpu, (fDpu & HK_DPU_ZC) != 0, fFlip, fDirtyMode, fRefresh);
+ 	}
+@@ -769,6 +789,50 @@
+ 	return true;
+ }
+ 
++/*
++ * hk_fb_fast=2: map the second panel buffer, the flip pool's first slot (unmanaged low DRAM, as the panel's own buffer; r1d fetched from there), as device
++ * memory like fPixels. Refused, with a reason, unless 120 runs by copy on a scaled scanout. The mapping is kept for the boot: hk_screen may read it lock free.
++ */
++/* Lock held. hk_fb_fast=2: the waiting swap presents the panel's own surface (CoreAnimation drew in fPixels itself). */
++bool
++AppleCLCD::pendingUsesPanel(void)
++{
++	if (!fDirty || fSurface == NULL) return false;
++	uint32_t mask = get32(fPending, 0x104);
++	for (uint32_t l = 0; l < SWEET_FB_LAYERS; l++)
++		if ((mask & (1u << l)) && get32(fPending, 0x54 + 4 * l) == fSurface->id) return true;
++	return false;
++}
++
++void
++AppleCLCD::dbufStart(void)
++{
++	if (sweet_fb_fast != SWEET_FB_FAST_DBUF) return;
++	uint64_t bytes = round_page((uint64_t)fRowBytes * fHeight);
++	const char *why = sweet_fb_dbuf_refusal(sweet_fb_fast, fRefresh, fFlip, fDirtyMode, fVrr.on, sweet_scanout_can_flip() != 0);
++	if (why == NULL && fMinKickUS != 0) why = "sweetfb_hz below 60";
++	if (why == NULL && bytes > SWEET_FB_POOL_SLOT) why = "buffer larger than a pool slot";
++	if (why == NULL) {
++		IOMemoryDescriptor *md = IOMemoryDescriptor::withPhysicalAddress(SWEET_FB_POOL_PA, bytes, kIODirectionInOut);
++		fBackMap = md != NULL ? md->map(kIOMapWriteCombineCache) : NULL;
++		OSSafeReleaseNULL(md);  /* the map holds it */
++		fBackPixels = fBackMap != NULL ? (uintptr_t)fBackMap->getVirtualAddress() : 0;
++		if (fBackPixels == 0) why = "no mapping";
++	}
++	if (why == NULL) {
++		sweet_fb_device_fill(fBackPixels, fRowBytes, fWidth, fHeight, 0xff000000u);
++		if (!sweet_scanout_back_attach(SWEET_FB_POOL_PA, fBackPixels)) why = "scanout refused it";
++	}
++	if (why != NULL) {
++		IOLog("SWEET FB: dbuf off: %s; one buffer\n", why);
++		OSSafeReleaseNULL(fBackMap);
++		fBackPixels = 0;
++		return;
++	}
++	fDbuf = true;
++	IOLog("SWEET FB: dbuf on: second buffer at 0x%llx, %llu bytes; copy while the last frame is sent\n", SWEET_FB_POOL_PA, bytes);
++}
++
+ void
+ AppleCLCD::vsyncFired(OSObject *owner, IOTimerEventSource *sender)
+ {
+@@ -826,6 +890,8 @@
+         }
+ 		if (step == 0 && ready) {
+ 			sweet_fb_device_fill(fb->fPixels, fb->fRowBytes, fb->fWidth, fb->fHeight, 0xff000000u);
++			fb->fStaged = false;    /* hk_fb_fast=2: if it was in fPixels it is black now; on again copies the latest frame */
++			fb->fCur = 0;
+ 			sweet_scanout_use_panel();
+ 			sweet_scanout_kick();
+ 			IOLog("SWEET FB: black frame submitted\n");
+@@ -843,7 +909,15 @@
+ 		return;
+ 	}
+ 	bool flush;
+-	if (fb->fPace) {
++	enum sweet_fb_dbuf_act dact = SWEET_FB_DBUF_NONE;
++	bool panelLayer = false;
++	if (fb->fDbuf) {
++		/* A swap that presents the panel's own surface is composed in fPixels, as with one buffer: only with nothing in flight. */
++		panelLayer = fb->fDirty && fb->pendingUsesPanel();
++		dact = sweet_fb_dbuf_step(ready, fb->fDirty, fb->fStaged);
++		if (panelLayer && dact == SWEET_FB_DBUF_STAGE) dact = SWEET_FB_DBUF_NONE;
++		flush = dact == SWEET_FB_DBUF_COPY_KICK || dact == SWEET_FB_DBUF_STAGE;
++	} else if (fb->fPace) {
+ 		flush = ready && fb->fDirty;
+ 		if (flush && fb->fMinKickUS) {
+ 			uint64_t ns;
+@@ -886,10 +960,60 @@
+ 	if (ready) sweet_scanout_panel_power(1);        /* hk_panel_off=1: lit again before the frame */
+ 	fb->vrrRun(vrr, vrr_us);                        /* hk_dpu VRR: before the kick, nothing in flight */
+ 	if (ready) sweet_scanout_bright_service();      /* hk_bright: between frames, this thread only */
++	if (fb->fDbuf) {
++		/* hk_fb_fast=2: copy into the buffer not being sent (1 - fCur), even while a frame is in flight; FRM_DONE then only kicks it. */
++		bool kick = dact == SWEET_FB_DBUF_KICK;
++		if (rec != NULL) {
++			uint64_t t0 = mach_absolute_time(), ns;
++			uintptr_t dst = (panelLayer || fb->fCur) ? fb->fPixels : fb->fBackPixels;
++			uint32_t how = fb->present(rec, (SweetSurface *const *)surfaces.object, &trace, dst);
++			sweet_present_copy_aggregate(&trace);
++			if (fb->fStats) {
++				absolutetime_to_nanoseconds(mach_absolute_time() - t0, &ns);
++				fb->statPresent(dact == SWEET_FB_DBUF_STAGE ? "stage" : "copy", ns / 1000, 0);
++			}
++			IOFreeData(rec, SWEET_FB_SWAP_REC_SIZE);
++			/* Copied: the panel buffers hold the frame, the surfaces are CoreAnimation's again. */
++			sweet_fb_pending_surfaces_release(&surfaces, sweet_fb_release_surface);
++			fb->fStaged = true;
++			fb->fStagedBuf = (panelLayer || (how & SWEET_FB_PRESENT_PANEL)) ? 0 : (how & SWEET_FB_PRESENT_DRAWN) ? 1 - fb->fCur : fb->fCur;
++			fb->fStagedTrace = trace;
++			IOLockLock(fb->fLock);
++			fb->fBusySwapID = 0;
++			if (dact == SWEET_FB_DBUF_STAGE && fb->fRefresh != 0) fb->fRate.staged++;
++			IOLockUnlock(fb->fLock);
++			/* The fetch may have ended during the copy: kick now rather than a tick later. */
++			if (dact == SWEET_FB_DBUF_COPY_KICK) kick = true;
++			else if (sweet_scanout_ready()) {
++				sweet_scanout_panel_power(1);
++				kick = true;
++			}
++		}
++		if (kick && fb->fStaged) {
++			uint32_t next = fb->fStagedBuf;
++			(void)sweet_scanout_use_buffer((int)next);
++			sweet_scanout_kick_traced(&fb->fStagedTrace);
++			fb->fCur = next;
++			fb->fStaged = false;
++			uint64_t ns;
++			absolutetime_to_nanoseconds(mach_absolute_time(), &ns);
++			IOLockLock(fb->fLock);
++			fb->fLastKickUS = ns / 1000;
++			if (fb->fRefresh != 0) fb->fRate.kicks++;
++			IOLockUnlock(fb->fLock);
++		}
++		IOLockLock(fb->fLock);
++		if (sweet_fb_swap_lifecycle_can_rearm(&fb->fSwapLifecycle)) {
++			uint32_t next = fb->paceNextUS();
++			if (next != 0) sender->setTimeoutUS(next);
++		}
++		IOLockUnlock(fb->fLock);
++		return;
++	}
+ 	bool flipped = rec != NULL && fb->fFlip && fb->presentFlip(rec, &surfaces, &trace);
+ 	if (rec != NULL && !flipped) {
+ 		uint64_t t0 = mach_absolute_time(), ns;
+-		fb->present(rec, (SweetSurface *const *)surfaces.object, &trace);
++		fb->present(rec, (SweetSurface *const *)surfaces.object, &trace, fb->fPixels);
+ 		sweet_present_copy_aggregate(&trace);
+ 		if (fb->fStats) {
+ 			absolutetime_to_nanoseconds(mach_absolute_time() - t0, &ns);
+@@ -931,6 +1055,7 @@
+ 	}
+ 	uint32_t left = sweet_scanout_remaining_us();
+ 	if (left != 0) {
++		if (fDbuf) return pendingUsesPanel() ? sweet_fb_pace_poll_us(left, fRefresh, fDirty) : sweet_fb_dbuf_poll_us(left, fDirty, fStaged);
+ 		return sweet_fb_pace_poll_us(left, fRefresh, fDirty);       /* poll is one MMIO read; no sooner than 1 ms is worth it */
+ 	}
+ 	if (fHeldValid) {
+@@ -938,8 +1063,9 @@
+ 	}
+ 	{
+ 		uint32_t bright = sweet_scanout_bright_wait_us();
+-		if (bright != 0 && !fDirty) return bright;
++		if (bright != 0 && !fDirty && !fStaged) return bright;
+ 	}
++	if (fStaged) return 1;
+ 	if (fDirty) {
+ 		if (fMinKickUS) {
+ 			uint64_t ns;
+@@ -1263,8 +1389,8 @@
+ 	if (rate_due) {
+ 		uint64_t span = rate_ns / 1000 - rate.since_us;
+ 		uint32_t s10 = sweet_fb_rate_dfps(rate.swaps, span), k10 = sweet_fb_rate_dfps(rate.kicks, span);
+-		IOLog("SWEET FB: rate swaps %u.%u/s kicks %u.%u/s max_gap_us %u changed %d,%d %dx%d unsaid %u\n", s10 / 10, s10 % 10, k10 / 10, k10 % 10,
+-		    rate.max_gap_us, rate.changed.x, rate.changed.y, rate.changed.w, rate.changed.h, rate.unsaid);
++		IOLog("SWEET FB: rate swaps %u.%u/s kicks %u.%u/s max_gap_us %u changed %d,%d %dx%d unsaid %u busy %u staged %u\n", s10 / 10, s10 % 10, k10 / 10, k10 % 10,
++		    rate.max_gap_us, rate.changed.x, rate.changed.y, rate.changed.w, rate.changed.h, rate.unsaid, rate.busy, rate.staged);
+ 	}
+ 	if (fStats && fStatDirtyLogged < 32) {
+ 		fStatDirtyLogged++;
+@@ -1280,9 +1406,11 @@
+ 	}
+ }
+ 
+-void
+-AppleCLCD::present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace)
++/* Returns SWEET_FB_PRESENT_DRAWN if a layer was copied into dst, SWEET_FB_PRESENT_PANEL if the panel's own surface was presented (it is already in fPixels). */
++uint32_t
++AppleCLCD::present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace, uintptr_t dst)
+ {
++	bool panelShown = false;
+ 	uint32_t mask = get32(rec, 0x104);
+ 	/* TEGU: CoreAnimation may present several layers per swap; each is
+ 	 * copied, not blended. Log multi-layer swaps (first 32) to see it. */
+@@ -1342,6 +1470,7 @@
+ 		}
+ 		if (s == NULL) continue;
+ 		if (s == fSurface) {
++			panelShown = true;
+ 			if (releaseSurface) s->release();
+ 			continue;
+ 		}
+@@ -1419,7 +1548,7 @@
+ 				/* Surface coordinates are the buffer's, less dx, dy. Nothing changed: nothing to copy, and the kick resends the same frame. */
+ 				if (sweet_fb_rect_clip(&part, w, h)) {
+ 					uint64_t copy_begin = sweet_present_now();
+-					int copied = sweet_fb_bgra_rows((void *)fPixels, (uint64_t)fRowBytes * fHeight,
++					int copied = sweet_fb_bgra_rows((void *)dst, (uint64_t)fRowBytes * fHeight,
+ 					    fRowBytes, (const void *)src, s->memory->getLength(), s->offset,
+ 					    s->bytesPerRow, (uint32_t)part.x, (uint32_t)part.y, (uint32_t)(dx + part.x),
+ 					    (uint32_t)(dy + part.y), (uint32_t)part.w, (uint32_t)part.h, 0);
+@@ -1430,7 +1559,7 @@
+ 				continue;
+ 			}
+ 			uint64_t copy_begin = sweet_present_now();
+-			int copied = sweet_fb_bgra_rows((void *)fPixels, (uint64_t)fRowBytes * fHeight,
++			int copied = sweet_fb_bgra_rows((void *)dst, (uint64_t)fRowBytes * fHeight,
+ 			    fRowBytes, (const void *)src, s->memory->getLength(), s->offset,
+ 			    s->bytesPerRow, (uint32_t)sx, (uint32_t)sy, (uint32_t)dx,
+ 			    (uint32_t)dy, (uint32_t)w, (uint32_t)h, drawn);
+@@ -1443,6 +1572,7 @@
+ 		sweet_scanout_plane1_hide();
+ 		fPlaneUp = false;
+ 	}
++	return (drawn ? SWEET_FB_PRESENT_DRAWN : 0u) | (panelShown ? SWEET_FB_PRESENT_PANEL : 0u);
+ }
+ 
+ bool
+@@ -1647,6 +1777,7 @@
+ 			IOLockLock(fFB->fLock);
+ 			bool queued = fFB->fDirty && !fFB->fPowerOff && get32(fFB->fPending, 0x50) == id;
+ 			bool busy = queued || (id != 0 && fFB->fBusySwapID == id);
++			if (busy && fFB->fRefresh != 0) fFB->fRate.busy++;
+ 			IOLockUnlock(fFB->fLock);
+ 			if (busy) ret = kIOReturnBusy;
+ 		}
+diff -ruN a/iokit/Kernel/arm/sweet_scanout.cpp b/iokit/Kernel/arm/sweet_scanout.cpp
+--- a/iokit/Kernel/arm/sweet_scanout.cpp	2026-11-04 00:15:08.691202271 +0100
++++ b/iokit/Kernel/arm/sweet_scanout.cpp	2026-11-04 00:26:02.400213485 +0100
+@@ -77,6 +77,10 @@
+ static uint64_t s_panel_pa;
+ static uint32_t s_panel_stride;
+ static bool s_on_panel = true;
++/* hk_fb_fast=2: a second panel-sized buffer in the unmanaged low bank. s_on_back: the next/last copy-path kick fetches it, not the panel's. */
++static uint64_t s_back_pa;
++static uintptr_t s_back_va;
++static bool s_on_back;
+ static uint32_t s_attach_w, s_attach_h;  /* the panel buffer, for the snapshot when nothing scales */
+ /* hk_fb_te=1 measures TE at attach and labels late underruns. =2 also starts each transfer inside TE's window. research/ios26-screen-r1/FINDINGS.md */
+ static uint32_t s_te_mode, s_te_period;
+@@ -284,9 +288,9 @@
+ {
+ 	/* The copy path's picture: at the buffer's origin while the layer scales it, else the whole panel buffer. A frame
+ 	 * being copied in may tear; this is for checking what is on the glass, not a capture. Word loads only: device memory. */
+-	uintptr_t va = s_panel_va;
++	uintptr_t va = s_on_back ? s_back_va : s_panel_va;
+ 	uint32_t stride = s_panel_stride;
+-	if (!s_on || !s_on_panel || va == 0 || step == 0) return 0;
++	if (!s_on || !(s_on_panel || s_on_back) || va == 0 || step == 0) return 0;
+ 	uint32_t sw = s_scaling ? s_layout.src_w : s_attach_w, sh = s_scaling ? s_layout.src_h : s_attach_h;
+ 	if (sw == 0 || sh == 0 || stride < sw * 4) return 0;
+ 	*src_w = sw; *src_h = sh;       /* also when it doesn't fit, so the caller can pick a larger step */
+@@ -310,9 +314,9 @@
+ {
+ 	/* hk_screen: the snapshot's picture, for a reader that samples it itself (also in the panic path: no locks). Also after
+ 	 * the scanout latched off: the buffer still holds the last frame copied in. */
+-	uintptr_t v = s_panel_va;
++	uintptr_t v = s_on_back ? s_back_va : s_panel_va;
+ 	uint32_t st = s_panel_stride;
+-	if (!s_on_panel || v == 0) return 0;
++	if (!(s_on_panel || s_on_back) || v == 0) return 0;
+ 	uint32_t sw = s_scaling ? s_layout.src_w : s_attach_w, sh = s_scaling ? s_layout.src_h : s_attach_h;
+ 	if (sw == 0 || sh == 0 || st < sw * 4) return 0;
+ 	*va = v; *stride = st; *w = sw; *h = sh; *on = s_on ? 1 : 0;
+@@ -351,7 +355,26 @@
+ void sweet_scanout_use_panel(void)
+ {
+ 	if (!s_on || !s_scaling || s_on_panel) return;
+-	if (tdpu_set_buffer(s_panel_pa, s_panel_stride) == TDPU_OK) s_on_panel = true;
++	if (tdpu_set_buffer(s_panel_pa, s_panel_stride) == TDPU_OK) { s_on_panel = true; s_on_back = false; }
++}
++
++int sweet_scanout_back_attach(uint64_t pa, uintptr_t va)
++{
++	if (!sweet_scanout_can_flip() || va == 0 || (pa & 0xff) || s_panel_stride == 0) return 0;
++	s_back_pa = pa;
++	s_back_va = va;
++	return 1;
++}
++
++int sweet_scanout_use_buffer(int back)
++{
++	if (!back) { sweet_scanout_use_panel(); return s_on_panel; }
++	if (!s_on || !s_scaling || s_back_va == 0) return 0;
++	if (s_on_back) return 1;
++	if (tdpu_set_buffer(s_back_pa, s_panel_stride) != TDPU_OK) return 0;
++	s_on_panel = false;
++	s_on_back = true;
++	return 1;
+ }
+ 
+ int sweet_scanout_flip(uint64_t pa, uint32_t stride, uint32_t w, uint32_t h)
+@@ -370,6 +393,7 @@
+ 	}
+ 	if (tdpu_set_buffer(pa, stride) != TDPU_OK) return 0;
+ 	s_on_panel = false;
++	s_on_back = false;
+ 	te_align();
+ 	int rc = tdpu_kick(++s_gen);
+ 	s_kick_us = k_now_us();
+diff -ruN a/iokit/Kernel/arm/sweet_scanout.h b/iokit/Kernel/arm/sweet_scanout.h
+--- a/iokit/Kernel/arm/sweet_scanout.h	2026-11-04 00:15:08.692642374 +0100
++++ b/iokit/Kernel/arm/sweet_scanout.h	2026-11-04 00:26:02.400759158 +0100
+@@ -36,6 +36,10 @@
+ int  sweet_scanout_flip(uint64_t pa, uint32_t stride, uint32_t w, uint32_t h);
+ /* Back to the panel's own buffer, before a copy-path kick. */
+ void sweet_scanout_use_panel(void);
++/* hk_fb_fast=2: a second panel-sized buffer (device memory, the panel buffer's stride), for copies while the panel's is fetched. 1: usable. */
++int  sweet_scanout_back_attach(uint64_t pa, uintptr_t va);
++/* Before a copy-path kick: 0 the panel's buffer, 1 the second one. 1: the next kick fetches it. */
++int  sweet_scanout_use_buffer(int back);
+ /* hk_fb_planes=3. A slot of low DRAM for Layer1, mapped as device memory: 0 if the gate is off, nothing is scanning out, or Layer0 is scaled (Layer1 is unscaled here). */
+ uintptr_t sweet_scanout_plane1_slot(uint64_t *bytes, uint32_t *stride);
+ /* The slot's rectangle goes up with the next kick; or comes down. No-op if never up. */

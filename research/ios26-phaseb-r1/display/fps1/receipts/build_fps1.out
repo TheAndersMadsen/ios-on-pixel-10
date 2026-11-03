@@ -1,0 +1,17 @@
+00:26:14 waiting for build slot lock
+00:26:14 lock held
+00:26:14 tree branch p1 HEAD b228c4f
+00:26:14 checked out hk-fps1 e505e6ee27630af7d162b14e4136877d966d87b0
+00:26:55 build fps1-build rc 0
+00:26:55 8a9f2f68dcacc1c39cf800db4d8095075b3040ce2f16583ab00b2455984c1cac  kernel.fps1
+00:26:55 396ea50a7af4673dd8f2f90e3c6a2ccdaedeadf1f55efe1423d0466a462504a4  kernel.fps1.unstripped
+00:26:55 3eea997a6c56a0e7cbfd65f3423893f0df4ebbbf02c48aca7113c827efce0aa1  SweetFramebuffer.cpo (/iokit/DEVELOPMENT/SweetFramebuffer.cpo)
+00:26:55 b97485cdca876e65c3ab79b010725ecd6f03c3cc63a76e5d7ff505ae4e3c8ca0  sweet_scanout.cpo (/iokit/DEVELOPMENT/sweet_scanout.cpo)
+00:26:55 524c0512779d5ded8dfe2fd37e38f3ae4deae669a295e7f27d056f7206b6f43a  tensor_dpu.o (/iokit/DEVELOPMENT/tensor_dpu.o)
+00:26:55 1c00a526dbb6f0a6b38c8ef0dd1219fb6dc0e5e3c1c576b958b4890e75013679  hk_screen.o (/osfmk/DEVELOPMENT/hk_screen.o)
+00:26:55 restored branch p1 HEAD b228c4f
+00:27:38 build fps1-restore-p1-build rc 0
+00:27:38 obj kernel after restore 201a186000d8155e4c47c22095fb23c57dc1557fed97ebc3ed5cfb5bddcbca68
+00:27:38 restored p1 kernel has 'HK USTACK: every': False
+00:27:38 restored p1 kernel has 'refresh 120 by copy': False
+00:27:38 restored p1 kernel has 'dbuf on: second buffer': False

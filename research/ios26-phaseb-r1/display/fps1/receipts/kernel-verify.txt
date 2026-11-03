@@ -1,0 +1,29 @@
+8a9f2f68dcacc1c39cf800db4d8095075b3040ce2f16583ab00b2455984c1cac  build/kernel.fps1
+396ea50a7af4673dd8f2f90e3c6a2ccdaedeadf1f55efe1423d0466a462504a4  build/kernel.fps1.unstripped
+1c00a526dbb6f0a6b38c8ef0dd1219fb6dc0e5e3c1c576b958b4890e75013679  build/obj/hk_screen.o
+3eea997a6c56a0e7cbfd65f3423893f0df4ebbbf02c48aca7113c827efce0aa1  build/obj/SweetFramebuffer.cpo
+b97485cdca876e65c3ab79b010725ecd6f03c3cc63a76e5d7ff505ae4e3c8ca0  build/obj/sweet_scanout.cpo
+524c0512779d5ded8dfe2fd37e38f3ae4deae669a295e7f27d056f7206b6f43a  build/obj/tensor_dpu.o
+build/kernel.fps1.unstripped: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
+undefined: 0
+fffffe00080746e0 S AppleCLCD::pendingUsesPanel()
+fffffe0008074a80 S AppleCLCD::present(unsigned char const*, SweetSurface* const*, sweet_present_stamp*, unsigned long)
+fffffe00080741d0 S AppleCLCD::dbufStart()
+fffffe000807a2b0 S _sweet_scanout_back_attach
+fffffe000807a340 S _sweet_scanout_use_buffer
+string 'dbuf on: second buffer' fps1: 1 int4: 0
+string 'dbuf off: %s; one buffer' fps1: 1 int4: 0
+string 'busy %u staged %u' fps1: 1 int4: 0
+== vsyncFired calls
+fffffe0008073378:      	bl	0xfffffe000807e690 <_sweet_scanout_ready>
+fffffe0008073828:      	bl	0xfffffe0008077bd0 <_sweet_present_begin>
+fffffe0008073914:      	bl	0xfffffe0008075670 <__ZN9AppleCLCD11presentFlipEPKhP25sweet_fb_pending_surfacesPK19sweet_present_stamp>
+fffffe0008073950:      	bl	0xfffffe0008074a80 <__ZN9AppleCLCD7presentEPKhPKP12SweetSurfaceP19sweet_present_stampm>
+fffffe0008073958:      	bl	0xfffffe0008077e30 <_sweet_present_copy_aggregate>
+fffffe0008073a14:      	bl	0xfffffe000807e920 <_sweet_scanout_kick_traced>
+fffffe0008073aac:      	bl	0xfffffe0008074a80 <__ZN9AppleCLCD7presentEPKhPKP12SweetSurfaceP19sweet_present_stampm>
+fffffe0008073ab8:      	bl	0xfffffe0008077e30 <_sweet_present_copy_aggregate>
+fffffe0008073ce0:      	bl	0xfffffe000807e690 <_sweet_scanout_ready>
+fffffe0008073ebc:      	bl	0xfffffe000807a340 <_sweet_scanout_use_buffer>
+fffffe0008073ec4:      	bl	0xfffffe000807e920 <_sweet_scanout_kick_traced>
+fffffe0008073f3c:      	bl	0xfffffe0008075390 <__ZN9AppleCLCD10paceNextUSEv>

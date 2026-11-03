@@ -1,0 +1,137 @@
+diff -ruN a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp	2026-11-04 00:26:02.390845293 +0100
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp	2026-11-04 00:26:02.391412091 +0100
+@@ -124,6 +124,8 @@
+ #define SWEET_FB_POOL_SLOTS             4
+ #define SWEET_FB_DIRTY_HEAL             256     /* every Nth copy is whole, whatever the rectangles say */
+ #define SWEET_FB_STATS_EVERY            64
++#define SWEET_FB_PRESENT_DRAWN          1u
++#define SWEET_FB_PRESENT_PANEL          2u
+ 
+ class IOMobileFramebuffer : public IOService {
+ 	OSDeclareDefaultStructors(IOMobileFramebuffer);
+@@ -204,7 +206,8 @@
+ 	uintptr_t     fBackPixels;    /* the second buffer, device memory as fPixels, same stride */
+ 	IOMemoryMap  *fBackMap;
+ 	uint32_t      fCur;           /* the buffer the last copy-path kick sent: 0 fPixels, 1 fBackPixels */
+-	bool          fStaged;        /* buffer 1 - fCur holds a whole frame not yet kicked */
++	bool          fStaged;        /* fStagedBuf holds a whole frame not yet kicked */
++	uint32_t      fStagedBuf;     /* normally 1 - fCur; fCur when nothing was copied (a resend), 0 when the panel's own surface was presented */
+ 	struct sweet_present_stamp fStagedTrace;
+ 	void          vrrRun(enum sweet_vrr_act a, uint64_t now_us);
+ 
+@@ -213,8 +216,9 @@
+ 	void removeClient(IOMobileFramebufferUserClient *client);
+ 	void stop(IOService *provider) APPLE_KEXT_OVERRIDE;
+ 	void swap(const uint8_t *rec, const struct sweet_fb_rect *changed);
+-	void present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace, uintptr_t dst);
++	uint32_t present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace, uintptr_t dst);
+ 	void dbufStart(void);
++	bool pendingUsesPanel(void);
+ 	bool presentFlip(const uint8_t *rec, sweet_fb_pending_surfaces *surfaces, const struct sweet_present_stamp *trace);
+ 	void muteConsoleOnce(void);
+ 	void publishPlanes(void);
+@@ -598,6 +602,7 @@
+ 	fBackMap = NULL;
+ 	fCur = 0;
+ 	fStaged = false;
++	fStagedBuf = 0;
+ 	fStagedTrace = {};
+ 	sweet_fb_swap_lifecycle_init(&fSwapLifecycle);
+ 
+@@ -788,6 +793,17 @@
+  * hk_fb_fast=2: map the second panel buffer, the flip pool's first slot (unmanaged low DRAM, as the panel's own buffer; r1d fetched from there), as device
+  * memory like fPixels. Refused, with a reason, unless 120 runs by copy on a scaled scanout. The mapping is kept for the boot: hk_screen may read it lock free.
+  */
++/* Lock held. hk_fb_fast=2: the waiting swap presents the panel's own surface (CoreAnimation drew in fPixels itself). */
++bool
++AppleCLCD::pendingUsesPanel(void)
++{
++	if (!fDirty || fSurface == NULL) return false;
++	uint32_t mask = get32(fPending, 0x104);
++	for (uint32_t l = 0; l < SWEET_FB_LAYERS; l++)
++		if ((mask & (1u << l)) && get32(fPending, 0x54 + 4 * l) == fSurface->id) return true;
++	return false;
++}
++
+ void
+ AppleCLCD::dbufStart(void)
+ {
+@@ -894,8 +910,12 @@
+ 	}
+ 	bool flush;
+ 	enum sweet_fb_dbuf_act dact = SWEET_FB_DBUF_NONE;
++	bool panelLayer = false;
+ 	if (fb->fDbuf) {
++		/* A swap that presents the panel's own surface is composed in fPixels, as with one buffer: only with nothing in flight. */
++		panelLayer = fb->fDirty && fb->pendingUsesPanel();
+ 		dact = sweet_fb_dbuf_step(ready, fb->fDirty, fb->fStaged);
++		if (panelLayer && dact == SWEET_FB_DBUF_STAGE) dact = SWEET_FB_DBUF_NONE;
+ 		flush = dact == SWEET_FB_DBUF_COPY_KICK || dact == SWEET_FB_DBUF_STAGE;
+ 	} else if (fb->fPace) {
+ 		flush = ready && fb->fDirty;
+@@ -945,7 +965,8 @@
+ 		bool kick = dact == SWEET_FB_DBUF_KICK;
+ 		if (rec != NULL) {
+ 			uint64_t t0 = mach_absolute_time(), ns;
+-			fb->present(rec, (SweetSurface *const *)surfaces.object, &trace, fb->fCur ? fb->fPixels : fb->fBackPixels);
++			uintptr_t dst = (panelLayer || fb->fCur) ? fb->fPixels : fb->fBackPixels;
++			uint32_t how = fb->present(rec, (SweetSurface *const *)surfaces.object, &trace, dst);
+ 			sweet_present_copy_aggregate(&trace);
+ 			if (fb->fStats) {
+ 				absolutetime_to_nanoseconds(mach_absolute_time() - t0, &ns);
+@@ -955,6 +976,7 @@
+ 			/* Copied: the panel buffers hold the frame, the surfaces are CoreAnimation's again. */
+ 			sweet_fb_pending_surfaces_release(&surfaces, sweet_fb_release_surface);
+ 			fb->fStaged = true;
++			fb->fStagedBuf = (panelLayer || (how & SWEET_FB_PRESENT_PANEL)) ? 0 : (how & SWEET_FB_PRESENT_DRAWN) ? 1 - fb->fCur : fb->fCur;
+ 			fb->fStagedTrace = trace;
+ 			IOLockLock(fb->fLock);
+ 			fb->fBusySwapID = 0;
+@@ -968,7 +990,7 @@
+ 			}
+ 		}
+ 		if (kick && fb->fStaged) {
+-			uint32_t next = 1 - fb->fCur;
++			uint32_t next = fb->fStagedBuf;
+ 			(void)sweet_scanout_use_buffer((int)next);
+ 			sweet_scanout_kick_traced(&fb->fStagedTrace);
+ 			fb->fCur = next;
+@@ -1033,7 +1055,7 @@
+ 	}
+ 	uint32_t left = sweet_scanout_remaining_us();
+ 	if (left != 0) {
+-		if (fDbuf) return sweet_fb_dbuf_poll_us(left, fDirty, fStaged);
++		if (fDbuf) return pendingUsesPanel() ? sweet_fb_pace_poll_us(left, fRefresh, fDirty) : sweet_fb_dbuf_poll_us(left, fDirty, fStaged);
+ 		return sweet_fb_pace_poll_us(left, fRefresh, fDirty);       /* poll is one MMIO read; no sooner than 1 ms is worth it */
+ 	}
+ 	if (fHeldValid) {
+@@ -1384,9 +1406,11 @@
+ 	}
+ }
+ 
+-void
++/* Returns SWEET_FB_PRESENT_DRAWN if a layer was copied into dst, SWEET_FB_PRESENT_PANEL if the panel's own surface was presented (it is already in fPixels). */
++uint32_t
+ AppleCLCD::present(const uint8_t *rec, SweetSurface *const surfaces[SWEET_FB_LAYERS], struct sweet_present_stamp *trace, uintptr_t dst)
+ {
++	bool panelShown = false;
+ 	uint32_t mask = get32(rec, 0x104);
+ 	/* TEGU: CoreAnimation may present several layers per swap; each is
+ 	 * copied, not blended. Log multi-layer swaps (first 32) to see it. */
+@@ -1446,6 +1470,7 @@
+ 		}
+ 		if (s == NULL) continue;
+ 		if (s == fSurface) {
++			panelShown = true;
+ 			if (releaseSurface) s->release();
+ 			continue;
+ 		}
+@@ -1547,6 +1572,7 @@
+ 		sweet_scanout_plane1_hide();
+ 		fPlaneUp = false;
+ 	}
++	return (drawn ? SWEET_FB_PRESENT_DRAWN : 0u) | (panelShown ? SWEET_FB_PRESENT_PANEL : 0u);
+ }
+ 
+ bool

@@ -1,0 +1,21 @@
+== patched rows on the fb120 live boot
+1 attempt(s):
+  live-20261103-234014-a7-fb120: console, console
+
+🔧 120 Hz: built [live-20261103-234014-a7-fb120] (status 🟡 partial; unsupported-here)
+    + SWEET FB: refresh asked \d+, running 120: research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:125: 23:40:58.306 [    0.12] SWEET FB: refresh asked 120, running 120, flip 0, interval 35791394
+    note: 120 Hz mode runs; no sustained rate above 60 yet (live-20261103-234014-a7-fb120)
+🟡 60 Hz mode and frame sync: partial [live-20261103-234014-a7-fb120] (status 🔧 built; promote)
+    + SWEET FB: refresh asked \d+, running (60|120): research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:125: 23:40:58.306 [    0.12] SWEET FB: refresh asked 120, running 120, flip 0, interval 35791394
+    + tensor-dpu: frames kicks \d+ dones [1-9]\d*: research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:1454: 23:41:07.300 [    9.11] tensor-dpu: frames kicks 1 dones 1 underrun first 0 later 0 nofetch 0 frame_us last 12887 max 12887 status 0x2000003 fe 0x40 refusal 0
+    + tensor-dpu: frames kicks \d+ dones [1-9]\d*: research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:3405: 23:41:38.274 [   40.09] tensor-dpu: frames kicks 257 dones 257 underrun first 0 later 12 nofetch 0 frame_us last 5773 max 13896 status 0x2000003 fe 0x40 refusal
+    + measured frame rate: research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:3482: 23:41:45.129 [   46.94] SWEET FB: rate swaps 67.9/s kicks 65.3/s max_gap_us 100136 changed 74,1083 977x792 unsaid 0
+    + measured frame rate: research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:2422: 23:41:28.752 [   30.57]     kTCCNotificationExtensionDaemonDataInfoStSWEET FB: rate swaps 0.1/s kicks 0.1/s max_gap_us 20873635 changed 0,0 1125x2511 unsaid 2
+    note: 60 Hz panel mode; frames measured at up to 65.3/s, not held at 55 (live-20261103-234014-a7-fb120)
+== current rows (docs/probes.yaml) on the same boot
+1 attempt(s):
+  live-20261103-234014-a7-fb120: console, console
+
+🟡 120 Hz: partial [live-20261103-234014-a7-fb120] (status 🟡 partial; agree)
+    + SWEET FB: refresh asked \d+, running 120: research/laguna-usb-fix/attempts/live-20261103-234014-a7-fb120/console.txt:125: 23:40:58.306 [    0.12] SWEET FB: refresh asked 120, running 120, flip 0, interval 35791394
+· 60 Hz mode and frame sync: no log verdict (status 🔧 built; unsupported-here)

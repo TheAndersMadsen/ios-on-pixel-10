@@ -1,0 +1,85 @@
+# fps1 sustained-motion test (display/fps1/FPS1.md section 6). Canvas pixels 1125x2511. Every SWEET FB rate line is one >= 5 s window.
+#   python3 -I tools/ui_run.py <live_boot run dir> research/ios26-phaseb-r1/display/fps1/test/scroll_fps.ui
+# expect=any settle=0.3 verify=0: no waiting for a still screen, so the list keeps moving (each fling also coasts ~1 s).
+wait_home
+shot fps-home
+mark fps-pages-start
+# 1) Home pages: 12 horizontal flings (page slide = whole-canvas motion)
+swipe 950 1300 150 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 150 1300 950 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 950 1300 150 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 150 1300 950 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 950 1300 150 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 150 1300 950 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 950 1300 150 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 150 1300 950 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 950 1300 150 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 150 1300 950 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 950 1300 150 1300 ms=150 expect=any settle=0.3 verify=0
+swipe 150 1300 950 1300 ms=150 expect=any settle=0.3 verify=0
+mark fps-pages-end
+# 2) Settings list: 40 vertical flings, ~45 s of continuous scrolling (whole-canvas damage)
+tap 170 279 app=Preferences retry=1 verify=25
+sleep 4
+shot fps-settings
+mark fps-scroll-start
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+swipe 562 2000 562 700 ms=120 expect=any settle=0.3 verify=0
+swipe 562 700 562 2000 ms=120 expect=any settle=0.3 verify=0
+mark fps-scroll-end
+# 3) Slow drag: 10 x 900 ms drags (motion without momentum: the frame rate CoreAnimation sustains while the finger moves)
+mark fps-drag-start
+swipe 562 1900 562 900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 900 562 1900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 1900 562 900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 900 562 1900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 1900 562 900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 900 562 1900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 1900 562 900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 900 562 1900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 1900 562 900 ms=900 expect=any settle=0.2 verify=0
+swipe 562 900 562 1900 ms=900 expect=any settle=0.2 verify=0
+mark fps-drag-end
+shot fps-settings-after
+home
+mark fps-idle-start
+sleep 30
+mark fps-idle-end
+shot fps-end

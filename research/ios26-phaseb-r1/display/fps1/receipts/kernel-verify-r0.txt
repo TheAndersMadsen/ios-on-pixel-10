@@ -1,0 +1,50 @@
+decf1ceac52aa23af3eee3f6d2b7c548a190fd57905bc5f2ebdec47ed14d367b  build/kernel.fps1
+ea12f7cee4924ba1a01adf804b3798af087d6b78df3eb46d50e929a8000bb20f  build/kernel.fps1.unstripped
+1c00a526dbb6f0a6b38c8ef0dd1219fb6dc0e5e3c1c576b958b4890e75013679  build/obj/hk_screen.o
+510c8fee0b18a894c014eec0033e3ed9f16badbe76e6b4541a5e45671a129d33  build/obj/SweetFramebuffer.cpo
+b97485cdca876e65c3ab79b010725ecd6f03c3cc63a76e5d7ff505ae4e3c8ca0  build/obj/sweet_scanout.cpo
+524c0512779d5ded8dfe2fd37e38f3ae4deae669a295e7f27d056f7206b6f43a  build/obj/tensor_dpu.o
+build/kernel.fps1.unstripped: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
+undefined: 0
+fffffe00080751e0 S AppleCLCD::paceNextUS()
+fffffe0008073300 S AppleCLCD::vsyncFired(OSObject*, IOTimerEventSource*)
+fffffe0008075430 S AppleCLCD::presentFlip(unsigned char const*, sweet_fb_pending_surfaces*, sweet_present_stamp const*)
+fffffe0008074910 S AppleCLCD::present(unsigned char const*, SweetSurface* const*, sweet_present_stamp*, unsigned long)
+fffffe00080740f0 S AppleCLCD::dbufStart()
+fffffe000873b8f0 b AppleCLCD::present(unsigned char const*, SweetSurface* const*, sweet_present_stamp*, unsigned long)::skipped_logged
+fffffe000873b8e8 b AppleCLCD::present(unsigned char const*, SweetSurface* const*, sweet_present_stamp*, unsigned long)::sweet_fb_multi_logged
+fffffe000807a070 S _sweet_scanout_back_attach
+fffffe000807a100 S _sweet_scanout_use_buffer
+string 'dbuf on: second buffer' in fps1: 1 int4: 0
+string 'dbuf off: %s; one buffer' in fps1: 1 int4: 0
+string 'busy %u staged %u' in fps1: 1 int4: 0
+string 'refresh 120 by copy' in fps1: 1 int4: 1
+== dbufStart
+fffffe0008074118:      	cmp	w8, #0x2
+fffffe0008074144:      	bl	0xfffffe0008079fc0 <_sweet_scanout_can_flip>
+fffffe00080741d8:      	bl	0xfffffe0007fe0400 <__ZN18IOMemoryDescriptor19withPhysicalAddressEyyj>
+== vsyncFired calls
+fffffe0008073378:      	bl	0xfffffe000807e450 <_sweet_scanout_ready>
+fffffe0008073788:      	bl	0xfffffe0008077990 <_sweet_present_begin>
+fffffe000807385c:      	bl	0xfffffe0008074910 <__ZN9AppleCLCD7presentEPKhPKP12SweetSurfaceP19sweet_present_stampm>
+fffffe0008073864:      	bl	0xfffffe0008077bf0 <_sweet_present_copy_aggregate>
+fffffe00080739fc:      	bl	0xfffffe0008075430 <__ZN9AppleCLCD11presentFlipEPKhP25sweet_fb_pending_surfacesPK19sweet_present_stamp>
+fffffe0008073a38:      	bl	0xfffffe0008074910 <__ZN9AppleCLCD7presentEPKhPKP12SweetSurfaceP19sweet_present_stampm>
+fffffe0008073a40:      	bl	0xfffffe0008077bf0 <_sweet_present_copy_aggregate>
+fffffe0008073ae8:      	bl	0xfffffe000807a000 <_sweet_scanout_use_panel>
+fffffe0008073afc:      	bl	0xfffffe000807e6e0 <_sweet_scanout_kick_traced>
+fffffe0008073b70:      	bl	0xfffffe000807e450 <_sweet_scanout_ready>
+fffffe0008073bac:      	bl	0xfffffe000807a100 <_sweet_scanout_use_buffer>
+fffffe0008073bb4:      	bl	0xfffffe000807e6e0 <_sweet_scanout_kick_traced>
+fffffe0008073cb0:      	bl	0xfffffe00080751e0 <__ZN9AppleCLCD10paceNextUSEv>
+fffffe0008073e28:      	bl	0xfffffe000807a000 <_sweet_scanout_use_panel>
+fffffe0008073e2c:      	bl	0xfffffe000807d3d0 <_sweet_scanout_kick>
+== paceNextUS
+fffffe0008075248:      	bl	0xfffffe000807a560 <_sweet_scanout_remaining_us>
+fffffe00080752a0:      	cmp	w0, #0xfa
+fffffe00080752b0:      	cmp	w8, #0x1f4
+fffffe00080752bc:      	bl	0xfffffe0008078e90 <_sweet_scanout_bright_wait_us>
+fffffe000807532c:      	bl	0xfffffe000799a0a0 <_mach_absolute_time>
+fffffe0008075334:      	bl	0xfffffe000799a520 <_absolutetime_to_nanoseconds>
+fffffe0008075380:      	bl	0xfffffe000799a0a0 <_mach_absolute_time>
+fffffe0008075388:      	bl	0xfffffe000799a520 <_absolutetime_to_nanoseconds>

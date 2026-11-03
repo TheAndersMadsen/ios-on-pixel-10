@@ -1,0 +1,57 @@
+--- a/docs/probes.yaml	2026-11-04 00:23:11.292901930 +0100
++++ b/docs/probes.yaml	2026-11-04 00:23:11.308974996 +0100
+@@ -250,14 +250,22 @@
+       markers: ['SWEET FB: refresh asked']
+     works:
+       all:
+-        - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 100, label: '>= 100 completed swaps/s'}
+-        - {re: 'SWEET FB: refresh asked 120, running 120'}
+-      note: 'Measured {swaps} swaps/s at 120 Hz ({attempt})'
++        - {re: 'SWEET FB: refresh asked 12[012], running 120'}
++        # kicks = frames that reached the panel; each rate line is one >= 5 s window. Sustained: 3 consecutive windows (>= 15 s of motion).
++        - {re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s', group: kicks, ge: 100, sustain: 3, label: '>= 100 frames/s on the panel for 3 consecutive 5 s windows'}
++      note: '120 Hz: {kicks} frames/s or more held for {kicks_windows} consecutive 5 s windows ({attempt})'
+     partial:
++      all:
++        - {re: 'SWEET FB: refresh asked 12[012], running 120'}
++        # > 60.5/s is impossible at one frame per two TEs (TE 120.6 Hz): frames on consecutive TEs, held for 2 windows (>= 10 s).
++        - {re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s', group: kicks, ge: 60.5, sustain: 2, label: '> 60.5 frames/s for 2 consecutive 5 s windows'}
++      note: '120 Hz mode; {kicks} frames/s or more held for {kicks_windows} consecutive 5 s windows, below 100 ({attempt})'
++    built:
+       any:
+         - {re: 'SWEET FB: refresh asked \d+, running 120'}
+-    owner: 'None: the swap-rate line measures it'
+-    next: {kind: build, minutes: 10, test: 'int1 image with the panel profile at 120 Hz; unattended 300 s boot reads SWEET FB rate'}
++      note: '120 Hz mode runs; no sustained rate above 60 yet ({attempt})'
++    owner: 'None: the SWEET FB rate line measures it (display/fps1/test/scroll_fps.ui makes the motion)'
++    next: {kind: attended, minutes: 20, test: 'a7-ios-system-fps1 (hk_fb_fast=2) with display/fps1/test/scroll_fps.ui; read SWEET FB rate kicks/busy/staged and HK TOP backboardd ms/frame'}
+ 
+   - id: hz60
+     phone_only: true
+@@ -266,19 +274,19 @@
+       markers: ['SWEET FB: refresh asked']
+     works:
+       all:
+-        - {re: 'SWEET FB: refresh asked 60, running 60'}
+-        - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 55, label: '>= 55 completed swaps/s'}
+-      note: '60 Hz: {swaps} completed swaps/s ({attempt})'
++        - {re: 'SWEET FB: refresh asked \d+, running (60|120)'}
++        - {re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s', group: kicks, ge: 55, sustain: 3, label: '>= 55 frames/s on the panel for 3 consecutive 5 s windows'}
++      note: '60 Hz: {kicks} frames/s or more held for {kicks_windows} consecutive 5 s windows ({attempt})'
+     partial:
+       all:
+-        - {re: 'SWEET FB: refresh asked 60, running 60'}
++        - {re: 'SWEET FB: refresh asked \d+, running (60|120)'}
+         - {re: 'tensor-dpu: frames kicks \d+ dones [1-9]\d*'}
+-        - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 1, label: measured swap rate}
+-      note: '60 Hz panel mode; completed frames measured at up to {swaps} swaps/s ({attempt})'
++        - {re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s', group: kicks, ge: 1, label: measured frame rate}
++      note: '60 Hz panel mode; frames measured at up to {kicks}/s, not held at 55 ({attempt})'
+     fails:
+       - {re: 'tensor-dpu: underrun in frame \d+', min: 10, label: DPU underruns}
+     owner: 'None'
+-    next: {kind: unattended, minutes: 10, test: 'Re-run int1 300 s with a scripted swipe loop (usbcon --tap) and read the SWEET FB rate lines'}
++    next: {kind: attended, minutes: 20, test: 'display/fps1/test/scroll_fps.ui on a live boot; read the SWEET FB rate lines'}
+ 
+   - id: vrr
+     phone_only: true
