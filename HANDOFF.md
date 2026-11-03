@@ -5,11 +5,10 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Attended, owner present: `a7-ios-system-r3` = r1 (5 cores, deadline 300) without `hk_bright=140`; Home expected about 90 s after power-on (`research/ios26-phaseb-r1/home-budget/BUDGET.md`). The black
-   screen is backboardd's CoreBrightness NULL read, which happens only when the kernel publishes `AppleARMBacklight`
-   (hk_bright) without `backlight-calibration-parameters`: 0 crashes in every boot without it, including the 11-01 Home
-   boot; 14-18 in every boot with it (`research/ios26-phaseb-r1/corebrightness/FINDINGS.md`). r2 (deadline 1800) still drew
-   0 frames. The proper fix, the 0001 kernel patch publishing the calibration, still needs the XNU compile.
+1. Done: `a7-ios-system-r3` reached Home from ios_system (owner confirmed). Next attended boots, all bare
+   `fastboot boot`: chooser `chooser-v1-r12` volume keys (`research/ios26-dualboot-r8/keys/BOOT-r12.md`), then the
+   chooser-iOS image built from r3's recipe (`research/ios26-dualboot-r8/chooser-ios/DESIGN.md`, C1 Android by timeout,
+   C2 iOS picked). Host: build the 0001 backlight calibration kernel patch and hk_accel_once on the Mac.
 2. Physical, attended: chooser volume keys (r8 line) and the iOS entry from the chooser (r11 display handback works).
 3. After a visible A7 boot: a physical ios_data persist test (QEMU negative test PASS,
    `research/ios26-dualboot-r8/ios-data-persist/NEGATIVE-r1.md`); `image_tool` refuses `blazer_persist` until then.

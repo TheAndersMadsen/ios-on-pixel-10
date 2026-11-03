@@ -19,12 +19,12 @@ recoverable. QEMU and host tools support development; they are not phone results
   `research/android-backup-20261103/RESTORE.md`). Return check PASS against the new post-restore baseline
   (root sentinel, app count, /data size): `research/ios26-dualboot-r8/attempts/return-after-restore/`.
   Play Integrity passes BASIC only (keybox not revoked); not a dual-boot blocker.
-- **iOS root on ios_system (2026-11-03, PHYSICAL):** flashed (30/30 OKAY), sha256 on the phone equals the image's
-  padded hash, GPT unchanged, return checks PASS. `a7-ios-system-r1` mounted the HFSX root from ios_system (read only)
-  and ran launchd and SpringBoard, but the panel stayed black: 0 frames, backboardd SIGSEGV every ~30 s (not the
-  NSURL-nil abort), 300 s deadline. `research/ios26-phaseb-r1/A7.md`. LUN letters change between boots: resolve
-  disks by-name. `tools/image_tool.py` still refuses `userdata_exp.ai` and `blazer_persist`; XNU dd000c8 writes only
-  to the GPT-resolved `ios_data` (host, ARM64 object, QEMU negative test; not physical).
+- **iOS Home from ios_system (2026-11-03, PHYSICAL):** `a7-ios-system-r3` (5 cores, deadline 300) booted the
+  flashed ios_system root to Home; the owner saw it, touch works and Settings opens. The earlier black screens were
+  backboardd's CoreBrightness NULL read whenever `hk_bright=140` publishes an uncalibrated `AppleARMBacklight`; r3 drops it
+  (0 traps). Only Settings is present (stock-app registration still blocked), no brightness control yet (calibration
+  patch 0001 not built), nothing persists. Android return checks PASS after every boot. `research/ios26-phaseb-r1/A7.md`.
+  Resolve disks by-name; `tools/image_tool.py` still refuses `userdata_exp.ai`.
 - **Storage (2026-11-03, PHYSICAL):** migrated. After a no-op proof (identical bytes, reboot, return check
   PASS), the owner-approved GPT write made userdata 69.3 GiB (LBA 4,597,990..22,757,375), `ios_system` 24 GiB
   (sda36) and `ios_data` 8 GiB (sda37), project type GUID; `sgdisk --verify` clean; recovery factory reset;
