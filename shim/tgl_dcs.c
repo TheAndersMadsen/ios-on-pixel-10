@@ -66,10 +66,12 @@
 #define LPB_NO_EFFECT 19u
 #define LPCM_DSI0_ON 0x01020001u
 #define LPCM_FE0_ON 0x01000001u
-/* Off forms for the chooser's release: same fields, last byte 0 (req 1 | sub<<16 | sswrp<<8 | on). Inference from the
- * proven on-requests and LSION_CLI_PD_ON 0x01000401; chooser-v1-r9 is their first physical use. */
-#define LPCM_DSI0_OFF 0x01020000u
-#define LPCM_FE0_OFF 0x01000000u
+/* Off forms for the chooser's release. Vendor power_controller_main.c send_lpcm_mail: payload[0] =
+ * REQ_ID(7:0) = LPCM_CMD_SET_GEN_PD 1 | SSWRP_ID(15:8) | PD_ID(23:16) | POWER_ON(31:24). The on-requests above set
+ * byte 3 to 1 and byte 0 to 1, so they hid the field order. chooser-v1-r9 and r10 sent 0x01000000 (REQ_ID 0, "on"):
+ * CPM asserted "lpb.c:676: sswrp_id < LPB_NUM_SSWRPS" both times. Off clears only POWER_ON. */
+#define LPCM_DSI0_OFF 0x00020001u
+#define LPCM_FE0_OFF 0x00000001u
 #define VS_CHIP_ID_9400 0x9400u
 #define FORCE_BE_CSR_RD_CNT 30u
 /* Compare PPS 0-88. Physical, r1a and r1b: byte 89 (second_line_bpg_offset, native 4:2:0 only) reads 0xff before and after we write 0. Recorded, not compared. */

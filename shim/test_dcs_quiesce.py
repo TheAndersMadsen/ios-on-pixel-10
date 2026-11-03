@@ -72,6 +72,22 @@ if fdt.exists():
     ok('ranges = <0x00 0x00 0xec00000 0x400000>;' in t and 'reg = <0x200000 0x120000 0x390000 0x10000>;' in t and 'reg-names = "dpu-fe-be", "dpu-gpcsr";' in t,
        'FDT: dpu-fe-be 0x0ee00000, dpu-gpcsr 0x0ef90000')
 
+# ---- every LPCM frame the shim sends, rebuilt from the vendor's FIELD_PREP masks (send_lpcm_mail)
+PC = ROOT / 'research/ios26-webscout-r1/dl-gos-6.12/repo/private/google-modules/soc/rdo/power-controller/power_controller_main.c'
+if PC.exists():
+    pc = PC.read_text()
+    def mask(name):
+        m = re.search(rf'#define {name} GENMASK\((\d+), (\d+)\)', pc); return int(m[2])
+    sh = {k: mask(k) for k in ('POWER_ON_BITFIELD', 'PD_ID_BITFIELD', 'SSWRP_ID_BITFIELD', 'REQ_ID_BITFIELD')}
+    req = int(re.search(r'#define LPCM_CMD_SET_GEN_PD (\d+)', pc)[1])
+    frame = lambda pd, on, sswrp=0: req << sh['REQ_ID_BITFIELD'] | sswrp << sh['SSWRP_ID_BITFIELD'] | pd << sh['PD_ID_BITFIELD'] | on << sh['POWER_ON_BITFIELD']
+    C2 = (S / 'tgl_dcs.c').read_text()
+    val = lambda n: int(re.search(rf'#define {n} (0x[0-9a-f]+)u', C2)[1], 16)
+    for name, want in (('LPCM_FE0_ON', frame(0, 1)), ('LPCM_DSI0_ON', frame(2, 1)), ('LPCM_FE0_OFF', frame(0, 0)), ('LPCM_DSI0_OFF', frame(2, 0))):
+        ok(val(name) == want, f'{name} = {val(name):#010x}, vendor fields give {want:#010x}')
+else:
+    print('note: vendor power_controller_main.c absent; LPCM field check skipped')
+
 # ---- fake bus, gate off and on
 OUT.mkdir(parents=True, exist_ok=True)
 for gate in (False, True):
