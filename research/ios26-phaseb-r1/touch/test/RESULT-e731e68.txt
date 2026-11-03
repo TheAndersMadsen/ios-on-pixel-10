@@ -1,0 +1,2 @@
+touch shape host test: 49 checks, 0 failed
+tcm decode host test: 133 checks, 0 failed

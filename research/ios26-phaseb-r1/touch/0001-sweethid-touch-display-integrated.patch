@@ -1,0 +1,159 @@
+diff --git c/iokit/Kernel/arm/hid/SweetHID.cpp i/iokit/Kernel/arm/hid/SweetHID.cpp
+index c977c6d..d60e002 100644
+--- c/iokit/Kernel/arm/hid/SweetHID.cpp
++++ i/iokit/Kernel/arm/hid/SweetHID.cpp
+@@ -42,6 +42,7 @@ static uint64_t hk_ui_uptime_us(void) {
+ #include "IOHIDKeys.h"
+ #include "IOHIDPrivateKeys.h"
+ #include "IOHIDUsageTables.h"
++#include "sweet_touch_event.h"
+ 
+ extern "C" uint64_t mach_absolute_time(void);
+ 
+@@ -470,6 +471,8 @@ OSDefineMetaClassAndStructors(SweetHIDTouch, IOHIDEventService);
+ 
+ static SweetHIDButtons *gSweetButtons;
+ static SweetHIDTouch *gSweetTouch;
++/* Touch events are display integrated (direct touches; sweet_touch_event.h). sweet_touch_indirect=1: the old shape. */
++static bool gSweetTouchDirect = true;
+ #if defined(BLAZER)
+ static SweetHIDButtons *gLiveButtons;
+ static SweetHIDTouch *gLiveTouch;
+@@ -686,6 +689,11 @@ SweetHIDTouch::start(IOService *provider)
+ #endif
+ 	/* The digitizer covers the main display (backboardd maps it 1:1). */
+ 	setProperty("DisplayIntegrated", kOSBooleanTrue);
++	{
++		/* The events say so too (sweet_touch_event.h); sweet_touch_indirect=1 sends the pre-fix indirect shape. */
++		uint32_t indirect = 0;
++		gSweetTouchDirect = !(PE_parse_boot_argn("sweet_touch_indirect", &indirect, sizeof(indirect)) && indirect != 0);
++	}
+ #if defined(BLAZER)
+ 	/* The picture's size in mm at 19.56 px/mm: the part of the glass the digitizer reports */
+ 	{
+@@ -716,7 +724,8 @@ SweetHIDTouch::start(IOService *provider)
+ 	gSweetTouch = this;
+ 	registerService();
+ #if defined(BLAZER)
+-	IOLog("SWEET HID: touch registered, canvas %ux%u, centred at %d,%d\n", fGeometry.canvas_w, fGeometry.canvas_h, fGeometry.pic_x, fGeometry.pic_y);
++	IOLog("SWEET HID: touch registered, canvas %ux%u, centred at %d,%d, %s touches\n", fGeometry.canvas_w, fGeometry.canvas_h, fGeometry.pic_x, fGeometry.pic_y,
++	    gSweetTouchDirect ? "direct" : "indirect");
+ #else
+ 	IOLog("SWEET HID: touch registered\n");
+ #endif
+@@ -774,8 +783,6 @@ SweetHIDTouch::touch(int finger, bool down, int x, int y)
+ 		IOLockUnlock(fLock);
+ 		return;
+ 	}
+-	collection->setIntegerValue(kIOHIDEventFieldDigitizerCollection, TRUE);
+-
+ 	UInt32 cmask = 0;
+ 	for (int i = 0; i < SWEET_TOUCH_FINGERS; i++) {
+ 		bool d = (i == finger) ? down : fDown[i];
+@@ -801,10 +808,7 @@ SweetHIDTouch::touch(int finger, bool down, int x, int y)
+ 				mask |= kIOHIDDigitizerEventIdentity;
+ 			}
+ 		}
+-		child->setIntegerValue(kIOHIDEventFieldDigitizerIndex, i);
+-		child->setIntegerValue(kIOHIDEventFieldDigitizerIdentity, i + 2);
+-		child->setIntegerValue(kIOHIDEventFieldDigitizerTouch, d);
+-		child->setIntegerValue(kIOHIDEventFieldDigitizerEventMask, mask);
++		sweet_touch_child_fields(child, i, i + 2, d, mask, gSweetTouchDirect);
+ 		collection->appendChild(child);
+ 		child->release();
+ 		cmask |= mask;
+@@ -815,12 +819,7 @@ SweetHIDTouch::touch(int finger, bool down, int x, int y)
+ 		fX[finger] = nx;
+ 		fY[finger] = ny;
+ 	}
+-	collection->setFixedValue(kIOHIDEventFieldDigitizerX, nx);
+-	collection->setFixedValue(kIOHIDEventFieldDigitizerY, ny);
+-	collection->setIntegerValue(kIOHIDEventFieldDigitizerRange, any);
+-	collection->setIntegerValue(kIOHIDEventFieldDigitizerTouch, any);
+-	collection->setIntegerValue(kIOHIDEventFieldDigitizerEventMask, cmask);
+-	collection->setIntegerValue(kIOHIDEventFieldDigitizerButtonMask, any ? 1 : 0);
++	sweet_touch_collection_fields(collection, nx, ny, any, cmask, gSweetTouchDirect);
+ #if defined(BLAZER)
+ 	/* An UP remains in flight until dispatch returns, even after fDown clears.
+ 	 * Live ownership must refuse this unlocked publication interval. */
+diff --git c/iokit/Kernel/arm/hid/hk_live_hid.inc i/iokit/Kernel/arm/hid/hk_live_hid.inc
+index 55f174a..6028388 100644
+--- c/iokit/Kernel/arm/hid/hk_live_hid.inc
++++ i/iokit/Kernel/arm/hid/hk_live_hid.inc
+@@ -234,20 +234,11 @@ sweet_live_touch_event(bool down, IOFixed nx, IOFixed ny, bool edge)
+  uint32_t mask = kIOHIDDigitizerEventTouch | kIOHIDDigitizerEventRange |
+      (down ? kIOHIDDigitizerEventIdentity | kIOHIDDigitizerEventPosition : 0) |
+      (edge ? kIOHIDDigitizerEventFromEdgeTip : 0);
+- child->setIntegerValue(kIOHIDEventFieldDigitizerIndex, SWEET_TOUCH_FINGERS - 1);
+- child->setIntegerValue(kIOHIDEventFieldDigitizerIdentity, 11);
+- child->setIntegerValue(kIOHIDEventFieldDigitizerTouch, down);
+- child->setIntegerValue(kIOHIDEventFieldDigitizerEventMask, mask);
++ sweet_touch_child_fields(child, SWEET_TOUCH_FINGERS - 1, 11, down, mask, gSweetTouchDirect);
+  event->appendChild(child);
+  child->release();
+  if (!event->getChildren() || event->getChildren()->getCount() != 1) { event->release(); return NULL; }
+- event->setIntegerValue(kIOHIDEventFieldDigitizerCollection, TRUE);
+- event->setFixedValue(kIOHIDEventFieldDigitizerX, nx);
+- event->setFixedValue(kIOHIDEventFieldDigitizerY, ny);
+- event->setIntegerValue(kIOHIDEventFieldDigitizerRange, down);
+- event->setIntegerValue(kIOHIDEventFieldDigitizerTouch, down);
+- event->setIntegerValue(kIOHIDEventFieldDigitizerEventMask, mask);
+- event->setIntegerValue(kIOHIDEventFieldDigitizerButtonMask, down ? 1 : 0);
++ sweet_touch_collection_fields(event, nx, ny, down, mask, gSweetTouchDirect);
+  return event;
+ }
+ 
+diff --git c/iokit/Kernel/arm/hid/sweet_touch_event.h i/iokit/Kernel/arm/hid/sweet_touch_event.h
+new file mode 100644
+index 0000000..39b3459
+--- /dev/null
++++ i/iokit/Kernel/arm/hid/sweet_touch_event.h
+@@ -0,0 +1,48 @@
++/*
++ * The per-event fields of a touch-screen digitizer event: one place for SweetHIDTouch::touch() (the panel),
++ * sweet_live_touch_event() (hk_live_hid.inc, scripted taps) and the host test
++ * (research/ios26-phaseb-r1/touch/test). E is IOHIDEvent in the kernel and a recording fake on the host;
++ * the caller provides the kIOHIDEventField* constants (IOHIDEventFieldDefs.h).
++ *
++ * Why IsDisplayIntegrated: UIKitCore (iOS 26 cache 0f1ee332) picks the touch handler of a digitizer collection from
++ * kIOHIDEventFieldDigitizerIsDisplayIntegrated (0xb0019): 0 = an indirect touch (trackpad-like), 1 = a direct finger,
++ * 1 with a stylus child = pencil (code at 0x18923b208). UIKit's own synthesized digitizer events set it to
++ * !supportsIndirectInputEvents (0x18a761c18), and a focus-system recognizer claims taps that are not display
++ * integrated (0x18ac69b78). The SweetHIDTouch service property DisplayIntegrated does not set the event field, and
++ * IOHIDEvent::digitizerEvent() leaves options.displayIntegrated 0, so every tap reached apps as an indirect touch.
++ *
++ * direct=false keeps the pre-fix shape (boot-arg sweet_touch_indirect=1) for an A/B boot.
++ */
++#ifndef SWEET_TOUCH_EVENT_H
++#define SWEET_TOUCH_EVENT_H
++
++template <class E>
++static inline void
++sweet_touch_child_fields(E *child, int index, int identity, bool touch, uint32_t mask, bool direct)
++{
++	child->setIntegerValue(kIOHIDEventFieldDigitizerIndex, index);
++	child->setIntegerValue(kIOHIDEventFieldDigitizerIdentity, identity);
++	child->setIntegerValue(kIOHIDEventFieldDigitizerTouch, touch);
++	child->setIntegerValue(kIOHIDEventFieldDigitizerEventMask, mask);
++	if (direct) {
++		child->setIntegerValue(kIOHIDEventFieldDigitizerIsDisplayIntegrated, 1);
++	}
++}
++
++template <class E>
++static inline void
++sweet_touch_collection_fields(E *collection, IOFixed x, IOFixed y, bool any, uint32_t mask, bool direct)
++{
++	collection->setIntegerValue(kIOHIDEventFieldDigitizerCollection, 1);
++	collection->setFixedValue(kIOHIDEventFieldDigitizerX, x);
++	collection->setFixedValue(kIOHIDEventFieldDigitizerY, y);
++	collection->setIntegerValue(kIOHIDEventFieldDigitizerRange, any);
++	collection->setIntegerValue(kIOHIDEventFieldDigitizerTouch, any);
++	collection->setIntegerValue(kIOHIDEventFieldDigitizerEventMask, mask);
++	collection->setIntegerValue(kIOHIDEventFieldDigitizerButtonMask, any ? 1 : 0);
++	if (direct) {
++		collection->setIntegerValue(kIOHIDEventFieldDigitizerIsDisplayIntegrated, 1);
++	}
++}
++
++#endif /* SWEET_TOUCH_EVENT_H */
