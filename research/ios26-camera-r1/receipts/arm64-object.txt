@@ -1,0 +1,27 @@
+clang version 23.1.4
+clang -target arm64-apple-ios26.0 -DBLAZER -ffreestanding -fno-builtin -nostdinc -isystem $(clang -print-resource-dir)/include -O2 -Wall -Wextra -Werror -c xnu-src/bsd/dev/blazer_torch_hw.c
+hw.o: Mach-O 64-bit arm64 object, flags:<|SUBSECTIONS_VIA_SYMBOLS>
+bd1159daa7108b0a34401c83fd4e3677a3651f61e23f3309e9742eae23fee8f6  hw.o
+0000000000000024 T _bt_init
+0000000000000084 T _bt_run
+0000000000000000 T _bt_stop_name
+0000000000003310 t _chip_write
+0000000000002a88 t _lpcm_ok
+000000000000257c t _mba
+0000000000002e48 t _pad_mux
+0000000000002d94 t _pad_read
+0000000000003198 t _push
+0000000000002404 t _rd
+00000000000032c8 t _read_flags
+0000000000001da4 t _read_retry
+0000000000003668 t _restore_en
+00000000000029c4 t _smc_vote
+0000000000002134 t _torch
+0000000000003084 t _wait_disabled
+0000000000002b40 t _wr
+not-lm3644
+refused-write
+cli select uart -> i2c
+pads muxed to cli7
+led%u on: torch code 0x%x, enable 0x%x, for %u ms
+led%u off: standby, %u ms lit, flags 0x%x 0x%x

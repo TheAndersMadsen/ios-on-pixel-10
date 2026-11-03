@@ -1,0 +1,3 @@
+cam1 bytes 1014 r3 bytes 999
+only in cam1: ['blazer_torch=4']
+only in r3: []

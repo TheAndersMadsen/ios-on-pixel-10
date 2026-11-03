@@ -1,0 +1,236 @@
+cc (GCC) 16.1.1 20260430
+PASS stage1-uart-readonly
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli not i2c; pad inventory only, no controller access
+blazer-torch: scl dmux 0x1 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x1 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: stop cli, detail 0x2
+PASS stage2-uart-unchanged
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli not i2c; pad inventory only, no controller access
+blazer-torch: scl dmux 0x1 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x1 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: stop cli, detail 0x2
+PASS stage3-select-id
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0x80
+PASS stage4-torch-both-leds
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0x80
+blazer-torch: lm3644: flags 0x0 0x0 (stale, now cleared), torch 0xbf 0x3f, timing 0x1a
+blazer-torch: led1 on: torch code 0x8, enable 0x89, for 2000 ms
+blazer-torch: led1 off: standby, 2000 ms lit, flags 0x0 0x0
+blazer-torch: led2 on: torch code 0x8, enable 0x8a, for 2000 ms
+blazer-torch: led2 off: standby, 2000 ms lit, flags 0x0 0x0
+PASS stage4-tt-5000ms
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x4, enable register 0x80
+blazer-torch: lm3644tt: flags 0x0 0x0 (stale, now cleared), torch 0xbf 0x3f, timing 0x1a
+blazer-torch: led1 on: torch code 0x8, enable 0x89, for 5000 ms
+blazer-torch: led1 off: standby, 5000 ms lit, flags 0x0 0x0
+blazer-torch: led2 on: torch code 0x8, enable 0x8a, for 5000 ms
+blazer-torch: led2 off: standby, 5000 ms lit, flags 0x0 0x0
+PASS stage4-unknown-id-no-write
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x3, enable register 0x80
+blazer-torch: stop not-lm3644, detail 0x3
+PASS stage4-enable-not-reset-no-write
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0xa0
+blazer-torch: stop not-standby, detail 0xa0
+PASS stage4-fault-flags
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0x80
+blazer-torch: lm3644: flags 0x0 0x0 (stale, now cleared), torch 0xbf 0x3f, timing 0x1a
+blazer-torch: led1 on: torch code 0x8, enable 0x89, for 2000 ms
+blazer-torch: led1 off: standby, 2000 ms lit, flags 0x4 0x0
+blazer-torch: stop flags, detail 0x400
+PASS stage4-no-chip-nak
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: stop nak, detail 0x1
+PASS stage4-lines-low
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x0
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x0
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: lines with pull-up scl 0 sda 0
+blazer-torch: stop lines-low, detail 0x0
+PASS stage4-pad-unknown
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x4
+blazer-torch: stop pad-not-i2c, detail 0x10004
+blazer-torch: stop refused-byte, detail 0x4
+blazer-torch: cleanup failed: refused-byte detail 0x4
+PASS stage4-nak-while-lit-en-off
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0x80
+blazer-torch: lm3644: flags 0x0 0x0 (stale, now cleared), torch 0xbf 0x3f, timing 0x1a
+blazer-torch: led1 on: torch code 0x8, enable 0x89, for 2000 ms
+blazer-torch: stop nak, detail 0x1
+blazer-torch: stop nak, detail 0x1
+blazer-torch: cleanup failed: nak detail 0x1
+blazer-torch: stop nak, detail 0x1
+blazer-torch: cleanup failed: nak detail 0x1
+blazer-torch: stop nak, detail 0x1
+blazer-torch: cleanup failed: nak detail 0x1
+PASS stage4-flags-nak-putback-standby
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 2,1,1
+blazer-torch: cli select uart -> i2c
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0x80
+blazer-torch: lm3644: flags 0x0 0x0 (stale, now cleared), torch 0xbf 0x3f, timing 0x1a
+blazer-torch: led1 on: torch code 0x8, enable 0x89, for 2000 ms
+blazer-torch: stop nak, detail 0x1
+PASS stage4-cli-already-i2c
+blazer-torch: lsio_e 2 (2 on)
+blazer-torch: lsio_s 2 (2 on)
+blazer-torch: cli was 1,1,1
+blazer-torch: i2c clock 200000000 Hz
+blazer-torch: pads were scl 0x1 sda 0x1
+blazer-torch: pads muxed to cli7
+blazer-torch: controller type 0x44570140 version 0x3230312a
+blazer-torch: scl dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: sda dmux 0x2 tx 0x0 rx 0x1
+blazer-torch: strobe dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: en dmux 0x1 tx 0x0 rx 0x0
+blazer-torch: left by loader: enable 0x0 status 0x2 con 0x0
+blazer-torch: chip answered: id register 0x2, enable register 0x80
+blazer-torch: lm3644: flags 0x0 0x0 (stale, now cleared), torch 0xbf 0x3f, timing 0x1a
+blazer-torch: led1 on: torch code 0x8, enable 0x89, for 2000 ms
+blazer-torch: led1 off: standby, 2000 ms lit, flags 0x0 0x0
+blazer-torch: led2 on: torch code 0x8, enable 0x8a, for 2000 ms
+blazer-torch: led2 off: standby, 2000 ms lit, flags 0x0 0x0
+PASS stage4-lsio-off
+blazer-torch: lsio_e 1 (2 on)
+blazer-torch: stop lsioe-off, detail 0x1
+PASS gates
+PASS refusals-before-mmio
+blazer-torch: stop refused-pa, detail 0x3a300000
+RESULT: PASS (17/17 cases)

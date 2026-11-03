@@ -1,0 +1,24 @@
+phone-bridge: m1box is at 3e3ec7b545, the Mac at e96cb64483 (--force: running anyway)
+phone-bridge: uncommitted on m1box and different on the Mac (the Mac's version runs): docs/debug/MAP.md docs/probes.yaml dualboot/validate.py .github/scripts/ci-tests.sh research/ios26-connectivity-r1/wifi/receipts/image_tool-w1.txt research/ios26-connectivity-r1/wifi/receipts/tests.txt tools/decode-shim-stamps.py tools/image_tool.py tools/live_boot.sh tools/test_image_tool.py tools/test_qemu_preflight.py tools/test_usbcon_tool.py 
+phone-bridge: copying research/ios26-camera-r1/xnu-src/0001-hk-cam1.patch to the Mac (25K)
+phone-bridge: copying research/ios26-camera-r1/tools/build_cam1.py to the Mac (5.3K)
+23:29:35 waiting for build slot lock
+23:31:48 lock held
+23:31:48 tree branch p1 HEAD b228c4f
+23:31:52 hk-cam1 = 2e8d77709c99ebab645cf919cb28dc9cd1947e40 (on 7227fe7)
+23:31:52 checked out hk-cam1 2e8d77709c99ebab645cf919cb28dc9cd1947e40
+23:32:13 build cam1-build rc 0
+23:32:13 c4c4795480ad74f0f1e0d35332fed6bb42fd772f66556f27dd3309608e789a5f  kernel.cam1
+23:32:13 02f27329d9eee53ab34c610f19c844fa6cd71df840b35509e4286f92b6b6d304  kernel.cam1.unstripped
+23:32:13 kernel.cam1 has 'cli select uart -> i2c': True
+23:32:13 kernel.cam1 has 'led%u on: torch code 0x%x, enable 0x%x, for %u ms': True
+23:32:13 kernel.cam1 has 'blazer-torch: summary stage %u': True
+23:32:13 kernel.cam1 has 'refused-write': True
+23:32:13 82b1307be0289e2eb9673f43bf1a8d68872d0e22da63407a0f63deb6d7cb99b8  blazer_torch.o (/bsd/DEVELOPMENT/blazer_torch.o)
+23:32:13 4b5975d374b7ac22e07c28135776da45e324a37346f11546446535b5f31cf1c1  blazer_torch_hw.o (/bsd/DEVELOPMENT/blazer_torch_hw.o)
+23:32:14 restored branch p1 HEAD b228c4f
+23:32:34 build cam1-restore-p1-build rc 0
+23:32:34 obj kernel after restore f151f0a3b9913c5f2e021b61d5e44f4b3979924bc9ba64158aa86fdd5e522114
+23:32:34 restored p1 kernel has the hk-cam1 string: False
+phone-bridge: copied back /srv/dev/repos/personal/hackios/research/ios26-camera-r1/build/
+rc=0

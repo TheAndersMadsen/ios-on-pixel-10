@@ -1,0 +1,17 @@
+kernel.cam1.unstripped 02f27329d9eee53ab34c610f19c844fa6cd71df840b35509e4286f92b6b6d304
+fffffe0007a29660 S _blazer_torch_init
+fffffe0007a25c90 S _bt_init
+fffffe0007a25cf0 S _bt_run
+fffffe0007a29150 s _chip_write
+fffffe0007a01a80 s _pad_mux
+fffffe0007a28c60 s _pad_mux
+fffffe0007a27e90 s _torch
+fffffe0008702aa8 b _torch
+fffffe0007a29720 s _torch_thread
+fffffe0007a021d0 s _write_allowed
+fffffe0008075c70 s _write_allowed
+blazer_ufs_fake_lun: 0
+cli select uart -> i2c: 1
+blazer-torch: stage %u, starts in %u s, torch %u ms (hk-cam1): 1
+r3 kernel: ../ios26-dualboot-r8/rootview/kernel.rootview
+r3 has fake_lun: 0

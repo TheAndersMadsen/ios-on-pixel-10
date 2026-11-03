@@ -1,0 +1,42 @@
+# hk_cycle expectations for a7-ios-system-cam1 (research/ios26-camera-r1/PHONE-TEST.md). Schema as live/expect/int1.yaml.
+# The blazer-torch patterns come from the hk-cam1 source and its host test (receipts/host-test.txt); no phone has printed them yet.
+name: cam1
+image: a7-ios-system-cam1
+probes:
+  - id: boot.root
+    feature: XNU rooted on ios_system, launchd running
+    need: ['blazer-root: .*rooting on|BSD root: ', '(?:^|\s)exec launchd$']
+  - id: torch.start
+    feature: hk-cam1 torch thread started at stage 4
+    need: ['blazer-torch: stage 4, starts in 45 s, torch 2000 ms \(hk-cam1\)']
+  - id: torch.power
+    feature: LSIO_E and LSIO_S on
+    need: ['blazer-torch: lsio_e 2 \(2 on\)', 'blazer-torch: lsio_s 2 \(2 on\)']
+  - id: torch.select
+    feature: CLI7 switched from the loader's UART to I2C, SCL/SDA muxed (stock default pinctrl)
+    need: ['blazer-torch: cli select uart -> i2c|blazer-torch: cli was 1,']
+  - id: torch.id
+    feature: LM3644 answered on CLI7 (id 0x02 or 0x04 for TT), enable register at reset 0x80
+    need: ['blazer-torch: chip answered: id register 0x[24], enable register 0x80']
+  - id: torch.led1
+    feature: LED1 torch lit for 2000 ms, back to standby, no fault flags
+    need: ['blazer-torch: led1 on: torch code 0x8, enable 0x89, for 2000 ms', 'blazer-torch: led1 off: standby, 2000 ms lit, flags 0x0 0x0']
+  - id: torch.led2
+    feature: LED2 torch lit for 2000 ms, back to standby, no fault flags
+    need: ['blazer-torch: led2 on: torch code 0x8, enable 0x8a, for 2000 ms', 'blazer-torch: led2 off: standby, 2000 ms lit, flags 0x0 0x0']
+  - id: torch.exit
+    feature: clean exit (standby, EN low, pads and CLI7 restored)
+    need: ['blazer-torch: ends: ok, chip answered 1, id 0x[24], enable 0x80', 'blazer-torch: summary stage 4 stop ok detail 0x0 lit 2000 2000 ms']
+    forbid: ['blazer-torch: cleanup failed', 'blazer-torch: en restore mismatch']
+  - id: torch.owner
+    feature: owner saw the rear flash glow twice (about 45-55 s after the boot started)
+    need: ['blazer-torch: led2 off: standby']
+    needs_input: true
+    note: "a felt/seen result: hk note <attempt> 'owner: flash glowed twice' (or not)"
+  - id: no.unplanned.panic
+    feature: only the planned deadline panic
+    forbid: ['^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline)']
+  - id: boot.home
+    feature: Home still reached (r3 behaviour unchanged)
+    need: ['(?:^|\s)exec SpringBoard$']
+    required: false

@@ -1,0 +1,1181 @@
+{
+ "preflight": {
+  "image": {
+   "dir": "/srv/dev/repos/personal/hackios/research/images/a7-ios-system-cam1",
+   "name": "a7-ios-system-cam1",
+   "image": "51900a1a2bfbc761c016801ffe2dc484114dae391da546744f32eb826881fb44",
+   "mach": "c4c4795480ad74f0f1e0d35332fed6bb42fd772f66556f27dd3309608e789a5f",
+   "cmdline": "debug=0x8 serial=3 cpus=5 rd=md0 blazer_ufs_mountroot=1 msgbuf=1048576 varfs=1 blazer_ufs=2 blazer_ufs_live=1 blazer_ufs_root=ios_system blazer_ufs_lun=0 blazer_deadline=300 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 launchd_disable_all_timeouts=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 hk_fb_probe=1 sweetfb_noconsole=1 sweetfb_hz=60 blazer_touch=1 blazer_touch_bars=1 atm_diagnostic_config=0x400 blazer_ufs_multi=1 blazer_ufs_spin_us=300 blazer_ufs_hold=1 blazer_ssbs=3 hk_fb_scale=1 hk_fb_fast=1 hk_fb_refresh=60 hk_overlay=0xA0080081 hk_top=30 blazer_battery=1 blazer_mem=13 blazer_thermal=2 blazer_thermal_fast=1 blazer_thermal_panic_c=70 blazer_gov=1 blazer_gov_cap=16 blazer_gov_stages=15 blazer_gov_b=40 blazer_usbcon=1 blazer_usbcon_ch9=1 blazer_usbcon_input=1 hk_present_trace=1 blazer_rtc=1 blazer_rtc_bounds=1 blazer_battery_status=1 blazer_battery_receipt=1 blazer_aks_log=1 blazer_torch=4 blazer_bootcpu=0x200",
+   "var_overlay": {
+    "bytes": 491040,
+    "groups": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     27,
+     28,
+     29,
+     30,
+     31
+    ],
+    "mask": 2684878977,
+    "path": "research/ios26-opt-20261102/combined_ui_overlay/artifacts/artwork-container-battery-observe-r1.ovl",
+    "placed": [
+     "0x884d9c000",
+     "0x78000"
+    ],
+    "sha256": "7d610456642614367cb4262576efdf05fd751ebc480720e4d669e1882a820f58"
+   },
+   "route": "ufs",
+   "phone_root": true,
+   "cpus": 5
+  },
+  "kernel": {
+   "path": "/srv/dev/repos/personal/hackios/research/ios26-camera-r1/build/kernel.cam1",
+   "sha": "c4c4795480ad74f0f1e0d35332fed6bb42fd772f66556f27dd3309608e789a5f",
+   "version": "Darwin Kernel Version 25.5.0: Sun Nov  1 23:52:38 CET 2026; andersmadsen:obj/DEVELOPMENT_ARM64_BLAZER",
+   "rebuild": "not needed: phone build runs on the rig ADT"
+  },
+  "expect": [
+   "/srv/dev/repos/personal/hackios/tools/qemu_preflight.expect.yaml"
+  ],
+  "tool_sha": "ff08a381a49ee4ca058c21137c60d59f2ef0994ced7fddae0ae5aeb728f2e9ae",
+  "expect_sha": {
+   "/srv/dev/repos/personal/hackios/tools/qemu_preflight.expect.yaml": "8e30526095f6fa46981df67975f975f307bf22a24be32c992e4063eb05deb9dc"
+  },
+  "overlay": {
+   "path": "/srv/dev/repos/personal/hackios/research/ios26-opt-20261102/combined_ui_overlay/artifacts/artwork-container-battery-observe-r1.ovl",
+   "sha": "7d610456642614367cb4262576efdf05fd751ebc480720e4d669e1882a820f58",
+   "mask": 2684878977,
+   "override": false,
+   "manifest_sha": "7d610456642614367cb4262576efdf05fd751ebc480720e4d669e1882a820f58"
+  },
+  "translation": [
+   [
+    "debug=0x8",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "serial=3",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "cpus=5",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "rd=md0",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_mountroot=1",
+    "drop",
+    "phone-only: phone md0 route"
+   ],
+   [
+    "msgbuf=1048576",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "varfs=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_ufs=2",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_live=1",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_root=ios_system",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_ufs_lun=0",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "blazer_deadline=300",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "launchd_unsecure_cache=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "unentitled_ios_sim_launch=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "ignition_level=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "launchd_disable_all_timeouts=1",
+    "harness",
+    "set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)"
+   ],
+   [
+    "sweetarm64e=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "autounlock=0",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "interrupt-masked-debug-mode=0",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_panic=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_usertrace=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_fb_scanout=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_fb_probe=1",
+    "drop",
+    "phone-only: DPU probe"
+   ],
+   [
+    "sweetfb_noconsole=1",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "sweetfb_hz=60",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_touch=1",
+    "drop",
+    "phone-only: touch controller (SPI/Laguna)"
+   ],
+   [
+    "blazer_touch_bars=1",
+    "drop",
+    "phone-only: touch controller (SPI/Laguna)"
+   ],
+   [
+    "atm_diagnostic_config=0x400",
+    "keep-new",
+    "ATM diagnostics config (software); first use on the rig"
+   ],
+   [
+    "blazer_ufs_multi=1",
+    "drop",
+    "phone-only: real UFS host queueing"
+   ],
+   [
+    "blazer_ufs_spin_us=300",
+    "drop",
+    "phone-only: real UFS host polling"
+   ],
+   [
+    "blazer_ufs_hold=1",
+    "drop",
+    "phone-only: real UFS link hold"
+   ],
+   [
+    "blazer_ssbs=3",
+    "drop",
+    "phone-only: Tensor CPU SSBS errata"
+   ],
+   [
+    "hk_fb_scale=1",
+    "drop",
+    "phone-only: DPU scaler"
+   ],
+   [
+    "hk_fb_fast=1",
+    "drop",
+    "phone-only: DPU fast path"
+   ],
+   [
+    "hk_fb_refresh=60",
+    "drop",
+    "phone-only: DPU refresh"
+   ],
+   [
+    "hk_overlay=0xA0080081",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "hk_top=30",
+    "keep",
+    "QEMU-proven"
+   ],
+   [
+    "blazer_battery=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "blazer_mem=13",
+    "drop",
+    "phone-only: phone DRAM map"
+   ],
+   [
+    "blazer_thermal=2",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_thermal_fast=1",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_thermal_panic_c=70",
+    "drop",
+    "phone-only: Tensor thermal sensors"
+   ],
+   [
+    "blazer_gov=1",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_cap=16",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_stages=15",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_gov_b=40",
+    "drop",
+    "phone-only: Tensor DVFS governor"
+   ],
+   [
+    "blazer_usbcon=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "blazer_usbcon_ch9=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "blazer_usbcon_input=1",
+    "drop",
+    "phone-only: DWC3 USB gadget console"
+   ],
+   [
+    "hk_present_trace=1",
+    "drop",
+    "not proven on the rig (unknown to the pre-flight; --keep to try)"
+   ],
+   [
+    "blazer_rtc=1",
+    "drop",
+    "phone-only: PMIC RTC"
+   ],
+   [
+    "blazer_rtc_bounds=1",
+    "drop",
+    "phone-only: PMIC RTC"
+   ],
+   [
+    "blazer_battery_status=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "blazer_battery_receipt=1",
+    "drop",
+    "phone-only: fuel gauge / PMIC"
+   ],
+   [
+    "blazer_aks_log=1",
+    "drop",
+    "not proven on the rig (unknown to the pre-flight; --keep to try)"
+   ],
+   [
+    "blazer_torch=4",
+    "drop",
+    "not proven on the rig (unknown to the pre-flight; --keep to try)"
+   ],
+   [
+    "blazer_bootcpu=0x200",
+    "drop",
+    "phone-only: phone boot cluster id"
+   ],
+   [
+    "sched_preemption_disable_debug_mode=0",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ],
+   [
+    "wdt=-1",
+    "add",
+    "QEMU observability (runq.sh TAIL)"
+   ]
+  ],
+  "qemu_args": "varfs=1 blazer_deadline=300 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 atm_diagnostic_config=0x400 hk_overlay=0xA0080081 hk_top=30 sched_preemption_disable_debug_mode=0 wdt=-1",
+  "root": "/data/hackios-qemu/research/ios26-root-r1/build-r3/ios26-phone-r3.img",
+  "seconds": 600,
+  "phone_deadline": "300",
+  "phone_cpus": "5",
+  "harness_cmd": [
+   "/usr/bin/python3",
+   "-I",
+   "/data/hackios-qemu/research/ios26-apps-r1/tools/qemu-ufsroot.py",
+   "cam1-q1",
+   "--kernel",
+   "/srv/dev/repos/personal/hackios/research/ios26-camera-r1/build/kernel.cam1",
+   "--root",
+   "/data/hackios-qemu/research/ios26-root-r1/build-r3/ios26-phone-r3.img",
+   "--window-gib",
+   "13",
+   "--runtime",
+   "600",
+   "--idle",
+   "0",
+   "--wait",
+   "1800",
+   "--slots",
+   "6",
+   "--route-md",
+   "--ufs-root",
+   "ios_system",
+   "--var-overlay",
+   "/srv/dev/repos/personal/hackios/research/ios26-opt-20261102/combined_ui_overlay/artifacts/artwork-container-battery-observe-r1.ovl",
+   "--args",
+   "varfs=1 blazer_deadline=300 launchd_unsecure_cache=1 unentitled_ios_sim_launch=1 ignition_level=1 sweetarm64e=1 autounlock=0 interrupt-masked-debug-mode=0 blazer_panic=1 hk_usertrace=1 hk_fb_scanout=1 sweetfb_noconsole=1 sweetfb_hz=60 atm_diagnostic_config=0x400 hk_overlay=0xA0080081 hk_top=30 sched_preemption_disable_debug_mode=0 wdt=-1"
+  ],
+  "harness_sha": "bdc6f360734357bfe32fcc6a9b26e76664af7b08aee8cf422d93733f49f15264",
+  "started": "2026-11-03T23:36:46+0100",
+  "harness_stdout": "{\"ended\": \"guest stopped\", \"elapsed\": 302.22504175099857, \"exit\": 0, \"root_unchanged\": true}\n",
+  "harness_rc": 0
+ },
+ "result": {
+  "run": "/data/hackios-qemu/research/ios26-apps-r1/runs/cam1-q1",
+  "console_lines": 2889,
+  "exit": {
+   "ended": "guest stopped",
+   "elapsed": 302.22504175099857,
+   "exit": 0,
+   "root_unchanged": true
+  },
+  "last_host_s": 302.0,
+  "milestones": {
+   "kernel": {
+    "label": "XNU arm_init",
+    "reached": true,
+    "host_s": 0.0
+   },
+   "root": {
+    "label": "root mounted, pid 1 exec",
+    "reached": true,
+    "host_s": 2.0
+   },
+   "overlay": {
+    "label": "var overlay applied",
+    "reached": true,
+    "host_s": 2.0
+   },
+   "launchd": {
+    "label": "launchd",
+    "reached": true,
+    "host_s": 2.0
+   },
+   "usermanagerd": {
+    "label": "boot tasks: usermanagerd",
+    "reached": true,
+    "host_s": 41.0
+   },
+   "backboardd": {
+    "label": "backboardd",
+    "reached": true,
+    "host_s": 45.0
+   },
+   "SpringBoard": {
+    "label": "SpringBoard",
+    "reached": true,
+    "host_s": 12.0
+   },
+   "display": {
+    "label": "SWEET FB display on",
+    "reached": true,
+    "host_s": 128.0
+   },
+   "PosterBoard": {
+    "label": "PosterBoard (phone: first frame ~10 s)",
+    "reached": false,
+    "host_s": null
+   },
+   "iconservicesagent": {
+    "label": "iconservicesagent (phone: Home-time)",
+    "reached": true,
+    "host_s": 144.0
+   }
+  },
+  "daemons": {
+   "ACCHWComponentAuthService": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "AccessibilityUIServer": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "AppleCredentialManagerDaemon": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "AudioConverterService": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "CommCenter": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "DumpPanic": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "IOMFB_FDR_Loader": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "MobileGestaltHelper": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "SpringBoard": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "UserEventAgent": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "accountsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "amfid": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "apfs_iosd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "appprotectiond": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "audioaccessoryd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "audiomxd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "backboardd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "calaccessd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "cameracaptured": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "cfprefsd": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "chronod": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "com.apple.datamigrator": {
+    "execs": 3,
+    "respawns": 2,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "configd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "contactsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "containermanagerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "containermanagerd_system": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "coreauthd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "coreduetd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "distnoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "dmd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "driverkitd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "fairplayd.H2": {
+    "execs": 2,
+    "respawns": 1,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "fseventsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "iconservicesagent": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "keybagd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "launchd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "liveactivitiesd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "lockdownd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "logd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "lsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mediaremoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mobiletimerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "mtmergeprops": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "nanoregistryd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "passd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "powerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "profiled": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "ptpd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "rapportd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "remoted": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "remotepairingdeviced": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "runningboardd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "securityd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "sleepd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "system/com.apple.iomfb_fdr_loader": {
+    "execs": 0,
+    "respawns": 0,
+    "crashes": 1,
+    "crash_kinds": [
+     "exited"
+    ],
+    "first_crash": "com.apple.xpc.launchd|1970-01-01 00:03:20.099180 (system/com.apple.iomfb_fdr_loader [45]) <Notice>: exited due to exit(1), ran for 180873ms"
+   },
+   "systemstatusd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "thermalmonitord": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "timed": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "user/501/com.apple.DumpPanic": {
+    "execs": 0,
+    "respawns": 0,
+    "crashes": 1,
+    "crash_kinds": [
+     "exited"
+    ],
+    "first_crash": "com.apple.xpc.launchd|1970-01-01 00:02:38.042638 (user/501/com.apple.DumpPanic [15]) <Notice>: exited due to exit(0), ran for 142437ms"
+   },
+   "user/501/com.apple.bluetoothd": {
+    "execs": 0,
+    "respawns": 0,
+    "crashes": 1,
+    "crash_kinds": [
+     "exited"
+    ],
+    "first_crash": "com.apple.xpc.launchd|1970-01-01 00:00:57.529263 (user/501/com.apple.bluetoothd [40]) <Notice>: exited due to exit(78), ran for 40500ms"
+   },
+   "user/501/com.apple.datamigrator": {
+    "execs": 0,
+    "respawns": 0,
+    "crashes": 3,
+    "crash_kinds": [
+     "exited"
+    ],
+    "first_crash": "com.apple.xpc.launchd|1970-01-01 00:02:00.178811 (user/501/com.apple.datamigrator [57]) <Notice>: exited due to exit(0), ran for 48140ms"
+   },
+   "user/501/com.apple.fairplayd.H2": {
+    "execs": 0,
+    "respawns": 0,
+    "crashes": 1,
+    "crash_kinds": [
+     "exited"
+    ],
+    "first_crash": "com.apple.xpc.launchd|1970-01-01 00:04:14.345556 (user/501/com.apple.fairplayd.H2 [42]) <Notice>: exited due to exit(0), ran for 236493ms"
+   },
+   "user/501/com.apple.mtmergeprops": {
+    "execs": 0,
+    "respawns": 0,
+    "crashes": 1,
+    "crash_kinds": [
+     "exited"
+    ],
+    "first_crash": "com.apple.xpc.launchd|1970-01-01 00:02:55.147435 (user/501/com.apple.mtmergeprops [39]) <Notice>: exited due to exit(0), ran for 157029ms"
+   },
+   "usermanagerd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "usernotificationsd": {
+    "execs": 1,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   },
+   "xpcproxy": {
+    "execs": 75,
+    "respawns": 0,
+    "crashes": 0,
+    "crash_kinds": [],
+    "first_crash": null
+   }
+  },
+  "deadline_end": {
+   "host_s": 302.0,
+   "line": "panic(cpu 0 caller 0xfffffe00079f8060): blazer-root: deadline 300 s, stage pid1_exec, 151798 reads, 151798 blocks, busy 1341 ms, last lba 2866445 @hakios.blazer_ufs.c:1120"
+  },
+  "panics": [],
+  "panics_note": "only the blazer_deadline panic",
+  "overlay": {
+   "mask_line": "varfs-overlay: mask 0xa0080081 of groups 0xf8ffffff, 46 entries, 491040 bytes, hash 997bee268960d2a2",
+   "applied": 12,
+   "bad": [],
+   "missing": [
+    "f /private/var/hk/hgltrack.dylib"
+   ],
+   "mask": "0xa0080081",
+   "entries": 46,
+   "expected_listed": 12
+  },
+  "hk_top": {
+   "samples": 10,
+   "frames": 3
+  },
+  "home_equivalent": {
+   "reached": false,
+   "host_s": null,
+   "needs": [
+    "launchd",
+    "backboardd",
+    "SpringBoard",
+    "PosterBoard",
+    "iconservicesagent"
+   ],
+   "ui_stable": true,
+   "note": "QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame."
+  },
+  "expect": [
+   {
+    "id": "root-on-ufs",
+    "feature": "root mounted from the UFS LUN",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "blazer-root: stage t \\d+ ms stage pid1_exec",
+      "source": "live",
+      "line": "blazer-root: stage t 751 ms stage pid1_exec reads 334 blocks 334 busy 2 ms max 1172 us last lba 3850450"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "overlay-applied",
+    "feature": "var overlay parsed and applied",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "varfs-overlay: [1-9]\\d* applied",
+      "source": "live",
+      "line": "varfs-overlay: 12 applied"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "launchd",
+    "feature": "launchd",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec launchd[ \\t]*$",
+      "source": "live",
+      "line": "exec launchd"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "usermanagerd",
+    "feature": "boot tasks reach usermanagerd",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec usermanagerd[ \\t]*$",
+      "source": "live",
+      "line": "exec usermanagerd"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "backboardd",
+    "feature": "backboardd runs once",
+    "required": true,
+    "note": "phone A7 r1/p32: 7-8 respawns (CoreBrightness NULL read)",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec backboardd[ \\t]*$",
+      "source": "live",
+      "line": "exec backboardd"
+     },
+     {
+      "re": "(?:^|[^\\w\\n])exec (backboardd)[ \\t]*$",
+      "source": "value",
+      "line": "count((?:^|[^\\w\\n])exec (backboardd)[ \\t]*$) = 0 <= 1"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "SpringBoard",
+    "feature": "SpringBoard runs once",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec SpringBoard[ \\t]*$",
+      "source": "live",
+      "line": "exec SpringBoard"
+     },
+     {
+      "re": "(?:^|[^\\w\\n])exec (SpringBoard)[ \\t]*$",
+      "source": "value",
+      "line": "count((?:^|[^\\w\\n])exec (SpringBoard)[ \\t]*$) = 0 <= 1"
+     }
+    ],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "home-daemons",
+    "feature": "Home-time daemons (QEMU Home proxy)",
+    "required": true,
+    "note": "",
+    "evidence": [
+     {
+      "re": "(?:^|[^\\w\\n])exec iconservicesagent[ \\t]*$",
+      "source": "live",
+      "line": "exec iconservicesagent"
+     }
+    ],
+    "missing": [
+     "(?:^|[^\\w\\n])exec PosterBoard[ \\t]*$"
+    ],
+    "forbidden": [],
+    "verdict": "FAIL"
+   },
+   {
+    "id": "no-lsd-abort",
+    "feature": "lsd has a user container",
+    "required": true,
+    "note": "INVALID_PERSONA -> Could not get user container URL",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-NSURL-nil",
+    "feature": "backboardd NSURL-nil abort absent",
+    "required": false,
+    "note": "physical only so far (LANE1); QEMU never showed it",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "no-panic",
+    "feature": "no kernel panic",
+    "required": true,
+    "note": "",
+    "evidence": [],
+    "missing": [],
+    "forbidden": [],
+    "verdict": "PASS"
+   },
+   {
+    "id": "netstack-published",
+    "feature": "configd IONetworkStack stand-in",
+    "verdict": "N/A",
+    "note": "needs blazer_netstack=1"
+   },
+   {
+    "id": "frame-display",
+    "feature": "first frame on the panel",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "power-key-armed",
+    "feature": "power key",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "haptic-ready",
+    "feature": "haptics",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "rtc-publish",
+    "feature": "RTC time",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   },
+   {
+    "id": "backlight-dcs",
+    "feature": "backlight calibration",
+    "verdict": "PHONE_ONLY",
+    "note": ""
+   }
+  ],
+  "evaluator": "tools/hk_cycle.py evaluate (sha eacb1d523520022d)",
+  "findings": [
+   "note (not a fault): applied count 12 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']",
+   "milestone not reached in 302.0 s: PosterBoard (PosterBoard (phone: first frame ~10 s))",
+   "expect home-daemons FAIL: missing: (?:^|[^\\w\\n])exec PosterBoard[ \\t]*$",
+   "note (not a fault): the recipe's blazer_deadline ended the guest at host 302.0 s"
+  ]
+ },
+ "verdict": "FAIL"
+}

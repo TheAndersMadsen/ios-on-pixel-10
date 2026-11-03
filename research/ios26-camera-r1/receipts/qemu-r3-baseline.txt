@@ -1,0 +1,102 @@
+qemu_preflight: cam1-q1-base-r3: 600 s on the rig (slots cap 6)
+QEMU pre-flight: a7-ios-system-r3  (QEMU/TCG evidence only; nothing touched the phone)
+  kernel  /srv/dev/repos/personal/hackios/research/ios26-dualboot-r8/rootview/kernel.rootview  sha ddf874fb41cf4871  (not needed: phone build runs on the rig ADT)
+          Darwin Kernel Version 25.5.0: Sun Nov  1 23:52:38 CET 2026; andersmadsen:obj/DEVELOPMENT_ARM64_BLAZER
+  overlay /srv/dev/repos/personal/hackios/research/ios26-opt-20261102/combined_ui_overlay/artifacts/artwork-container-battery-observe-r1.ovl  sha 7d61045664261436  mask 0xa0080081
+  root    /data/hackios-qemu/research/ios26-root-r1/build-r3/ios26-phone-r3.img  (fake UFS LUN, read-only)
+  run     /data/hackios-qemu/research/ios26-apps-r1/runs/cam1-q1-base-r3  host 302.0 s of 600 s; exit {"ended": "guest stopped", "elapsed": 302.2827772620003, "exit": 0, "root_unchanged": true}
+  boot-args translation:
+    harness  debug=0x8                                set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  serial=3                                 set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  cpus=5                                   set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  rd=md0                                   set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    drop     blazer_ufs_mountroot=1                   phone-only: phone md0 route
+    harness  msgbuf=1048576                           set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs=2                             set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs_live=1                        set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs_root=ios_system               set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  blazer_ufs_lun=0                         set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    harness  launchd_disable_all_timeouts=1           set by qemu-ufsroot.py (cpus=1, rd=ufsroot0 on the fake LUN)
+    drop     hk_fb_probe=1                            phone-only: DPU probe
+    drop     blazer_touch=1                           phone-only: touch controller (SPI/Laguna)
+    drop     blazer_touch_bars=1                      phone-only: touch controller (SPI/Laguna)
+    keep-new atm_diagnostic_config=0x400              ATM diagnostics config (software); first use on the rig
+    drop     blazer_ufs_multi=1                       phone-only: real UFS host queueing
+    drop     blazer_ufs_spin_us=300                   phone-only: real UFS host polling
+    drop     blazer_ufs_hold=1                        phone-only: real UFS link hold
+    drop     blazer_ssbs=3                            phone-only: Tensor CPU SSBS errata
+    drop     hk_fb_scale=1                            phone-only: DPU scaler
+    drop     hk_fb_fast=1                             phone-only: DPU fast path
+    drop     hk_fb_refresh=60                         phone-only: DPU refresh
+    drop     blazer_battery=1                         phone-only: fuel gauge / PMIC
+    drop     blazer_mem=13                            phone-only: phone DRAM map
+    drop     blazer_thermal=2                         phone-only: Tensor thermal sensors
+    drop     blazer_thermal_fast=1                    phone-only: Tensor thermal sensors
+    drop     blazer_thermal_panic_c=70                phone-only: Tensor thermal sensors
+    drop     blazer_gov=1                             phone-only: Tensor DVFS governor
+    drop     blazer_gov_cap=16                        phone-only: Tensor DVFS governor
+    drop     blazer_gov_stages=15                     phone-only: Tensor DVFS governor
+    drop     blazer_gov_b=40                          phone-only: Tensor DVFS governor
+    drop     blazer_usbcon=1                          phone-only: DWC3 USB gadget console
+    drop     blazer_usbcon_ch9=1                      phone-only: DWC3 USB gadget console
+    drop     blazer_usbcon_input=1                    phone-only: DWC3 USB gadget console
+    drop     hk_present_trace=1                       not proven on the rig (unknown to the pre-flight; --keep to try)
+    drop     blazer_rtc=1                             phone-only: PMIC RTC
+    drop     blazer_rtc_bounds=1                      phone-only: PMIC RTC
+    drop     blazer_battery_status=1                  phone-only: fuel gauge / PMIC
+    drop     blazer_battery_receipt=1                 phone-only: fuel gauge / PMIC
+    drop     blazer_aks_log=1                         not proven on the rig (unknown to the pre-flight; --keep to try)
+    drop     blazer_bootcpu=0x200                     phone-only: phone boot cluster id
+    add      sched_preemption_disable_debug_mode=0    QEMU observability (runq.sh TAIL)
+    add      wdt=-1                                   QEMU observability (runq.sh TAIL)
+    keep     15 QEMU-proven tokens
+  milestones (host s):
+    OK  kernel                 0.0  XNU arm_init
+    OK  root                   2.0  root mounted, pid 1 exec
+    OK  overlay                2.0  var overlay applied
+    OK  launchd                2.0  launchd
+    OK  usermanagerd          35.0  boot tasks: usermanagerd
+    OK  backboardd            39.0  backboardd
+    OK  SpringBoard           12.0  SpringBoard
+    OK  display              119.0  SWEET FB display on
+    --  PosterBoard                 PosterBoard (phone: first frame ~10 s)
+    OK  iconservicesagent    137.0  iconservicesagent (phone: Home-time)
+    --  Home equivalent             (UI stable: True; QEMU proxy: Home-time daemons spawned, backboardd/SpringBoard never respawned or crashed, no panic. TCG draws no Home frame.)
+  HK TOP samples 10, frames 3
+  overlay: varfs-overlay: mask 0xa0080081 of groups 0xf8ffffff, 46 entries, 491040 bytes, hash 997bee268960d2a2; applied 12; expected listed 12; missing 1; rejected 0
+  respawns / crashes (daemons with exec > 1 or a crash event):
+    fairplayd.H2                 exec   4 respawns   3 crashes   0 
+    com.apple.datamigrator       exec   3 respawns   2 crashes   0 
+    cfprefsd                     exec   2 respawns   1 crashes   0 
+    user/501/com.apple.datamigrator exec   0 respawns   0 crashes   4 exited
+    user/501/com.apple.fairplayd.H2 exec   0 respawns   0 crashes   3 exited
+    system/com.apple.iomfb_fdr_loader exec   0 respawns   0 crashes   1 exited
+    user/501/com.apple.DumpPanic exec   0 respawns   0 crashes   1 exited
+    user/501/com.apple.bluetoothd exec   0 respawns   0 crashes   1 exited
+    user/501/com.apple.mtmergeprops exec   0 respawns   0 crashes   1 exited
+  daemons exec'd: 68
+  panics: 0; deadline end at host 302.0 s
+  expect (tools/hk_cycle.py evaluate (sha eacb1d523520022d)):
+    PASS       root-on-ufs                blazer-root: stage t 774 ms stage pid1_exec reads 314 blocks 314 busy 1 ms max 120 us last lba 3850330
+    PASS       overlay-applied            varfs-overlay: 12 applied
+    PASS       launchd                    exec launchd
+    PASS       usermanagerd               exec usermanagerd
+    PASS       backboardd                 exec backboardd
+    PASS       SpringBoard                exec SpringBoard
+    FAIL       home-daemons               (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    PASS       no-lsd-abort               
+    PASS       no-NSURL-nil               (optional) 
+    PASS       no-panic                   
+    N/A        netstack-published         
+    PHONE_ONLY frame-display              
+    PHONE_ONLY power-key-armed            
+    PHONE_ONLY haptic-ready               
+    PHONE_ONLY rtc-publish                
+    PHONE_ONLY backlight-dcs              
+  findings: 
+    - note (not a fault): applied count 12 matches; 1 record(s) without a listing line: ['f /private/var/hk/hgltrack.dylib']
+    - milestone not reached in 302.0 s: PosterBoard (PosterBoard (phone: first frame ~10 s))
+    - expect home-daemons FAIL: missing: (?:^|[^\w\n])exec PosterBoard[ \t]*$
+    - note (not a fault): the recipe's blazer_deadline ended the guest at host 302.0 s
+VERDICT: FAIL (2 finding(s))
+rc=1
