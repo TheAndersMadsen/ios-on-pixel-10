@@ -15,3 +15,10 @@ sha256sum: /vendor/firmware/bcmdhd_txcap.blob_ROW: Permission denied
 [   13.332381] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob_MP1.0 failed with error -2
 [   13.332422] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob_ROW failed with error -2
 [   13.332443] dhdpcie 0001:01:00.0: Direct firmware load for bcmdhd_clm.blob failed with error -2
+db46afd65f4e3d9ec4f825bc52f2487195f9bb0d43062baade35c68b26c92864  /vendor/firmware/fw_bcmdhd.bin_4390_b1
+12cf65692efd15050479bfd6b70e0a287350b609b13e71ad62261ef0b0f990eb  /vendor/firmware/fw_bcmdhd.map_4390_b1
+fe7cf29218f8cea8a5cf43a8e46c735f84f336004b9236e3d46e7a4990da1bc5  /vendor/firmware/bcmdhd.cal_USI_G7BB_7311_V11
+9ad4c6ceff1ff29eb1cd30f585103a69425cc15d3bfc66786d941d0b8661596e  /vendor/firmware/bcmdhd_clm.blob_4390_b1
+75c0515da4e74de05d67f53f0ffa1145d5ce5a2c3261303b15fd78531b6f697a  /vendor/firmware/bcmdhd_txcap.blob_ROW
+/prj_wlan/projects/mob_sw_build/wifi/URIAL_BRANCH_27_10/URIAL_TWIG_27_10_1121_57/27.10.1121.57.31/2026.9.23.0/URIAL_TWIG_27_10_1121_57/components/chre/google/chpp/app.c
+/prj_wlan/projects/mob_sw_build/wifi/URIAL_BRANCH_27_10/URIAL_TWIG_27_10_1121_57/27.10.1121.57.31/2026.9.23.0/URIAL_TWIG_27_10_1121_57/components/chre/google/chpp/services/discovery.c
