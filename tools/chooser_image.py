@@ -101,10 +101,12 @@ def build(a):
     log = (out / 'build.log').open('w')
     t = IT.scope(a.name)
     if a.display and not a.ui: IT.die('--display shows the menu: it needs --ui')
+    if a.quiesce and not a.display: IT.die('--quiesce changes the display release: it needs --display')
     cflags = CHOOSER_FLAGS + (' -DTGL_CHOOSER_MMU=1' if a.mmu else '') + (' -DTGL_CHOOSER_UI=1' if a.ui else '') + \
-        (' -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3' if a.display else '') + (' -DTGL_CHOOSER_KEYS=1' if a.keys else '')
+        (' -DTGL_CHOOSER_DISPLAY=1 -DTGL_DCS_MENU=1 -DTGL_FRAME_RUNG=3' if a.display else '') + (' -DTGL_CHOOSER_KEYS=1' if a.keys else '') + \
+        (' -DTGL_DCS_QUIESCE=1' if a.quiesce else '')
     src = CHOOSER_SRC + (' el2_mmu.c' if a.mmu else '') + (' menu_ui.c' if a.ui else '') + (' tgl_dcs.c' if a.display else '')
-    env = {**IT.os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(IT.LLVM), 'HOSTCC': '/usr/bin/cc', 'TGL_UFS_HANDOFF': '0',
+    env = {**IT.os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(IT.LLVM), 'HOSTCC': '/usr/bin/cc', 'TGL_UFS_HANDOFF': '0', 'TGL_TOOLCHAIN': 'llvm',
            'EXTRA_CFLAGS': cflags, 'TGL_EXTRA_SRC': src}
     run(['bash', str(t / 'build.sh')], log, env=env)
     shim = (t / 'out/Image').read_bytes()
@@ -120,8 +122,11 @@ def build(a):
     tests += run([str(t / 'out/chooser_test')] + ([str(Path(a.fdt).resolve())] if a.fdt else []), log)
     tests += run([str(t / 'out/el2_mmu_test')] + ([str(Path(a.fdt).resolve())] if a.fdt else []), log)
     tests += run([str(t / 'out/menu_ui_preview'), str(t / 'out/menu')], log)
+    if a.quiesce:  # chooser-v1-r10: the release order and values against the phone's vs_drm.ko (shim/dpu_quiesce.h)
+        tests += run([sys.executable, '-I', str(t / 'test_dcs_quiesce.py')], log)
     for pat in (r'lz4 host test: \d+ checks, 0 failed', r'chooser host test: \d+ checks, 0 failed', r'el2 mmu host test: \d+ checks, 0 failed', r'band-vs-full differing pixels 0'):
         if not re.search(pat, tests): IT.die(f'host test line missing: {pat}')
+    if a.quiesce and not re.search(r'^\d+ checks, 0 failed$', tests, re.M): IT.die('quiesce host test did not pass')
     (out / 'host-tests.txt').write_text(tests)
     boot = out / 'boot.img'
     # The stock v4 header page verbatim, kernel_size replaced: every other field
@@ -163,6 +168,17 @@ def build(a):
         (('tgl_dcs_guarded', 'tgl_dcs_present', 'tgl_dcs_run') if a.display else ())
     for s in want:
         if not re.search(rf'^[0-9a-fA-F]+ [Tt] {s}$', syms, re.M): IT.die(f'shim lacks text symbol {s}')
+    if a.display:
+        # The enabled gate must be in the linked code, not only in cflags: the release with the quiesce carries the
+        # GPCSR base (0x0ef90000) and the stock BE-idle and isolation offsets; without it, none of them.
+        dis = subprocess.run([str(IT.LLVM / 'llvm-objdump'), '-d', '--no-show-raw-insn', '--disassemble-symbols=tgl_dcs_release',
+                              str(out / 'shim.elf')], capture_output=True, text=True, check=True).stdout
+        (out / 'release-disasm.txt').write_text(dis)
+        # Patterns that survive address folding (clang forms 0x0ef91084 as 0x0ef9107c + 8, 0x0ee80248 as 0x0ee80004 + 0x244).
+        want_marks = ('#0xef9, lsl #16', '#0x107c', '#0xee8, lsl #16', '#-0xe001', '#0xfff1, lsl #16')
+        marks = [m for m in want_marks if m in dis]
+        if a.quiesce and len(marks) != len(want_marks): IT.die(f'tgl_dcs_release lacks the quiesce constants (found {marks})')
+        if not a.quiesce and '#0xef9, lsl #16' in dis: IT.die('tgl_dcs_release touches GPCSR though --quiesce is off')
     for s, on in (('tgl_el2_mmu_on', a.mmu), ('tgl_menu_draw', a.ui)):
         if not on and re.search(rf'\s{s}$', syms, re.M): IT.die(f'{s} present though its gate is off')
     for s, allowed in (('tgl_dcs_guarded', a.display), ('tgl_fc_entry', False)):
@@ -173,7 +189,8 @@ def build(a):
                stock=dict(boot_sha256=a.stock_kernel_sha, lz4_sha256=hashlib.sha256(st['kernel']).hexdigest(), lz4_bytes=len(st['kernel']),
                           image_sha256=hashlib.sha256(img).hexdigest(), image_len=len(img), image_size=ih['image_size'],
                           flags=hex(ih['flags']), csum64=hex(csum64(st['kernel'])), cmdline=st['cmdline'], os_version_raw=st['os_version_raw']),
-               header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui), display=bool(a.display), keys_read=bool(a.keys),
+               header=dict(version=4, ramdisk_size=0, cmdline=st['cmdline']), cflags=cflags, extra_src=src, mmu=bool(a.mmu), ui=bool(a.ui), display=bool(a.display), quiesce=bool(a.quiesce), keys_read=bool(a.keys),
+               compiler=subprocess.run([str(IT.LLVM / 'clang'), '--version'], capture_output=True, text=True).stdout.splitlines()[0],
                stamp_nonce=(t / 'out/stamp-nonce.txt').read_text().strip(), keys='pads 51/52 RXDATA (fault-gated reads)' if a.keys else 'off',
                tests=[l for l in tests.splitlines() if 'host test' in l or 'placement' in l],
                avb=v.strip().splitlines()[-1], shim_copy=IT.tree(IT.SHIM),
@@ -215,6 +232,7 @@ if __name__ == '__main__':
     i.add_argument('--mmu', action='store_true', help='EL2 cached identity map for checksum, menu and decode (TGL_CHOOSER_MMU)')
     i.add_argument('--keys', action='store_true', help='read volume pads 51 (down) and 52 (up) for the menu (TGL_CHOOSER_KEYS)')
     i.add_argument('--display', action='store_true', help='show the menu on the panel via the display-frame-r1d ladder, full-panel layer (TGL_CHOOSER_DISPLAY)')
+    i.add_argument('--quiesce', action='store_true', help='before the display release, the stock vs_drm.ko quiesce: trigger off, layer/BE idle, BE interrupts reset, isolation on (TGL_DCS_QUIESCE, chooser-v1-r10)')
     i.add_argument('--ui', action='store_true', help='startup menu renderer into the console buffer (TGL_CHOOSER_UI)')
     i.add_argument('--fdt', help='A0 /sys/firmware/fdt dump: placement host test on real data')
     i.add_argument('--chooser', action='store_true', help='accepted for the image_tool.py spelling')

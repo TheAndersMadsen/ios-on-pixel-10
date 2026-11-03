@@ -14,7 +14,9 @@ fi
 # -P: shim/ is also reached through the teguload/shim symlink. ".." below must
 # mean the repo root on either path, as the kernel resolves it physically.
 cd -P "$(dirname "${BASH_SOURCE[0]}")"
-if command -v aarch64-linux-gnu-gcc >/dev/null 2>&1; then
+# TGL_TOOLCHAIN=llvm forces clang/ld.lld even where a GNU cross compiler exists (m1box), so a host-built image
+# uses the same compiler family as the Mac builds it is compared with.
+if [ "${TGL_TOOLCHAIN:-}" != llvm ] && command -v aarch64-linux-gnu-gcc >/dev/null 2>&1; then
 	CC=aarch64-linux-gnu-gcc
 	OBJCOPY=aarch64-linux-gnu-objcopy
 	READELF=aarch64-linux-gnu-readelf

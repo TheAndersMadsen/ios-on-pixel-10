@@ -10,6 +10,7 @@
 #include "tgl_dcs.h"
 #include "dcs_tables.h"
 #include "frame_tables.h"
+#include "dpu_quiesce.h"
 #ifndef TGL_DCS_HOSTTEST
 #include "probe.h"
 #include "guard.h"
@@ -195,6 +196,14 @@ static int frame_off_ok(uint32_t off, int wr)
     static const uint32_t rw[] = { FR_POST_PROCESS_OUT, FR_CLOCK_DOMAIN_ISOLATION, FR_BE_INTR_ENABLE, FR_BE_INTR_STATUS, FR_PANEL0_CONFIG, FR_OUTPUT0_CONFIG, FR_OUTPUT0_START, FR_OUTPUT0_SW_CONFIG, FR_OUTPUT0, FR_OUTPUT0_CONFIG_COMMAND_OPT,
         FR_SH_PANEL0_POST_PRO_TP_COLOR_RED, FR_SH_PANEL0_POST_PRO_TP_COLOR_GREEN, FR_SH_PANEL0_POST_PRO_TP_COLOR_BLUE, FR_OUTIF_OFIFO_CRC_START, FR_PANEL0_CRC_START };
     static const uint32_t rw3[] = { FR_LAYER0_CONFIG, FR_SH_LAYER0_ADDRESS, FR_SH_LAYER0_HIGH_ADDRESS, FR_SH_LAYER0_STRIDE, FR_SH_LAYER0_SIZE, FR_SH_LAYER0_CONFIG, FR_SH_LAYER0_OUT_ROI_ORIGIN, FR_SH_LAYER0_OUT_ROI_SIZE, FR_SH_LAYER0_ALPHA_BLEND_CONFIG, FR_FE0_INTR_ENABLE, FR_FE0_INTR_STATUS, FR_SH_PANEL0_POST_PRO_TP_ENABLE };
+#ifdef TGL_DCS_QUIESCE
+    /* release-time quiesce (dpu_quiesce.h): the stock registers it reads and writes, nothing else */
+    if (TGL_FRAME_RUNG >= 3) {
+        static const uint32_t qrw[] = { Q_BE_INTR_ENABLE1, Q_SH_OUTPUT0_CLK_EN, Q_SH_OUTPUT1_CLK_EN, Q_BE_INTR_STATUS1, Q_BE_INTR_OVERFLOW, Q_BE_INTR_OVERFLOW1 };
+        for (unsigned i = 0; i < sizeof qrw / sizeof qrw[0]; ++i) if (off == qrw[i]) return 1;
+        if (!wr && (off == Q_L0_DMA_ST || off == Q_L0_DMA_COORD)) return 1;
+    }
+#endif
     if (TGL_FRAME_RUNG >= 3) {
         for (unsigned i = 0; i < sizeof rw3 / sizeof rw3[0]; ++i) if (off == rw3[i]) return 1;
         for (unsigned i = 0; i < sizeof fr_fe0 / sizeof fr_fe0[0]; ++i) if (off == fr_fe0[i].off) return 1;
@@ -217,6 +226,10 @@ static int pa_ok(uint64_t pa, int wr)
     if (TGL_FRAME_RUNG >= 3 && !wr && (pa == DPU_SMMU + SMMU_IDR0 || pa == DPU_SMMU + SMMU_CR0 || pa == DPU_SMMU + SMMU_CR0ACK || pa == DPU_SMMU + SMMU_GBPA || pa == DPU_SMMU + SMMU_GERROR || pa == DPU_SMMU + SMMU_GERRORN || pa == DPU_SMMU + SMMU_STRTAB_BASE)) return 1;
     if (TGL_FRAME_RUNG >= 3 && wr && pa == DPU_SMMU + SMMU_GBPA) return 1;
     if (pa >= FR_DPU && pa < FR_DPU + 0x120000) return frame_off_ok((uint32_t)(pa - FR_DPU), wr);
+#ifdef TGL_DCS_QUIESCE
+    if (TGL_FRAME_RUNG >= 3 && pa == Q_GPCSR + Q_BE_DBG_CTL) return 1;
+    if (TGL_FRAME_RUNG >= 3 && pa == Q_GPCSR + Q_BE_DBG_STATUS) return !wr;
+#endif
     if (pa == MBA_MAGIC_PA) return !wr;
     if (pa == MBA_PAGE + MBA_GO || pa == MBA_PAGE + MBA_CTL || pa == MBA_PAGE + MBA_ST) return 1;
     if (pa >= MBA_PAGE + MBA_MSG && pa < MBA_PAGE + MBA_MSG + 16) return 1;
@@ -991,11 +1004,56 @@ int tgl_dcs_run(void)
 /* chooser-v1-r7-t1: Linux panicked in sswrp_dpu_pd power_off (no CPM reply) because the ladder left the DPU domain
  * on while ABL hands it over off. Give back, in reverse, exactly what this run asked CPM for, then wait for the
  * domain to read off. Returns 0, or a DCS_C_* code; the record holds every reply. */
+#ifdef TGL_DCS_QUIESCE
+/* chooser-v1-r10: r7 (Linux sswrp_dpu_pd power_off) and r9 (FE0 off) both sent a power-off while the DPU was still
+ * set up for scanout, and CPM never answered. Before any domain goes off, do what the phone's own vs_drm.ko does
+ * before its genpd power-off, in its order, with its values (dpu_quiesce.h). No software reset: a busy layer or
+ * BE stops the release and the chooser does not jump (stock resets complete through an interrupt the shim lacks). */
+static int quiesce(void)
+{
+    uint32_t v = 0, st = 0, co = 0; int rc, hit = 0;
+    stage(DCS_S_Q_QUIESCE);
+    /* 1. dc_hw_disable_trigger -> online_trigger(false) */
+    if ((rc = wr(FR_DPU + Q_OUTPUT0_START, 0))) return rc;
+    /* 2. layer 0 idle (dc_hw_is_layer_idle), bounded */
+    for (uint64_t a = dcs_port_now_us();;) {
+        if ((rc = rdq(FR_DPU + Q_L0_DMA_ST, &st)) || (rc = rdq(FR_DPU + Q_L0_DMA_COORD, &co))) return rc;
+        if ((st & Q_L0_ST_MASK) == Q_L0_ST_IDLE || (st | co) == 0) { hit = 1; break; }
+        if (dcs_port_now_us() - a >= Q_FRAME_US) break;
+        dcs_port_delay_us(50);
+    }
+    note(DCS_N_Q_L0_ST, st);
+    note(DCS_N_Q_L0_COORD, co);
+    if (!hit) return stop_with(DCS_C_Q_LAYER_BUSY, st);
+    /* 3. dc_hw_is_be_idle */
+    if ((rc = wr(Q_GPCSR + Q_BE_DBG_CTL, Q_BE_DBG_CTL_VAL))) return rc;
+    if ((rc = poll(Q_GPCSR + Q_BE_DBG_STATUS, Q_BE_DBG_BUSY, 0, Q_BE_IDLE_US, &v, &hit))) return rc;
+    note(DCS_N_Q_BE_DBG, v);
+    if (!hit) return stop_with(DCS_C_Q_BE_BUSY, v);
+    /* 5. dc_hw_reset_all_be_interrupts: disable (with the stock clock gates), then clear */
+    if ((rc = rd(FR_DPU + Q_BE_INTR_ENABLE, &v))) return rc;
+    note(DCS_N_Q_BE_EN, v);
+    if ((rc = rd(FR_DPU + Q_BE_INTR_ENABLE1, &v))) return rc;
+    note(DCS_N_Q_BE_EN1, v);
+    if ((rc = wr(FR_DPU + Q_BE_INTR_ENABLE, 0)) || (rc = wr(FR_DPU + Q_BE_INTR_ENABLE1, 0)) ||
+        (rc = wr(FR_DPU + Q_SH_OUTPUT0_CLK_EN, 0)) || (rc = wr(FR_DPU + Q_SH_OUTPUT1_CLK_EN, 0))) return rc;
+    if ((rc = wr(FR_DPU + Q_BE_INTR_STATUS, Q_BE_W0_MASK)) || (rc = wr(FR_DPU + Q_BE_INTR_STATUS1, Q_BE_W1_MASK)) ||
+        (rc = wr(FR_DPU + Q_BE_INTR_OVERFLOW, Q_BE_W0_MASK)) || (rc = wr(FR_DPU + Q_BE_INTR_OVERFLOW1, Q_BE_W1_MASK))) return rc;
+    /* 6. dc_hw_enable_clock_domain_iso(true) */
+    if ((rc = wr(FR_DPU + Q_CLOCK_DOMAIN_ISOLATION, Q_ISO_ALL))) return rc;
+    if ((rc = rd(FR_DPU + Q_CLOCK_DOMAIN_ISOLATION, &v))) return rc;
+    note(DCS_N_Q_ISO, v);
+    return 0;
+}
+#endif
 int tgl_dcs_release(void)
 {
     uint32_t r[4] = {0}, st = 0; int rc, on = 1;
     if (!d.started) return 0;
     d.stop = 0;
+#ifdef TGL_DCS_QUIESCE
+    if ((d.held & HELD_FE0) && (rc = quiesce())) return rc;
+#endif
     d.stage = DCS_S_N_DONE;
     if (d.held & HELD_FE0) { if ((rc = lpcm(LPCM_FE0_OFF, 0, r))) return rc; note(DCS_N_MBA_R1, r[1]); }
     if (d.held & HELD_CLK) {
