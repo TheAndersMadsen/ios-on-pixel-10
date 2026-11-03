@@ -1,0 +1,78 @@
+# 2026-11-04T00:34:13+01:00 m1box cc (GCC) 16.1.1 20260430
+cc -std=gnu11 -g -O1 -fsanitize=address,undefined -fno-sanitize-recover=undefined -Wall -Wextra -Is1/tests/inc -Is1/src s1/tests/test_s1.c
+gpu2 replay: done
+612 checks, 0 failed
+rc=0
+order_check: OK (store after zero, before barrier; readback before power-on/SMC; flag before thread; gates around health; no KICK/CCB/UFO code)
+s1/tests/mutants_s1.sh
+caught no-coremem-write
+caught fwva-not-devva
+caught pa-not-devva
+caught lo-only
+caught wrong-offset
+caught coremem-on-rung8
+caught store-after-barrier
+caught readback-ignored
+caught readback-after-power
+caught no-boot-gate
+caught final-ignored
+caught mmu-not-counted
+caught lockup-not-gated
+caught poll-not-gated
+caught resync-on-bad-id
+caught truncation-accepted
+caught wrap-accepted
+caught reset-not-counted
+caught lockup-dm-not-counted
+caught empty-accepted
+caught no-settle
+caught invalid-not-fail
+caught assert-ignored
+caught fwfault-ignored
+caught hwr-ignored
+caught dump-ignored
+caught pf-ignored
+caught s1-off-rung7
+caught trace-off-rung7
+caught rung7-refused
+M2 test against the S1 source (rung 6 path: gta_m2(rgx, false)):
+75 checks, 0 failed
+rc=0
+M2 test and mutants against m2/src (unchanged):
+75 checks, 0 failed
+rc=0
+      1 caught exec-wait-short
+      1 caught health-waits-rtn
+      1 caught line-offset
+      1 caught log-on-rung5
+      1 caught no-diag
+      1 caught no-fresh-check
+      1 caught no-log-type
+      1 caught no-tb-size
+      1 caught pass-on-consume
+      1 caught second-after-unread
+      1 caught tb-cached-va
+      1 caught wrong-stateflags
+M1 regression: cc ... -Itests m2/src/blazer_gpu.c tests/test_survey.c
+blazer_gpu=3 host test: 820 checks, 0 failed (8 cases)
+rc=0
+fwlog_decode on the CLEAN model's log:
+# HK GPUTA: M2 fwlog: ptr 20 wrap 0, 20 words from 0 (24 words)
+    8: 0x000000000014 MTS     KCCB Slot 0: Cmd=0x2abc006f, Driver ID=0   [RGXFW_SF_MTS_KCCBCMD_EXEC]
+   14: 0x000000000014 MTS     KCCB Slot 1: Cmd=0x2abc00ce, Driver ID=0   [RGXFW_SF_MTS_KCCBCMD_EXEC]
+s1/tests/test_s1_accept.py (host acceptance tool, gpu2 phone log relabelled + synthetic clean and corruptions):
+ok   gpu2: rc 1
+ok   clean: rc 0
+ok   clean+mirror: rc 0
+ok   dropped-TB-line: rc 1
+ok   wrapped: rc 1
+ok   pointer-past-words: rc 1
+ok   unknown-id: rc 1
+ok   second-panic: rc 1
+ok   no-coremem-line: rc 1
+ok   fault-on-boot-line: rc 1
+ok   hwr-bad: rc 1
+ok   no-s1-pass: rc 1
+ok   register-nonzero: rc 1
+test_s1_accept: 0 failed
+rc=0

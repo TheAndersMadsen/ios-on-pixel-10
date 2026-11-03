@@ -1,0 +1,2951 @@
+# 3d46aff64df4173cc04937121d6e50b0cb8c53e71fd363c99c328922c09f9b39  research/ios26-gpu-r1/artifacts/blazer_gpu_tipc.s1.o
+
+research/ios26-gpu-r1/artifacts/blazer_gpu_tipc.s1.o:	file format mach-o arm64
+
+Disassembly of section __TEXT,__text:
+
+0000000000002500 <_gta_shared_init>:
+    2500:      	sub	sp, sp, #0x1b0
+    2504:      	stp	x28, x27, [sp, #0x150]
+    2508:      	stp	x26, x25, [sp, #0x160]
+    250c:      	stp	x24, x23, [sp, #0x170]
+    2510:      	stp	x22, x21, [sp, #0x180]
+    2514:      	stp	x20, x19, [sp, #0x190]
+    2518:      	stp	x29, x30, [sp, #0x1a0]
+    251c:      	add	x29, sp, #0x1a0
+    2520:      	mov	w19, w0
+    2524:      	mov	w0, #-0x45f00000        ; =-1173356544
+    2528:      	mov	w1, #0x1e00000          ; =31457280
+    252c:      	bl	0x252c <_gta_shared_init+0x2c>
+		000000000000252c:  ARM64_RELOC_BRANCH26	_ml_io_map
+    2530:      	adrp	x8, 0x2000 <_gta_send_firmware+0x460>
+		0000000000002530:  ARM64_RELOC_PAGE21	_gs
+    2534:      	str	x0, [x8]
+		0000000000002534:  ARM64_RELOC_PAGEOFF12	_gs
+    2538:      	cbz	x0, 0x4818 <_gta_shared_init+0x2318>
+    253c:      	mov	w9, #0x200000           ; =2097152
+    2540:      	mov	w10, #0x1dd0000         ; =31260672
+    2544:      	mov	w11, #0x4               ; =4
+    2548:      	add	x10, x0, x10
+    254c:      	movk	w11, #0x1dd, lsl #16
+    2550:      	mov	w12, #0x8               ; =8
+    2554:      	adrp	x16, 0x2000 <_gta_send_firmware+0x460>
+		0000000000002554:  ARM64_RELOC_PAGE21	_gs_next
+    2558:      	str	w9, [x16]
+		0000000000002558:  ARM64_RELOC_PAGEOFF12	_gs_next
+    255c:      	add	x9, x0, x11
+    2560:      	movk	w12, #0x1dd, lsl #16
+    2564:      	mov	w11, #0xc               ; =12
+    2568:      	str	w19, [sp, #0x88]
+    256c:      	str	wzr, [x10]
+    2570:      	add	x10, x0, x12
+    2574:      	movk	w11, #0x1dd, lsl #16
+    2578:      	mov	w12, #0x1de0000         ; =31326208
+    257c:      	add	x11, x0, x11
+    2580:      	str	wzr, [x9]
+    2584:      	add	x9, x0, x12
+    2588:      	str	wzr, [x10]
+    258c:      	mov	w13, #0x70              ; =112
+    2590:      	mov	x8, xzr
+    2594:      	str	wzr, [x11]
+    2598:      	movk	w13, #0x1de, lsl #16
+    259c:      	str	x9, [sp, #0x30]
+    25a0:      	add	x13, x0, x13
+    25a4:      	str	wzr, [x9]
+    25a8:      	mov	w9, #0x4                ; =4
+    25ac:      	movk	w9, #0x1de, lsl #16
+    25b0:      	add	x12, x0, x9
+    25b4:      	mov	w9, #0x8                ; =8
+    25b8:      	movk	w9, #0x1de, lsl #16
+    25bc:      	add	x11, x0, x9
+    25c0:      	mov	w9, #0xc                ; =12
+    25c4:      	movk	w9, #0x1de, lsl #16
+    25c8:      	add	x10, x0, x9
+    25cc:      	mov	w9, #0x10               ; =16
+    25d0:      	movk	w9, #0x1de, lsl #16
+    25d4:      	stp	x12, x11, [sp, #0x38]
+    25d8:      	add	x9, x0, x9
+    25dc:      	str	wzr, [x12]
+    25e0:      	str	wzr, [x11]
+    25e4:      	mov	w11, #0x1c              ; =28
+    25e8:      	str	x10, [sp, #0x48]
+    25ec:      	movk	w11, #0x1de, lsl #16
+    25f0:      	str	wzr, [x10]
+    25f4:      	mov	w10, #0x18              ; =24
+    25f8:      	str	x9, [sp, #0x60]
+    25fc:      	add	x12, x0, x11
+    2600:      	str	wzr, [x9]
+    2604:      	mov	w9, #0x14               ; =20
+    2608:      	movk	w9, #0x1de, lsl #16
+    260c:      	mov	w11, #0x20              ; =32
+    2610:      	add	x9, x0, x9
+    2614:      	movk	w10, #0x1de, lsl #16
+    2618:      	movk	w11, #0x1de, lsl #16
+    261c:      	add	x10, x0, x10
+    2620:      	str	wzr, [x9]
+    2624:      	add	x9, x0, x11
+    2628:      	str	wzr, [x10]
+    262c:      	mov	w10, #0x2c              ; =44
+    2630:      	str	x12, [sp, #0x28]
+    2634:      	mov	w11, #0x30              ; =48
+    2638:      	str	wzr, [x12]
+    263c:      	movk	w10, #0x1de, lsl #16
+    2640:      	str	x9, [sp, #0x70]
+    2644:      	movk	w11, #0x1de, lsl #16
+    2648:      	str	wzr, [x9]
+    264c:      	mov	w9, #0x24               ; =36
+    2650:      	movk	w9, #0x1de, lsl #16
+    2654:      	add	x10, x0, x10
+    2658:      	add	x12, x0, x9
+    265c:      	mov	w9, #0x28               ; =40
+    2660:      	movk	w9, #0x1de, lsl #16
+    2664:      	add	x11, x0, x11
+    2668:      	add	x9, x0, x9
+    266c:      	str	x12, [sp, #0x68]
+    2670:      	str	wzr, [x12]
+    2674:      	mov	w12, #0x40              ; =64
+    2678:      	str	wzr, [x9]
+    267c:      	mov	w9, #0x34               ; =52
+    2680:      	movk	w9, #0x1de, lsl #16
+    2684:      	str	wzr, [x10]
+    2688:      	add	x9, x0, x9
+    268c:      	str	wzr, [x11]
+    2690:      	mov	w10, #0x38              ; =56
+    2694:      	mov	w11, #0x3c              ; =60
+    2698:      	movk	w10, #0x1de, lsl #16
+    269c:      	movk	w11, #0x1de, lsl #16
+    26a0:      	movk	w12, #0x1de, lsl #16
+    26a4:      	add	x10, x0, x10
+    26a8:      	add	x11, x0, x11
+    26ac:      	str	wzr, [x9]
+    26b0:      	add	x9, x0, x12
+    26b4:      	mov	w12, #0x50              ; =80
+    26b8:      	str	wzr, [x10]
+    26bc:      	mov	w10, #0x48              ; =72
+    26c0:      	str	wzr, [x11]
+    26c4:      	mov	w11, #0x4c              ; =76
+    26c8:      	str	wzr, [x9]
+    26cc:      	mov	w9, #0x44               ; =68
+    26d0:      	movk	w9, #0x1de, lsl #16
+    26d4:      	movk	w10, #0x1de, lsl #16
+    26d8:      	add	x9, x0, x9
+    26dc:      	movk	w11, #0x1de, lsl #16
+    26e0:      	movk	w12, #0x1de, lsl #16
+    26e4:      	add	x10, x0, x10
+    26e8:      	add	x11, x0, x11
+    26ec:      	str	wzr, [x9]
+    26f0:      	add	x9, x0, x12
+    26f4:      	str	wzr, [x10]
+    26f8:      	mov	w10, #0x58              ; =88
+    26fc:      	str	wzr, [x11]
+    2700:      	movk	w10, #0x1de, lsl #16
+    2704:      	str	wzr, [x9]
+    2708:      	mov	w9, #0x54               ; =84
+    270c:      	movk	w9, #0x1de, lsl #16
+    2710:      	add	x10, x0, x10
+    2714:      	add	x9, x0, x9
+    2718:      	mov	w11, #0x5c              ; =92
+    271c:      	movk	w11, #0x1de, lsl #16
+    2720:      	mov	w12, #0x60              ; =96
+    2724:      	add	x11, x0, x11
+    2728:      	movk	w12, #0x1de, lsl #16
+    272c:      	str	wzr, [x9]
+    2730:      	add	x12, x0, x12
+    2734:      	str	wzr, [x10]
+    2738:      	mov	w10, #0x64              ; =100
+    273c:      	movk	w10, #0x1de, lsl #16
+    2740:      	str	wzr, [x11]
+    2744:      	add	x10, x0, x10
+    2748:      	mov	w11, #0x68              ; =104
+    274c:      	movk	w11, #0x1de, lsl #16
+    2750:      	str	wzr, [x12]
+    2754:      	add	x11, x0, x11
+    2758:      	mov	w12, #0x6c              ; =108
+    275c:      	movk	w12, #0x1de, lsl #16
+    2760:      	str	wzr, [x10]
+    2764:      	mov	w10, #0x74              ; =116
+    2768:      	add	x12, x0, x12
+    276c:      	movk	w10, #0x1de, lsl #16
+    2770:      	str	wzr, [x11]
+    2774:      	add	x11, x0, x10
+    2778:      	mov	w10, #0x78              ; =120
+    277c:      	movk	w10, #0x1de, lsl #16
+    2780:      	str	wzr, [x12]
+    2784:      	str	x13, [sp, #0x78]
+    2788:      	mov	w9, #0x4                ; =4
+    278c:      	str	wzr, [x13]
+    2790:      	add	x13, x0, x10
+    2794:      	mov	w10, #0x7c              ; =124
+    2798:      	movk	w9, #0x1df, lsl #16
+    279c:      	movk	w10, #0x1de, lsl #16
+    27a0:      	stp	x13, x11, [sp, #0x50]
+    27a4:      	add	x12, x0, x10
+    27a8:      	str	wzr, [x11]
+    27ac:      	mov	x10, #-0x88             ; =-136
+    27b0:      	mov	w11, #0x1df0000         ; =31391744
+    27b4:      	str	wzr, [x13]
+    27b8:      	str	x12, [sp, #0x80]
+    27bc:      	str	wzr, [x12]
+    27c0:      	add	x12, x8, x9
+    27c4:      	add	x13, x8, x11
+    27c8:      	add	x14, x12, #0x4
+    27cc:      	add	x15, x12, #0x8
+    27d0:      	add	x8, x8, #0x88
+    27d4:      	add	x10, x10, #0x88
+    27d8:      	str	wzr, [x0, x13]
+    27dc:      	add	x13, x12, #0xc
+    27e0:      	str	wzr, [x0, x12]
+    27e4:      	cmp	x10, #0x330
+    27e8:      	str	wzr, [x0, x14]
+    27ec:      	add	x14, x12, #0x10
+    27f0:      	str	wzr, [x0, x15]
+    27f4:      	add	x15, x12, #0x14
+    27f8:      	str	wzr, [x0, x13]
+    27fc:      	add	x13, x12, #0x18
+    2800:      	str	wzr, [x0, x14]
+    2804:      	add	x14, x12, #0x1c
+    2808:      	str	wzr, [x0, x15]
+    280c:      	add	x15, x12, #0x20
+    2810:      	str	wzr, [x0, x13]
+    2814:      	add	x13, x12, #0x24
+    2818:      	str	wzr, [x0, x14]
+    281c:      	add	x14, x12, #0x28
+    2820:      	str	wzr, [x0, x15]
+    2824:      	add	x15, x12, #0x2c
+    2828:      	str	wzr, [x0, x13]
+    282c:      	add	x13, x12, #0x30
+    2830:      	str	wzr, [x0, x14]
+    2834:      	add	x14, x12, #0x34
+    2838:      	str	wzr, [x0, x15]
+    283c:      	add	x15, x12, #0x38
+    2840:      	str	wzr, [x0, x13]
+    2844:      	add	x13, x12, #0x3c
+    2848:      	str	wzr, [x0, x14]
+    284c:      	add	x14, x12, #0x40
+    2850:      	str	wzr, [x0, x15]
+    2854:      	add	x15, x12, #0x44
+    2858:      	str	wzr, [x0, x13]
+    285c:      	add	x13, x12, #0x48
+    2860:      	str	wzr, [x0, x14]
+    2864:      	add	x14, x12, #0x4c
+    2868:      	str	wzr, [x0, x15]
+    286c:      	add	x15, x12, #0x50
+    2870:      	str	wzr, [x0, x13]
+    2874:      	add	x13, x12, #0x54
+    2878:      	str	wzr, [x0, x14]
+    287c:      	add	x14, x12, #0x58
+    2880:      	str	wzr, [x0, x15]
+    2884:      	add	x15, x12, #0x5c
+    2888:      	str	wzr, [x0, x13]
+    288c:      	add	x13, x12, #0x60
+    2890:      	str	wzr, [x0, x14]
+    2894:      	add	x14, x12, #0x64
+    2898:      	str	wzr, [x0, x15]
+    289c:      	add	x15, x12, #0x68
+    28a0:      	str	wzr, [x0, x13]
+    28a4:      	add	x13, x12, #0x6c
+    28a8:      	str	wzr, [x0, x14]
+    28ac:      	add	x14, x12, #0x70
+    28b0:      	str	wzr, [x0, x15]
+    28b4:      	add	x15, x12, #0x74
+    28b8:      	str	wzr, [x0, x13]
+    28bc:      	add	x13, x12, #0x78
+    28c0:      	str	wzr, [x0, x14]
+    28c4:      	add	x14, x12, #0x7c
+    28c8:      	add	x12, x12, #0x80
+    28cc:      	str	wzr, [x0, x15]
+    28d0:      	str	wzr, [x0, x13]
+    28d4:      	str	wzr, [x0, x14]
+    28d8:      	str	wzr, [x0, x12]
+    28dc:      	b.lo	0x27c0 <_gta_shared_init+0x2c0>
+    28e0:      	ldr	w6, [x16]
+		00000000000028e0:  ARM64_RELOC_PAGEOFF12	_gs_next
+    28e4:      	mov	w9, #0x10               ; =16
+    28e8:      	movk	w9, #0xffe0, lsl #16
+    28ec:      	mov	w8, #0x199f             ; =6559
+    28f0:      	mov	w12, #0x4               ; =4
+    28f4:      	add	w9, w6, w9
+    28f8:      	add	w8, w6, w8
+    28fc:      	and	w17, w8, #0xfffff000
+    2900:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2904:      	sub	w11, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2908:      	movk	w12, #0xffe0, lsl #16
+    290c:      	stur	x9, [x29, #-0x60]
+    2910:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2914:      	sub	w8, w9, #0xfec
+    2918:      	mov	w9, #0x20               ; =32
+    291c:      	movk	w9, #0xffe0, lsl #16
+    2920:      	add	w12, w6, w12
+    2924:      	sub	w13, w6, #0x200, lsl #12 ; =0x200000
+    2928:      	add	w14, w12, #0x8
+    292c:      	stur	x8, [x29, #-0x68]
+    2930:      	sub	w8, w10, #0xfe8
+    2934:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2938:      	add	w15, w12, #0x4
+    293c:      	str	w17, [sp, #0x24]
+    2940:      	stur	x8, [x29, #-0x70]
+    2944:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2948:      	sub	w8, w8, #0xfe4
+    294c:      	stur	x8, [x29, #-0x78]
+    2950:      	add	w8, w6, w9
+    2954:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2958:      	stur	x8, [x29, #-0x80]
+    295c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2960:      	sub	w8, w8, #0xfdc
+    2964:      	stur	x8, [x29, #-0x88]
+    2968:      	sub	w8, w9, #0xfd8
+    296c:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2970:      	stur	x8, [x29, #-0x90]
+    2974:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2978:      	sub	w8, w8, #0xfd4
+    297c:      	stur	x8, [x29, #-0x98]
+    2980:      	sub	w8, w9, #0xfd0
+    2984:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2988:      	stur	x8, [x29, #-0xa0]
+    298c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2990:      	sub	w8, w8, #0xfcc
+    2994:      	stur	x8, [x29, #-0xa8]
+    2998:      	sub	w8, w9, #0xfc8
+    299c:      	mov	w9, #0x40               ; =64
+    29a0:      	movk	w9, #0xffe0, lsl #16
+    29a4:      	stur	x8, [x29, #-0xb0]
+    29a8:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29ac:      	sub	w8, w8, #0xfc4
+    29b0:      	stur	x8, [x29, #-0xb8]
+    29b4:      	add	w8, w6, w9
+    29b8:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29bc:      	stur	x8, [x29, #-0xc0]
+    29c0:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29c4:      	sub	w8, w8, #0xfbc
+    29c8:      	stur	x8, [x29, #-0xc8]
+    29cc:      	sub	w8, w9, #0xfb8
+    29d0:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29d4:      	str	x8, [sp, #0xd0]
+    29d8:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29dc:      	sub	w8, w8, #0xfb4
+    29e0:      	str	x8, [sp, #0xc8]
+    29e4:      	sub	w8, w9, #0xfb0
+    29e8:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29ec:      	str	x8, [sp, #0xc0]
+    29f0:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    29f4:      	sub	w8, w8, #0xfac
+    29f8:      	str	x8, [sp, #0xb8]
+    29fc:      	sub	w8, w9, #0xfa8
+    2a00:      	sub	w9, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a04:      	str	x8, [sp, #0xb0]
+    2a08:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a0c:      	sub	w8, w8, #0xfa4
+    2a10:      	str	x8, [sp, #0xa8]
+    2a14:      	sub	w8, w9, #0xfa0
+    2a18:      	mov	x9, x16
+    2a1c:      	mov	x16, #-0xb0             ; =-176
+    2a20:      	str	x8, [sp, #0xa0]
+    2a24:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a28:      	sub	w8, w8, #0xf9c
+    2a2c:      	str	w17, [x9]
+		0000000000002a2c:  ARM64_RELOC_PAGEOFF12	_gs_next
+    2a30:      	str	x8, [sp, #0x98]
+    2a34:      	sub	w8, w10, #0xf98
+    2a38:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a3c:      	sub	w4, w10, #0xf90
+    2a40:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a44:      	sub	w7, w10, #0xf88
+    2a48:      	mov	w10, #0x80              ; =128
+    2a4c:      	str	x8, [sp, #0x90]
+    2a50:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a54:      	movk	w10, #0xffe0, lsl #16
+    2a58:      	sub	w3, w8, #0xf94
+    2a5c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a60:      	add	w22, w6, w10
+    2a64:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a68:      	sub	w5, w8, #0xf8c
+    2a6c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a70:      	sub	w24, w10, #0xf78
+    2a74:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a78:      	sub	w21, w8, #0xf84
+    2a7c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a80:      	sub	w26, w10, #0xf70
+    2a84:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a88:      	sub	w23, w8, #0xf7c
+    2a8c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a90:      	sub	w28, w10, #0xf68
+    2a94:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2a98:      	sub	w25, w8, #0xf74
+    2a9c:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2aa0:      	sub	w19, w10, #0xf60
+    2aa4:      	sub	w10, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2aa8:      	sub	w27, w8, #0xf6c
+    2aac:      	sub	w8, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2ab0:      	sub	w20, w10, #0xf5c
+    2ab4:      	sub	w10, w11, #0xf58
+    2ab8:      	sub	w11, w6, #0x1ff, lsl #12 ; =0x1ff000
+    2abc:      	sub	w8, w8, #0xf64
+    2ac0:      	sub	w11, w11, #0xf54
+    2ac4:      	add	w17, w13, w16
+    2ac8:      	add	w1, w12, w16
+    2acc:      	add	w9, w15, w16
+    2ad0:      	add	w2, w14, w16
+    2ad4:      	add	w17, w17, #0xb0
+    2ad8:      	add	w1, w1, #0xb0
+    2adc:      	add	w9, w9, #0xb0
+    2ae0:      	add	w2, w2, #0xb0
+    2ae4:      	str	wzr, [x0, w17, uxtw]
+    2ae8:      	str	wzr, [x0, w1, uxtw]
+    2aec:      	str	wzr, [x0, w9, uxtw]
+    2af0:      	str	wzr, [x0, w2, uxtw]
+    2af4:      	ldp	x17, x9, [x29, #-0x68]
+    2af8:      	ldp	x2, x1, [x29, #-0x78]
+    2afc:      	add	w17, w17, w16
+    2b00:      	add	w9, w9, w16
+    2b04:      	add	w17, w17, #0xb0
+    2b08:      	add	w9, w9, #0xb0
+    2b0c:      	add	w2, w2, w16
+    2b10:      	add	w1, w1, w16
+    2b14:      	add	w1, w1, #0xb0
+    2b18:      	str	wzr, [x0, w9, uxtw]
+    2b1c:      	add	w9, w2, #0xb0
+    2b20:      	str	wzr, [x0, w17, uxtw]
+    2b24:      	str	wzr, [x0, w1, uxtw]
+    2b28:      	str	wzr, [x0, w9, uxtw]
+    2b2c:      	ldp	x17, x9, [x29, #-0x88]
+    2b30:      	ldp	x2, x1, [x29, #-0x98]
+    2b34:      	add	w17, w17, w16
+    2b38:      	add	w9, w9, w16
+    2b3c:      	add	w17, w17, #0xb0
+    2b40:      	add	w9, w9, #0xb0
+    2b44:      	add	w2, w2, w16
+    2b48:      	add	w1, w1, w16
+    2b4c:      	add	w1, w1, #0xb0
+    2b50:      	str	wzr, [x0, w9, uxtw]
+    2b54:      	add	w9, w2, #0xb0
+    2b58:      	str	wzr, [x0, w17, uxtw]
+    2b5c:      	str	wzr, [x0, w1, uxtw]
+    2b60:      	str	wzr, [x0, w9, uxtw]
+    2b64:      	ldp	x17, x9, [x29, #-0xa8]
+    2b68:      	ldp	x2, x1, [x29, #-0xb8]
+    2b6c:      	add	w17, w17, w16
+    2b70:      	add	w9, w9, w16
+    2b74:      	add	w17, w17, #0xb0
+    2b78:      	add	w9, w9, #0xb0
+    2b7c:      	add	w2, w2, w16
+    2b80:      	add	w1, w1, w16
+    2b84:      	add	w1, w1, #0xb0
+    2b88:      	str	wzr, [x0, w9, uxtw]
+    2b8c:      	add	w9, w2, #0xb0
+    2b90:      	str	wzr, [x0, w17, uxtw]
+    2b94:      	str	wzr, [x0, w1, uxtw]
+    2b98:      	str	wzr, [x0, w9, uxtw]
+    2b9c:      	ldp	x17, x9, [x29, #-0xc8]
+    2ba0:      	ldp	x2, x1, [sp, #0xc8]
+    2ba4:      	add	w17, w17, w16
+    2ba8:      	add	w9, w9, w16
+    2bac:      	add	w17, w17, #0xb0
+    2bb0:      	add	w9, w9, #0xb0
+    2bb4:      	add	w2, w2, w16
+    2bb8:      	add	w1, w1, w16
+    2bbc:      	add	w1, w1, #0xb0
+    2bc0:      	str	wzr, [x0, w9, uxtw]
+    2bc4:      	add	w9, w2, #0xb0
+    2bc8:      	str	wzr, [x0, w17, uxtw]
+    2bcc:      	str	wzr, [x0, w1, uxtw]
+    2bd0:      	str	wzr, [x0, w9, uxtw]
+    2bd4:      	ldp	x17, x9, [sp, #0xb8]
+    2bd8:      	ldp	x2, x1, [sp, #0xa8]
+    2bdc:      	add	w17, w17, w16
+    2be0:      	add	w9, w9, w16
+    2be4:      	add	w17, w17, #0xb0
+    2be8:      	add	w9, w9, #0xb0
+    2bec:      	add	w2, w2, w16
+    2bf0:      	add	w1, w1, w16
+    2bf4:      	add	w1, w1, #0xb0
+    2bf8:      	str	wzr, [x0, w9, uxtw]
+    2bfc:      	add	w9, w2, #0xb0
+    2c00:      	str	wzr, [x0, w17, uxtw]
+    2c04:      	add	w2, w3, w16
+    2c08:      	str	wzr, [x0, w1, uxtw]
+    2c0c:      	str	wzr, [x0, w9, uxtw]
+    2c10:      	ldp	x17, x9, [sp, #0x98]
+    2c14:      	ldr	x1, [sp, #0x90]
+    2c18:      	add	w17, w17, w16
+    2c1c:      	add	w9, w9, w16
+    2c20:      	add	w1, w1, w16
+    2c24:      	add	w9, w9, #0xb0
+    2c28:      	add	w17, w17, #0xb0
+    2c2c:      	add	w1, w1, #0xb0
+    2c30:      	str	wzr, [x0, w9, uxtw]
+    2c34:      	add	w9, w2, #0xb0
+    2c38:      	str	wzr, [x0, w17, uxtw]
+    2c3c:      	add	w17, w5, w16
+    2c40:      	str	wzr, [x0, w1, uxtw]
+    2c44:      	add	w1, w7, w16
+    2c48:      	str	wzr, [x0, w9, uxtw]
+    2c4c:      	add	w9, w4, w16
+    2c50:      	add	w9, w9, #0xb0
+    2c54:      	add	w2, w21, w16
+    2c58:      	add	w17, w17, #0xb0
+    2c5c:      	add	w1, w1, #0xb0
+    2c60:      	str	wzr, [x0, w9, uxtw]
+    2c64:      	add	w9, w2, #0xb0
+    2c68:      	str	wzr, [x0, w17, uxtw]
+    2c6c:      	add	w17, w23, w16
+    2c70:      	str	wzr, [x0, w1, uxtw]
+    2c74:      	add	w1, w24, w16
+    2c78:      	str	wzr, [x0, w9, uxtw]
+    2c7c:      	add	w9, w22, w16
+    2c80:      	add	w9, w9, #0xb0
+    2c84:      	add	w2, w25, w16
+    2c88:      	add	w17, w17, #0xb0
+    2c8c:      	add	w1, w1, #0xb0
+    2c90:      	str	wzr, [x0, w9, uxtw]
+    2c94:      	add	w9, w2, #0xb0
+    2c98:      	str	wzr, [x0, w17, uxtw]
+    2c9c:      	add	w17, w27, w16
+    2ca0:      	str	wzr, [x0, w1, uxtw]
+    2ca4:      	add	w1, w28, w16
+    2ca8:      	str	wzr, [x0, w9, uxtw]
+    2cac:      	add	w9, w26, w16
+    2cb0:      	add	w9, w9, #0xb0
+    2cb4:      	add	w2, w8, w16
+    2cb8:      	add	w17, w17, #0xb0
+    2cbc:      	add	w1, w1, #0xb0
+    2cc0:      	str	wzr, [x0, w9, uxtw]
+    2cc4:      	add	w9, w2, #0xb0
+    2cc8:      	str	wzr, [x0, w17, uxtw]
+    2ccc:      	add	w17, w20, w16
+    2cd0:      	str	wzr, [x0, w1, uxtw]
+    2cd4:      	add	w1, w10, w16
+    2cd8:      	str	wzr, [x0, w9, uxtw]
+    2cdc:      	add	w9, w19, w16
+    2ce0:      	add	w9, w9, #0xb0
+    2ce4:      	add	w2, w11, w16
+    2ce8:      	add	w17, w17, #0xb0
+    2cec:      	add	w1, w1, #0xb0
+    2cf0:      	add	x16, x16, #0xb0
+    2cf4:      	str	wzr, [x0, w9, uxtw]
+    2cf8:      	add	w9, w2, #0xb0
+    2cfc:      	cmp	x16, #0x8f0
+    2d00:      	str	wzr, [x0, w17, uxtw]
+    2d04:      	str	wzr, [x0, w1, uxtw]
+    2d08:      	str	wzr, [x0, w9, uxtw]
+    2d0c:      	b.lo	0x2ac4 <_gta_shared_init+0x5c4>
+    2d10:      	ldr	w2, [sp, #0x24]
+    2d14:      	mov	w11, #0x4               ; =4
+    2d18:      	movk	w11, #0xffe0, lsl #16
+    2d1c:      	orr	w8, w6, #0x40000000
+    2d20:      	ldr	x14, [sp, #0x28]
+    2d24:      	mov	w12, #0x100f            ; =4111
+    2d28:      	add	w11, w2, w11
+    2d2c:      	sub	w9, w2, #0x200, lsl #12 ; =0x200000
+    2d30:      	add	w13, w11, #0x4
+    2d34:      	mov	x10, xzr
+    2d38:      	orr	w3, w2, #0x40000000
+    2d3c:      	stur	x13, [x29, #-0xb8]
+    2d40:      	add	x13, x0, x13
+    2d44:      	str	w8, [x14]
+    2d48:      	add	w8, w11, #0x8
+    2d4c:      	str	wzr, [x0, w9, uxtw]
+    2d50:      	add	w9, w2, w12
+    2d54:      	and	w9, w9, #0xfffff000
+    2d58:      	str	wzr, [x0, w11, uxtw]
+    2d5c:      	str	wzr, [x13]
+    2d60:      	sub	w11, w9, #0x200, lsl #12 ; =0x200000
+    2d64:      	str	wzr, [x0, w8, uxtw]
+    2d68:      	add	w8, w9, #0x1c, lsl #12  ; =0x1c000
+    2d6c:      	add	w8, w8, #0xfff
+    2d70:      	stur	w9, [x29, #-0xc0]
+    2d74:      	and	w8, w8, #0xfffff000
+    2d78:      	orr	x9, x11, #0x78
+    2d7c:      	orr	x22, x11, #0x40
+    2d80:      	orr	x23, x11, #0x3c
+    2d84:      	orr	x4, x11, #0x30
+    2d88:      	orr	x12, x11, #0x1c
+    2d8c:      	stur	w8, [x29, #-0xb0]
+    2d90:      	orr	x8, x11, #0x7c
+    2d94:      	orr	x13, x11, #0x18
+    2d98:      	orr	x14, x11, #0x10
+    2d9c:      	orr	x15, x11, #0xc
+    2da0:      	orr	x16, x11, #0x8
+    2da4:      	stur	x8, [x29, #-0x60]
+    2da8:      	mov	w8, #0x74               ; =116
+    2dac:      	orr	x8, x11, x8
+    2db0:      	orr	x17, x11, #0x4
+    2db4:      	ldr	x1, [sp, #0x30]
+    2db8:      	stp	x8, x9, [x29, #-0x70]
+    2dbc:      	mov	w8, #0x6c               ; =108
+    2dc0:      	orr	x9, x11, #0x70
+    2dc4:      	orr	x8, x11, x8
+    2dc8:      	stp	x8, x9, [x29, #-0x80]
+    2dcc:      	mov	w8, #0x68               ; =104
+    2dd0:      	orr	x8, x11, x8
+    2dd4:      	orr	x9, x11, #0x60
+    2dd8:      	stur	x8, [x29, #-0x88]
+    2ddc:      	mov	w8, #0x64               ; =100
+    2de0:      	orr	x8, x11, x8
+    2de4:      	stur	x8, [x29, #-0x90]
+    2de8:      	mov	w8, #0x5c               ; =92
+    2dec:      	orr	x8, x11, x8
+    2df0:      	stp	x8, x9, [x29, #-0xa0]
+    2df4:      	mov	w8, #0x58               ; =88
+    2df8:      	orr	x8, x11, x8
+    2dfc:      	mov	w9, #0x54               ; =84
+    2e00:      	orr	x6, x11, x9
+    2e04:      	mov	w9, #0x4c               ; =76
+    2e08:      	orr	x19, x11, x9
+    2e0c:      	mov	w9, #0x44               ; =68
+    2e10:      	stur	x8, [x29, #-0xa8]
+    2e14:      	mov	w8, #0x50               ; =80
+    2e18:      	orr	x7, x11, x8
+    2e1c:      	mov	w8, #0x48               ; =72
+    2e20:      	orr	x20, x11, x8
+    2e24:      	mov	w8, #0x34               ; =52
+    2e28:      	orr	x21, x11, x9
+    2e2c:      	orr	x24, x11, x8
+    2e30:      	mov	w8, #0x2c               ; =44
+    2e34:      	mov	w9, #0x28               ; =40
+    2e38:      	orr	x25, x11, x8
+    2e3c:      	orr	x26, x11, x9
+    2e40:      	mov	w8, #0x24               ; =36
+    2e44:      	mov	w9, #0x14               ; =20
+    2e48:      	orr	x27, x11, x8
+    2e4c:      	orr	x28, x11, x9
+    2e50:      	orr	x8, x11, #0x38
+    2e54:      	orr	x9, x11, #0x20
+    2e58:      	str	w3, [x1]
+    2e5c:      	adrp	x1, 0x2000 <_gta_send_firmware+0x460>
+		0000000000002e5c:  ARM64_RELOC_PAGE21	_gsh.0
+    2e60:      	str	w2, [x1]
+		0000000000002e60:  ARM64_RELOC_PAGEOFF12	_gsh.0
+    2e64:      	add	w1, w11, w10
+    2e68:      	add	w2, w17, w10
+    2e6c:      	add	w3, w16, w10
+    2e70:      	add	x5, x10, #0x7c
+    2e74:      	str	wzr, [x0, w1, uxtw]
+    2e78:      	add	w1, w15, w10
+    2e7c:      	str	wzr, [x0, w2, uxtw]
+    2e80:      	add	w2, w14, w10
+    2e84:      	str	wzr, [x0, w3, uxtw]
+    2e88:      	add	w3, w28, w10
+    2e8c:      	str	wzr, [x0, w1, uxtw]
+    2e90:      	add	w1, w13, w10
+    2e94:      	str	wzr, [x0, w2, uxtw]
+    2e98:      	add	w2, w12, w10
+    2e9c:      	str	wzr, [x0, w3, uxtw]
+    2ea0:      	add	w3, w9, w10
+    2ea4:      	str	wzr, [x0, w1, uxtw]
+    2ea8:      	add	w1, w27, w10
+    2eac:      	str	wzr, [x0, w2, uxtw]
+    2eb0:      	add	w2, w26, w10
+    2eb4:      	str	wzr, [x0, w3, uxtw]
+    2eb8:      	add	w3, w25, w10
+    2ebc:      	str	wzr, [x0, w1, uxtw]
+    2ec0:      	add	w1, w4, w10
+    2ec4:      	str	wzr, [x0, w2, uxtw]
+    2ec8:      	add	w2, w24, w10
+    2ecc:      	str	wzr, [x0, w3, uxtw]
+    2ed0:      	add	w3, w8, w10
+    2ed4:      	str	wzr, [x0, w1, uxtw]
+    2ed8:      	add	w1, w23, w10
+    2edc:      	str	wzr, [x0, w2, uxtw]
+    2ee0:      	add	w2, w22, w10
+    2ee4:      	str	wzr, [x0, w3, uxtw]
+    2ee8:      	add	w3, w21, w10
+    2eec:      	str	wzr, [x0, w1, uxtw]
+    2ef0:      	add	w1, w20, w10
+    2ef4:      	str	wzr, [x0, w2, uxtw]
+    2ef8:      	add	w2, w19, w10
+    2efc:      	str	wzr, [x0, w3, uxtw]
+    2f00:      	add	w3, w7, w10
+    2f04:      	str	wzr, [x0, w1, uxtw]
+    2f08:      	add	w1, w6, w10
+    2f0c:      	str	wzr, [x0, w2, uxtw]
+    2f10:      	ldur	x2, [x29, #-0xa8]
+    2f14:      	str	wzr, [x0, w3, uxtw]
+    2f18:      	ldur	x3, [x29, #-0xa0]
+    2f1c:      	str	wzr, [x0, w1, uxtw]
+    2f20:      	ldur	x1, [x29, #-0x98]
+    2f24:      	add	w2, w2, w10
+    2f28:      	add	w3, w3, w10
+    2f2c:      	add	w1, w1, w10
+    2f30:      	str	wzr, [x0, w2, uxtw]
+    2f34:      	ldur	x2, [x29, #-0x90]
+    2f38:      	str	wzr, [x0, w3, uxtw]
+    2f3c:      	ldur	x3, [x29, #-0x88]
+    2f40:      	str	wzr, [x0, w1, uxtw]
+    2f44:      	ldur	x1, [x29, #-0x80]
+    2f48:      	add	w2, w2, w10
+    2f4c:      	add	w3, w3, w10
+    2f50:      	add	w1, w1, w10
+    2f54:      	str	wzr, [x0, w2, uxtw]
+    2f58:      	ldur	x2, [x29, #-0x78]
+    2f5c:      	str	wzr, [x0, w3, uxtw]
+    2f60:      	ldur	x3, [x29, #-0x70]
+    2f64:      	str	wzr, [x0, w1, uxtw]
+    2f68:      	add	x1, x10, #0x80
+    2f6c:      	add	w2, w2, w10
+    2f70:      	add	w3, w3, w10
+    2f74:      	str	wzr, [x0, w2, uxtw]
+    2f78:      	ldur	x2, [x29, #-0x68]
+    2f7c:      	str	wzr, [x0, w3, uxtw]
+    2f80:      	ldur	x3, [x29, #-0x60]
+    2f84:      	add	w2, w2, w10
+    2f88:      	add	w3, w3, w10
+    2f8c:      	mov	x10, x1
+    2f90:      	mov	w1, #0xbffc             ; =49148
+    2f94:      	movk	w1, #0x1, lsl #16
+    2f98:      	str	wzr, [x0, w2, uxtw]
+    2f9c:      	cmp	x5, x1
+    2fa0:      	str	wzr, [x0, w3, uxtw]
+    2fa4:      	b.lo	0x2e64 <_gta_shared_init+0x964>
+    2fa8:      	ldur	w26, [x29, #-0xb0]
+    2fac:      	mov	w9, #0x1fff             ; =8191
+    2fb0:      	ldur	w25, [x29, #-0xc0]
+    2fb4:      	mov	x11, xzr
+    2fb8:      	mov	x13, #-0x4              ; =-4
+    2fbc:      	mov	w14, #0x14              ; =20
+    2fc0:      	add	w9, w26, w9
+    2fc4:      	sub	w12, w26, #0x200, lsl #12 ; =0x200000
+    2fc8:      	orr	w8, w25, #0x40000000
+    2fcc:      	and	w10, w9, #0xfffff000
+    2fd0:      	ldr	x9, [sp, #0x38]
+    2fd4:      	mov	w15, #0x24              ; =36
+    2fd8:      	mov	w16, #0x28              ; =40
+    2fdc:      	mov	w17, #0x2c              ; =44
+    2fe0:      	mov	w1, #0x34               ; =52
+    2fe4:      	mov	w2, #0x44               ; =68
+    2fe8:      	str	w8, [x9]
+    2fec:      	adrp	x8, 0x2000 <_gta_send_firmware+0x460>
+		0000000000002fec:  ARM64_RELOC_PAGE21	_gsh.1
+    2ff0:      	str	w25, [x8]
+		0000000000002ff0:  ARM64_RELOC_PAGEOFF12	_gsh.1
+    2ff4:      	mov	w3, #0x48               ; =72
+    2ff8:      	mov	w5, #0x4c               ; =76
+    2ffc:      	mov	w6, #0x50               ; =80
+    3000:      	mov	w7, #0x54               ; =84
+    3004:      	mov	w19, #0x58              ; =88
+    3008:      	mov	w20, #0x5c              ; =92
+    300c:      	mov	w21, #0x64              ; =100
+    3010:      	mov	w22, #0x68              ; =104
+    3014:      	mov	w23, #0x6c              ; =108
+    3018:      	mov	w24, #0x74              ; =116
+    301c:      	ldur	x8, [x29, #-0xb8]
+    3020:      	mov	w4, #0x3ff              ; =1023
+    3024:      	str	w4, [x0, x8]
+    3028:      	nop
+    302c:      	nop
+    3030:      	add	x8, x12, w11, uxtw
+    3034:      	orr	w9, w11, #0x4
+    3038:      	orr	w4, w11, #0x8
+    303c:      	orr	w25, w11, #0xc
+    3040:      	add	x9, x12, x9
+    3044:      	add	x4, x12, x4
+    3048:      	str	wzr, [x0, x8]
+    304c:      	orr	w8, w11, #0x10
+    3050:      	add	x25, x12, x25
+    3054:      	add	x8, x12, x8
+    3058:      	str	wzr, [x0, x9]
+    305c:      	orr	w9, w11, #0x18
+    3060:      	str	wzr, [x0, x4]
+    3064:      	orr	w4, w11, #0x1c
+    3068:      	str	wzr, [x0, x25]
+    306c:      	orr	w25, w11, #0x20
+    3070:      	str	wzr, [x0, x8]
+    3074:      	orr	w8, w11, w14
+    3078:      	add	x8, x12, x8
+    307c:      	add	x9, x12, x9
+    3080:      	add	x4, x12, x4
+    3084:      	add	x13, x13, #0x80
+    3088:      	cmp	x13, #0xffc
+    308c:      	str	wzr, [x0, x8]
+    3090:      	add	x8, x12, x25
+    3094:      	str	wzr, [x0, x9]
+    3098:      	orr	w9, w11, w16
+    309c:      	str	wzr, [x0, x4]
+    30a0:      	orr	w4, w11, w17
+    30a4:      	str	wzr, [x0, x8]
+    30a8:      	orr	w8, w11, w15
+    30ac:      	add	x8, x12, x8
+    30b0:      	orr	w25, w11, #0x30
+    30b4:      	add	x9, x12, x9
+    30b8:      	add	x4, x12, x4
+    30bc:      	str	wzr, [x0, x8]
+    30c0:      	add	x8, x12, x25
+    30c4:      	str	wzr, [x0, x9]
+    30c8:      	orr	w9, w11, #0x38
+    30cc:      	str	wzr, [x0, x4]
+    30d0:      	orr	w4, w11, #0x3c
+    30d4:      	str	wzr, [x0, x8]
+    30d8:      	orr	w8, w11, w1
+    30dc:      	add	x8, x12, x8
+    30e0:      	orr	w25, w11, #0x40
+    30e4:      	add	x9, x12, x9
+    30e8:      	add	x4, x12, x4
+    30ec:      	str	wzr, [x0, x8]
+    30f0:      	add	x8, x12, x25
+    30f4:      	str	wzr, [x0, x9]
+    30f8:      	orr	w9, w11, w3
+    30fc:      	str	wzr, [x0, x4]
+    3100:      	orr	w4, w11, w5
+    3104:      	str	wzr, [x0, x8]
+    3108:      	orr	w8, w11, w2
+    310c:      	add	x8, x12, x8
+    3110:      	orr	w25, w11, w6
+    3114:      	add	x9, x12, x9
+    3118:      	add	x4, x12, x4
+    311c:      	str	wzr, [x0, x8]
+    3120:      	add	x8, x12, x25
+    3124:      	str	wzr, [x0, x9]
+    3128:      	orr	w9, w11, w19
+    312c:      	str	wzr, [x0, x4]
+    3130:      	orr	w4, w11, w20
+    3134:      	str	wzr, [x0, x8]
+    3138:      	orr	w8, w11, w7
+    313c:      	add	x8, x12, x8
+    3140:      	orr	w25, w11, #0x60
+    3144:      	add	x9, x12, x9
+    3148:      	add	x4, x12, x4
+    314c:      	str	wzr, [x0, x8]
+    3150:      	add	x8, x12, x25
+    3154:      	str	wzr, [x0, x9]
+    3158:      	orr	w9, w11, w22
+    315c:      	str	wzr, [x0, x4]
+    3160:      	add	x9, x12, x9
+    3164:      	str	wzr, [x0, x8]
+    3168:      	orr	w8, w11, w21
+    316c:      	add	x8, x12, x8
+    3170:      	orr	w4, w11, w23
+    3174:      	orr	w25, w11, #0x70
+    3178:      	add	x4, x12, x4
+    317c:      	str	wzr, [x0, x8]
+    3180:      	add	x8, x12, x25
+    3184:      	str	wzr, [x0, x9]
+    3188:      	orr	w9, w11, w24
+    318c:      	add	x9, x12, x9
+    3190:      	str	wzr, [x0, x4]
+    3194:      	str	wzr, [x0, x8]
+    3198:      	orr	w8, w11, #0x78
+    319c:      	orr	w4, w11, #0x7c
+    31a0:      	add	x8, x12, x8
+    31a4:      	str	wzr, [x0, x9]
+    31a8:      	add	x9, x12, x4
+    31ac:      	add	x11, x11, #0x80
+    31b0:      	str	wzr, [x0, x8]
+    31b4:      	str	wzr, [x0, x9]
+    31b8:      	b.lo	0x3030 <_gta_shared_init+0xb30>
+    31bc:      	mov	w9, #0x100f             ; =4111
+    31c0:      	orr	w8, w26, #0x40000000
+    31c4:      	add	w9, w10, w9
+    31c8:      	sub	w12, w10, #0x200, lsl #12 ; =0x200000
+    31cc:      	and	w2, w9, #0xfffff000
+    31d0:      	mov	w9, #0x4                ; =4
+    31d4:      	movk	w9, #0xffe0, lsl #16
+    31d8:      	mov	x11, xzr
+    31dc:      	add	w13, w10, w9
+    31e0:      	ldr	x9, [sp, #0x40]
+    31e4:      	orr	w25, w10, #0x40000000
+    31e8:      	mov	w14, #0x14              ; =20
+    31ec:      	mov	w15, #0x24              ; =36
+    31f0:      	mov	w16, #0x28              ; =40
+    31f4:      	str	w8, [x9]
+    31f8:      	adrp	x8, 0x3000 <_gta_shared_init+0xb00>
+		00000000000031f8:  ARM64_RELOC_PAGE21	_gsh.2
+    31fc:      	str	w26, [x8]
+		00000000000031fc:  ARM64_RELOC_PAGEOFF12	_gsh.2
+    3200:      	add	w9, w13, #0x4
+    3204:      	add	x8, x0, x9
+    3208:      	adrp	x28, 0x3000 <_gta_shared_init+0xb00>
+		0000000000003208:  ARM64_RELOC_PAGE21	_gs_next
+    320c:      	str	w2, [x28]
+		000000000000320c:  ARM64_RELOC_PAGEOFF12	_gs_next
+    3210:      	mov	w17, #0x2c              ; =44
+    3214:      	str	wzr, [x0, w12, uxtw]
+    3218:      	add	w12, w13, #0x8
+    321c:      	str	wzr, [x0, w13, uxtw]
+    3220:      	mov	x13, #-0x4              ; =-4
+    3224:      	str	wzr, [x8]
+    3228:      	mov	w8, #0x1dff             ; =7679
+    322c:      	str	wzr, [x0, w12, uxtw]
+    3230:      	add	w8, w2, w8
+    3234:      	and	w8, w8, #0xfffff000
+    3238:      	sub	w12, w2, #0x200, lsl #12 ; =0x200000
+    323c:      	mov	w1, #0x34               ; =52
+    3240:      	mov	w3, #0x44               ; =68
+    3244:      	mov	w4, #0x48               ; =72
+    3248:      	mov	w5, #0x4c               ; =76
+    324c:      	mov	w6, #0x50               ; =80
+    3250:      	mov	w7, #0x54               ; =84
+    3254:      	mov	w19, #0x58              ; =88
+    3258:      	mov	w20, #0x5c              ; =92
+    325c:      	mov	w21, #0x64              ; =100
+    3260:      	mov	w22, #0x68              ; =104
+    3264:      	mov	w23, #0x6c              ; =108
+    3268:      	mov	w24, #0x74              ; =116
+    326c:      	ldr	x26, [sp, #0x48]
+    3270:      	str	w25, [x26]
+    3274:      	adrp	x25, 0x3000 <_gta_shared_init+0xb00>
+		0000000000003274:  ARM64_RELOC_PAGE21	_gsh.3
+    3278:      	str	w10, [x25]
+		0000000000003278:  ARM64_RELOC_PAGEOFF12	_gsh.3
+    327c:      	nop
+    3280:      	add	x10, x12, w11, uxtw
+    3284:      	orr	w25, w11, #0x4
+    3288:      	orr	w26, w11, #0x8
+    328c:      	orr	w27, w11, #0xc
+    3290:      	add	x25, x12, x25
+    3294:      	add	x26, x12, x26
+    3298:      	str	wzr, [x0, x10]
+    329c:      	orr	w10, w11, #0x10
+    32a0:      	add	x27, x12, x27
+    32a4:      	add	x10, x12, x10
+    32a8:      	str	wzr, [x0, x25]
+    32ac:      	orr	w25, w11, #0x18
+    32b0:      	str	wzr, [x0, x26]
+    32b4:      	orr	w26, w11, #0x1c
+    32b8:      	str	wzr, [x0, x27]
+    32bc:      	orr	w27, w11, #0x20
+    32c0:      	str	wzr, [x0, x10]
+    32c4:      	orr	w10, w11, w14
+    32c8:      	add	x10, x12, x10
+    32cc:      	add	x25, x12, x25
+    32d0:      	add	x26, x12, x26
+    32d4:      	add	x13, x13, #0x80
+    32d8:      	cmp	x13, #0xdfc
+    32dc:      	str	wzr, [x0, x10]
+    32e0:      	add	x10, x12, x27
+    32e4:      	str	wzr, [x0, x25]
+    32e8:      	orr	w25, w11, w16
+    32ec:      	str	wzr, [x0, x26]
+    32f0:      	orr	w26, w11, w17
+    32f4:      	str	wzr, [x0, x10]
+    32f8:      	orr	w10, w11, w15
+    32fc:      	add	x10, x12, x10
+    3300:      	orr	w27, w11, #0x30
+    3304:      	add	x25, x12, x25
+    3308:      	add	x26, x12, x26
+    330c:      	str	wzr, [x0, x10]
+    3310:      	add	x10, x12, x27
+    3314:      	str	wzr, [x0, x25]
+    3318:      	orr	w25, w11, #0x38
+    331c:      	str	wzr, [x0, x26]
+    3320:      	orr	w26, w11, #0x3c
+    3324:      	str	wzr, [x0, x10]
+    3328:      	orr	w10, w11, w1
+    332c:      	add	x10, x12, x10
+    3330:      	orr	w27, w11, #0x40
+    3334:      	add	x25, x12, x25
+    3338:      	add	x26, x12, x26
+    333c:      	str	wzr, [x0, x10]
+    3340:      	add	x10, x12, x27
+    3344:      	str	wzr, [x0, x25]
+    3348:      	orr	w25, w11, w4
+    334c:      	str	wzr, [x0, x26]
+    3350:      	orr	w26, w11, w5
+    3354:      	str	wzr, [x0, x10]
+    3358:      	orr	w10, w11, w3
+    335c:      	add	x10, x12, x10
+    3360:      	orr	w27, w11, w6
+    3364:      	add	x25, x12, x25
+    3368:      	add	x26, x12, x26
+    336c:      	str	wzr, [x0, x10]
+    3370:      	add	x10, x12, x27
+    3374:      	str	wzr, [x0, x25]
+    3378:      	orr	w25, w11, w19
+    337c:      	str	wzr, [x0, x26]
+    3380:      	orr	w26, w11, w20
+    3384:      	str	wzr, [x0, x10]
+    3388:      	orr	w10, w11, w7
+    338c:      	add	x10, x12, x10
+    3390:      	orr	w27, w11, #0x60
+    3394:      	add	x25, x12, x25
+    3398:      	add	x26, x12, x26
+    339c:      	str	wzr, [x0, x10]
+    33a0:      	add	x10, x12, x27
+    33a4:      	str	wzr, [x0, x25]
+    33a8:      	orr	w25, w11, w22
+    33ac:      	str	wzr, [x0, x26]
+    33b0:      	add	x25, x12, x25
+    33b4:      	str	wzr, [x0, x10]
+    33b8:      	orr	w10, w11, w21
+    33bc:      	add	x10, x12, x10
+    33c0:      	orr	w26, w11, w23
+    33c4:      	orr	w27, w11, #0x70
+    33c8:      	add	x26, x12, x26
+    33cc:      	str	wzr, [x0, x10]
+    33d0:      	add	x10, x12, x27
+    33d4:      	str	wzr, [x0, x25]
+    33d8:      	orr	w25, w11, w24
+    33dc:      	add	x25, x12, x25
+    33e0:      	str	wzr, [x0, x26]
+    33e4:      	str	wzr, [x0, x10]
+    33e8:      	orr	w10, w11, #0x78
+    33ec:      	orr	w26, w11, #0x7c
+    33f0:      	add	x10, x12, x10
+    33f4:      	str	wzr, [x0, x25]
+    33f8:      	add	x25, x12, x26
+    33fc:      	add	x11, x11, #0x80
+    3400:      	str	wzr, [x0, x10]
+    3404:      	str	wzr, [x0, x25]
+    3408:      	b.lo	0x3280 <_gta_shared_init+0xd80>
+    340c:      	orr	w13, w2, #0x40000000
+    3410:      	ldr	x15, [sp, #0x60]
+    3414:      	mov	w11, #0x1447            ; =5191
+    3418:      	mov	x10, xzr
+    341c:      	add	w11, w8, w11
+    3420:      	sub	w12, w8, #0x200, lsl #12 ; =0x200000
+    3424:      	and	w11, w11, #0xfffff000
+    3428:      	str	w13, [x15]
+    342c:      	mov	x13, #-0x4              ; =-4
+    3430:      	mov	w14, #0x1f              ; =31
+    3434:      	adrp	x15, 0x3000 <_gta_shared_init+0xb00>
+		0000000000003434:  ARM64_RELOC_PAGE21	_gsh.4
+    3438:      	str	w2, [x15]
+		0000000000003438:  ARM64_RELOC_PAGEOFF12	_gsh.4
+    343c:      	str	w14, [x0, x9]
+    3440:      	orr	w14, w10, #0x4
+    3444:      	add	x9, x12, w10, uxtw
+    3448:      	add	x14, x12, x14
+    344c:      	add	x10, x10, #0x8
+    3450:      	add	x13, x13, #0x8
+    3454:      	cmp	x13, #0x444
+    3458:      	str	wzr, [x0, x9]
+    345c:      	str	wzr, [x0, x14]
+    3460:      	b.lo	0x3440 <_gta_shared_init+0xf40>
+    3464:      	orr	w10, w8, #0x40000000
+    3468:      	mov	w8, #0x1dff             ; =7679
+    346c:      	add	w8, w2, w8
+    3470:      	ldr	x14, [sp, #0x68]
+    3474:      	and	w8, w8, #0xfffff000
+    3478:      	mov	w12, #0x1447            ; =5191
+    347c:      	mov	w9, #0x380f             ; =14351
+    3480:      	add	w8, w8, w12
+    3484:      	add	w9, w11, w9
+    3488:      	and	w8, w8, #0xfffff000
+    348c:      	str	w10, [x14]
+    3490:      	mov	w13, #0x1               ; =1
+    3494:      	and	w12, w9, #0xfffff000
+    3498:      	sub	w8, w8, #0x200, lsl #12 ; =0x200000
+    349c:      	mov	x9, #-0x4               ; =-4
+    34a0:      	ldr	x10, [sp, #0x70]
+    34a4:      	str	w13, [x10]
+    34a8:      	nop
+    34ac:      	nop
+    34b0:      	str	wzr, [x0, w8, uxtw]
+    34b4:      	add	w10, w8, #0x4
+    34b8:      	add	w13, w8, #0x8
+    34bc:      	add	w14, w8, #0xc
+    34c0:      	add	w8, w8, #0x10
+    34c4:      	add	x9, x9, #0x10
+    34c8:      	lsr	x15, x9, #2
+    34cc:      	str	wzr, [x0, w10, uxtw]
+    34d0:      	cmp	x15, #0xa03
+    34d4:      	str	wzr, [x0, w13, uxtw]
+    34d8:      	str	wzr, [x0, w14, uxtw]
+    34dc:      	b.lo	0x34b0 <_gta_shared_init+0xfb0>
+    34e0:      	orr	w9, w11, #0x40000000
+    34e4:      	ldr	x16, [sp, #0x50]
+    34e8:      	sub	w13, w12, #0x200, lsl #12 ; =0x200000
+    34ec:      	mov	w1, #0x4                ; =4
+    34f0:      	movk	w1, #0xffe0, lsl #16
+    34f4:      	mov	w11, #0x1017            ; =4119
+    34f8:      	add	w8, w1, #0x4
+    34fc:      	str	w9, [x16]
+    3500:      	add	w9, w1, #0x8
+    3504:      	add	w14, w12, w1
+    3508:      	add	w15, w12, w8
+    350c:      	str	wzr, [x0, w13, uxtw]
+    3510:      	add	w13, w12, w9
+    3514:      	add	w11, w12, w11
+    3518:      	str	wzr, [x0, w14, uxtw]
+    351c:      	and	w14, w11, #0xfffff000
+    3520:      	str	wzr, [x0, w15, uxtw]
+    3524:      	add	w15, w1, #0x10
+    3528:      	str	wzr, [x0, w13, uxtw]
+    352c:      	add	w13, w1, #0xc
+    3530:      	add	w11, w12, w13
+    3534:      	add	w16, w12, w15
+    3538:      	mov	w17, #0x1027            ; =4135
+    353c:      	orr	w12, w12, #0x40000000
+    3540:      	add	w17, w14, w17
+    3544:      	add	w13, w14, w13
+    3548:      	str	wzr, [x0, w11, uxtw]
+    354c:      	and	w11, w17, #0xfffff000
+    3550:      	str	wzr, [x0, w16, uxtw]
+    3554:      	sub	w16, w14, #0x200, lsl #12 ; =0x200000
+    3558:      	ldr	x17, [sp, #0x58]
+    355c:      	add	w15, w14, w15
+    3560:      	add	w23, w11, w9
+    3564:      	mov	x10, xzr
+    3568:      	orr	w24, w11, #0x40000000
+    356c:      	mov	w3, #0x4c               ; =76
+    3570:      	str	w12, [x17]
+    3574:      	add	w12, w14, w1
+    3578:      	str	w11, [x28]
+		0000000000003578:  ARM64_RELOC_PAGEOFF12	_gs_next
+    357c:      	add	w17, w14, w8
+    3580:      	str	wzr, [x0, w16, uxtw]
+    3584:      	add	w16, w14, w9
+    3588:      	str	wzr, [x0, w12, uxtw]
+    358c:      	mov	w4, #0x50               ; =80
+    3590:      	str	wzr, [x0, w17, uxtw]
+    3594:      	mov	w17, #0x44              ; =68
+    3598:      	str	wzr, [x0, w16, uxtw]
+    359c:      	add	w16, w12, #0x14
+    35a0:      	str	wzr, [x0, w13, uxtw]
+    35a4:      	add	w13, w12, #0x18
+    35a8:      	str	wzr, [x0, w15, uxtw]
+    35ac:      	add	w15, w12, #0x1c
+    35b0:      	add	w12, w12, #0x20
+    35b4:      	str	wzr, [x0, w16, uxtw]
+    35b8:      	str	wzr, [x0, w13, uxtw]
+    35bc:      	orr	w13, w14, #0x40000000
+    35c0:      	str	wzr, [x0, w15, uxtw]
+    35c4:      	add	w15, w11, w8
+    35c8:      	str	wzr, [x0, w12, uxtw]
+    35cc:      	sub	w12, w11, #0x200, lsl #12 ; =0x200000
+    35d0:      	ldr	x14, [sp, #0x78]
+    35d4:      	mov	w16, #0x34              ; =52
+    35d8:      	mov	w5, #0x54               ; =84
+    35dc:      	mov	w6, #0x58               ; =88
+    35e0:      	mov	w7, #0x5c               ; =92
+    35e4:      	mov	w19, #0x64              ; =100
+    35e8:      	str	w13, [x14]
+    35ec:      	mov	w14, #0x100f            ; =4111
+    35f0:      	add	w8, w11, w14
+    35f4:      	str	wzr, [x0, w12, uxtw]
+    35f8:      	and	w8, w8, #0xfffff000
+    35fc:      	mov	w12, #0x1fff            ; =8191
+    3600:      	add	w9, w8, w12
+    3604:      	add	w13, w11, w1
+    3608:      	and	w9, w9, #0xfffff000
+    360c:      	mov	x11, #-0x4              ; =-4
+    3610:      	mov	w12, #0x14              ; =20
+    3614:      	mov	w14, #0x28              ; =40
+    3618:      	str	wzr, [x0, w13, uxtw]
+    361c:      	mov	w13, #0x24              ; =36
+    3620:      	str	wzr, [x0, w15, uxtw]
+    3624:      	mov	w15, #0x2c              ; =44
+    3628:      	str	w9, [sp, #0x68]
+    362c:      	sub	w9, w8, #0x200, lsl #12 ; =0x200000
+    3630:      	str	wzr, [x0, w23, uxtw]
+    3634:      	mov	w1, #0x48               ; =72
+    3638:      	mov	w20, #0x68              ; =104
+    363c:      	mov	w21, #0x6c              ; =108
+    3640:      	mov	w22, #0x74              ; =116
+    3644:      	ldr	x23, [sp, #0x80]
+    3648:      	str	w24, [x23]
+    364c:      	nop
+    3650:      	add	x23, x9, w10, uxtw
+    3654:      	orr	w24, w10, #0x4
+    3658:      	orr	w25, w10, #0x8
+    365c:      	orr	w26, w10, #0xc
+    3660:      	add	x24, x9, x24
+    3664:      	add	x25, x9, x25
+    3668:      	str	wzr, [x0, x23]
+    366c:      	orr	w23, w10, #0x10
+    3670:      	add	x26, x9, x26
+    3674:      	add	x23, x9, x23
+    3678:      	str	wzr, [x0, x24]
+    367c:      	orr	w24, w10, #0x18
+    3680:      	str	wzr, [x0, x25]
+    3684:      	orr	w25, w10, #0x1c
+    3688:      	str	wzr, [x0, x26]
+    368c:      	orr	w26, w10, #0x20
+    3690:      	str	wzr, [x0, x23]
+    3694:      	orr	w23, w10, w12
+    3698:      	add	x23, x9, x23
+    369c:      	add	x24, x9, x24
+    36a0:      	add	x25, x9, x25
+    36a4:      	add	x11, x11, #0x80
+    36a8:      	cmp	x11, #0xffc
+    36ac:      	str	wzr, [x0, x23]
+    36b0:      	add	x23, x9, x26
+    36b4:      	str	wzr, [x0, x24]
+    36b8:      	orr	w24, w10, w14
+    36bc:      	str	wzr, [x0, x25]
+    36c0:      	orr	w25, w10, w15
+    36c4:      	str	wzr, [x0, x23]
+    36c8:      	orr	w23, w10, w13
+    36cc:      	add	x23, x9, x23
+    36d0:      	orr	w26, w10, #0x30
+    36d4:      	add	x24, x9, x24
+    36d8:      	add	x25, x9, x25
+    36dc:      	str	wzr, [x0, x23]
+    36e0:      	add	x23, x9, x26
+    36e4:      	str	wzr, [x0, x24]
+    36e8:      	orr	w24, w10, #0x38
+    36ec:      	str	wzr, [x0, x25]
+    36f0:      	orr	w25, w10, #0x3c
+    36f4:      	str	wzr, [x0, x23]
+    36f8:      	orr	w23, w10, w16
+    36fc:      	add	x23, x9, x23
+    3700:      	orr	w26, w10, #0x40
+    3704:      	add	x24, x9, x24
+    3708:      	add	x25, x9, x25
+    370c:      	str	wzr, [x0, x23]
+    3710:      	add	x23, x9, x26
+    3714:      	str	wzr, [x0, x24]
+    3718:      	orr	w24, w10, w1
+    371c:      	str	wzr, [x0, x25]
+    3720:      	orr	w25, w10, w3
+    3724:      	str	wzr, [x0, x23]
+    3728:      	orr	w23, w10, w17
+    372c:      	add	x23, x9, x23
+    3730:      	orr	w26, w10, w4
+    3734:      	add	x24, x9, x24
+    3738:      	add	x25, x9, x25
+    373c:      	str	wzr, [x0, x23]
+    3740:      	add	x23, x9, x26
+    3744:      	str	wzr, [x0, x24]
+    3748:      	orr	w24, w10, w6
+    374c:      	str	wzr, [x0, x25]
+    3750:      	orr	w25, w10, w7
+    3754:      	str	wzr, [x0, x23]
+    3758:      	orr	w23, w10, w5
+    375c:      	add	x23, x9, x23
+    3760:      	orr	w26, w10, #0x60
+    3764:      	add	x24, x9, x24
+    3768:      	add	x25, x9, x25
+    376c:      	str	wzr, [x0, x23]
+    3770:      	add	x23, x9, x26
+    3774:      	str	wzr, [x0, x24]
+    3778:      	orr	w24, w10, w20
+    377c:      	str	wzr, [x0, x25]
+    3780:      	add	x24, x9, x24
+    3784:      	str	wzr, [x0, x23]
+    3788:      	orr	w23, w10, w19
+    378c:      	add	x23, x9, x23
+    3790:      	orr	w25, w10, w21
+    3794:      	orr	w26, w10, #0x70
+    3798:      	add	x25, x9, x25
+    379c:      	str	wzr, [x0, x23]
+    37a0:      	add	x23, x9, x26
+    37a4:      	str	wzr, [x0, x24]
+    37a8:      	orr	w24, w10, w22
+    37ac:      	add	x24, x9, x24
+    37b0:      	str	wzr, [x0, x25]
+    37b4:      	str	wzr, [x0, x23]
+    37b8:      	orr	w23, w10, #0x78
+    37bc:      	orr	w25, w10, #0x7c
+    37c0:      	add	x23, x9, x23
+    37c4:      	str	wzr, [x0, x24]
+    37c8:      	add	x24, x9, x25
+    37cc:      	add	x10, x10, #0x80
+    37d0:      	str	wzr, [x0, x23]
+    37d4:      	str	wzr, [x0, x24]
+    37d8:      	b.lo	0x3650 <_gta_shared_init+0x1150>
+    37dc:      	mov	w11, #0xbeef            ; =48879
+    37e0:      	mov	x10, xzr
+    37e4:      	movk	w11, #0xdead, lsl #16
+    37e8:      	mov	x12, #-0x4              ; =-4
+    37ec:      	nop
+    37f0:      	add	x13, x10, x9
+    37f4:      	add	x10, x10, #0x80
+    37f8:      	add	x14, x13, #0x4
+    37fc:      	add	x15, x13, #0x8
+    3800:      	add	x16, x13, #0xc
+    3804:      	add	x12, x12, #0x80
+    3808:      	str	w11, [x0, x13]
+    380c:      	cmp	x12, #0xffc
+    3810:      	str	w11, [x0, x14]
+    3814:      	add	x14, x13, #0x10
+    3818:      	str	w11, [x0, x15]
+    381c:      	add	x15, x13, #0x14
+    3820:      	str	w11, [x0, x16]
+    3824:      	add	x16, x13, #0x18
+    3828:      	str	w11, [x0, x14]
+    382c:      	add	x14, x13, #0x1c
+    3830:      	str	w11, [x0, x15]
+    3834:      	add	x15, x13, #0x20
+    3838:      	str	w11, [x0, x16]
+    383c:      	add	x16, x13, #0x24
+    3840:      	str	w11, [x0, x14]
+    3844:      	add	x14, x13, #0x28
+    3848:      	str	w11, [x0, x15]
+    384c:      	add	x15, x13, #0x2c
+    3850:      	str	w11, [x0, x16]
+    3854:      	add	x16, x13, #0x30
+    3858:      	str	w11, [x0, x14]
+    385c:      	add	x14, x13, #0x34
+    3860:      	str	w11, [x0, x15]
+    3864:      	add	x15, x13, #0x38
+    3868:      	str	w11, [x0, x16]
+    386c:      	add	x16, x13, #0x3c
+    3870:      	str	w11, [x0, x14]
+    3874:      	add	x14, x13, #0x40
+    3878:      	str	w11, [x0, x15]
+    387c:      	add	x15, x13, #0x44
+    3880:      	str	w11, [x0, x16]
+    3884:      	add	x16, x13, #0x48
+    3888:      	str	w11, [x0, x14]
+    388c:      	add	x14, x13, #0x4c
+    3890:      	str	w11, [x0, x15]
+    3894:      	add	x15, x13, #0x50
+    3898:      	str	w11, [x0, x16]
+    389c:      	add	x16, x13, #0x54
+    38a0:      	str	w11, [x0, x14]
+    38a4:      	add	x14, x13, #0x58
+    38a8:      	str	w11, [x0, x15]
+    38ac:      	add	x15, x13, #0x5c
+    38b0:      	str	w11, [x0, x16]
+    38b4:      	add	x16, x13, #0x60
+    38b8:      	str	w11, [x0, x14]
+    38bc:      	add	x14, x13, #0x64
+    38c0:      	str	w11, [x0, x15]
+    38c4:      	add	x15, x13, #0x68
+    38c8:      	str	w11, [x0, x16]
+    38cc:      	add	x16, x13, #0x6c
+    38d0:      	str	w11, [x0, x14]
+    38d4:      	add	x14, x13, #0x70
+    38d8:      	str	w11, [x0, x15]
+    38dc:      	add	x15, x13, #0x74
+    38e0:      	str	w11, [x0, x16]
+    38e4:      	add	x16, x13, #0x78
+    38e8:      	add	x13, x13, #0x7c
+    38ec:      	str	w11, [x0, x14]
+    38f0:      	str	w11, [x0, x15]
+    38f4:      	str	w11, [x0, x16]
+    38f8:      	str	w11, [x0, x13]
+    38fc:      	b.lo	0x37f0 <_gta_shared_init+0x12f0>
+    3900:      	mov	w10, #-0x46100000       ; =-1175453696
+    3904:      	mov	w11, #0x1df0000         ; =31391744
+    3908:      	add	x8, x10, w8, uxtw
+    390c:      	add	x10, x0, x11
+    3910:      	mov	w12, #0x4               ; =4
+    3914:      	lsr	x11, x8, #32
+    3918:      	movk	w12, #0x1df, lsl #16
+    391c:      	mov	w13, #0x8               ; =8
+    3920:      	add	x12, x0, x12
+    3924:      	str	w8, [x10]
+    3928:      	mov	w8, #0xc                ; =12
+    392c:      	movk	w13, #0x1df, lsl #16
+    3930:      	movk	w8, #0x1df, lsl #16
+    3934:      	add	x13, x0, x13
+    3938:      	add	x8, x0, x8
+    393c:      	mov	w10, #0xda              ; =218
+    3940:      	str	w11, [x12]
+    3944:      	mov	w11, #0x10              ; =16
+    3948:      	mov	w12, #0x14              ; =20
+    394c:      	movk	w11, #0x1df, lsl #16
+    3950:      	movk	w12, #0x1df, lsl #16
+    3954:      	str	wzr, [x13]
+    3958:      	add	x11, x0, x11
+    395c:      	add	x12, x0, x12
+    3960:      	mov	w13, #0xe0              ; =224
+    3964:      	str	w10, [x8]
+    3968:      	mov	w8, #0x18               ; =24
+    396c:      	mov	w10, #0x1c              ; =28
+    3970:      	movk	w8, #0x1df, lsl #16
+    3974:      	str	wzr, [x11]
+    3978:      	add	x8, x0, x8
+    397c:      	str	w13, [x12]
+    3980:      	mov	w12, #0x20              ; =32
+    3984:      	movk	w10, #0x1df, lsl #16
+    3988:      	movk	w12, #0x1df, lsl #16
+    398c:      	add	x10, x0, x10
+    3990:      	mov	w11, #0xec              ; =236
+    3994:      	add	x12, x0, x12
+    3998:      	mov	w13, #0x40000000        ; =1073741824
+    399c:      	str	wzr, [x8]
+    39a0:      	mov	w8, #0x24               ; =36
+    39a4:      	mov	w14, #0x30              ; =48
+    39a8:      	movk	w8, #0x1df, lsl #16
+    39ac:      	str	w11, [x10]
+    39b0:      	add	x8, x0, x8
+    39b4:      	str	w13, [x12]
+    39b8:      	mov	w10, #0x28              ; =40
+    39bc:      	mov	w12, #0x2c              ; =44
+    39c0:      	movk	w10, #0x1df, lsl #16
+    39c4:      	movk	w12, #0x1df, lsl #16
+    39c8:      	movk	w14, #0x1df, lsl #16
+    39cc:      	add	x10, x0, x10
+    39d0:      	add	x12, x0, x12
+    39d4:      	mov	w13, #0xf0              ; =240
+    39d8:      	str	w11, [x8]
+    39dc:      	add	x8, x0, x14
+    39e0:      	str	wzr, [x10]
+    39e4:      	mov	w10, #0x11b7            ; =4535
+    39e8:      	str	w13, [x12]
+    39ec:      	mov	w11, #0x10              ; =16
+    39f0:      	str	wzr, [x8]
+    39f4:      	mov	w8, #0x34               ; =52
+    39f8:      	ldr	w24, [sp, #0x68]
+    39fc:      	movk	w8, #0x1df, lsl #16
+    3a00:      	add	x26, x0, x8
+    3a04:      	mov	w16, #0x20              ; =32
+    3a08:      	mov	w19, #0x40              ; =64
+    3a0c:      	movk	w11, #0xffe0, lsl #16
+    3a10:      	add	w8, w24, w10
+    3a14:      	movk	w16, #0xffe0, lsl #16
+    3a18:      	and	w28, w8, #0xfffff000
+    3a1c:      	mov	w8, #0x8                ; =8
+    3a20:      	movk	w8, #0xffe0, lsl #16
+    3a24:      	movk	w19, #0xffe0, lsl #16
+    3a28:      	sub	w12, w24, #0x200, lsl #12 ; =0x200000
+    3a2c:      	add	w8, w24, w8
+    3a30:      	sub	w10, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a34:      	add	w11, w24, w11
+    3a38:      	sub	w13, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a3c:      	sub	w14, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a40:      	sub	w15, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a44:      	add	w16, w24, w16
+    3a48:      	sub	w17, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a4c:      	sub	w1, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a50:      	sub	w3, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a54:      	sub	w4, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a58:      	sub	w5, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a5c:      	sub	w6, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a60:      	sub	w7, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a64:      	add	w19, w24, w19
+    3a68:      	sub	w20, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a6c:      	sub	w21, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a70:      	sub	w22, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a74:      	sub	w23, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a78:      	sub	w24, w24, #0x1ff, lsl #12 ; =0x1ff000
+    3a7c:      	mov	x9, xzr
+    3a80:      	mov	w27, #0xed              ; =237
+    3a84:      	sub	w10, w10, #0xff4
+    3a88:      	sub	w13, w13, #0xfec
+    3a8c:      	sub	w14, w14, #0xfe8
+    3a90:      	sub	w15, w15, #0xfe4
+    3a94:      	sub	w17, w17, #0xfdc
+    3a98:      	sub	w1, w1, #0xfd8
+    3a9c:      	sub	w3, w3, #0xfd4
+    3aa0:      	sub	w4, w4, #0xfd0
+    3aa4:      	sub	w5, w5, #0xfcc
+    3aa8:      	sub	w6, w6, #0xfc8
+    3aac:      	sub	w7, w7, #0xfc4
+    3ab0:      	sub	w20, w20, #0xfbc
+    3ab4:      	sub	w21, w21, #0xfb8
+    3ab8:      	sub	w22, w22, #0xfb4
+    3abc:      	sub	w23, w23, #0xfb0
+    3ac0:      	sub	w24, w24, #0xfac
+    3ac4:      	mov	x25, #-0x58             ; =-88
+    3ac8:      	str	w27, [x26]
+    3acc:      	adrp	x26, 0x3000 <_gta_shared_init+0xb00>
+		0000000000003acc:  ARM64_RELOC_PAGE21	_gs_next
+    3ad0:      	str	w28, [x26]
+		0000000000003ad0:  ARM64_RELOC_PAGEOFF12	_gs_next
+    3ad4:      	str	w28, [sp, #0x60]
+    3ad8:      	nop
+    3adc:      	nop
+    3ae0:      	orr	w27, w9, #0x4
+    3ae4:      	add	x26, x12, w9, uxtw
+    3ae8:      	add	x27, x12, x27
+    3aec:      	add	w28, w9, w8
+    3af0:      	add	x25, x25, #0x58
+    3af4:      	str	wzr, [x0, x26]
+    3af8:      	add	w26, w9, w10
+    3afc:      	str	wzr, [x0, x27]
+    3b00:      	add	w27, w9, w11
+    3b04:      	str	wzr, [x0, w28, uxtw]
+    3b08:      	add	w28, w9, w13
+    3b0c:      	str	wzr, [x0, w26, uxtw]
+    3b10:      	add	w26, w9, w14
+    3b14:      	str	wzr, [x0, w27, uxtw]
+    3b18:      	add	w27, w9, w15
+    3b1c:      	str	wzr, [x0, w28, uxtw]
+    3b20:      	add	w28, w9, w16
+    3b24:      	str	wzr, [x0, w26, uxtw]
+    3b28:      	add	w26, w9, w17
+    3b2c:      	str	wzr, [x0, w27, uxtw]
+    3b30:      	add	w27, w9, w1
+    3b34:      	str	wzr, [x0, w28, uxtw]
+    3b38:      	add	w28, w9, w3
+    3b3c:      	str	wzr, [x0, w26, uxtw]
+    3b40:      	add	w26, w9, w4
+    3b44:      	str	wzr, [x0, w27, uxtw]
+    3b48:      	add	w27, w9, w5
+    3b4c:      	str	wzr, [x0, w28, uxtw]
+    3b50:      	add	w28, w9, w6
+    3b54:      	str	wzr, [x0, w26, uxtw]
+    3b58:      	add	w26, w9, w7
+    3b5c:      	str	wzr, [x0, w27, uxtw]
+    3b60:      	add	w27, w9, w19
+    3b64:      	str	wzr, [x0, w28, uxtw]
+    3b68:      	add	w28, w9, w20
+    3b6c:      	str	wzr, [x0, w26, uxtw]
+    3b70:      	add	w26, w9, w21
+    3b74:      	str	wzr, [x0, w27, uxtw]
+    3b78:      	add	w27, w9, w22
+    3b7c:      	str	wzr, [x0, w28, uxtw]
+    3b80:      	cmp	x25, #0x160
+    3b84:      	str	wzr, [x0, w26, uxtw]
+    3b88:      	add	w26, w9, w23
+    3b8c:      	str	wzr, [x0, w27, uxtw]
+    3b90:      	add	w27, w9, w24
+    3b94:      	add	x9, x9, #0x58
+    3b98:      	str	wzr, [x0, w26, uxtw]
+    3b9c:      	str	wzr, [x0, w27, uxtw]
+    3ba0:      	b.lo	0x3ae0 <_gta_shared_init+0x15e0>
+    3ba4:      	ldr	w10, [sp, #0x68]
+    3ba8:      	mov	w8, #0x9c               ; =156
+    3bac:      	movk	w8, #0x1df, lsl #16
+    3bb0:      	add	x8, x0, x8
+    3bb4:      	orr	w9, w10, #0x40000000
+    3bb8:      	str	w9, [x8]
+    3bbc:      	adrp	x8, 0x3000 <_gta_shared_init+0xb00>
+		0000000000003bbc:  ARM64_RELOC_PAGE21	_gsh.6
+    3bc0:      	str	w10, [x8]
+		0000000000003bc0:  ARM64_RELOC_PAGEOFF12	_gsh.6
+    3bc4:      	ldr	w8, [sp, #0x88]
+    3bc8:      	tbz	w8, #0x0, 0x40c0 <_gta_shared_init+0x1bc0>
+    3bcc:      	mov	w8, #0x1dff             ; =7679
+    3bd0:      	mov	w9, #0x1447             ; =5191
+    3bd4:      	add	w8, w2, w8
+    3bd8:      	mov	w11, #0x1027            ; =4135
+    3bdc:      	and	w8, w8, #0xfffff000
+    3be0:      	mov	w13, #0x1fff            ; =8191
+    3be4:      	add	w8, w8, w9
+    3be8:      	mov	w9, #0x380f             ; =14351
+    3bec:      	and	w8, w8, #0xfffff000
+    3bf0:      	mov	w14, #0xbc              ; =188
+    3bf4:      	add	w8, w8, w9
+    3bf8:      	mov	w9, #0x1017             ; =4119
+    3bfc:      	and	w8, w8, #0xfffff000
+    3c00:      	mov	w15, #0xb4              ; =180
+    3c04:      	add	w8, w8, w9
+    3c08:      	mov	w9, #0x100f             ; =4111
+    3c0c:      	and	w8, w8, #0xfffff000
+    3c10:      	mov	w16, #0xb0              ; =176
+    3c14:      	add	w8, w8, w11
+    3c18:      	mov	w11, #0x11b7            ; =4535
+    3c1c:      	and	w8, w8, #0xfffff000
+    3c20:      	mov	w17, #0xac              ; =172
+    3c24:      	add	w8, w8, w9
+    3c28:      	mov	w9, #0xb8               ; =184
+    3c2c:      	and	w8, w8, #0xfffff000
+    3c30:      	mov	w10, #0xcb7f            ; =52095
+    3c34:      	add	w8, w8, w13
+    3c38:      	mov	x28, #-0xc0             ; =-192
+    3c3c:      	and	w8, w8, #0xfffff000
+    3c40:      	add	w8, w8, w11
+    3c44:      	ldr	w11, [sp, #0x60]
+    3c48:      	and	w8, w8, #0xfffff000
+    3c4c:      	sub	w13, w8, #0x200, lsl #12 ; =0x200000
+    3c50:      	orr	x8, x13, x14
+    3c54:      	add	w10, w11, w10
+    3c58:      	and	w11, w10, #0xfffff000
+    3c5c:      	orr	x3, x13, #0x80
+    3c60:      	orr	x4, x13, #0x7c
+    3c64:      	orr	x5, x13, #0x78
+    3c68:      	stur	x8, [x29, #-0x60]
+    3c6c:      	orr	x8, x13, x9
+    3c70:      	orr	x6, x13, #0x70
+    3c74:      	orr	x7, x13, #0x60
+    3c78:      	orr	x19, x13, #0x40
+    3c7c:      	orr	x21, x13, #0x3c
+    3c80:      	stur	x8, [x29, #-0x68]
+    3c84:      	orr	x8, x13, x15
+    3c88:      	orr	x22, x13, #0x38
+    3c8c:      	orr	x23, x13, #0x30
+    3c90:      	orr	x20, x13, #0x1c
+    3c94:      	orr	x24, x13, #0x18
+    3c98:      	stur	x8, [x29, #-0x70]
+    3c9c:      	orr	x8, x13, x16
+    3ca0:      	orr	x25, x13, #0x10
+    3ca4:      	orr	x26, x13, #0xc
+    3ca8:      	orr	x27, x13, #0x8
+    3cac:      	orr	x9, x13, #0x4
+    3cb0:      	stur	x8, [x29, #-0x78]
+    3cb4:      	orr	x8, x13, x17
+    3cb8:      	adrp	x10, 0x3000 <_gta_shared_init+0xb00>
+		0000000000003cb8:  ARM64_RELOC_PAGE21	_gs_next
+    3cbc:      	str	w11, [x10]
+		0000000000003cbc:  ARM64_RELOC_PAGEOFF12	_gs_next
+    3cc0:      	stur	x8, [x29, #-0x80]
+    3cc4:      	mov	w8, #0xa8               ; =168
+    3cc8:      	orr	x8, x13, x8
+    3ccc:      	stur	x8, [x29, #-0x88]
+    3cd0:      	mov	w8, #0xa4               ; =164
+    3cd4:      	orr	x8, x13, x8
+    3cd8:      	stur	x8, [x29, #-0x90]
+    3cdc:      	mov	w8, #0xa0               ; =160
+    3ce0:      	orr	x8, x13, x8
+    3ce4:      	stur	x8, [x29, #-0x98]
+    3ce8:      	mov	w8, #0x9c               ; =156
+    3cec:      	orr	x8, x13, x8
+    3cf0:      	stur	x8, [x29, #-0xa0]
+    3cf4:      	mov	w8, #0x98               ; =152
+    3cf8:      	orr	x8, x13, x8
+    3cfc:      	stur	x8, [x29, #-0xa8]
+    3d00:      	mov	w8, #0x94               ; =148
+    3d04:      	orr	x8, x13, x8
+    3d08:      	stur	x8, [x29, #-0xb0]
+    3d0c:      	mov	w8, #0x90               ; =144
+    3d10:      	orr	x8, x13, x8
+    3d14:      	stur	x8, [x29, #-0xb8]
+    3d18:      	mov	w8, #0x8c               ; =140
+    3d1c:      	orr	x8, x13, x8
+    3d20:      	stur	x8, [x29, #-0xc0]
+    3d24:      	mov	w8, #0x88               ; =136
+    3d28:      	orr	x8, x13, x8
+    3d2c:      	stur	x8, [x29, #-0xc8]
+    3d30:      	mov	w8, #0x84               ; =132
+    3d34:      	orr	x8, x13, x8
+    3d38:      	str	x8, [sp, #0xd0]
+    3d3c:      	mov	w8, #0x74               ; =116
+    3d40:      	orr	x8, x13, x8
+    3d44:      	str	x8, [sp, #0xc8]
+    3d48:      	mov	w8, #0x6c               ; =108
+    3d4c:      	orr	x8, x13, x8
+    3d50:      	str	x8, [sp, #0xc0]
+    3d54:      	mov	w8, #0x68               ; =104
+    3d58:      	orr	x8, x13, x8
+    3d5c:      	str	x8, [sp, #0xb8]
+    3d60:      	mov	w8, #0x64               ; =100
+    3d64:      	orr	x8, x13, x8
+    3d68:      	str	x8, [sp, #0xb0]
+    3d6c:      	mov	w8, #0x5c               ; =92
+    3d70:      	orr	x8, x13, x8
+    3d74:      	str	x8, [sp, #0xa8]
+    3d78:      	mov	w8, #0x58               ; =88
+    3d7c:      	orr	x8, x13, x8
+    3d80:      	str	x8, [sp, #0xa0]
+    3d84:      	mov	w8, #0x54               ; =84
+    3d88:      	orr	x8, x13, x8
+    3d8c:      	str	x8, [sp, #0x98]
+    3d90:      	mov	w8, #0x50               ; =80
+    3d94:      	orr	x8, x13, x8
+    3d98:      	str	x8, [sp, #0x90]
+    3d9c:      	mov	w8, #0x4c               ; =76
+    3da0:      	orr	x8, x13, x8
+    3da4:      	str	x8, [sp, #0x88]
+    3da8:      	mov	w8, #0x48               ; =72
+    3dac:      	orr	x8, x13, x8
+    3db0:      	str	x8, [sp, #0x80]
+    3db4:      	mov	w8, #0x44               ; =68
+    3db8:      	orr	x8, x13, x8
+    3dbc:      	str	x8, [sp, #0x78]
+    3dc0:      	mov	w8, #0x34               ; =52
+    3dc4:      	orr	x8, x13, x8
+    3dc8:      	str	x8, [sp, #0x70]
+    3dcc:      	mov	w8, #0x2c               ; =44
+    3dd0:      	orr	x16, x13, x8
+    3dd4:      	mov	w8, #0x28               ; =40
+    3dd8:      	orr	x17, x13, x8
+    3ddc:      	mov	w8, #0x24               ; =36
+    3de0:      	orr	x1, x13, x8
+    3de4:      	mov	w8, #0x14               ; =20
+    3de8:      	orr	x2, x13, x8
+    3dec:      	orr	x8, x13, #0x20
+    3df0:      	add	w10, w13, w28
+    3df4:      	add	w11, w9, w28
+    3df8:      	add	w10, w10, #0xc0
+    3dfc:      	add	w14, w27, w28
+    3e00:      	add	w15, w26, w28
+    3e04:      	add	w11, w11, #0xc0
+    3e08:      	add	w14, w14, #0xc0
+    3e0c:      	add	w15, w15, #0xc0
+    3e10:      	str	wzr, [x0, w10, uxtw]
+    3e14:      	add	w10, w25, w28
+    3e18:      	add	w10, w10, #0xc0
+    3e1c:      	str	wzr, [x0, w11, uxtw]
+    3e20:      	str	wzr, [x0, w14, uxtw]
+    3e24:      	add	w11, w24, w28
+    3e28:      	str	wzr, [x0, w15, uxtw]
+    3e2c:      	add	w14, w20, w28
+    3e30:      	str	wzr, [x0, w10, uxtw]
+    3e34:      	add	w10, w2, w28
+    3e38:      	add	w10, w10, #0xc0
+    3e3c:      	add	w15, w8, w28
+    3e40:      	add	w11, w11, #0xc0
+    3e44:      	add	w14, w14, #0xc0
+    3e48:      	str	wzr, [x0, w10, uxtw]
+    3e4c:      	add	w10, w15, #0xc0
+    3e50:      	str	wzr, [x0, w11, uxtw]
+    3e54:      	add	w11, w17, w28
+    3e58:      	str	wzr, [x0, w14, uxtw]
+    3e5c:      	add	w14, w16, w28
+    3e60:      	str	wzr, [x0, w10, uxtw]
+    3e64:      	add	w10, w1, w28
+    3e68:      	add	w10, w10, #0xc0
+    3e6c:      	add	w15, w23, w28
+    3e70:      	add	w11, w11, #0xc0
+    3e74:      	add	w14, w14, #0xc0
+    3e78:      	str	wzr, [x0, w10, uxtw]
+    3e7c:      	add	w10, w15, #0xc0
+    3e80:      	str	wzr, [x0, w11, uxtw]
+    3e84:      	add	w11, w22, w28
+    3e88:      	str	wzr, [x0, w14, uxtw]
+    3e8c:      	add	w14, w21, w28
+    3e90:      	str	wzr, [x0, w10, uxtw]
+    3e94:      	add	w15, w19, w28
+    3e98:      	ldr	x10, [sp, #0x70]
+    3e9c:      	add	w11, w11, #0xc0
+    3ea0:      	add	w14, w14, #0xc0
+    3ea4:      	add	w10, w10, w28
+    3ea8:      	add	w10, w10, #0xc0
+    3eac:      	str	wzr, [x0, w10, uxtw]
+    3eb0:      	add	w10, w15, #0xc0
+    3eb4:      	str	wzr, [x0, w11, uxtw]
+    3eb8:      	str	wzr, [x0, w14, uxtw]
+    3ebc:      	str	wzr, [x0, w10, uxtw]
+    3ec0:      	ldp	x10, x11, [sp, #0x78]
+    3ec4:      	ldp	x14, x15, [sp, #0x88]
+    3ec8:      	add	w10, w10, w28
+    3ecc:      	add	w10, w10, #0xc0
+    3ed0:      	add	w11, w11, w28
+    3ed4:      	add	w14, w14, w28
+    3ed8:      	add	w11, w11, #0xc0
+    3edc:      	add	w15, w15, w28
+    3ee0:      	add	w14, w14, #0xc0
+    3ee4:      	str	wzr, [x0, w10, uxtw]
+    3ee8:      	add	w10, w15, #0xc0
+    3eec:      	str	wzr, [x0, w11, uxtw]
+    3ef0:      	add	w15, w7, w28
+    3ef4:      	str	wzr, [x0, w14, uxtw]
+    3ef8:      	str	wzr, [x0, w10, uxtw]
+    3efc:      	ldp	x10, x11, [sp, #0x98]
+    3f00:      	ldr	x14, [sp, #0xa8]
+    3f04:      	add	w10, w10, w28
+    3f08:      	add	w10, w10, #0xc0
+    3f0c:      	add	w11, w11, w28
+    3f10:      	add	w14, w14, w28
+    3f14:      	add	w11, w11, #0xc0
+    3f18:      	add	w14, w14, #0xc0
+    3f1c:      	str	wzr, [x0, w10, uxtw]
+    3f20:      	add	w10, w15, #0xc0
+    3f24:      	str	wzr, [x0, w11, uxtw]
+    3f28:      	add	w15, w6, w28
+    3f2c:      	str	wzr, [x0, w14, uxtw]
+    3f30:      	str	wzr, [x0, w10, uxtw]
+    3f34:      	ldp	x10, x11, [sp, #0xb0]
+    3f38:      	ldr	x14, [sp, #0xc0]
+    3f3c:      	add	w10, w10, w28
+    3f40:      	add	w10, w10, #0xc0
+    3f44:      	add	w11, w11, w28
+    3f48:      	add	w14, w14, w28
+    3f4c:      	add	w11, w11, #0xc0
+    3f50:      	add	w14, w14, #0xc0
+    3f54:      	str	wzr, [x0, w10, uxtw]
+    3f58:      	add	w10, w15, #0xc0
+    3f5c:      	str	wzr, [x0, w11, uxtw]
+    3f60:      	add	w11, w5, w28
+    3f64:      	str	wzr, [x0, w14, uxtw]
+    3f68:      	add	w14, w4, w28
+    3f6c:      	str	wzr, [x0, w10, uxtw]
+    3f70:      	add	w15, w3, w28
+    3f74:      	ldr	x10, [sp, #0xc8]
+    3f78:      	add	w11, w11, #0xc0
+    3f7c:      	add	w14, w14, #0xc0
+    3f80:      	add	w10, w10, w28
+    3f84:      	add	w10, w10, #0xc0
+    3f88:      	str	wzr, [x0, w10, uxtw]
+    3f8c:      	add	w10, w15, #0xc0
+    3f90:      	str	wzr, [x0, w11, uxtw]
+    3f94:      	str	wzr, [x0, w14, uxtw]
+    3f98:      	str	wzr, [x0, w10, uxtw]
+    3f9c:      	ldr	x10, [sp, #0xd0]
+    3fa0:      	ldp	x11, x14, [x29, #-0xc8]
+    3fa4:      	add	w10, w10, w28
+    3fa8:      	ldur	x15, [x29, #-0xb8]
+    3fac:      	add	w10, w10, #0xc0
+    3fb0:      	add	w11, w11, w28
+    3fb4:      	add	w14, w14, w28
+    3fb8:      	add	w15, w15, w28
+    3fbc:      	add	w11, w11, #0xc0
+    3fc0:      	add	w14, w14, #0xc0
+    3fc4:      	str	wzr, [x0, w10, uxtw]
+    3fc8:      	add	w10, w15, #0xc0
+    3fcc:      	str	wzr, [x0, w11, uxtw]
+    3fd0:      	str	wzr, [x0, w14, uxtw]
+    3fd4:      	str	wzr, [x0, w10, uxtw]
+    3fd8:      	ldp	x10, x11, [x29, #-0xb0]
+    3fdc:      	ldp	x14, x15, [x29, #-0xa0]
+    3fe0:      	add	w10, w10, w28
+    3fe4:      	add	w10, w10, #0xc0
+    3fe8:      	add	w11, w11, w28
+    3fec:      	add	w14, w14, w28
+    3ff0:      	add	w11, w11, #0xc0
+    3ff4:      	add	w15, w15, w28
+    3ff8:      	add	w14, w14, #0xc0
+    3ffc:      	str	wzr, [x0, w10, uxtw]
+    4000:      	add	w10, w15, #0xc0
+    4004:      	str	wzr, [x0, w11, uxtw]
+    4008:      	str	wzr, [x0, w14, uxtw]
+    400c:      	str	wzr, [x0, w10, uxtw]
+    4010:      	ldp	x10, x11, [x29, #-0x90]
+    4014:      	ldp	x14, x15, [x29, #-0x80]
+    4018:      	add	w10, w10, w28
+    401c:      	add	w10, w10, #0xc0
+    4020:      	add	w11, w11, w28
+    4024:      	add	w14, w14, w28
+    4028:      	add	w11, w11, #0xc0
+    402c:      	add	w15, w15, w28
+    4030:      	add	w14, w14, #0xc0
+    4034:      	str	wzr, [x0, w10, uxtw]
+    4038:      	add	w10, w15, #0xc0
+    403c:      	str	wzr, [x0, w11, uxtw]
+    4040:      	str	wzr, [x0, w14, uxtw]
+    4044:      	str	wzr, [x0, w10, uxtw]
+    4048:      	ldp	x10, x11, [x29, #-0x70]
+    404c:      	ldur	x14, [x29, #-0x60]
+    4050:      	add	w10, w10, w28
+    4054:      	add	w10, w10, #0xc0
+    4058:      	add	w11, w11, w28
+    405c:      	add	w14, w14, w28
+    4060:      	add	w11, w11, #0xc0
+    4064:      	add	w14, w14, #0xc0
+    4068:      	add	x28, x28, #0xc0
+    406c:      	str	wzr, [x0, w10, uxtw]
+    4070:      	lsr	x10, x28, #6
+    4074:      	cmp	x10, #0x2eb
+    4078:      	str	wzr, [x0, w11, uxtw]
+    407c:      	str	wzr, [x0, w14, uxtw]
+    4080:      	b.lo	0x3df0 <_gta_shared_init+0x18f0>
+    4084:      	ldr	w9, [sp, #0x68]
+    4088:      	mov	w8, #0x4                ; =4
+    408c:      	movk	w8, #0xffe0, lsl #16
+    4090:      	ldr	w14, [sp, #0x60]
+    4094:      	mov	w11, #0x2ee0            ; =12000
+    4098:      	mov	w13, #0xc62f            ; =50735
+    409c:      	add	w8, w8, w9
+    40a0:      	add	w9, w8, #0xc
+    40a4:      	add	w8, w8, #0x1ac
+    40a8:      	orr	w10, w14, #0x40000000
+    40ac:      	str	w10, [x0, w9, uxtw]
+    40b0:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000040b0:  ARM64_RELOC_PAGE21	_gsh.7
+    40b4:      	str	w14, [x9]
+		00000000000040b4:  ARM64_RELOC_PAGEOFF12	_gsh.7
+    40b8:      	str	w11, [x0, w8, uxtw]
+    40bc:      	str	w13, [x0, w12, uxtw]
+    40c0:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000040c0:  ARM64_RELOC_PAGE21	_gs_next
+    40c4:      	ldr	w16, [x8]
+		00000000000040c4:  ARM64_RELOC_PAGEOFF12	_gs_next
+    40c8:      	mov	w9, #0x10               ; =16
+    40cc:      	mov	w8, #0x1f2f             ; =7983
+    40d0:      	movk	w9, #0xffe0, lsl #16
+    40d4:      	mov	x2, #-0x90              ; =-144
+    40d8:      	add	w8, w16, w8
+    40dc:      	add	w9, w16, w9
+    40e0:      	and	w8, w8, #0xfffff000
+    40e4:      	sub	w10, w16, #0x1ff, lsl #12 ; =0x1ff000
+    40e8:      	str	w16, [sp, #0xc8]
+    40ec:      	stur	x9, [x29, #-0x60]
+    40f0:      	sub	w9, w16, #0x1ff, lsl #12 ; =0x1ff000
+    40f4:      	str	w8, [sp, #0xd0]
+    40f8:      	sub	w8, w9, #0xfec
+    40fc:      	sub	w9, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4100:      	sub	w9, w9, #0xf88
+    4104:      	stur	x8, [x29, #-0x68]
+    4108:      	sub	w8, w10, #0xfe8
+    410c:      	sub	w10, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4110:      	sub	w11, w10, #0xf84
+    4114:      	mov	w10, #0x80              ; =128
+    4118:      	stur	x8, [x29, #-0x70]
+    411c:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4120:      	sub	w8, w8, #0xfe4
+    4124:      	movk	w10, #0xffe0, lsl #16
+    4128:      	add	w12, w16, w10
+    412c:      	sub	w10, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4130:      	sub	w13, w10, #0xf7c
+    4134:      	sub	w10, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4138:      	stur	x8, [x29, #-0x78]
+    413c:      	mov	w8, #0x20               ; =32
+    4140:      	movk	w8, #0xffe0, lsl #16
+    4144:      	sub	w14, w10, #0xf78
+    4148:      	add	w8, w16, w8
+    414c:      	sub	w10, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4150:      	sub	w15, w10, #0xf74
+    4154:      	mov	w10, #0x4               ; =4
+    4158:      	movk	w10, #0xffe0, lsl #16
+    415c:      	stur	x8, [x29, #-0x80]
+    4160:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4164:      	sub	w8, w8, #0xfdc
+    4168:      	add	w10, w16, w10
+    416c:      	add	w17, w10, #0x8
+    4170:      	add	w1, w10, #0x4
+    4174:      	stur	x8, [x29, #-0x88]
+    4178:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    417c:      	sub	w8, w8, #0xfd8
+    4180:      	stur	x8, [x29, #-0x90]
+    4184:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4188:      	sub	w8, w8, #0xfd4
+    418c:      	stur	x8, [x29, #-0x98]
+    4190:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4194:      	sub	w8, w8, #0xfd0
+    4198:      	stur	x8, [x29, #-0xa0]
+    419c:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41a0:      	sub	w8, w8, #0xfcc
+    41a4:      	stur	x8, [x29, #-0xa8]
+    41a8:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41ac:      	sub	w8, w8, #0xfc8
+    41b0:      	stur	x8, [x29, #-0xb0]
+    41b4:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41b8:      	sub	w8, w8, #0xfc4
+    41bc:      	stur	x8, [x29, #-0xb8]
+    41c0:      	mov	w8, #0x40               ; =64
+    41c4:      	movk	w8, #0xffe0, lsl #16
+    41c8:      	add	w8, w16, w8
+    41cc:      	stur	x8, [x29, #-0xc0]
+    41d0:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41d4:      	sub	w8, w8, #0xfbc
+    41d8:      	stur	x8, [x29, #-0xc8]
+    41dc:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41e0:      	sub	w7, w8, #0xfb8
+    41e4:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41e8:      	sub	w19, w8, #0xfb4
+    41ec:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41f0:      	sub	w20, w8, #0xfb0
+    41f4:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    41f8:      	sub	w21, w8, #0xfac
+    41fc:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4200:      	sub	w22, w8, #0xfa8
+    4204:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4208:      	sub	w23, w8, #0xfa4
+    420c:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4210:      	sub	w24, w8, #0xfa0
+    4214:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4218:      	sub	w25, w8, #0xf9c
+    421c:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4220:      	sub	w26, w8, #0xf98
+    4224:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4228:      	sub	w27, w8, #0xf94
+    422c:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4230:      	sub	w28, w8, #0xf90
+    4234:      	sub	w8, w16, #0x1ff, lsl #12 ; =0x1ff000
+    4238:      	sub	w8, w8, #0xf8c
+    423c:      	sub	w16, w16, #0x200, lsl #12 ; =0x200000
+    4240:      	add	w3, w16, w2
+    4244:      	add	w4, w10, w2
+    4248:      	add	w5, w1, w2
+    424c:      	add	w6, w17, w2
+    4250:      	add	w3, w3, #0x90
+    4254:      	add	w4, w4, #0x90
+    4258:      	add	w5, w5, #0x90
+    425c:      	add	w6, w6, #0x90
+    4260:      	str	wzr, [x0, w3, uxtw]
+    4264:      	str	wzr, [x0, w4, uxtw]
+    4268:      	str	wzr, [x0, w5, uxtw]
+    426c:      	str	wzr, [x0, w6, uxtw]
+    4270:      	ldp	x4, x3, [x29, #-0x68]
+    4274:      	ldp	x6, x5, [x29, #-0x78]
+    4278:      	add	w4, w4, w2
+    427c:      	add	w3, w3, w2
+    4280:      	add	w4, w4, #0x90
+    4284:      	add	w3, w3, #0x90
+    4288:      	add	w6, w6, w2
+    428c:      	add	w5, w5, w2
+    4290:      	add	w5, w5, #0x90
+    4294:      	str	wzr, [x0, w3, uxtw]
+    4298:      	add	w3, w6, #0x90
+    429c:      	str	wzr, [x0, w4, uxtw]
+    42a0:      	str	wzr, [x0, w5, uxtw]
+    42a4:      	str	wzr, [x0, w3, uxtw]
+    42a8:      	ldp	x4, x3, [x29, #-0x88]
+    42ac:      	ldp	x6, x5, [x29, #-0x98]
+    42b0:      	add	w4, w4, w2
+    42b4:      	add	w3, w3, w2
+    42b8:      	add	w4, w4, #0x90
+    42bc:      	add	w3, w3, #0x90
+    42c0:      	add	w6, w6, w2
+    42c4:      	add	w5, w5, w2
+    42c8:      	add	w5, w5, #0x90
+    42cc:      	str	wzr, [x0, w3, uxtw]
+    42d0:      	add	w3, w6, #0x90
+    42d4:      	str	wzr, [x0, w4, uxtw]
+    42d8:      	str	wzr, [x0, w5, uxtw]
+    42dc:      	str	wzr, [x0, w3, uxtw]
+    42e0:      	ldp	x4, x3, [x29, #-0xa8]
+    42e4:      	ldp	x6, x5, [x29, #-0xb8]
+    42e8:      	add	w4, w4, w2
+    42ec:      	add	w3, w3, w2
+    42f0:      	add	w4, w4, #0x90
+    42f4:      	add	w3, w3, #0x90
+    42f8:      	add	w6, w6, w2
+    42fc:      	add	w5, w5, w2
+    4300:      	add	w5, w5, #0x90
+    4304:      	str	wzr, [x0, w3, uxtw]
+    4308:      	add	w3, w6, #0x90
+    430c:      	str	wzr, [x0, w4, uxtw]
+    4310:      	add	w6, w19, w2
+    4314:      	str	wzr, [x0, w5, uxtw]
+    4318:      	add	w5, w7, w2
+    431c:      	str	wzr, [x0, w3, uxtw]
+    4320:      	add	w5, w5, #0x90
+    4324:      	ldp	x4, x3, [x29, #-0xc8]
+    4328:      	add	w4, w4, w2
+    432c:      	add	w3, w3, w2
+    4330:      	add	w4, w4, #0x90
+    4334:      	add	w3, w3, #0x90
+    4338:      	str	wzr, [x0, w3, uxtw]
+    433c:      	add	w3, w6, #0x90
+    4340:      	str	wzr, [x0, w4, uxtw]
+    4344:      	add	w4, w21, w2
+    4348:      	str	wzr, [x0, w5, uxtw]
+    434c:      	add	w5, w22, w2
+    4350:      	str	wzr, [x0, w3, uxtw]
+    4354:      	add	w3, w20, w2
+    4358:      	add	w3, w3, #0x90
+    435c:      	add	w6, w23, w2
+    4360:      	add	w4, w4, #0x90
+    4364:      	add	w5, w5, #0x90
+    4368:      	str	wzr, [x0, w3, uxtw]
+    436c:      	add	w3, w6, #0x90
+    4370:      	str	wzr, [x0, w4, uxtw]
+    4374:      	add	w4, w25, w2
+    4378:      	str	wzr, [x0, w5, uxtw]
+    437c:      	add	w5, w26, w2
+    4380:      	str	wzr, [x0, w3, uxtw]
+    4384:      	add	w3, w24, w2
+    4388:      	add	w3, w3, #0x90
+    438c:      	add	w6, w27, w2
+    4390:      	add	w4, w4, #0x90
+    4394:      	add	w5, w5, #0x90
+    4398:      	str	wzr, [x0, w3, uxtw]
+    439c:      	add	w3, w6, #0x90
+    43a0:      	str	wzr, [x0, w4, uxtw]
+    43a4:      	add	w4, w8, w2
+    43a8:      	str	wzr, [x0, w5, uxtw]
+    43ac:      	add	w5, w9, w2
+    43b0:      	str	wzr, [x0, w3, uxtw]
+    43b4:      	add	w3, w28, w2
+    43b8:      	add	w3, w3, #0x90
+    43bc:      	add	w6, w11, w2
+    43c0:      	add	w4, w4, #0x90
+    43c4:      	add	w5, w5, #0x90
+    43c8:      	str	wzr, [x0, w3, uxtw]
+    43cc:      	add	w3, w6, #0x90
+    43d0:      	str	wzr, [x0, w4, uxtw]
+    43d4:      	add	w4, w13, w2
+    43d8:      	str	wzr, [x0, w5, uxtw]
+    43dc:      	add	w5, w14, w2
+    43e0:      	str	wzr, [x0, w3, uxtw]
+    43e4:      	add	w3, w12, w2
+    43e8:      	add	w3, w3, #0x90
+    43ec:      	add	w6, w15, w2
+    43f0:      	add	w4, w4, #0x90
+    43f4:      	add	w5, w5, #0x90
+    43f8:      	add	x2, x2, #0x90
+    43fc:      	str	wzr, [x0, w3, uxtw]
+    4400:      	add	w3, w6, #0x90
+    4404:      	cmp	x2, #0xea0
+    4408:      	str	wzr, [x0, w4, uxtw]
+    440c:      	str	wzr, [x0, w5, uxtw]
+    4410:      	str	wzr, [x0, w3, uxtw]
+    4414:      	b.lo	0x4240 <_gta_shared_init+0x1d40>
+    4418:      	mov	w9, #0xa0               ; =160
+    441c:      	ldr	w15, [sp, #0xd0]
+    4420:      	ldr	w14, [sp, #0xc8]
+    4424:      	movk	w9, #0x1df, lsl #16
+    4428:      	add	x13, x0, x9
+    442c:      	mov	w9, #0x1277             ; =4727
+    4430:      	add	w9, w15, w9
+    4434:      	mov	x8, xzr
+    4438:      	orr	w11, w14, #0x40000000
+    443c:      	sub	w12, w15, #0x200, lsl #12 ; =0x200000
+    4440:      	and	w9, w9, #0xfffff000
+    4444:      	mov	x10, #-0x4              ; =-4
+    4448:      	str	w11, [x13]
+    444c:      	adrp	x11, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000444c:  ARM64_RELOC_PAGE21	_gsh.5
+    4450:      	str	w14, [x11]
+		0000000000004450:  ARM64_RELOC_PAGEOFF12	_gsh.5
+    4454:      	orr	w13, w8, #0x4
+    4458:      	add	x11, x12, w8, uxtw
+    445c:      	add	x13, x12, x13
+    4460:      	add	x8, x8, #0x8
+    4464:      	add	x10, x10, #0x8
+    4468:      	cmp	x10, #0x274
+    446c:      	str	wzr, [x0, x11]
+    4470:      	str	wzr, [x0, x13]
+    4474:      	b.lo	0x4454 <_gta_shared_init+0x1f54>
+    4478:      	mov	w10, #0xb0              ; =176
+    447c:      	orr	w13, w15, #0x40000000
+    4480:      	movk	w10, #0x1df, lsl #16
+    4484:      	mov	w11, #0x4               ; =4
+    4488:      	add	x14, x0, x10
+    448c:      	mov	w10, #0x1c              ; =28
+    4490:      	movk	w11, #0xffe0, lsl #16
+    4494:      	mov	x8, xzr
+    4498:      	add	w11, w15, w11
+    449c:      	adrp	x19, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000449c:  ARM64_RELOC_PAGE21	_gs_next
+    44a0:      	str	w13, [x14]
+    44a4:      	str	w10, [x0, w12, uxtw]
+    44a8:      	adrp	x12, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000044a8:  ARM64_RELOC_PAGE21	_gta_shared_init.km
+    44ac:      	add	x12, x12, #0x0
+		00000000000044ac:  ARM64_RELOC_PAGEOFF12	_gta_shared_init.km
+    44b0:      	lsl	x13, x8, #2
+    44b4:      	add	x8, x8, #0xe
+    44b8:      	add	x14, x13, x11
+    44bc:      	orr	x16, x13, #0x4
+    44c0:      	subs	x10, x10, #0xe
+    44c4:      	ldr	w15, [x12, x13]
+    44c8:      	str	w15, [x0, x14]
+    44cc:      	add	x15, x16, x11
+    44d0:      	ldr	w14, [x12, x16]
+    44d4:      	add	x16, x13, #0x8
+    44d8:      	str	w14, [x0, x15]
+    44dc:      	add	x15, x16, x11
+    44e0:      	ldr	w14, [x12, x16]
+    44e4:      	add	x16, x13, #0xc
+    44e8:      	str	w14, [x0, x15]
+    44ec:      	add	x15, x16, x11
+    44f0:      	ldr	w14, [x12, x16]
+    44f4:      	add	x16, x13, #0x10
+    44f8:      	str	w14, [x0, x15]
+    44fc:      	add	x15, x16, x11
+    4500:      	ldr	w14, [x12, x16]
+    4504:      	add	x16, x13, #0x14
+    4508:      	str	w14, [x0, x15]
+    450c:      	add	x15, x16, x11
+    4510:      	ldr	w14, [x12, x16]
+    4514:      	add	x16, x13, #0x18
+    4518:      	str	w14, [x0, x15]
+    451c:      	add	x15, x16, x11
+    4520:      	ldr	w14, [x12, x16]
+    4524:      	add	x16, x13, #0x1c
+    4528:      	str	w14, [x0, x15]
+    452c:      	add	x15, x16, x11
+    4530:      	ldr	w14, [x12, x16]
+    4534:      	add	x16, x13, #0x20
+    4538:      	str	w14, [x0, x15]
+    453c:      	add	x15, x16, x11
+    4540:      	ldr	w14, [x12, x16]
+    4544:      	add	x16, x13, #0x24
+    4548:      	str	w14, [x0, x15]
+    454c:      	add	x15, x16, x11
+    4550:      	ldr	w14, [x12, x16]
+    4554:      	add	x16, x13, #0x28
+    4558:      	str	w14, [x0, x15]
+    455c:      	add	x15, x16, x11
+    4560:      	ldr	w14, [x12, x16]
+    4564:      	add	x16, x13, #0x2c
+    4568:      	str	w14, [x0, x15]
+    456c:      	add	x15, x16, x11
+    4570:      	ldr	w14, [x12, x16]
+    4574:      	add	x16, x13, #0x30
+    4578:      	add	x13, x13, #0x34
+    457c:      	str	w14, [x0, x15]
+    4580:      	add	x15, x16, x11
+    4584:      	ldr	w14, [x12, x16]
+    4588:      	str	w14, [x0, x15]
+    458c:      	ldr	w14, [x12, x13]
+    4590:      	add	x13, x13, x11
+    4594:      	str	w14, [x0, x13]
+    4598:      	b.ne	0x44b0 <_gta_shared_init+0x1fb0>
+    459c:      	mov	w8, #0x1097             ; =4247
+    45a0:      	mov	w11, #0x4               ; =4
+    45a4:      	add	w10, w9, w8
+    45a8:      	sub	w8, w9, #0x200, lsl #12 ; =0x200000
+    45ac:      	and	w10, w10, #0xfffff000
+    45b0:      	add	x12, x0, x8
+    45b4:      	movk	w11, #0xffe0, lsl #16
+    45b8:      	add	w16, w9, w11
+    45bc:      	orr	w9, w9, #0x40000000
+    45c0:      	add	w11, w16, #0x4
+    45c4:      	str	w10, [x19]
+		00000000000045c4:  ARM64_RELOC_PAGEOFF12	_gs_next
+    45c8:      	add	w13, w16, #0x8
+    45cc:      	str	wzr, [x12]
+    45d0:      	add	x12, x0, x11
+    45d4:      	add	w14, w16, #0xc
+    45d8:      	add	w10, w16, #0x10
+    45dc:      	add	x15, x0, x13
+    45e0:      	add	x17, x0, x14
+    45e4:      	add	x1, x0, x10
+    45e8:      	str	wzr, [x0, w16, uxtw]
+    45ec:      	add	w2, w16, #0x18
+    45f0:      	str	wzr, [x12]
+    45f4:      	add	w12, w16, #0x14
+    45f8:      	str	wzr, [x15]
+    45fc:      	add	w15, w16, #0x1c
+    4600:      	str	wzr, [x17]
+    4604:      	add	w17, w16, #0x20
+    4608:      	str	wzr, [x1]
+    460c:      	add	x1, x0, x12
+    4610:      	add	x3, x0, x15
+    4614:      	str	wzr, [x1]
+    4618:      	add	x1, x0, x17
+    461c:      	str	wzr, [x0, w2, uxtw]
+    4620:      	add	w2, w16, #0x24
+    4624:      	str	wzr, [x3]
+    4628:      	add	w3, w16, #0x28
+    462c:      	str	wzr, [x1]
+    4630:      	add	w1, w16, #0x2c
+    4634:      	str	wzr, [x0, w2, uxtw]
+    4638:      	add	w2, w16, #0x30
+    463c:      	str	wzr, [x0, w3, uxtw]
+    4640:      	add	w3, w16, #0x34
+    4644:      	str	wzr, [x0, w1, uxtw]
+    4648:      	add	w1, w16, #0x38
+    464c:      	str	wzr, [x0, w2, uxtw]
+    4650:      	add	w2, w16, #0x3c
+    4654:      	str	wzr, [x0, w3, uxtw]
+    4658:      	add	w3, w16, #0x40
+    465c:      	str	wzr, [x0, w1, uxtw]
+    4660:      	add	w1, w16, #0x44
+    4664:      	str	wzr, [x0, w2, uxtw]
+    4668:      	add	w2, w16, #0x48
+    466c:      	str	wzr, [x0, w3, uxtw]
+    4670:      	add	w3, w16, #0x4c
+    4674:      	str	wzr, [x0, w1, uxtw]
+    4678:      	add	w1, w16, #0x50
+    467c:      	str	wzr, [x0, w2, uxtw]
+    4680:      	add	w2, w16, #0x54
+    4684:      	str	wzr, [x0, w3, uxtw]
+    4688:      	add	w3, w16, #0x58
+    468c:      	str	wzr, [x0, w1, uxtw]
+    4690:      	add	w1, w16, #0x5c
+    4694:      	str	wzr, [x0, w2, uxtw]
+    4698:      	add	w2, w16, #0x60
+    469c:      	str	wzr, [x0, w3, uxtw]
+    46a0:      	add	w3, w16, #0x64
+    46a4:      	str	wzr, [x0, w1, uxtw]
+    46a8:      	add	w1, w16, #0x68
+    46ac:      	str	wzr, [x0, w2, uxtw]
+    46b0:      	add	w2, w16, #0x6c
+    46b4:      	str	wzr, [x0, w3, uxtw]
+    46b8:      	add	w3, w16, #0x70
+    46bc:      	str	wzr, [x0, w1, uxtw]
+    46c0:      	add	w1, w16, #0x74
+    46c4:      	str	wzr, [x0, w2, uxtw]
+    46c8:      	add	w2, w16, #0x78
+    46cc:      	str	wzr, [x0, w3, uxtw]
+    46d0:      	add	w3, w16, #0x7c
+    46d4:      	str	wzr, [x0, w1, uxtw]
+    46d8:      	add	w1, w16, #0x80
+    46dc:      	str	wzr, [x0, w2, uxtw]
+    46e0:      	add	w2, w16, #0x84
+    46e4:      	str	wzr, [x0, w3, uxtw]
+    46e8:      	add	w3, w16, #0x88
+    46ec:      	str	wzr, [x0, w1, uxtw]
+    46f0:      	add	w1, w16, #0x8c
+    46f4:      	str	wzr, [x0, w2, uxtw]
+    46f8:      	mov	w2, #0x98               ; =152
+    46fc:      	movk	w2, #0x1df, lsl #16
+    4700:      	add	w16, w16, #0x90
+    4704:      	add	x2, x0, x2
+    4708:      	str	wzr, [x0, w3, uxtw]
+    470c:      	str	wzr, [x0, w1, uxtw]
+    4710:      	mov	w1, #0xf000             ; =61440
+    4714:      	str	wzr, [x0, w16, uxtw]
+    4718:      	mov	w0, #0xea60             ; =60000
+    471c:      	str	w9, [x2]
+    4720:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004720:  ARM64_RELOC_PAGE21	_gs
+    4724:      	ldr	x16, [x9]
+		0000000000004724:  ARM64_RELOC_PAGEOFF12	_gs
+    4728:      	movk	w1, #0x249, lsl #16
+    472c:      	mov	w2, #0x3                ; =3
+    4730:      	add	x8, x16, x8
+    4734:      	add	x9, x16, x11
+    4738:      	add	x11, x16, x13
+    473c:      	mov	w13, #0xa300            ; =41728
+    4740:      	movk	w13, #0x11e1, lsl #16
+    4744:      	add	x14, x16, x14
+    4748:      	str	w0, [x8]
+    474c:      	mov	w8, #0x1                ; =1
+    4750:      	add	x10, x16, x10
+    4754:      	str	w8, [x9]
+    4758:      	mov	w9, #0xb4               ; =180
+    475c:      	str	w13, [x11]
+    4760:      	add	x11, x16, x15
+    4764:      	str	w1, [x14]
+    4768:      	mov	w14, #-0x1              ; =-1
+    476c:      	add	x15, x16, x17
+    4770:      	mov	w17, #0x8480            ; =33920
+    4774:      	movk	w9, #0x1df, lsl #16
+    4778:      	movk	w17, #0x1e, lsl #16
+    477c:      	str	w14, [x11]
+    4780:      	add	x11, x16, x12
+    4784:      	add	x9, x16, x9
+    4788:      	str	w17, [x15]
+    478c:      	str	w2, [x10]
+    4790:      	mov	w10, #0x4               ; =4
+    4794:      	str	w2, [x11]
+    4798:      	movk	w10, #0x1dd, lsl #16
+    479c:      	str	w13, [x9]
+    47a0:      	add	x10, x16, x10
+    47a4:      	str	w1, [x9, #0x4]
+    47a8:      	str	w0, [x9, #0x8]
+    47ac:      	str	w8, [x9, #0x94]
+    47b0:      	adrp	x11, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000047b0:  ARM64_RELOC_PAGE21	_gta_s1_coremem
+    47b4:      	ldrb	w11, [x11]
+		00000000000047b4:  ARM64_RELOC_PAGEOFF12	_gta_s1_coremem
+    47b8:      	tbz	w11, #0x0, 0x47d0 <_gta_shared_init+0x22d0>
+    47bc:      	mov	w11, #0xc000            ; =49152
+    47c0:      	mov	w12, #0xe1              ; =225
+    47c4:      	movk	w11, #0xc013, lsl #16
+    47c8:      	str	w11, [x9, #0x9c]
+    47cc:      	str	w12, [x9, #0xa0]
+    47d0:      	str	w8, [x10]
+    47d4:      	adrp	x0, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000047d4:  ARM64_RELOC_PAGE21	l_.str.87
+    47d8:      	add	x0, x0, #0x0
+		00000000000047d8:  ARM64_RELOC_PAGEOFF12	l_.str.87
+    47dc:      	dsb	sy
+    47e0:      	ldr	w8, [x19]
+		00000000000047e0:  ARM64_RELOC_PAGEOFF12	_gs_next
+    47e4:      	str	x8, [sp]
+    47e8:      	bl	0x47e8 <_gta_shared_init+0x22e8>
+		00000000000047e8:  ARM64_RELOC_BRANCH26	_printf
+    47ec:      	ldr	w8, [x19]
+		00000000000047ec:  ARM64_RELOC_PAGEOFF12	_gs_next
+    47f0:      	mov	w9, #0x1                ; =1
+    47f4:      	movk	w9, #0x1fd, lsl #16
+    47f8:      	cmp	w8, w9
+    47fc:      	b.lo	0x4868 <_gta_shared_init+0x2368>
+    4800:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004800:  ARM64_RELOC_PAGE21	_aoc_stop_reason
+    4804:      	ldr	x8, [x8]
+		0000000000004804:  ARM64_RELOC_PAGEOFF12	_aoc_stop_reason
+    4808:      	cbnz	x8, 0x4854 <_gta_shared_init+0x2354>
+    480c:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000480c:  ARM64_RELOC_PAGE21	l_.str.88
+    4810:      	add	x8, x8, #0x0
+		0000000000004810:  ARM64_RELOC_PAGEOFF12	l_.str.88
+    4814:      	b	0x482c <_gta_shared_init+0x232c>
+    4818:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004818:  ARM64_RELOC_PAGE21	_aoc_stop_reason
+    481c:      	ldr	x8, [x8]
+		000000000000481c:  ARM64_RELOC_PAGEOFF12	_aoc_stop_reason
+    4820:      	cbnz	x8, 0x4854 <_gta_shared_init+0x2354>
+    4824:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004824:  ARM64_RELOC_PAGE21	l_.str.86
+    4828:      	add	x8, x8, #0x0
+		0000000000004828:  ARM64_RELOC_PAGEOFF12	l_.str.86
+    482c:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000482c:  ARM64_RELOC_ADDEND	0x160
+		000000000000482c:  ARM64_RELOC_PAGE21	_aoc
+    4830:      	add	x9, x9, #0x0
+		0000000000004830:  ARM64_RELOC_ADDEND	0x160
+		0000000000004830:  ARM64_RELOC_PAGEOFF12	_aoc
+    4834:      	adrp	x0, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004834:  ARM64_RELOC_PAGE21	l_.str.38
+    4838:      	add	x0, x0, #0x0
+		0000000000004838:  ARM64_RELOC_PAGEOFF12	l_.str.38
+    483c:      	adrp	x11, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000483c:  ARM64_RELOC_PAGE21	_aoc_stop_reason
+    4840:      	str	x8, [x11]
+		0000000000004840:  ARM64_RELOC_PAGEOFF12	_aoc_stop_reason
+    4844:      	ldp	w10, w9, [x9]
+    4848:      	str	x8, [sp]
+    484c:      	stp	x10, x9, [sp, #0x8]
+    4850:      	bl	0x4850 <_gta_shared_init+0x2350>
+		0000000000004850:  ARM64_RELOC_BRANCH26	_printf
+    4854:      	mov	w8, #0x1                ; =1
+    4858:      	mov	w0, #-0x1               ; =-1
+    485c:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000485c:  ARM64_RELOC_ADDEND	0x13c
+		000000000000485c:  ARM64_RELOC_PAGE21	_aoc
+    4860:      	strb	w8, [x9]
+		0000000000004860:  ARM64_RELOC_ADDEND	0x13c
+		0000000000004860:  ARM64_RELOC_PAGEOFF12	_aoc
+    4864:      	b	0x486c <_gta_shared_init+0x236c>
+    4868:      	mov	w0, wzr
+    486c:      	ldp	x29, x30, [sp, #0x1a0]
+    4870:      	ldp	x20, x19, [sp, #0x190]
+    4874:      	ldp	x22, x21, [sp, #0x180]
+    4878:      	ldp	x24, x23, [sp, #0x170]
+    487c:      	ldp	x26, x25, [sp, #0x160]
+    4880:      	ldp	x28, x27, [sp, #0x150]
+    4884:      	add	sp, sp, #0x1b0
+    4888:      	ret
+    488c:      	nop
+
+0000000000004890 <_gta_s1_coremem_check>:
+    4890:      	sub	sp, sp, #0x60
+    4894:      	stp	x22, x21, [sp, #0x30]
+    4898:      	stp	x20, x19, [sp, #0x40]
+    489c:      	stp	x29, x30, [sp, #0x50]
+    48a0:      	add	x29, sp, #0x50
+    48a4:      	dsb	sy
+    48a8:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000048a8:  ARM64_RELOC_PAGE21	_gs
+    48ac:      	ldr	x8, [x8]
+		00000000000048ac:  ARM64_RELOC_PAGEOFF12	_gs
+    48b0:      	mov	w9, #0x150              ; =336
+    48b4:      	movk	w9, #0x1df, lsl #16
+    48b8:      	mov	x21, #0xc000            ; =49152
+    48bc:      	movk	x21, #0xc013, lsl #16
+    48c0:      	cmp	w0, #0x7
+    48c4:      	add	x9, x8, x9
+    48c8:      	movk	x21, #0xe1, lsl #32
+    48cc:      	csel	x19, x21, xzr, eq
+    48d0:      	ldr	w8, [x9]
+    48d4:      	ldr	w9, [x9, #0x4]
+    48d8:      	orr	x20, x8, x9, lsl #32
+    48dc:      	b.ne	0x4948 <_gta_s1_coremem_check+0xb8>
+    48e0:      	mov	w11, #0xc000            ; =49152
+    48e4:      	sub	x10, x21, #0x13c, lsl #12 ; =0x13c000
+    48e8:      	movk	w11, #0x13, lsl #16
+    48ec:      	adrp	x0, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000048ec:  ARM64_RELOC_PAGE21	l_.str.89
+    48f0:      	add	x0, x0, #0x0
+		00000000000048f0:  ARM64_RELOC_PAGEOFF12	l_.str.89
+    48f4:      	mov	w12, #0x150             ; =336
+    48f8:      	stp	x21, x8, [sp, #0x18]
+    48fc:      	str	x9, [sp, #0x28]
+    4900:      	stp	x10, x11, [sp, #0x8]
+    4904:      	str	x12, [sp]
+    4908:      	bl	0x4908 <_gta_s1_coremem_check+0x78>
+		0000000000004908:  ARM64_RELOC_BRANCH26	_printf
+    490c:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000490c:  ARM64_RELOC_PAGE21	l_.str.92
+    4910:      	add	x8, x8, #0x0
+		0000000000004910:  ARM64_RELOC_PAGEOFF12	l_.str.92
+    4914:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004914:  ARM64_RELOC_PAGE21	l_.str.91
+    4918:      	add	x9, x9, #0x0
+		0000000000004918:  ARM64_RELOC_PAGEOFF12	l_.str.91
+    491c:      	cmp	x20, x21
+    4920:      	mov	w10, #0xc000            ; =49152
+    4924:      	csel	x8, x9, x8, eq
+    4928:      	mov	w9, #0xc000             ; =49152
+    492c:      	movk	w9, #0xba03, lsl #16
+    4930:      	movk	w10, #0xc013, lsl #16
+    4934:      	adrp	x0, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004934:  ARM64_RELOC_PAGE21	l_.str.90
+    4938:      	add	x0, x0, #0x0
+		0000000000004938:  ARM64_RELOC_PAGEOFF12	l_.str.90
+    493c:      	stp	x9, x8, [sp, #0x10]
+    4940:      	stp	x21, x10, [sp]
+    4944:      	b	0x495c <_gta_s1_coremem_check+0xcc>
+    4948:      	adrp	x0, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004948:  ARM64_RELOC_PAGE21	l_.str.93
+    494c:      	add	x0, x0, #0x0
+		000000000000494c:  ARM64_RELOC_PAGEOFF12	l_.str.93
+    4950:      	mov	w10, #0x150             ; =336
+    4954:      	stp	x8, x9, [sp, #0x8]
+    4958:      	str	x10, [sp]
+    495c:      	bl	0x495c <_gta_s1_coremem_check+0xcc>
+		000000000000495c:  ARM64_RELOC_BRANCH26	_printf
+    4960:      	cmp	x20, x19
+    4964:      	b.ne	0x4970 <_gta_s1_coremem_check+0xe0>
+    4968:      	mov	w0, wzr
+    496c:      	b	0x49b8 <_gta_s1_coremem_check+0x128>
+    4970:      	adrp	x8, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004970:  ARM64_RELOC_PAGE21	_aoc_stop_reason
+    4974:      	ldr	x9, [x8]
+		0000000000004974:  ARM64_RELOC_PAGEOFF12	_aoc_stop_reason
+    4978:      	cbnz	x9, 0x49a8 <_gta_s1_coremem_check+0x118>
+    497c:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000497c:  ARM64_RELOC_ADDEND	0x160
+		000000000000497c:  ARM64_RELOC_PAGE21	_aoc
+    4980:      	add	x9, x9, #0x0
+		0000000000004980:  ARM64_RELOC_ADDEND	0x160
+		0000000000004980:  ARM64_RELOC_PAGEOFF12	_aoc
+    4984:      	adrp	x11, 0x4000 <_gta_shared_init+0x1b00>
+		0000000000004984:  ARM64_RELOC_PAGE21	l_.str.94
+    4988:      	add	x11, x11, #0x0
+		0000000000004988:  ARM64_RELOC_PAGEOFF12	l_.str.94
+    498c:      	adrp	x0, 0x4000 <_gta_shared_init+0x1b00>
+		000000000000498c:  ARM64_RELOC_PAGE21	l_.str.38
+    4990:      	add	x0, x0, #0x0
+		0000000000004990:  ARM64_RELOC_PAGEOFF12	l_.str.38
+    4994:      	ldp	w10, w9, [x9]
+    4998:      	str	x11, [x8]
+		0000000000004998:  ARM64_RELOC_PAGEOFF12	_aoc_stop_reason
+    499c:      	str	x11, [sp]
+    49a0:      	stp	x10, x9, [sp, #0x8]
+    49a4:      	bl	0x49a4 <_gta_s1_coremem_check+0x114>
+		00000000000049a4:  ARM64_RELOC_BRANCH26	_printf
+    49a8:      	mov	w8, #0x1                ; =1
+    49ac:      	mov	w0, #-0x1               ; =-1
+    49b0:      	adrp	x9, 0x4000 <_gta_shared_init+0x1b00>
+		00000000000049b0:  ARM64_RELOC_ADDEND	0x13c
+		00000000000049b0:  ARM64_RELOC_PAGE21	_aoc
+    49b4:      	strb	w8, [x9]
+		00000000000049b4:  ARM64_RELOC_ADDEND	0x13c
+		00000000000049b4:  ARM64_RELOC_PAGEOFF12	_aoc
+    49b8:      	ldp	x29, x30, [sp, #0x50]
+    49bc:      	ldp	x20, x19, [sp, #0x40]
+    49c0:      	ldp	x22, x21, [sp, #0x30]
+    49c4:      	add	sp, sp, #0x60
+    49c8:      	ret
+    49cc:      	nop
+
+0000000000006660 <_gta_s1_gate>:
+    6660:      	sub	sp, sp, #0x110
+    6664:      	stp	x28, x27, [sp, #0xb0]
+    6668:      	stp	x26, x25, [sp, #0xc0]
+    666c:      	stp	x24, x23, [sp, #0xd0]
+    6670:      	stp	x22, x21, [sp, #0xe0]
+    6674:      	stp	x20, x19, [sp, #0xf0]
+    6678:      	stp	x29, x30, [sp, #0x100]
+    667c:      	add	x29, sp, #0x100
+    6680:      	mov	w20, #0x4               ; =4
+    6684:      	mov	x27, x0
+    6688:      	movk	w20, #0xffe0, lsl #16
+    668c:      	adrp	x19, 0x6000 <_aoc_send+0xc0>
+		000000000000668c:  ARM64_RELOC_PAGE21	_gsh.7
+    6690:      	ldr	w9, [x19]
+		0000000000006690:  ARM64_RELOC_PAGEOFF12	_gsh.7
+    6694:      	adrp	x8, 0x6000 <_aoc_send+0xc0>
+		0000000000006694:  ARM64_RELOC_PAGE21	_gsh.6
+    6698:      	ldr	w21, [x8]
+		0000000000006698:  ARM64_RELOC_PAGEOFF12	_gsh.6
+    669c:      	adrp	x22, 0x6000 <_aoc_send+0xc0>
+		000000000000669c:  ARM64_RELOC_PAGE21	_gs
+    66a0:      	cbz	w9, 0x6708 <_gta_s1_gate+0xa8>
+    66a4:      	sub	w10, w21, #0x200, lsl #12 ; =0x200000
+    66a8:      	ldr	x8, [x22]
+		00000000000066a8:  ARM64_RELOC_PAGEOFF12	_gs
+    66ac:      	mov	w11, #0xc62f            ; =50735
+    66b0:      	ldr	w10, [x8, w10, uxtw]
+    66b4:      	cmp	w10, w11
+    66b8:      	b.ne	0x66fc <_gta_s1_gate+0x9c>
+    66bc:      	add	w10, w20, w21
+    66c0:      	mov	w12, #0x2ee0            ; =12000
+    66c4:      	add	w11, w10, #0x1ac
+    66c8:      	ldr	w11, [x8, w11, uxtw]
+    66cc:      	cmp	w11, w12
+    66d0:      	b.ne	0x66fc <_gta_s1_gate+0x9c>
+    66d4:      	add	w10, w10, #0xc
+    66d8:      	orr	w9, w9, #0x40000000
+    66dc:      	ldr	w10, [x8, w10, uxtw]
+    66e0:      	cmp	w10, w9
+    66e4:      	b.ne	0x66fc <_gta_s1_gate+0x9c>
+    66e8:      	add	w9, w20, w21
+    66ec:      	add	w23, w9, #0x8
+    66f0:      	add	x10, x8, x23
+    66f4:      	ldr	w10, [x10]
+    66f8:      	cbz	w10, 0x6b9c <_gta_s1_gate+0x53c>
+    66fc:      	mov	w8, wzr
+    6700:      	mov	w9, wzr
+    6704:      	b	0x670c <_gta_s1_gate+0xac>
+    6708:      	mov	w8, wzr
+    670c:      	mov	w10, wzr
+    6710:      	mov	w11, wzr
+    6714:      	mov	w0, wzr
+    6718:      	mov	w13, wzr
+    671c:      	mov	w14, wzr
+    6720:      	mov	w28, wzr
+    6724:      	mov	w15, wzr
+    6728:      	dsb	sy
+    672c:      	adrp	x12, 0x6000 <_aoc_send+0xc0>
+		000000000000672c:  ARM64_RELOC_PAGE21	_gsh.5
+    6730:      	ldr	w12, [x12]
+		0000000000006730:  ARM64_RELOC_PAGEOFF12	_gsh.5
+    6734:      	ldr	x6, [x22]
+		0000000000006734:  ARM64_RELOC_PAGEOFF12	_gs
+    6738:      	add	w12, w20, w12
+    673c:      	add	w16, w12, #0xdac
+    6740:      	add	w12, w12, #0xde4
+    6744:      	ldr	w17, [x6, w16, uxtw]
+    6748:      	ldr	w16, [x6, w12, uxtw]
+    674c:      	cbnz	w0, 0x676c <_gta_s1_gate+0x10c>
+    6750:      	add	w12, w20, w21
+    6754:      	add	w0, w12, #0x14
+    6758:      	ldr	w0, [x6, w0, uxtw]
+    675c:      	cbnz	w0, 0x676c <_gta_s1_gate+0x10c>
+    6760:      	add	w12, w12, #0xdc
+    6764:      	ldr	w12, [x6, w12, uxtw]
+    6768:      	cbz	w12, 0x6aac <_gta_s1_gate+0x44c>
+    676c:      	mov	w1, wzr
+    6770:      	adrp	x12, 0x6000 <_aoc_send+0xc0>
+		0000000000006770:  ARM64_RELOC_PAGE21	_gsh.3
+    6774:      	ldr	w12, [x12]
+		0000000000006774:  ARM64_RELOC_PAGEOFF12	_gsh.3
+    6778:      	sub	w0, w12, #0x200, lsl #12 ; =0x200000
+    677c:      	add	w12, w12, w20
+    6780:      	ldr	w0, [x6, w0, uxtw]
+    6784:      	ldr	w2, [x6, w12, uxtw]
+    6788:      	cmp	w0, #0x1f
+    678c:      	ccmp	w2, #0x1f, #0x2, ls
+    6790:      	sub	w12, w0, w2
+    6794:      	and	w12, w12, #0x1f
+    6798:      	cset	w3, hi
+    679c:      	cmp	w3, #0x0
+    67a0:      	csel	w4, wzr, w12, ne
+    67a4:      	cbz	w4, 0x6828 <_gta_s1_gate+0x1c8>
+    67a8:      	adrp	x12, 0x6000 <_aoc_send+0xc0>
+		00000000000067a8:  ARM64_RELOC_PAGE21	_gsh.4
+    67ac:      	ldr	w12, [x12]
+		00000000000067ac:  ARM64_RELOC_PAGEOFF12	_gsh.4
+    67b0:      	stp	x28, x13, [x29, #-0x68]
+    67b4:      	mov	x13, x27
+    67b8:      	and	w20, w4, #0x3
+    67bc:      	cmp	w4, #0x4
+    67c0:      	sub	w7, w12, #0x200, lsl #12 ; =0x200000
+    67c4:      	b.hs	0x6830 <_gta_s1_gate+0x1d0>
+    67c8:      	mov	w21, wzr
+    67cc:      	mov	w5, wzr
+    67d0:      	mov	x27, x13
+    67d4:      	ldp	x28, x13, [x29, #-0x68]
+    67d8:      	cbz	w20, 0x6ae8 <_gta_s1_gate+0x488>
+    67dc:      	add	w12, w21, w2
+    67e0:      	mov	w19, #0x70              ; =112
+    67e4:      	and	w12, w12, #0x1f
+    67e8:      	madd	w12, w12, w19, w7
+    67ec:      	ldr	w19, [x6, w12, uxtw]
+    67f0:      	mov	w12, #0x6c              ; =108
+    67f4:      	movk	w12, #0x2abc, lsl #16
+    67f8:      	cmp	w19, w12
+    67fc:      	b.gt	0x69b4 <_gta_s1_gate+0x354>
+    6800:      	mov	w12, #0x69              ; =105
+    6804:      	movk	w12, #0x2abc, lsl #16
+    6808:      	cmp	w19, w12
+    680c:      	b.eq	0x69d4 <_gta_s1_gate+0x374>
+    6810:      	mov	w12, #0x6a              ; =106
+    6814:      	movk	w12, #0x2abc, lsl #16
+    6818:      	cmp	w19, w12
+    681c:      	b.ne	0x69d8 <_gta_s1_gate+0x378>
+    6820:      	add	w5, w5, #0x1
+    6824:      	b	0x69d8 <_gta_s1_gate+0x378>
+    6828:      	mov	w5, wzr
+    682c:      	b	0x6ae8 <_gta_s1_gate+0x488>
+    6830:      	mov	w24, #0x6c              ; =108
+    6834:      	mov	w25, #0x69              ; =105
+    6838:      	mov	w26, #0x6a              ; =106
+    683c:      	mov	w27, #0x70              ; =112
+    6840:      	mov	w28, #0x6d              ; =109
+    6844:      	mov	w21, wzr
+    6848:      	mov	w5, wzr
+    684c:      	and	w22, w4, #0x1c
+    6850:      	mov	w23, #0x70              ; =112
+    6854:      	movk	w24, #0x2abc, lsl #16
+    6858:      	movk	w25, #0x2abc, lsl #16
+    685c:      	movk	w26, #0x2abc, lsl #16
+    6860:      	movk	w27, #0x2abc, lsl #16
+    6864:      	movk	w28, #0x2abc, lsl #16
+    6868:      	mov	w19, w2
+    686c:      	b	0x6884 <_gta_s1_gate+0x224>
+    6870:      	add	w3, w3, #0x1
+    6874:      	add	w21, w21, #0x4
+    6878:      	add	w19, w19, #0x4
+    687c:      	cmp	w22, w21
+    6880:      	b.eq	0x67d0 <_gta_s1_gate+0x170>
+    6884:      	and	w12, w19, #0x1f
+    6888:      	mul	w12, w12, w23
+    688c:      	add	w12, w12, w7
+    6890:      	ldr	w12, [x6, w12, uxtw]
+    6894:      	cmp	w12, w24
+    6898:      	b.gt	0x68b4 <_gta_s1_gate+0x254>
+    689c:      	cmp	w12, w25
+    68a0:      	b.eq	0x68c0 <_gta_s1_gate+0x260>
+    68a4:      	cmp	w12, w26
+    68a8:      	b.ne	0x68c4 <_gta_s1_gate+0x264>
+    68ac:      	add	w5, w5, #0x1
+    68b0:      	b	0x68c4 <_gta_s1_gate+0x264>
+    68b4:      	cmp	w12, w28
+    68b8:      	ccmp	w12, w27, #0x4, ne
+    68bc:      	b.ne	0x68c4 <_gta_s1_gate+0x264>
+    68c0:      	add	w3, w3, #0x1
+    68c4:      	add	w12, w19, #0x1
+    68c8:      	and	w12, w12, #0x1f
+    68cc:      	mul	w12, w12, w23
+    68d0:      	add	w12, w12, w7
+    68d4:      	ldr	w12, [x6, w12, uxtw]
+    68d8:      	cmp	w12, w24
+    68dc:      	b.gt	0x6900 <_gta_s1_gate+0x2a0>
+    68e0:      	cmp	w12, w25
+    68e4:      	b.eq	0x6910 <_gta_s1_gate+0x2b0>
+    68e8:      	cmp	w12, w26
+    68ec:      	b.ne	0x6914 <_gta_s1_gate+0x2b4>
+    68f0:      	add	w5, w5, #0x1
+    68f4:      	b	0x6914 <_gta_s1_gate+0x2b4>
+    68f8:      	nop
+    68fc:      	nop
+    6900:      	cmp	w12, w27
+    6904:      	b.eq	0x6910 <_gta_s1_gate+0x2b0>
+    6908:      	cmp	w12, w28
+    690c:      	b.ne	0x6914 <_gta_s1_gate+0x2b4>
+    6910:      	add	w3, w3, #0x1
+    6914:      	add	w12, w19, #0x2
+    6918:      	and	w12, w12, #0x1f
+    691c:      	mul	w12, w12, w23
+    6920:      	add	w12, w12, w7
+    6924:      	ldr	w12, [x6, w12, uxtw]
+    6928:      	cmp	w12, w24
+    692c:      	b.gt	0x6950 <_gta_s1_gate+0x2f0>
+    6930:      	cmp	w12, w25
+    6934:      	b.eq	0x6960 <_gta_s1_gate+0x300>
+    6938:      	cmp	w12, w26
+    693c:      	b.ne	0x6964 <_gta_s1_gate+0x304>
+    6940:      	add	w5, w5, #0x1
+    6944:      	b	0x6964 <_gta_s1_gate+0x304>
+    6948:      	nop
+    694c:      	nop
+    6950:      	cmp	w12, w27
+    6954:      	b.eq	0x6960 <_gta_s1_gate+0x300>
+    6958:      	cmp	w12, w28
+    695c:      	b.ne	0x6964 <_gta_s1_gate+0x304>
+    6960:      	add	w3, w3, #0x1
+    6964:      	add	w12, w19, #0x3
+    6968:      	and	w12, w12, #0x1f
+    696c:      	mul	w12, w12, w23
+    6970:      	add	w12, w12, w7
+    6974:      	ldr	w12, [x6, w12, uxtw]
+    6978:      	cmp	w12, w24
+    697c:      	b.gt	0x69a0 <_gta_s1_gate+0x340>
+    6980:      	cmp	w12, w25
+    6984:      	b.eq	0x6870 <_gta_s1_gate+0x210>
+    6988:      	cmp	w12, w26
+    698c:      	b.ne	0x6874 <_gta_s1_gate+0x214>
+    6990:      	add	w5, w5, #0x1
+    6994:      	b	0x6874 <_gta_s1_gate+0x214>
+    6998:      	nop
+    699c:      	nop
+    69a0:      	cmp	w12, w27
+    69a4:      	b.eq	0x6870 <_gta_s1_gate+0x210>
+    69a8:      	cmp	w12, w28
+    69ac:      	b.eq	0x6870 <_gta_s1_gate+0x210>
+    69b0:      	b	0x6874 <_gta_s1_gate+0x214>
+    69b4:      	mov	w12, #0x70              ; =112
+    69b8:      	movk	w12, #0x2abc, lsl #16
+    69bc:      	cmp	w19, w12
+    69c0:      	b.eq	0x69d4 <_gta_s1_gate+0x374>
+    69c4:      	mov	w12, #0x6d              ; =109
+    69c8:      	movk	w12, #0x2abc, lsl #16
+    69cc:      	cmp	w19, w12
+    69d0:      	b.ne	0x69d8 <_gta_s1_gate+0x378>
+    69d4:      	add	w3, w3, #0x1
+    69d8:      	cmp	w20, #0x1
+    69dc:      	b.eq	0x6ae8 <_gta_s1_gate+0x488>
+    69e0:      	add	w12, w21, w2
+    69e4:      	mov	w19, #0x70              ; =112
+    69e8:      	add	w12, w12, #0x1
+    69ec:      	and	w12, w12, #0x1f
+    69f0:      	madd	w12, w12, w19, w7
+    69f4:      	ldr	w19, [x6, w12, uxtw]
+    69f8:      	mov	w12, #0x6c              ; =108
+    69fc:      	movk	w12, #0x2abc, lsl #16
+    6a00:      	cmp	w19, w12
+    6a04:      	b.gt	0x6a30 <_gta_s1_gate+0x3d0>
+    6a08:      	mov	w12, #0x69              ; =105
+    6a0c:      	movk	w12, #0x2abc, lsl #16
+    6a10:      	cmp	w19, w12
+    6a14:      	b.eq	0x6a50 <_gta_s1_gate+0x3f0>
+    6a18:      	mov	w12, #0x6a              ; =106
+    6a1c:      	movk	w12, #0x2abc, lsl #16
+    6a20:      	cmp	w19, w12
+    6a24:      	b.ne	0x6a54 <_gta_s1_gate+0x3f4>
+    6a28:      	add	w5, w5, #0x1
+    6a2c:      	b	0x6a54 <_gta_s1_gate+0x3f4>
+    6a30:      	mov	w12, #0x70              ; =112
+    6a34:      	movk	w12, #0x2abc, lsl #16
+    6a38:      	cmp	w19, w12
+    6a3c:      	b.eq	0x6a50 <_gta_s1_gate+0x3f0>
+    6a40:      	mov	w12, #0x6d              ; =109
+    6a44:      	movk	w12, #0x2abc, lsl #16
+    6a48:      	cmp	w19, w12
+    6a4c:      	b.ne	0x6a54 <_gta_s1_gate+0x3f4>
+    6a50:      	add	w3, w3, #0x1
+    6a54:      	cmp	w20, #0x2
+    6a58:      	b.eq	0x6ae8 <_gta_s1_gate+0x488>
+    6a5c:      	add	w12, w21, w2
+    6a60:      	mov	w19, #0x70              ; =112
+    6a64:      	add	w12, w12, #0x2
+    6a68:      	and	w12, w12, #0x1f
+    6a6c:      	madd	w12, w12, w19, w7
+    6a70:      	ldr	w6, [x6, w12, uxtw]
+    6a74:      	mov	w12, #0x6c              ; =108
+    6a78:      	movk	w12, #0x2abc, lsl #16
+    6a7c:      	cmp	w6, w12
+    6a80:      	b.gt	0x6ac4 <_gta_s1_gate+0x464>
+    6a84:      	mov	w12, #0x69              ; =105
+    6a88:      	movk	w12, #0x2abc, lsl #16
+    6a8c:      	cmp	w6, w12
+    6a90:      	b.eq	0x6ae4 <_gta_s1_gate+0x484>
+    6a94:      	mov	w12, #0x6a              ; =106
+    6a98:      	movk	w12, #0x2abc, lsl #16
+    6a9c:      	cmp	w6, w12
+    6aa0:      	b.ne	0x6ae8 <_gta_s1_gate+0x488>
+    6aa4:      	add	w5, w5, #0x1
+    6aa8:      	b	0x6ae8 <_gta_s1_gate+0x488>
+    6aac:      	add	w12, w20, w21
+    6ab0:      	add	w12, w12, #0x1a4
+    6ab4:      	ldr	w12, [x6, w12, uxtw]
+    6ab8:      	cmp	w12, #0x0
+    6abc:      	cset	w1, eq
+    6ac0:      	b	0x6770 <_gta_s1_gate+0x110>
+    6ac4:      	mov	w12, #0x70              ; =112
+    6ac8:      	movk	w12, #0x2abc, lsl #16
+    6acc:      	cmp	w6, w12
+    6ad0:      	b.eq	0x6ae4 <_gta_s1_gate+0x484>
+    6ad4:      	mov	w12, #0x6d              ; =109
+    6ad8:      	movk	w12, #0x2abc, lsl #16
+    6adc:      	cmp	w6, w12
+    6ae0:      	b.ne	0x6ae8 <_gta_s1_gate+0x488>
+    6ae4:      	add	w3, w3, #0x1
+    6ae8:      	cmp	w8, #0x0
+    6aec:      	orr	w20, w5, w11
+    6af0:      	csel	w7, wzr, w15, ne
+    6af4:      	cmp	w9, #0x0
+    6af8:      	csel	w7, wzr, w7, ne
+    6afc:      	cmp	w10, #0x0
+    6b00:      	csel	w7, wzr, w7, ne
+    6b04:      	cmp	w20, #0x0
+    6b08:      	csel	w7, wzr, w7, ne
+    6b0c:      	cmp	w17, #0x0
+    6b10:      	mov	w19, #0xeb              ; =235
+    6b14:      	csel	w7, wzr, w7, ne
+    6b18:      	and	w19, w16, w19
+    6b1c:      	and	w7, w7, w1
+    6b20:      	cmp	w3, #0x0
+    6b24:      	adrp	x12, 0x6000 <_aoc_send+0xc0>
+		0000000000006b24:  ARM64_RELOC_PAGE21	l_.str.157
+    6b28:      	add	x12, x12, #0x0
+		0000000000006b28:  ARM64_RELOC_PAGEOFF12	l_.str.157
+    6b2c:      	adrp	x6, 0x6000 <_aoc_send+0xc0>
+		0000000000006b2c:  ARM64_RELOC_PAGE21	l_.str.156
+    6b30:      	add	x6, x6, #0x0
+		0000000000006b30:  ARM64_RELOC_PAGEOFF12	l_.str.156
+    6b34:      	csel	w7, wzr, w7, ne
+    6b38:      	cmp	w19, #0x1
+    6b3c:      	stp	x0, x2, [sp, #0x70]
+    6b40:      	csel	x12, x6, x12, eq
+    6b44:      	adrp	x0, 0x6000 <_aoc_send+0xc0>
+		0000000000006b44:  ARM64_RELOC_PAGE21	l_.str.155
+    6b48:      	add	x0, x0, #0x0
+		0000000000006b48:  ARM64_RELOC_PAGEOFF12	l_.str.155
+    6b4c:      	stp	x4, x3, [sp, #0x80]
+    6b50:      	stp	x28, x13, [sp, #0x50]
+    6b54:      	csel	w19, wzr, w7, ne
+    6b58:      	stp	x15, x14, [sp, #0x40]
+    6b5c:      	stp	x5, x17, [sp, #0x28]
+    6b60:      	stp	x10, x11, [sp, #0x18]
+    6b64:      	stp	x8, x9, [sp, #0x8]
+    6b68:      	str	x27, [sp]
+    6b6c:      	str	x1, [sp, #0x38]
+    6b70:      	stp	x16, x12, [sp, #0x60]
+    6b74:      	bl	0x6b74 <_gta_s1_gate+0x514>
+		0000000000006b74:  ARM64_RELOC_BRANCH26	_printf
+    6b78:      	mov	w0, w19
+    6b7c:      	ldp	x29, x30, [sp, #0x100]
+    6b80:      	ldp	x20, x19, [sp, #0xf0]
+    6b84:      	ldp	x22, x21, [sp, #0xe0]
+    6b88:      	ldp	x24, x23, [sp, #0xd0]
+    6b8c:      	ldp	x26, x25, [sp, #0xc0]
+    6b90:      	ldp	x28, x27, [sp, #0xb0]
+    6b94:      	add	sp, sp, #0x110
+    6b98:      	ret
+    6b9c:      	add	w24, w9, #0x4
+    6ba0:      	mov	w26, #0x19              ; =25
+    6ba4:      	add	x8, x8, x24
+    6ba8:      	ldr	w25, [x8]
+    6bac:      	nop
+    6bb0:      	mov	w0, #0x14               ; =20
+    6bb4:      	bl	0x6bb4 <_gta_s1_gate+0x554>
+		0000000000006bb4:  ARM64_RELOC_BRANCH26	_IOSleep
+    6bb8:      	dsb	sy
+    6bbc:      	ldr	x15, [x22]
+		0000000000006bbc:  ARM64_RELOC_PAGEOFF12	_gs
+    6bc0:      	ldr	w16, [x15, x24]
+    6bc4:      	cmp	w16, w25
+    6bc8:      	b.eq	0x6c00 <_gta_s1_gate+0x5a0>
+    6bcc:      	mov	w8, wzr
+    6bd0:      	mov	w9, wzr
+    6bd4:      	mov	w10, wzr
+    6bd8:      	mov	w11, wzr
+    6bdc:      	mov	w0, wzr
+    6be0:      	mov	w13, wzr
+    6be4:      	mov	w14, wzr
+    6be8:      	mov	w28, wzr
+    6bec:      	mov	w15, wzr
+    6bf0:      	mov	w25, w16
+    6bf4:      	subs	w26, w26, #0x1
+    6bf8:      	b.ne	0x6bb0 <_gta_s1_gate+0x550>
+    6bfc:      	b	0x6728 <_gta_s1_gate+0xc8>
+    6c00:      	mov	w8, #-0x2ee1            ; =-12001
+    6c04:      	mov	w9, #-0x2ee0            ; =-12000
+    6c08:      	add	w8, w25, w8
+    6c0c:      	cmp	w8, w9
+    6c10:      	b.lo	0x66fc <_gta_s1_gate+0x9c>
+    6c14:      	ldr	w12, [x19]
+		0000000000006c14:  ARM64_RELOC_PAGEOFF12	_gsh.7
+    6c18:      	stur	x27, [x29, #-0x60]
+    6c1c:      	mov	w17, #0xb029            ; =45097
+    6c20:      	mov	w1, #0x1017             ; =4119
+    6c24:      	mov	w2, #0x104a             ; =4170
+    6c28:      	mov	w4, #0x1018             ; =4120
+    6c2c:      	mov	w6, #0xb00c             ; =45068
+    6c30:      	mov	w7, #0xb02a             ; =45098
+    6c34:      	mov	w26, #0xb00d            ; =45069
+    6c38:      	mov	w27, #0xb052            ; =45138
+    6c3c:      	mov	w19, #0xb051            ; =45137
+    6c40:      	mov	w28, wzr
+    6c44:      	mov	w13, wzr
+    6c48:      	mov	w8, wzr
+    6c4c:      	mov	w9, wzr
+    6c50:      	mov	w10, wzr
+    6c54:      	mov	w11, wzr
+    6c58:      	mov	w0, wzr
+    6c5c:      	mov	w14, wzr
+    6c60:      	sub	w16, w12, #0x200, lsl #12 ; =0x200000
+    6c64:      	movk	w17, #0x7001, lsl #16
+    6c68:      	movk	w1, #0x7001, lsl #16
+    6c6c:      	movk	w2, #0x7000, lsl #16
+    6c70:      	movk	w4, #0x7001, lsl #16
+    6c74:      	movk	w6, #0x7003, lsl #16
+    6c78:      	movk	w7, #0x7001, lsl #16
+    6c7c:      	movk	w26, #0x7003, lsl #16
+    6c80:      	movk	w27, #0x7004, lsl #16
+    6c84:      	movk	w19, #0x7003, lsl #16
+    6c88:      	b	0x6ca0 <_gta_s1_gate+0x640>
+    6c8c:      	add	w8, w8, #0x1
+    6c90:      	add	w28, w28, #0x1
+    6c94:      	mov	w14, w3
+    6c98:      	cmp	w3, w25
+    6c9c:      	b.hs	0x6d70 <_gta_s1_gate+0x710>
+    6ca0:      	add	w12, w16, w14, lsl #2
+    6ca4:      	ldr	w5, [x15, w12, uxtw]
+    6ca8:      	lsr	w12, w5, #20
+    6cac:      	cmp	w12, #0x700
+    6cb0:      	b.ne	0x6d68 <_gta_s1_gate+0x708>
+    6cb4:      	ubfx	w12, w5, #16, #4
+    6cb8:      	add	w12, w14, w12
+    6cbc:      	add	w3, w12, #0x3
+    6cc0:      	cmp	w3, w25
+    6cc4:      	b.hi	0x6d68 <_gta_s1_gate+0x708>
+    6cc8:      	cmp	w5, w17
+    6ccc:      	b.le	0x6cf4 <_gta_s1_gate+0x694>
+    6cd0:      	cmp	w5, w6
+    6cd4:      	b.le	0x6d30 <_gta_s1_gate+0x6d0>
+    6cd8:      	cmp	w5, w26
+    6cdc:      	b.eq	0x6d58 <_gta_s1_gate+0x6f8>
+    6ce0:      	cmp	w5, w27
+    6ce4:      	b.eq	0x6c8c <_gta_s1_gate+0x62c>
+    6ce8:      	cmp	w5, w19
+    6cec:      	b.eq	0x6c8c <_gta_s1_gate+0x62c>
+    6cf0:      	b	0x6d60 <_gta_s1_gate+0x700>
+    6cf4:      	cmp	w5, w1
+    6cf8:      	b.gt	0x6d10 <_gta_s1_gate+0x6b0>
+    6cfc:      	cmp	w5, w2
+    6d00:      	b.eq	0x6d28 <_gta_s1_gate+0x6c8>
+    6d04:      	mov	w12, #0x10c7            ; =4295
+    6d08:      	movk	w12, #0x7000, lsl #16
+    6d0c:      	b	0x6d20 <_gta_s1_gate+0x6c0>
+    6d10:      	cmp	w5, w4
+    6d14:      	b.eq	0x6d50 <_gta_s1_gate+0x6f0>
+    6d18:      	mov	w12, #0x10c5            ; =4293
+    6d1c:      	movk	w12, #0x7001, lsl #16
+    6d20:      	cmp	w5, w12
+    6d24:      	b.ne	0x6d60 <_gta_s1_gate+0x700>
+    6d28:      	add	w9, w9, #0x1
+    6d2c:      	b	0x6c90 <_gta_s1_gate+0x630>
+    6d30:      	cmp	w5, w7
+    6d34:      	b.eq	0x6c8c <_gta_s1_gate+0x62c>
+    6d38:      	mov	w12, #0xb03d            ; =45117
+    6d3c:      	movk	w12, #0x7001, lsl #16
+    6d40:      	cmp	w5, w12
+    6d44:      	b.ne	0x6d60 <_gta_s1_gate+0x700>
+    6d48:      	add	w11, w11, #0x1
+    6d4c:      	b	0x6c90 <_gta_s1_gate+0x630>
+    6d50:      	add	w0, w0, #0x1
+    6d54:      	b	0x6c90 <_gta_s1_gate+0x630>
+    6d58:      	add	w10, w10, #0x1
+    6d5c:      	b	0x6c90 <_gta_s1_gate+0x630>
+    6d60:      	add	w13, w13, #0x1
+    6d64:      	b	0x6c90 <_gta_s1_gate+0x630>
+    6d68:      	ldur	x27, [x29, #-0x60]
+    6d6c:      	b	0x6724 <_gta_s1_gate+0xc4>
+    6d70:      	dsb	sy
+    6d74:      	ldr	x12, [x22]
+		0000000000006d74:  ARM64_RELOC_PAGEOFF12	_gs
+    6d78:      	ldr	w14, [x12, x23]
+    6d7c:      	cbz	w14, 0x6d88 <_gta_s1_gate+0x728>
+    6d80:      	mov	w15, wzr
+    6d84:      	b	0x6d94 <_gta_s1_gate+0x734>
+    6d88:      	ldr	w12, [x12, x24]
+    6d8c:      	cmp	w12, w25
+    6d90:      	cset	w15, hs
+    6d94:      	ldur	x27, [x29, #-0x60]
+    6d98:      	mov	w14, w25
+    6d9c:      	b	0x6728 <_gta_s1_gate+0xc8>

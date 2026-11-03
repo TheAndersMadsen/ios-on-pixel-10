@@ -1,0 +1,1 @@
+cc: cc (GCC) 16.1.1 20260430; vendor: /data/hackios-gpu-ref/powervr

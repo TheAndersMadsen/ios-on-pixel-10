@@ -1,0 +1,17 @@
+# gpu2 manifest 556901efa0caba14513619fd80ba1978dbf97268b08e1c4f96bef6d0069d2832
+# gpu3 manifest eb6fc1bc2d23a31b3ed3162ea3ad1eeb409cd3a85ace596e57d0680e7d6717b0
+adt: a1b2de5b9e8cec10b530ee40e2dfedf8650e93b79ca81eab2c597deb6b3500f3 -> 35bfeea407617496cd2d72a6fafdc38b5fbd7b74296a299cbaab095b4b4c1ebe
+adt_facts.seed_sha256: ccc82b2a116a63c8a42d357ecfd0e8f5b4118275657a95e5ae7b47b031073586 -> 269e0c84e3390abc5c4f66177a27018caaa02dd5df0e4bc0dcd47e99961762a7
+cmdline: - ['blazer_gpu_tipc=6'] + ['blazer_gpu_tipc=7']; 1017 -> 1017 bytes; token order otherwise identical: True
+decode: python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-gpu2/manifest.json -> python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-gpu3/manifest.json
+epoch: 1793734569 -> 1793748595
+ids.epoch: 0x2f2c8effe4 -> 0x2f2c8f1f1d
+ids.record_nonce: 2ceb9e3415edd56dc1ec2651360fdee9 -> 378b933d404e1033a25dc567fcd376d8
+ids.stamp_nonce: 0x8ec8b39df9ea2563 -> 0x333157606c1ee709
+image: 6dc9b62798903c9c8f18592b878ca7bd485e41e8ec2d074e49282b03b36641e7 -> 42e36c1f08f0b30763c9119444c22a812c112c999f61e23b2184648cd8b75a7e
+mach: 039204c0b23201b76d99e6c99d5465fe5274600537a91e665ff52e2b8911faaf -> 4462f88675dbf310076064e89888ae77cbc736ed8f6a573098bade763ab2bfa3
+margin_bytes: 40122848 -> 40122720
+name: a7-ios-system-gpu2 -> a7-ios-system-gpu3
+payload: 4d860e7d9fb2e55ff78fb85533bf8de30c6414b2c787b15c02503772d7a334f4 -> 5c2d6ed9d5b66bee0a0dfc278e93b3d4ec8ce009bf4860bcfc0266764dffc3f7
+payload_bytes: 25937440 -> 25937568
+# unchanged keys: 59

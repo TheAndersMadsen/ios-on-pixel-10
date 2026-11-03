@@ -1,0 +1,54 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 hackios contributors. Measured from the pinned lga production DDK headers (5940a317) by
+ * research/ios26-gpu-r1/m2/tools/fw_layout_r2.c on the Mac (receipts/fw-layout-r2.json). Numeric layout facts only. */
+#ifndef HMFW_M2_LAYOUT_H
+#define HMFW_M2_LAYOUT_H
+#define HMFV2_SZ_SYSDATA 0xf30u
+#define HMFV2_SZ_TRACEBUF 0x1b8u
+#define HMFV2_SZ_FILE_INFO_BUF 0x198u
+#define HMFV2_SZ_FWFAULTINFO 0x1b0u
+#define HMFV2_SZ_TRACEBUF_SPACE 0x1a8u
+#define HMFV2_SYS_CONFIG_FLAGS 0x0u
+#define HMFV2_SYS_CONFIG_FLAGS_EXT 0x4u
+#define HMFV2_SYS_POW_STATE 0x8u
+#define HMFV2_SYS_OS_RUNTIME_FLAGS0 0xcu
+#define HMFV2_SYS_OS_RUNTIME_FLAGS1 0x10u
+#define HMFV2_SYS_FAULT_INFO0 0x30u
+#define HMFV2_SYS_FAULT_INFO1 0x1e0u
+#define HMFV2_SYS_FAULT_INFO0_PATH 0x48u
+#define HMFV2_SYS_FAULT_INFO0_INFO 0x110u
+#define HMFV2_SYS_FAULT_INFO0_LINE 0x1d8u
+#define HMFV2_SYS_FAULT_INFO0_DATA 0x40u
+#define HMFV2_SYS_FW_FAULTS 0xdb0u
+#define HMFV2_SYS_CR_POLL_ADDR0 0xdb4u
+#define HMFV2_SYS_CR_POLL_MASK0 0xdb8u
+#define HMFV2_SYS_CR_POLL_COUNT0 0xdbcu
+#define HMFV2_SYS_TS_MIRROR0 0xdc8u
+#define HMFV2_SYS_HWR_FLAGS 0xde8u
+#define HMFV2_SYS_FLAGS 0xe10u
+#define HMFV2_TB_LOG_TYPE 0x0u
+#define HMFV2_TB_TRACE_POINTER0 0x8u
+#define HMFV2_TB_WRAP0 0xcu
+#define HMFV2_TB_BUFFER0 0x10u
+#define HMFV2_TB_ASSERT0_PATH 0x18u
+#define HMFV2_TB_ASSERT0_INFO 0xe0u
+#define HMFV2_TB_ASSERT0_LINE 0x1a8u
+#define HMFV2_TB_SIZE_DW 0x1b0u
+#define HMFV2_TB_FLAGS 0x1b4u
+#define HMFV2_KC_FLAGS 0x4u
+#define HMFV2_ASSERT_BYTES 0xc8ULL
+#define HMFV2_THREAD_NUM 0x1ULL
+#define HMFV2_OS_STATE_MASK 0x7ULL
+#define HMFV2_MAX_NUM_OSIDS 0x8ULL
+#define HMFV2_FAULTINFO_MAX 0x8ULL
+#define HMFV2_TB_DEFAULT_DW 0x2ee0ULL
+#define HMFV2_TB_MIN_DW 0x2000ULL
+#define HMFV2_LOG_TYPE_TRACE 0x1ULL
+#define HMFV2_LOG_TYPE_GROUP_MASK 0x8007fffeULL
+#define HMFV2_LOG_M2_GROUPS 0xc62eULL
+#define HMFV2_CMD_HEALTH 0x2abc006fULL
+#define HMFV2_CMD_STATEFLAGS 0x2abc00ceULL
+#define HMFV2_RTN_EXECUTED 0x1ULL
+#define HMFV2_RTN_POLL_FAILURE 0x4ULL
+#define HMFV2_INICFG_ALL 0xfffff7ffULL
+#endif

@@ -1,0 +1,5 @@
+image_tool_s1: HEAD e96cb64 tools/image_tool.py sha256 2bdc03e8cf29cd4fa10f994e919b64e1477643949b6b90fa50c580c14d29cb87 + hunk sha256 b66e38621e282bf7a4cd0cefc4b874234ad1782cecfd65884b0bf3c0f6c9b5e7
+a7-ios-system-gpu3 bootable 42e36c1f08f0b30763c9119444c22a812c112c999f61e23b2184648cd8b75a7e payload 25937568 margin 40122720
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-gpu3/manifest.json
+image_tool_s1: HEAD e96cb64 tools/image_tool.py sha256 2bdc03e8cf29cd4fa10f994e919b64e1477643949b6b90fa50c580c14d29cb87 + hunk sha256 b66e38621e282bf7a4cd0cefc4b874234ad1782cecfd65884b0bf3c0f6c9b5e7
+OK a7-ios-system-gpu3 bootable 42e36c1f08f0b30763c9119444c22a812c112c999f61e23b2184648cd8b75a7e

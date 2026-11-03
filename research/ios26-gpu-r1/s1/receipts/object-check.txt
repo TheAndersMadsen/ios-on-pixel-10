@@ -1,0 +1,33 @@
+# object strings
+HK GPUTA: rung %u start
+HK GPUTA: rung %u %sPASS, boot ended on purpose @%s:%d
+HK GPUTA: rung %u ANSWERED, boot ended on purpose @%s:%d
+HK GPUTA: rung %u STOP: %s @%s:%d
+HK GPUTA: rung %u %sPASS, firmware running (smcs %u)
+HK GPUTA: M3 COREMEM: sysinit_off=0x%x raw_heap=0x%llx section_off=0x%x devva=0x%016llx lo=0x%08x hi=0x%08x
+HK GPUTA: M3 COREMEM forms: sysinit devva 0x%llx; trusty fw_va 0x%x and pa 0x%llx (SEND only, not sysinit); readback %s
+HK GPUTA: M3 COREMEM: control, sysinit_off=0x%x left 0, lo=0x%08x hi=0x%08x
+sysinit coremem readback differs
+HK GPUTA: M3 S1 FAIL: firmware init not clean before HEALTH_CHECK; no command sent
+S1 init not clean before HEALTH_CHECK
+HK GPUTA: M3 S1 PASS: clean firmware init and health; no client KICK issued
+HK GPUTA: M3 S1 FAIL: firmware trace not clean after STATEFLAGS_CTRL
+S1 trace not clean after STATEFLAGS_CTRL
+HK GPUTA: M3 S1 %s: mmu_fault %u lockup %u failed_hw_poll %u hwr_reset %u debug_dump %u fw_faults %u assert_empty %u; trace_valid %u words %u entries %u other %u; hwr 0x%x %s; fwccb w %u r %u pending %u fault_cmds %u
+gta_s1_coremem
+gta_s1_coremem_check
+# kernel.gpu-m3-s1 strings
+HK GPUTA: rung %u start
+HK GPUTA: rung %u %sPASS, boot ended on purpose @%s:%d
+HK GPUTA: rung %u ANSWERED, boot ended on purpose @%s:%d
+HK GPUTA: rung %u STOP: %s @%s:%d
+HK GPUTA: rung %u %sPASS, firmware running (smcs %u)
+HK GPUTA: M3 COREMEM: sysinit_off=0x%x raw_heap=0x%llx section_off=0x%x devva=0x%016llx lo=0x%08x hi=0x%08x
+HK GPUTA: M3 COREMEM forms: sysinit devva 0x%llx; trusty fw_va 0x%x and pa 0x%llx (SEND only, not sysinit); readback %s
+HK GPUTA: M3 COREMEM: control, sysinit_off=0x%x left 0, lo=0x%08x hi=0x%08x
+HK GPUTA: M3 S1 FAIL: firmware init not clean before HEALTH_CHECK; no command sent
+HK GPUTA: M3 S1 PASS: clean firmware init and health; no client KICK issued
+HK GPUTA: M3 S1 FAIL: firmware trace not clean after STATEFLAGS_CTRL
+HK GPUTA: M3 S1 %s: mmu_fault %u lockup %u failed_hw_poll %u hwr_reset %u debug_dump %u fw_faults %u assert_empty %u; trace_valid %u words %u entries %u other %u; hwr 0x%x %s; fwccb w %u r %u pending %u fault_cmds %u
+# thread call order
+_aoc_identify _gta_fw_check _aoc_virtio_up _gta_log_add _aoc_connect _gta_send_firmware _gta_shared_init _gta_s1_coremem_check _blazer_gpu_power_on _aoc_smc _printf _gs_wait_nonzero _aoc_now_ms _gta_m2 _aoc_identify _gta_fw_check _printf _aoc_virtio_up _gta_log_add _aoc_connect _gta_send_firmware _aoc_nop _gta_log_dump _aoc_identify _aoc_virtio_up _gta_log_add _aoc_connect _mach_absolute_time _absolutetime_to_nanoseconds _aoc_send _aoc_wait _mach_absolute_time _absolutetime_to_nanoseconds _printf _panic _aoc_nop _gta_log_dump _printf _aoc_std _gta_log_dump _aoc_stop _printf _aoc_nop _gta_log_dump _aoc_stop _aoc_now_ms _gta_health _printf _gta_fw_state _aoc_nop _gta_log_dump _printf 
