@@ -1,0 +1,45 @@
+int1 syms 88700, int2-about syms 88701
+only int2:
+___startup_EARLY_BOOT_entry_sweet_amfi_register_268
+___startup_TUNABLES_entry_sweet_amfi_debug_70
+_sweet_sandbox_self_logged
+only int1:
+___startup_EARLY_BOOT_entry_sweet_amfi_register_266
+___startup_TUNABLES_entry_sweet_amfi_debug_68
+undefined: 0
+1 self-check: sandboxed
+1 com.apple.private.sandbox.profile:embedded
+1 HK USTACK: every
+1 blazer-netstack: published alone
+1 SWEET BL: calibration
+1 hkcover: %u of %u covers
+fffffe0007d31530:      	cmp	w1, #0x3f
+fffffe0007d31558:      	cmp	w19, #0x4
+fffffe0007d31560:      	cmp	w19, #0x5
+fffffe0007d31568:      	cmp	w19, #0x6
+fffffe0007d31570:      	cmp	w19, #0x43
+fffffe0007d31590:      	bl	0xfffffe00079721f0 <_copyin>
+fffffe0007d315a8:      	bl	0xfffffe0007972a10 <_copyout>
+fffffe0007d315e4:      	bl	0xfffffe0007dbaa90 <_proc_pid>
+fffffe0007d315f4:      	bl	0xfffffe0007dbc600 <_proc_name>
+fffffe0007d31608:      	bl	0xfffffe00077aad50 <_printf>
+fffffe0007d31614:      	cmp	w19, #0x4
+fffffe0007d3161c:      	cmp	w19, #0x2
+fffffe0007d31624:      	cmp	w19, #0x4
+fffffe0007d31630:      	bl	0xfffffe0007d319b0 <_sweet_sandbox_container_path>
+fffffe0007d31654:      	bl	0xfffffe00079721f0 <_copyin>
+fffffe0007d31670:      	bl	0xfffffe0007972a10 <_copyout>
+fffffe0007d316a0:      	bl	0xfffffe00079721f0 <_copyin>
+fffffe0007d316bc:      	cmp	x8, x9
+fffffe0007d316dc:      	bl	0xfffffe0007dbaa90 <_proc_pid>
+fffffe0007d31700:      	cmp	x8, x9
+fffffe0007d31710:      	bl	0xfffffe000803c6d0 <_IOCurrentTaskGetEntitlement>
+fffffe0007d3171c:      	cmp	w8, #0x62
+fffffe0007d31728:      	cmp	w8, #0x6c
+fffffe0007d31734:      	cmp	w8, #0x61
+fffffe0007d31740:      	cmp	w8, #0x73
+fffffe0007d3174c:      	cmp	w8, #0x74
+fffffe0007d31758:      	cmp	w8, #0x64
+fffffe0007d31764:      	cmp	w8, #0x6f
+fffffe0007d31770:      	cmp	w8, #0x6f
+fffffe0007d3177c:      	cmp	w8, #0x72

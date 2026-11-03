@@ -1,0 +1,39 @@
+--- research/ios26-phaseb-r1/int/tools/image_tool_int1.py	2026-11-03 20:33:51.865449137 +0100
++++ research/ios26-audio-r1/tools/image_tool_aud1.py	2026-11-03 21:33:36.272206607 +0100
+@@ -11,7 +11,7 @@
+ import argparse, array, hashlib, json, os, re, shutil, struct, subprocess, sys, time
+ from pathlib import Path
+ sys.dont_write_bytecode = True
+-X = Path(__file__).resolve().parents[4]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # int/tools/image_tool_int1.py: the Mac's acf48b98 + pwr1 + netstack (INT1.md), run from here
++X = Path(__file__).resolve().parents[3]/'tools'; ROOT = X.parent; R = ROOT/'research'; SHIM = ROOT/'shim'  # ios26-audio-r1/tools/image_tool_aud1.py: int1's image_tool_int1.py (728bdd21) + blazer_audio/blazer_audio_rt (ios26-audio-r1/PLAN.md), run from here
+ RUN = R/'images'; WORK = RUN/'.work'  # images and scratch stay under research/, which git ignores
+ sys.path[:0] = [str(X)]
+ import adt as ADT, mkadt, mkpayload
+@@ -181,6 +181,10 @@
+ # research/ios26-phaseb-r1/live/NET.md: kernel IPv4 192.168.77.2/24 on en2 over the USB gadget (CDC-ECM 1209:0003), no default route.
+ PHONE_ALLOWED.update({'blazer_usbnet': r'blazer_usbnet=1', 'blazer_usbnet_direct': r'blazer_usbnet_direct=1'})
+ PHONE_ALLOWED.update({'blazer_netstack': r'blazer_netstack=1'})  # research/ios26-phaseb-r1/configd/FIX.md: IONetworkStack alone
++# research/ios26-audio-r1/PLAN.md A1: stage-1 audio on int1's kernel. blazer_audio=3: hkcover puts the overlay's group 24 (BlazerAudio.driver)
++# and 25 (D421 tunings) over the root's HAL and tunings directories and makes /dev/blazer-audio, which caps and discards (no sink, no amp,
++# no AoC). blazer_audio_rt=1: audiomxd's own 1200-tick realtime bootstrap raised to XNU's minimum (0903). blazer_audio_pcm stays refused.
++PHONE_ALLOWED.update({'blazer_audio': r'blazer_audio=3', 'blazer_audio_rt': r'blazer_audio_rt=1'})
+ PHONE_EXACT_INT1 = ('blazer_power_key=1', 'blazer_key_delivery=1', 'blazer_haptic_tap=1')  # research/ios26-phaseb-r1/pwr/PLAN.md
+ DROP_DIAG = ('hk_fb_probe=1', 'hk_usertrace=1')  # --drop-diag: base-line diagnostics a full line may give up (pwr/PLAN.md; int/INT1.md)
+ PHONE_CANVAS = '1125x2511'  # native's request, the only other size the phone ADT can have
+@@ -444,6 +448,16 @@
+         if 'blazer_haptic_tap=1' in extra and (any(t.startswith('blazer_haptic=') for t in extra) or b'blazer-haptic: tap feedback on' not in buf or b'native ROM service ready' not in buf):
+             die('blazer_haptic_tap=1: alone (it implies the ID-only stage and the service) and a kernel built with BLAZER_HAPTIC_SERVICE=1 (pwr/PLAN.md)')
+         if 'blazer_netstack=1' in extra and b'blazer-netstack: published alone' not in buf: die('kernel has no blazer_netstack (hk-netstack-cfg1, configd/FIX.md)')
++        if 'blazer_audio=3' in extra:  # ios26-audio-r1/PLAN.md A1
++            if not ov or not {24, 25} <= set(ov['groups']): die('blazer_audio=3 needs an overlay holding groups 24 and 25 (aud1_overlay.py): hkcover panics without them')
++            if ov['mask'] >> 24 & 3: die('blazer_audio=3: hk_overlay must not hold bits 24/25, hkcover groups are never applied to /private/var')
++            if 'varfs=1' not in PHONE_ARGS.split(): die('blazer_audio=3 needs varfs=1 on the line')
++            for s_ in (b'hkcover: blazer_audio=0x%x needs varfs=1', b'/private/var/hkcover/hal', b'blazer-audio: /dev/blazer-audio, cap %u of 32768, %s', b'_blazer_audio_pcm_bind'):
++                if s_ not in buf: die(f'kernel lacks stage-1 audio ({s_.decode()}): 0900/1144/1145')
++        if 'blazer_audio_rt=1' in extra:
++            if 'blazer_audio=3' not in extra: die('blazer_audio_rt=1 goes with blazer_audio=3')
++            if b'hk-audio-rt: audiomxd bootstrap 1200 -> %u ticks' not in buf: die('kernel has no audio RT bootstrap adapter (0903)')
++        if any(t.startswith('blazer_audio_pcm') for t in extra): die('blazer_audio_pcm: no AoC consumer exists; refused (ios26-audio-r1/PLAN.md)')
+         if 'blazer_netstack=1' in extra and any(t.startswith(('blazer_usbnet=', 'blazer_wifi_net=')) for t in extra): die('blazer_netstack=1 is the stand-in alone: not with blazer_usbnet/blazer_wifi_net')
+         if any(t.startswith('blazer_thermal_panic_c=') for t in extra) and 'blazer_thermal=2' not in extra: die('blazer_thermal_panic_c needs blazer_thermal=2')
+         if getattr(a, 'phone_deadline', None) not in (None, 300, 1800, 3600): die('--phone-deadline: 300, 1800 or 3600')

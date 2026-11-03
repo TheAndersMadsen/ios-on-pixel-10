@@ -1,0 +1,17 @@
+vs a7-ios-system-int1: cmdline bytes 1018 -> 1018; tokens 56 -> 56
+cmdline identical
+adt: "31d61b7b02d454b3592cef5daba2a97e2d7585327fb34a438a0fe70fc402b9d7" -> "eeed3c42c925721be14e75c85c3fb069012e669063283a30d964486581215d26"
+adt_facts: {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button -> {"boot_reg": 512, "canvas": [1125, 2511], "chip_id": "0x8030", "compatible": ["D421AP", "iPhone12,3", "google,lga-blazer", "google,tegu", "google,lga", "AppleARM"], "ctrr": 0, "dram": ["0x882000000", "0x100000000"], "fb": null, "home_button
+avb: "boot: Successfully verified sha256 hash of boot.img for image of 28655616 bytes" -> "boot: Successfully verified sha256 hash of boot.img for image of 28667904 bytes"
+decode: "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-int1/manifest.json" -> "python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-int2/manifest.json"
+epoch: 1793734481 -> 1793739902
+ids: {"epoch": "0x2f2c8effe2", "handoff": 1, "record_nonce": "1286480548adc0840058cb5f0e097402", "stamp_nonce": "0x8bc64d7181cbb83c"} -> {"epoch": "0x2f2c8f008d", "handoff": 1, "record_nonce": "87a02df92e49c8aa810063a4606d911c", "stamp_nonce": "0x3d1b3d3a44313bed"}
+image: "f67220f8fada32b0795548bb4974a875c9801a6936d9ac6ed03307df947b066c" -> "d4e3f129f4959fb48e66b588307443d987b76ae635ec47bc2d498d7d07ed7951"
+kernel_end: "0xfffffe0008e50000" -> "0xfffffe0008e54000"
+mach: "0d0c99b2cd7b1c71509c9cf52af34ca29c1856001fd077df41b6386bf243e9bf" -> "c2ec7b75cd67a48f8839ea5590d7b0f4f7362b775b9f45da9bfdbce76d0b5861"
+margin_bytes: 39929424 -> 39915616
+name: "a7-ios-system-int1" -> "a7-ios-system-int2"
+payload: "af0acf49e3d43ccf38d1846f883c4e293ebd7f7b59a79268833f473b484bdcd6" -> "b048defe42ec79d0fe64b9637816f28be4c03bfa49e8af84a57951f1566acd08"
+payload_bytes: 26130864 -> 26144672
+plan: {"adt_pa": "0x884e50000", "boot_args_pa": "0x884e54000", "entry_pa": "0x88398d488", "top": "0x884e58000"} -> {"adt_pa": "0x884e54000", "boot_args_pa": "0x884e58000", "entry_pa": "0x88398d488", "top": "0x884e5c000"}
+var_overlay: {"bytes": 661680, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/int/overlays/int1-r1.ovl", "placed": ["0x884dac000 -> {"bytes": 675432, "groups": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 27, 28, 29, 30, 31], "mask": 2684878977, "path": "research/ios26-phaseb-r1/about/build/int2-about-r1.ovl", "placed": ["0x884d

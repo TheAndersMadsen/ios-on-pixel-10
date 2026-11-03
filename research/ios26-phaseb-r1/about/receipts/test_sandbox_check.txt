@@ -1,0 +1,6 @@
+PASS: 11 checks, 0 failed
+mutation [s/SSC_PROFILE_PREFIX_LEN  9/SSC_PROFILE_PREFIX_LEN  8/] -> FAIL: 11 checks, 1 failed
+mutation [s/ || args\[2\] != 0//] -> FAIL: 11 checks, 1 failed
+mutation [s/ || args\[3\] != 0//] -> FAIL: 11 checks, 1 failed
+mutation [s/ || (long long)args\[1\] != self_pid//] -> FAIL: 11 checks, 2 failed
+mutation [s/if (profile == 0) {/if (0) {/] -> ==234835==ABORTING

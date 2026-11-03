@@ -1,0 +1,2 @@
+OK a7-ios-system-aud1 bootable 272d9799cca3069ed93a40a7443a443c6f49d3a3f3637b687a9a3fcbb26e2649
+shared tools/image_tool.py: OK a7-ios-system-aud1 bootable 272d9799cca3069ed93a40a7443a443c6f49d3a3f3637b687a9a3fcbb26e2649

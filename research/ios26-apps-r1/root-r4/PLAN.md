@@ -15,7 +15,7 @@ here touched the phone). Large files stay on m1box under `/data/hackios-qemu/res
 | Change | volume 2,097,152 → 6,291,456 blocks (free 528 MiB → 15.4 GiB); 49 bundles in `/Applications` (18,438 entries: 12,498 dirs, 5,940 files, 0 links) |
 | Everything r3 ships | **unchanged**: 274,113 of 274,113 r3 entries identical in path, type, mode, uid, gid, size, nlink, mtime and sha256; 0 removed; attributes B-tree 259,471 records in both (no xattr added) |
 | fsck.hfsplus -f -n | OK after the grow, OK after the insert |
-| QEMU | see section 4 |
+| QEMU (20 GiB twin, same content) | lsd: 253 apps in /Applications (r3: 204); Home shows the full stock grid (r3: Settings + Phone only); 0 traps/panics |
 
 ## 1. What r3 lacked and where the bundles come from (HOST)
 
@@ -95,22 +95,20 @@ plists changed in both). Intent: `receipts/qemu-intent.json`; launcher: `tools/q
   - This is a property of the QEMU layout. On the phone the arena is at 0x889e6c000 (A7 log).
   - So QEMU ran a **20 GiB twin** instead: `build_r4q20.sh`, the same steps with the grow to 5,242,880 blocks
     (e7d8c319…). Its census is identical to r4 (292,551 entries, 0 differences).
-- The first pair of guests was killed when my session ended (`*-killed` dirs, r3 control at t≈640, r4 at t≈40). I
-  relaunched both detached; three guests shared the host (one from another lane), so the guest clock ran at about ⅓ of wall time.
+- The first pair of guests was killed when my session ended (`*-killed` dirs). I relaunched both detached; both ran
+  the full 1800 s (guest t≈1771), exit 0, root unchanged (`receipts/qemu-exit.json`).
 
 | | r3 control (`root-r4-q-r3ctl`) | **r4 (`root-r4-q-r4q20`)** |
 | --- | --- | --- |
 | root mount | `"ios_system" on LUN 0 … 8192 MiB` | `"ios_system" on LUN 0 … 20480 MiB` |
 | lsd `Scanned N apps in /Applications` | **204** | **253** (+49) |
 | lsd on Calculator | only the placeholder (`Info.plist missing at /System/Library/AppPlaceholders/Calculator.app`) | also the real bundle (filters `com.apple.calculator.CalculatorWidget`) |
-| INVALID_PERSONA / usertrap / userabort / panic (by t≈700) | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 |
-| Home and icons | not reached | not reached |
+| INVALID_PERSONA / usertrap / userabort / kernel panic | 0 / 0 / 4 / 0 | 0 / 0 / 0 / 0 |
+| **Home at the end** (`receipts/qemu-home-*.png`) | Settings + Phone (dock), nothing else | **2 widgets, 15 icons on page 1, 4 in the dock**: the same layout as r24 on apps-full |
 
-- Home appears in this route only at guest t≈1700 s (r24). These guests were near t≈700 s when this was written and
-  stop at the 1800 s wall limit, so **SpringBoard icons were not observed in QEMU**.
-- To see them: one guest alone (≈1:1 clock), 1800 s, then compare `fb-final.png` with r24's grid.
-- 253 matches r23's count on the apps-full lineage, so lsd now sees the same /Applications set on the phone root.
-  Registration acceptance and icons remain the phone boot's question (§5 step 6).
+- In QEMU, icon artwork renders as grey tiles, except the live Clock face. It looked the same in r24, so this is not an r4 effect.
+- So in QEMU, lsd registers the 49 bundles and SpringBoard lays them out on Home. The phone boot (§5 step 6) remains
+  the physical question: artwork, launches, and timing against the 300 s deadline.
 
 ## 5. Owner-approved flash of r4, with rollback (attended; the only write is step 3)
 
@@ -212,3 +210,23 @@ research/ios26-dualboot-r8/return-check.sh research/ios26-dualboot-r8/attempts/a
 - `ROOT_SHA`/`PHONE_ROOT_SHA` pin update (coordination thread).
 - If wanted, normalise the new bundles' owners to r3's /Applications (0:80); kept as the IPSW ships them here.
 - Registration and launches on the phone: answered only by step 6.
+
+## next: files for a root r5 (from research/ios26-phaseb-r1/about/FIX.md; HOST, 2026-11-03)
+
+r4 keeps r3's prune, so these stay missing. Source: the stock 23G90 system volume (`apple/23G90/094-95981-090.dmg`), same
+paths. Sizes and sha256 prefixes: `research/ios26-phaseb-r1/about/receipts/r5-filelist.txt`.
+
+- **Covered by the int2 overlay already (no r5 needed, keep them in r5 so the covers can go):**
+  `MusicLibrary.framework/{MLSortMapTables.plist, SortingDetails.plist, en.lproj/MLSections.plist}` (About abort),
+  `AccessibilitySharedSupport.framework/{AXSSPunctuationModel.momd/AXSSPunctuationModel.mom, VOPronunciationModel.momd/VOPronunciationModel.mom}`
+  (AccessibilityUIServer abort).
+- **Need r5 (too many directories for the 8 overlay covers; Phone app white screen, INFERENCE):** the `Assets.car` of
+  `Applications/MobilePhone.app` (1,829,272 B), `Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework`,
+  and `System/Library/PrivateFrameworks/{CallsDialer, CallsAppUI, TelephonyUI, ConversationKit, CommunicationsUI}.framework`,
+  `System/Library/Frameworks/ContactsUI.framework` (about 4.5 MB together).
+- **Also missing, same rule, low priority:** `MusicLibrary.framework/com.apple.Music.artworkConfig`; AccessibilitySharedSupport's
+  `AXLanguageToLocale.plist`, `SynthesizerLanguageMap.plist`, `FullKeyboardAccessStandardCommands-Default.plist`.
+- **Prune rule changes (scripts/prune.py)**, so the next root does not lose them again: `deny-framework-data` keeps a `*.momd/*.mom`
+  and `*.omo` whenever it keeps the `.momd/VersionInfo.plist` (it now keeps the plist and deletes the model, which is what
+  aborts CoreData); `DENY` does not match `MusicLibrary.framework` or `AccessibilitySharedSupport.framework`; `KEEP_CAR` adds
+  `MobilePhone|CallsDialer|CallsAppUI|TelephonyUI|ConversationKit|CommunicationsUI|ContactsUI`.

@@ -1,0 +1,2 @@
+a7-ios-system-int2 bootable d4e3f129f4959fb48e66b588307443d987b76ae635ec47bc2d498d7d07ed7951 payload 26144672 margin 39915616
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-int2/manifest.json

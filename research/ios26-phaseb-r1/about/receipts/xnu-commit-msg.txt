@@ -1,0 +1,11 @@
+sweet sandbox: sandbox_check self-query answers "sandboxed" for BlastDoor profiles
+
+libsystem_sandbox's sandbox_check (23G90 0x2a4413b70 -> 0x2a44138e8) passes { &result, pid, op, type, ... } to
+__sandbox_ms("Sandbox", 2) and returns result != 0. The stand-in returned 0 without writing result, so every process
+looked unsandboxed. BlastDoor/Sandbox.swift (0x218a63fb4) checks sandbox_check(getpid(), NULL, 0) == 1 at launch and
+otherwise fatalErrors "BlastDoor cannot run unsandboxed." (brk #1): MessagesBlastDoorService died with SIGTRAP every
+10 s in the int1 boots. Op 2 now writes 1 for a self-query (op NULL, type 0, own pid) from a process whose
+com.apple.private.sandbox.profile:embedded starts with "blastdoor"; every other check is unchanged. Logged once per
+process, at most 16 lines: "SWEET Sandbox: NAME[PID] self-check: sandboxed (profile P)".
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

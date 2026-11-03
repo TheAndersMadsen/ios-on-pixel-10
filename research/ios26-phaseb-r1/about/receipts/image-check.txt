@@ -1,0 +1,3 @@
+OK a7-ios-system-int2 bootable d4e3f129f4959fb48e66b588307443d987b76ae635ec47bc2d498d7d07ed7951
+shared tools/image_tool.py: OK a7-ios-system-int2 bootable d4e3f129f4959fb48e66b588307443d987b76ae635ec47bc2d498d7d07ed7951
+OK a7-ios-system-int2 bootable d4e3f129f4959fb48e66b588307443d987b76ae635ec47bc2d498d7d07ed7951

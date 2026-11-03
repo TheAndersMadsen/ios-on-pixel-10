@@ -1,0 +1,24 @@
+{
+ "base": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e",
+ "output_sha256": "edbd799a3bc1651b03e3e4eb0bec0024aac69a80a663541104052543a3f795af",
+ "bytes": 675432,
+ "records": 65,
+ "added_bytes": 13752,
+ "covers_before": 1,
+ "covers_after": 4,
+ "appended": [
+  "l g19 /private/var/hkcover/ml-en.cover -> /System/Library/PrivateFrameworks/MusicLibrary.framework/en.lproj",
+  "d g19 /private/var/hkcover/ml-en",
+  "f g19 /private/var/hkcover/ml-en/MLSortMapTables.plist 1218 B 148e53436ca9",
+  "f g19 /private/var/hkcover/ml-en/SortingDetails.plist 93 B 03bd240165c5",
+  "f g19 /private/var/hkcover/ml-en/MLSections.plist 286 B 94b84f64a659",
+  "l g19 /private/var/hkcover/ax-punct.cover -> /System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXSSPunctuationModel.momd",
+  "d g19 /private/var/hkcover/ax-punct",
+  "f g19 /private/var/hkcover/ax-punct/VersionInfo.plist 515 B 8c47bb03b7c5",
+  "f g19 /private/var/hkcover/ax-punct/AXSSPunctuationModel.mom 4658 B be65ed3dbb69",
+  "l g19 /private/var/hkcover/ax-vopron.cover -> /System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/VOPronunciationModel.momd",
+  "d g19 /private/var/hkcover/ax-vopron",
+  "f g19 /private/var/hkcover/ax-vopron/VersionInfo.plist 447 B aaeadeb44b04",
+  "f g19 /private/var/hkcover/ax-vopron/VOPronunciationModel.mom 5346 B a222edc158c5"
+ ]
+}

@@ -1,0 +1,93 @@
+varfs-overlay: mask 0xa0080081 of groups 0xfbffffff, 317 entries, 10963640 bytes, hash a2bfa751a3527b27
+blazer-audio: /dev/blazer-audio, cap 327 of 32768, no sink
+hkcover: /Library/Audio/Plug-Ins/HAL/VirtualAudio.plugin/Info.plist 963 bytes
+hkcover: /Library/Audio/Plug-Ins/HAL/VirtualAudio.plugin/VirtualAudio 7295952 bytes
+hkcover: /Library/Audio/Plug-Ins/HAL/VirtualAudio.plugin/Localizable.loctable 1560 bytes
+hkcover: /Library/Audio/Plug-Ins/HAL, 3 entries, 69359 bytes
+hkcover: /Library/Audio/Tunings/D421, 257 entries, 10157425 bytes
+hkcover: /System/Library/PrivateFrameworks/CoreUI.framework/DesignLibrary-iOS.bundle/iOSRepositories, 6 entries, 160576 bytes
+hkcover: 1 of 1 covers from the overlay
+exec SpringBoard
+hk-audio-test: loaded
+exec backboardd
+exec audiomxd
+blazer-audio: opened by audiomxd
+blazer-hal: the speaker is with the HAL (/dev/blazer-audio: open)
+hk-audio-test: round 1, system sound 1007
+hk-audio-rt: audiomxd bootstrap 1200 -> 3125 ticks
+hk-audio-test: AVFAudio open, class found
+hk-audio-test: setCategory 1, error none
+blazer-audio: volume 0.000 dB under the loudest
+blazer-hal: the volume is 1.000: 0.0 dB under the loudest
+hk-audio-test: setActive 1, error none
+hk-audio-test: route <AVAudioSessionRouteDescription: 0x1501ecee0, 
+hk-audio-test: AudioQueueNewOutput 0
+hk-audio-rt: audiomxd bootstrap 1200 -> 3125 ticks
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+blazer-audio: first non-silent write, 512 frames, peak 1452 of 32768
+hk-audio-test: AudioQueueStart 0
+hk-audio-test: tone done
+blazer-hal: stopped after 4.43 s (0 frames not taken by /dev/blazer-audio)
+blazer-audio: 212732 frames written, 55296 of them in non-silent writes, peak 7128 of 32768, 71 after the cap of 327, 27752 frames/s; since boot 212732, 55296 non-silent
+hk-audio-test: round 2, system sound 1007
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+blazer-audio: 56320 frames written, 49664 of them in non-silent writes, peak 1740 of 32768, 17 after the cap of 327, 16642 frames/s; since boot 269052, 104960 non-silent
+blazer-hal: stopped after 1.17 s (0 frames not taken by /dev/blazer-audio)
+hk-audio-test: AVFAudio open, class found
+hk-audio-test: setCategory 1, error none
+hk-audio-test: setActive 1, error none
+hk-audio-test: route <AVAudioSessionRouteDescription: 0x1501ecf90, 
+hk-audio-test: AudioQueueNewOutput 0
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+hk-audio-test: AudioQueueStart 0
+hk-audio-test: tone done
+blazer-audio: 97280 frames written, 22016 of them in non-silent writes, peak 4813 of 32768, 48 after the cap of 327, 23821 frames/s; since boot 366332, 126976 non-silent
+blazer-hal: stopped after 2.16 s (0 frames not taken by /dev/blazer-audio)
+blazer-audio: 6656 frames written, 0 of them in non-silent writes, peak 5 of 32768, 0 after the cap of 327, 0 frames/s; since boot 372988, 126976 non-silent
+hk-audio-test: round 3, system sound 1007
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+blazer-hal: stopped after 1.46 s (0 frames not taken by /dev/blazer-audio)
+hk-audio-test: AVFAudio open, class found
+hk-audio-test: setCategory 1, error none
+hk-audio-test: setActive 1, error none
+hk-audio-test: route <AVAudioSessionRouteDescription: 0x1501ecff0, 
+hk-audio-test: AudioQueueNewOutput 0
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+hk-audio-test: AudioQueueStart 0
+hk-audio-test: tone done
+blazer-hal: stopped after 1.32 s (0 frames not taken by /dev/blazer-audio)
+blazer-audio: 133956 frames written, 102724 of them in non-silent writes, peak 5311 of 32768, 52 after the cap of 327, 15563 frames/s; since boot 506944, 229700 non-silent
+hk-audio-test: round 4, system sound 1007
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+blazer-hal: stopped after 1.36 s (0 frames not taken by /dev/blazer-audio)
+hk-audio-test: AVFAudio open, class found
+hk-audio-test: setCategory 1, error none
+hk-audio-test: setActive 1, error none
+hk-audio-test: route <AVAudioSessionRouteDescription: 0x1501ed040, 
+blazer-audio: 65536 frames written, 46080 of them in non-silent writes, peak 1740 of 32768, 17 after the cap of 327, 17668 frames/s; since boot 572480, 275780 non-silent
+hk-audio-test: AudioQueueNewOutput 0
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+hk-audio-test: AudioQueueStart 0
+hk-audio-test: tone done
+blazer-hal: stopped after 1.15 s (0 frames not taken by /dev/blazer-audio)
+blazer-audio: 55268 frames written, 42980 of them in non-silent writes, peak 5321 of 32768, 53 after the cap of 327, 17038 frames/s; since boot 627748, 318760 non-silent
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+blazer-audio: 52224 frames written, 48128 of them in non-silent writes, peak 1487 of 32768, 14 after the cap of 327, 15763 frames/s; since boot 679972, 366888 non-silent
+blazer-hal: stopped after 1.12 s (0 frames not taken by /dev/blazer-audio)
+blazer-audio: 1536 frames written, 1024 of them in non-silent writes, peak 120 of 32768, 1 after the cap of 327, 0 frames/s; since boot 681508, 367912 non-silent
+hk-audio-test: round 5, system sound 1007
+blazer-hal: StartIO 2, client 143, running 0
+blazer-hal: playing
+blazer-hal: stopped after 1.42 s (0 frames not taken by /dev/blazer-audio)
+blazer-audio: 68608 frames written, 52224 of them in non-silent writes, peak 1722 of 32768, 17 after the cap of 327, 17698 frames/s; since boot 750116, 420136 non-silent
+hk-audio-test: AVFAudio open, class found
+hk-audio-test: setCategory 1, error none
+console.log sha256 b5e26cb475a93a712503bea9db7fcc913be2c3800a7b060e5604d4cc8f1648cb (m1box /data/hackios-qemu/research/ios26-apps-r1/runs/aud1-q-r1, not in git)

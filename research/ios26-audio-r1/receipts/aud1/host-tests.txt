@@ -1,0 +1,37 @@
+# host tests, m1box 2026-11-03T20:39:58Z, python Python 3.14.8, cc (GCC) 16.1.1 20260430
+$ python3 -I research/ios26-audio-r1/tests/test_aud1_overlay.py
+aud1 overlay host test: 23 checks, 0 failed; output 89e72e571fd3aff7ac0b8d2a7e4adb314871a412a58a74803001a014f3f0f626 10963640 B
+$ python3 -I research/ios26-audio-r1/tests/mutants_aud1.py
+caught: tone stays in group 26
+caught: no [39] edit
+caught: tone first in the DYLD list
+caught: tunings dropped
+caught: HAL after tunings
+caught: tone mode 0644
+caught: int1 record dropped
+aud1 overlay mutants 7/7 caught
+$ cc -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-sanitize-recover=all -I research/ios26-audio-r1/inputs/hk-int1 research/ios26-audio-r1/tests/aud1_consumer.c -o /tmp/aud1_consumer && /tmp/aud1_consumer research/ios26-audio-r1/build/aud1-r1.ovl 0xA0080081
+varfs-overlay: mask 0xa0080081 of groups 0xfbffffff, 317 entries, 10963640 bytes, hash a2bfa751a3527b27
+applied: 12 files, 4 dirs, 2 rules; env rules 856 of 1024 bytes; covers in the mask 1
+hk_env: SpringBoard gets FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome
+hk_env: SpringBoard gets DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib:/private/var/hk/hkaudiotest.dylib
+hk_env: SpringBoard gets HK_BATTERY_TRACE=1
+hk_env: backboardd gets DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib
+hk_env: backboardd gets HK_CONTAINER_READY=probe
+hk_env: backboardd gets HK_ACCEL_ONCE=skip
+hkcover: /Library/Audio/Plug-Ins/HAL, 3 entries, 69359 bytes (+ VirtualAudio's 3 from the root)
+hkcover: /Library/Audio/Tunings/D421, 257 entries, 10157425 bytes
+aud1 consumer (hk-int1 headers): 340 checks, 0 failed
+$ (negative control) /tmp/aud1_consumer research/ios26-phaseb-r1/int/overlays/int1-r1.ovl 0xA0080081
+hkcover: /Library/Audio/Tunings/D421, 0 entries, 0 bytes
+aud1 consumer (hk-int1 headers): 75 checks, 5 failed
+consumer exit 1 (expected 1; the earlier 'exit' line was tail's status)
+$ python3 -I research/ios26-audio-r1/tests/test_image_tool_aud1.py
+ok   test-aud1-no-cover-groups: needs an overlay holding groups 24 and 25
+ok   test-aud1-rt-alone: blazer_audio_rt=1 goes with blazer_audio=3
+ok   test-aud1-mask-bit24: must not hold bits 24/25
+ok   test-aud1-pcm: blazer_audio_pcm
+ok   test-aud1-bits1: blazer_audio=1
+ok   test-aud1-kernel-no-rt: no audio RT bootstrap adapter
+ok   test-aud1-kernel-no-hal: kernel lacks stage-1 audio
+image_tool_aud1 refusal test: 7 cases, 0 failed

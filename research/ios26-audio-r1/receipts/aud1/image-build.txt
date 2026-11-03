@@ -1,0 +1,2 @@
+a7-ios-system-aud1 bootable 272d9799cca3069ed93a40a7443a443c6f49d3a3f3637b687a9a3fcbb26e2649 payload 36432832 margin 29627456
+python3 -I tools/all_decode.py <attempt>/ramdump/kernel.log research/images/a7-ios-system-aud1/manifest.json

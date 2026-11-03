@@ -1,0 +1,10 @@
+== research/ios26-phaseb-r1/int/overlays/int1-r1.ovl
+hkov_check: ok, 52 entries, 661680 bytes, hash d1542238facd5b66
+groups 0xf8ffffff, mask 0xa0080081, mask & ~groups = 0x0
+hkov_cover_check: ok, covers 1
+== research/ios26-phaseb-r1/about/build/int2-about-r1.ovl
+hkov_check: ok, 65 entries, 675432 bytes, hash 9e729b7e3b9355bf
+groups 0xf8ffffff, mask 0xa0080081, mask & ~groups = 0x0
+hkov_cover_check: ok, covers 4
+992c4b286517515e3a897dbd9d808b3dd3c2f329e0699a9da2633589b8dd56e5  hk-int1:bsd/miscfs/ramfs/varfs_overlay.h
+280c81df6f884706af9ee49cd960519458c3764134981bcabe5a2c8824df8410  hk-int1:bsd/miscfs/ramfs/miscfs/ramfs/varfs_tsv.h

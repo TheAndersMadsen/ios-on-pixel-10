@@ -1,0 +1,22 @@
+22:03:06 waiting for build slot lock
+22:03:06 lock held
+22:03:07 tree branch p1 HEAD b228c4f
+22:03:07 checked out hk-int2-about 48b613bae1245516ef8197f9c0f4ddbc09963836
+22:03:45 build int2-about-build rc 0
+22:03:45 c2ec7b75cd67a48f8839ea5590d7b0f4f7362b775b9f45da9bfdbce76d0b5861  kernel.int2-about
+22:03:45 56ebe555577c8977018f9042dbf0ad4c8fadebc0ac868d5fd7dacbac1ba281d4  kernel.int2-about.unstripped
+22:03:45 d4a87c83cb7097044d7ba43d592bd80e94c8e2f35bf2553a75fb75cb4369d4e4  hakios.blazer_keys.o (/bsd/DEVELOPMENT/hakios.blazer_keys.o)
+22:03:45 e10a3097b802160a96193ff7eb86922cdd87b1f37afd5c59cc83ae4f163f0377  blazer_haptic.o (/bsd/DEVELOPMENT/blazer_haptic.o)
+22:03:45 28013fd4f06e37eaf92db96ba0bd33c25a85c23c4328680718cdc16eb0d6e356  SweetHID.cpo (/iokit/DEVELOPMENT/SweetHID.cpo)
+22:03:45 e105d5dbaa77e6bbda8a8fb16fb60201016b2b3c8557a142df33989cee5eccf4  SweetFramebuffer.cpo (/iokit/DEVELOPMENT/SweetFramebuffer.cpo)
+22:03:45 3b8b6f195fcb2c9f5ef58c1fe0471bc72a4e6939075da5ec406770a8ee83f60b  SweetKeyStore.cpo (/iokit/DEVELOPMENT/SweetKeyStore.cpo)
+22:03:45 b5720f4d8176860e8bec3d773d50883e983b62ea8b4dd6530330a8d6dc15a8de  sweet_amfi.o (/bsd/DEVELOPMENT/sweet_amfi.o)
+22:03:45 f7e8f0091e5a81ce641a2f8730b2148995f744fc9bad57a4cbff88ec46f12b89  blazer_usbnet.o (/bsd/DEVELOPMENT/blazer_usbnet.o)
+22:03:45 a3719a21cc370f527e554384ade07788ef645e3ca02c0aadd540a17cb478ab2c  BlazerNetServices.cpo (/iokit/DEVELOPMENT/BlazerNetServices.cpo)
+22:03:46 b6b9f8f62b7825ca3e5642adaf9a9751e96fd956a2e9b1a0bba24256c8bc56f9  hk_ustack.o (/osfmk/DEVELOPMENT/hk_ustack.o)
+22:03:46 14b42cd022c41c5b68c442aaddec070aa48a830ddf925970ad01936c5ca4f15a  ramfs.o (/bsd/DEVELOPMENT/ramfs.o)
+22:03:46 a10b62289f38ca5c7ca50df7b2e8683ff0b6837e5f10d3895365f21e37ac975b  blazer_gpu.o (/bsd/DEVELOPMENT/blazer_gpu.o)
+22:03:46 restored branch p1 HEAD b228c4f
+22:04:26 build int2-about-restore-p1-build rc 0
+22:04:26 obj kernel after restore 2743529f78b37817a9d3abcf4eaf64260568a98fdcce2cc74466b2e12b8df38d
+22:04:26 restored p1 kernel has hk_ustack string: False

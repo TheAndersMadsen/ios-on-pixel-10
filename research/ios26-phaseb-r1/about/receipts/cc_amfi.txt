@@ -1,0 +1,19 @@
+== sweet_amfi.c rc 0
+
+                 U _IOCurrentTaskGetEntitlement
+                 U _copyin
+                 U _copyout
+                 U _sweet_sandbox_container_path
+0000000000002720 d _sweet_sandbox_mac_conf
+000000000001c64c b _sweet_sandbox_mac_handle
+00000000000017c8 s _sweet_sandbox_mac_ops
+00000000000008d0 t _sweet_sandbox_priv_grant
+000000000001c658 b _sweet_sandbox_seen
+000000000001c660 b _sweet_sandbox_self_logged
+00000000000005a0 t _sweet_sandbox_syscall
+sweet_sandbox_syscall insns 243 | cmp #0x2: True
+check_self relocs: []
+strings: ['com.apple.private.sandbox.profile:embedded', 'SWEET Sandbox: %s[%d] self-check: sandboxed (profile %s)']
+/var/folders/sl/srcjy8n90xn143tgfg5sl30c0000gn/T/hk_amfi_cc.4tsq95mr/sweet_amfi.o: Mach-O 64-bit object arm64
+5cef740e97f12cf2b4181594099071e90aa50643a1457fcabc91a03c22f67123  /tmp/hk-int2-about-wt/bsd/kern/sweet_amfi.c
+911e0ed89f30224a4f98e7d8cda63586d22c02c6ad4f9b7f7395b444fe6c83af  /tmp/hk-int2-about-wt/bsd/kern/sweet_sandbox_check.h

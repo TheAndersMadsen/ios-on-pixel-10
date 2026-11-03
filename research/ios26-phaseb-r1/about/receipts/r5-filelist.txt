@@ -1,0 +1,19 @@
+  1829272 2ef5ba3c8af4775d Applications/MobilePhone.app/Assets.car
+   629896 f9c1b829a0d8d4bc Applications/MobilePhone.app/PlugIns/VoicemailMessageNotificationExtension.appex/Frameworks/CallsDialer.framework/Assets.car
+   629896 89120463dcfdefe1 System/Library/PrivateFrameworks/CallsDialer.framework/Assets.car
+    31768 8e057414bb50c743 System/Library/PrivateFrameworks/CallsAppUI.framework/Assets.car
+    60584 f08b7c1ec5116536 System/Library/PrivateFrameworks/TelephonyUI.framework/Assets.car
+   974296 e5d2ec9e0d2cf02c System/Library/PrivateFrameworks/ConversationKit.framework/Assets.car
+    71928 fb4cdc966a056737 System/Library/PrivateFrameworks/CommunicationsUI.framework/Assets.car
+   288712 2beadc64d15044af System/Library/Frameworks/ContactsUI.framework/Assets.car
+     1218 148e53436ca99c65 System/Library/PrivateFrameworks/MusicLibrary.framework/MLSortMapTables.plist
+       93 03bd240165c5bdf1 System/Library/PrivateFrameworks/MusicLibrary.framework/SortingDetails.plist
+      286 94b84f64a659101b System/Library/PrivateFrameworks/MusicLibrary.framework/en.lproj/MLSections.plist
+      933 ba9fab6b767e8cbb System/Library/PrivateFrameworks/MusicLibrary.framework/com.apple.Music.artworkConfig
+     4658 be65ed3dbb695221 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXSSPunctuationModel.momd/AXSSPunctuationModel.mom
+     5346 a222edc158c5314c System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/VOPronunciationModel.momd/VOPronunciationModel.mom
+      969 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXLanguageToLocale.plist (AX, pruned)
+    70257 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/SynthesizerLanguageMap.plist (AX, pruned)
+     1396 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/FullKeyboardAccessStandardCommands-Default.plist (AX, pruned)
+  1511424 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_zh.sqlite (AX, pruned)
+   483328 System/Library/PrivateFrameworks/AccessibilitySharedSupport.framework/AXWordDescriptionsData_ja.sqlite (AX, pruned)

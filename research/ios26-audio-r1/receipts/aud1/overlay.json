@@ -1,0 +1,65 @@
+{
+  "int1": "c440b6ea64759d09f5ddb75951f39f664b7080c15468e2884278faba7da7cf5e",
+  "s1b": "9c4a7ddee3ba543ccae9334dbb0d67065a2c5766671533b071cd4e83ac3bcbd5",
+  "output_sha256": "89e72e571fd3aff7ac0b8d2a7e4adb314871a412a58a74803001a014f3f0f626",
+  "bytes": 10963640,
+  "records": 317,
+  "mask": "0xa0080081",
+  "groups": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "applied_groups": [
+    0,
+    7,
+    19,
+    29,
+    31
+  ],
+  "edited": {
+    "[39]": {
+      "before_sha256": "7dbd20ac62d9ac4cc7680c68ba732670e72ba9dbdb13e41708ac41679f856727",
+      "after_sha256": "11e1de0eed74de8257d1e2eef93c84be4e8f318b3ed9c1b49a32a85ca1399d12",
+      "springboard_env": [
+        "FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome",
+        "DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib:/private/var/hk/hkaudiotest.dylib",
+        "HK_BATTERY_TRACE=1"
+      ]
+    }
+  },
+  "appended": {
+    "hal_g24": 5,
+    "tunings_g25": 259,
+    "tone_g29": "[316] f g29 /private/var/hk/hkaudiotest.dylib sha256 9ac322067ddb17915479fe2352c815a47ac6aa2b583bca04bdc26f39d08234b8"
+  },
+  "hk_env_text_bytes": 855
+}
