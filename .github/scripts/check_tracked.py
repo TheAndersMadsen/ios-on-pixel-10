@@ -27,6 +27,8 @@ RESEARCH_ALLOW = re.compile(r'''(?x)^research/(
   | ios26-apps-r1/receipts/(m1box-rig|l1-r16|h3-static-r12)/[A-Za-z0-9_.-]+\.md
   | ios26-phaseb-r1/home-budget/(data/)?[A-Za-z0-9_.-]+\.(md|py|json)
   | ios26-connectivity-r1/bluetooth/(aks-wrap/((src|tests|tools|receipts|baseline|candidate/iokit/Kernel/arm)/)?)?[A-Za-z0-9_.-]+\.(md|txt|patch|inc|cpp|c|py|json)
+  | ios26-connectivity-r1/wifi/r2/(src/)?[A-Za-z0-9_.-]+\.(md|patch|c|h|py|sh)
+  | ios26-wifi-r1/tools/mkwifisecret\.py
   | ios26-connectivity-r1/wifi/((tools|tests|receipts)/)?[A-Za-z0-9_.-]+\.(md|py|patch|c|sh|txt|meta)
   | ios26-phaseb-r1/touch/(test/(shim/IOKit/)?)?[A-Za-z0-9_.-]+\.(md|patch|sh|cpp|c|h|txt)
   | ios26-phaseb-r1/display/(test/)?[A-Za-z0-9_.-]+\.(md|patch|py|c)

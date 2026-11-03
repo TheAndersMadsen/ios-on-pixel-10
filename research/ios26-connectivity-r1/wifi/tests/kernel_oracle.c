@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT
  * HOST ONLY. The kernel's own reader, run on a composed overlay: the release tree's real varfs_overlay.h (hkov_check,
  * hkov_next, hkov_cover_check, hkov_same) and real blazer_bcm4390_join.c (b4_net_parse), linked with stubs for the radio
- * calls b4_net_parse never makes. The walk below is blazer_wifi_net.c blazer_wifi_net_secret's, minus the IODT lookup,
+ * calls b4_net_parse never makes. BWN1 and BWN2 (r2: the passphrase too; never printed, nor its length). The walk below is blazer_wifi_net.c blazer_wifi_net_secret's, minus the IODT lookup,
  * the pid-1 wait and the physical wipe. Prints lengths and flags only: never the name or the key.
  *
  *   kernel_oracle OVL MASK      exit 0: varfs would accept the blob with MASK, and the Wi-Fi reader finds a usable network
@@ -83,9 +83,9 @@ run(int argc, char **argv)
 				printf("wifi: network unusable: %s\n", bad);
 				return 1;
 			}
-			printf("wifi: network ok: ssid_len %u, open %d, have_mac %d, country %c%c/%c%c, rev %d, mode 0%o uid %u gid %u\n",
+			printf("wifi: network ok: ssid_len %u, open %d, have_mac %d, country %c%c/%c%c, rev %d, passphrase %s, mode 0%o uid %u gid %u\n",
 			    net.ssid_len, net.open, net.have_mac, net.abbrev[0], net.abbrev[1], net.ccode[0], net.ccode[1], net.rev,
-			    e.mode, e.uid, e.gid);
+			    net.pass_len != 0 ? "yes" : "no", e.mode, e.uid, e.gid);
 			memset(&net, 0, sizeof(net));
 		}
 	}

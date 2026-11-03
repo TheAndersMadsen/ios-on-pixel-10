@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """HOST ONLY. Inputs for the first Wi-Fi join boot (W1) on the A7-r3 line: kernel ddf874fb, root ios_system, 5 cores.
 
-  compose_wifi_join.py overlay [SECRET] [--out OVL]   A7-r3 overlay + the owner's network as one group-26 record
+  compose_wifi_join.py overlay [SECRET] [--out OVL] [--v1]   A7-r3 overlay + the owner's network as one group-26 record
   compose_wifi_join.py cmdline                        the r3 line, minus two trace tokens, plus the join tokens
   compose_wifi_join.py check OVL                      what the kernel's reader (blazer_wifi_net_secret) will see
 
 overlay: base artwork-container-battery-observe-r1.ovl (7d610456..., A7-r3's var_overlay). Every base record is kept
 byte for byte and in order. One file record is appended: group 26, 0600 root:root, /private/var/hkcover/wifi/net, data =
-mkwifisecret.py's 108-byte BWN1 blob (PMK, never the password). Group 26 is not in hk_overlay=0xA0080081, so varfs never
+mkwifisecret.py's blob: BWN2, 176 bytes (PMK and passphrase; r2 on, needs a kernel with b4_net_parse's BWN2, branch hk-wifi-pass),
+or with --v1 BWN1, 108 bytes (PMK only: what r1 had, which the firmware's supplicant can't use; r2/FIX.md). Group 26 is not in hk_overlay=0xA0080081, so varfs never
 applies it; blazer_wifi_net.c reads it once after pid 1 exists and zeroes it in place. The header count, length and
 fnv1a are recomputed. Output is mode 0600 under research/ios26-wifi-r1/secret/ (git-ignored, 0700). Nothing secret is
 printed: only sizes and SHA-256s. Refuses to overwrite.
@@ -31,13 +32,15 @@ SECRET_DIR = REPO / 'research/ios26-wifi-r1/secret'
 PINNED = {
     BASE: '7d610456642614367cb4262576efdf05fd751ebc480720e4d669e1882a820f58',
     MKOVERLAY: 'e658e67be7b8d2caa36e37a5e690ab60d5ac45b3bbe7a7d70121e48e98813573',
-    MKWIFISECRET: '730029b2e69924ea2e580f02cf141a4df5faddffb63c7df58c8e47b6319af9c5',
+    MKWIFISECRET: 'f107d012cd2bdc6645311a3743c0817510e135617376a8dd42fdad9fdf3ff6b1',
 }
 R3_CMDLINE_SHA = '840fc51c70788c74c1d853ede4569bb86ec6e3385f20ddb7486371e1482d5917'
 R3_MASK = 0xA0080081
 GROUP = 26
 PATH = '/private/var/hkcover/wifi/net'
 NB_BYTES = 108
+NB2_BYTES = 176
+BLOBS = {NB_BYTES: b'BWN1', NB2_BYTES: b'BWN2'}
 LINE_MAX = 1023
 DROP = ('hk_present_trace=1', 'blazer_battery_receipt=1')
 ADD = ('blazer_wifi=1', 'blazer_wifi_stage=8', 'blazer_wifi_join=1')
@@ -93,8 +96,8 @@ def records(mk, b):
 
 def compose(mk, base, net_blob):
     """base bytes + one group-26 file record. Pure: the tests drive it with synthetic blobs."""
-    if len(net_blob) != NB_BYTES or net_blob[:4] != b'BWN1':
-        raise ValueError('network blob: not a 108-byte BWN1 record')
+    if BLOBS.get(len(net_blob)) != net_blob[:4]:
+        raise ValueError('network blob: not a 108-byte BWN1 or a 176-byte BWN2 record')
     recs = records(mk, base)
     if any(r['group'] == GROUP for r in recs):
         raise ValueError(f'base already uses group {GROUP}')
@@ -146,7 +149,7 @@ def reader_view(mk, blob):
     d = hits[0]['data']
     return dict(records=len(records(mk, blob)), net_bytes=len(d), magic=d[:4].decode('ascii', 'replace'),
                 ssid_len=d[24], flags=d[25], country=d[26:28].decode('ascii', 'replace'), mode=oct(hits[0]['mode']),
-                applied_by_mask=bool(R3_MASK & (1 << GROUP)))
+                has_passphrase=len(d) == NB2_BYTES and d[108] != 0, applied_by_mask=bool(R3_MASK & (1 << GROUP)))
 
 
 def main():
@@ -155,6 +158,7 @@ def main():
     o = sub.add_parser('overlay')
     o.add_argument('secret', nargs='?', default=str(SECRET_DIR / 'wifi.secret'))
     o.add_argument('--out', default=str(SECRET_DIR / 'a7-r3-wifi-join.ovl'))
+    o.add_argument('--v1', action='store_true', help='BWN1, PMK only (r1). Default BWN2')
     sub.add_parser('cmdline')
     c = sub.add_parser('check')
     c.add_argument('ovl')
@@ -175,7 +179,7 @@ def main():
     base = BASE.read_bytes()
     if sha(base) != PINNED[BASE]:
         die('base overlay sha256 differs')
-    net = ws.blob(ws.parse(Path(a.secret)))   # parse() refuses a secret file readable by others
+    net = ws.blob(ws.parse(Path(a.secret)), 1 if a.v1 else 2)   # parse() refuses a secret file readable by others
     blob = compose(mk, base, net)
     out.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -183,7 +187,8 @@ def main():
         f.write(blob)
     v = reader_view(mk, blob)
     print(json.dumps(dict(out=str(out), bytes=len(blob), sha256=sha(blob), base_sha256=PINNED[BASE],
-                          records=v['records'], net_bytes=v['net_bytes'], group=GROUP, mask=hex(R3_MASK)), indent=1))
+                          records=v['records'], net_bytes=v['net_bytes'], blob=v['magic'], has_passphrase=v['has_passphrase'],
+                          group=GROUP, mask=hex(R3_MASK)), indent=1))
 
 
 if __name__ == '__main__':

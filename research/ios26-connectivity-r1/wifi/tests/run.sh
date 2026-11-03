@@ -14,11 +14,17 @@ mkdir -p build "$R"
 mkdir -p build/inc/miscfs/ramfs
 ln -sf "$X/bsd/miscfs/ramfs/varfs_overlay.h" "$X/bsd/miscfs/ramfs/varfs_tsv.h" build/inc/miscfs/ramfs/
 # Only the two overlay headers: -I$X/bsd would shadow the host libc's sys/ headers
-INC="-Ibuild/inc -iquote $X/bsd/dev"
+# r2 (branch hk-wifi-pass): the join and its header from ../r2/src, everything else from the release tree
+INC="-Ibuild/inc -iquote $W/r2/src -iquote $X/bsd/dev"
 
 # 1. Oracle: real varfs_overlay.h + real blazer_bcm4390_join.c, host executable, ASan/UBSan
 "$L/clang" -std=c11 -O1 -g -DBLAZER -fsanitize=address,undefined -fno-sanitize-recover=all -Wall -Wextra $INC \
-  kernel_oracle.c "$X/bsd/dev/blazer_bcm4390_join.c" -o build/kernel_oracle
+  kernel_oracle.c "$W/r2/src/blazer_bcm4390_join.c" -o build/kernel_oracle
+# 1b. Key oracle: the real configure()/set_key() against a recording ioctl, and its mutants
+"$L/clang" -std=c11 -O1 -g -DBLAZER -fsanitize=address,undefined -fno-sanitize-recover=all -Wall -Wextra $INC key_oracle.c -o build/key_oracle
+./build/key_oracle > "$R/key-oracle.txt" 2>&1 || { cat "$R/key-oracle.txt"; exit 1; }
+python3 -I mutate_key.py >> "$R/key-oracle.txt" 2>&1 || { cat "$R/key-oracle.txt"; exit 1; }
+cat "$R/key-oracle.txt"
 
 # 2. Composer tests (they call build/kernel_oracle)
 python3 -I test_compose_wifi_join.py 2>&1 | tee "$R/tests.txt"
@@ -33,7 +39,7 @@ python3 -I test_image_tool_w1.py "$T/tools" 2>&1 | tee "$R/image_tool-w1.txt"
 
 # 3. ARM64 objects of the sources the join boot runs (unchanged here: a compile and symbol check, not a new implementation)
 AF="-target arm64e-apple-macos13.0 -DBLAZER -ffreestanding -fno-builtin -fno-stack-protector -O2 -std=c11 -c $INC"
-"$L/clang" $AF "$X/bsd/dev/blazer_bcm4390_join.c" -o build/blazer_bcm4390_join.arm64e.o
+"$L/clang" $AF "$W/r2/src/blazer_bcm4390_join.c" -o build/blazer_bcm4390_join.arm64e.o
 {
   echo "== blazer_bcm4390_join.arm64e.o"
   "$L/llvm-objdump" --macho --private-header build/blazer_bcm4390_join.arm64e.o | sed -n 1,4p
@@ -48,5 +54,5 @@ AF="-target arm64e-apple-macos13.0 -DBLAZER -ffreestanding -fno-builtin -fno-sta
     LC_ALL=C grep -qaF "$t" "$K" && echo "kernel string: $t" || { echo "kernel MISSING string: $t"; exit 1; }
   done
 } 2>&1 | tee "$R/objects.txt"
-sha256sum build/kernel_oracle build/blazer_bcm4390_join.arm64e.o ../tools/compose_wifi_join.py kernel_oracle.c test_compose_wifi_join.py test_image_tool_w1.py ../image_tool-w1.patch run.sh \
-  "$X/bsd/dev/blazer_bcm4390_join.c" "$X/bsd/miscfs/ramfs/varfs_overlay.h" "$X/bsd/dev/blazer_wifi_net.c" | tee "$R/SHA256SUMS"
+sha256sum build/kernel_oracle build/key_oracle build/blazer_bcm4390_join.arm64e.o ../tools/compose_wifi_join.py kernel_oracle.c key_oracle.c mutate_key.py test_compose_wifi_join.py test_image_tool_w1.py ../image_tool-w1.patch run.sh \
+  "$REPO/research/ios26-wifi-r1/tools/mkwifisecret.py" "$W/r2/src/blazer_bcm4390_join.c" "$W/r2/src/blazer_pcie1.h" "$X/bsd/miscfs/ramfs/varfs_overlay.h" "$X/bsd/dev/blazer_wifi_net.c" | tee "$R/SHA256SUMS"

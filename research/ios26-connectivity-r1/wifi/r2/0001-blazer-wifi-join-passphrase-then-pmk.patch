@@ -1,0 +1,253 @@
+From eef94c6fbb3cb4a40933d470387627ae186b56bf Mon Sep 17 00:00:00 2001
+From: Anders Madsen <madsenanders97@gmail.com>
+Date: Tue, 3 Nov 2026 17:17:39 +0100
+Subject: [PATCH] blazer wifi join: give the firmware the passphrase, then the
+ PMK (BWN2)
+
+a7-wifi-join-r1 (physical): auth and association status 0, then the supplicant
+sat in WLC_SUP_KEYXCHANGE_WAIT_M1 (status 4) until the network deauthenticated
+it with reason 15 (4-way handshake timeout). M1 was never answered, so this was
+not a wrong password: the firmware had no key it could use.
+
+fw_bcmdhd.bin_4390_b1 and its .map: wlc_keymgmt_set_wsec_pmk sends a flags-0
+PMK to wlc_sup_set_pmk and a WSEC_PASSPHRASE key to wlc_pmk_add_passphrase. At
+the join, wlc_join_infra prints "Start PSK to PMK conversion" and
+wlc_sup_set_ssid hashes the stored passphrase with the join SSID
+(wlc_pmk_set_psk, timer-driven). The M1 that arrives meanwhile is cached and
+answered later (wlc_sup_pmk_notif_cb). Android on this phone sets the
+passphrase first, then the PMK (dmesg: "Passphrase set", "pmk added").
+
+b4_net_parse also reads BWN2: 176 bytes, BWN1 plus the passphrase (8-63
+printable ASCII, zeros after it). set_key sends the passphrase (flags
+WSEC_PASSPHRASE) and then the 32-byte PMK, both as WLC_SET_WSEC_PMK with the
+same 263-byte wsec_pmk_t. It wipes every copy and never logs the length. A
+BWN1 blob behaves as before. The handshake failure line now tells "never
+answered M1" apart from "most often a wrong password".
+
+Host: research/ios26-connectivity-r1/wifi/tests (key_oracle + 15/15 mutants,
+composer and kernel-reader oracle with IEEE 802.11i vectors) and
+research/ios26-wifi-r1/tests/test_pcie1.c: PASSED, output identical to 7227fe7.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ bsd/dev/blazer_bcm4390_join.c | 103 ++++++++++++++++++++++++++++------
+ bsd/dev/blazer_pcie1.h        |   4 ++
+ 2 files changed, 89 insertions(+), 18 deletions(-)
+
+diff --git a/bsd/dev/blazer_bcm4390_join.c b/bsd/dev/blazer_bcm4390_join.c
+index 581c86f..85abb57 100644
+--- a/bsd/dev/blazer_bcm4390_join.c
++++ b/bsd/dev/blazer_bcm4390_join.c
+@@ -7,7 +7,7 @@
+  *   the firmware's auth and association requests to one address on one channel, found by listening, the join's own scan being passive; EAPOL 2 and 4 from its supplicant; then what the stack sends, and for blazer_wifi_net=1 DHCP, ARP and ICMP built here.
+  * Without it stage JOIN is a dry run: every setting goes to the firmware and it says what it thinks of them, and the join and every frame are refused by the gate (b4_ioctl_allowed, b4_tx_post). No probe request anywhere: no active scan can be expressed, so a hidden network can't be joined.
+  *
+- * The secret: the network's name and key reach here in cfg.net. The name is never logged, nor anything that would tell which of the networks heard it is. The key goes to the firmware as a 32-byte PMK, made on the host; every copy here is wiped as soon as the firmware has it. A password never reaches the kernel. So WPA3-only networks can't be joined: SAE needs the password itself. */
++ * The secret: the network's name and key reach here in cfg.net. The name is never logged, nor anything that would tell which of the networks heard it is. The key goes to the firmware as the passphrase (BWN2), which its supplicant needs, then as the 32-byte PMK made on the host; every copy here is wiped as soon as the firmware has it. An old BWN1 blob holds only the PMK. WPA3-only networks still aren't joined: no SAE settings are made. */
+ #include "blazer_hw_port.h"
+ #include "blazer_pcie1.h"
+ 
+@@ -45,6 +45,9 @@
+ #define MFP_CAPABLE     1u              /* WL_MFP_CAPABLE */
+ #define MFP_REQUIRED    2u              /* WL_MFP_REQUIRED */
+ #define PMK_BYTES       32u             /* WL_SUPP_PMK_LEN */
++#define WSEC_PASSPHRASE 1u              /* wsec_pmk_t.flags: key is a passphrase. 0: a PMK */
++#define PASS_MIN        8u              /* WSEC_MIN_PSK_LEN */
++#define PASS_MAX        63u
+ #define PMK_IOCTL_BYTES 263u            /* sizeof(wsec_pmk_t) + 1, as stock's array */
+ #define PMK_KEY_AT      4u
+ 
+@@ -84,6 +87,7 @@
+ #define E_LINK          16u
+ #define E_PSK_SUP       46u
+ #define EV_FLAG_LINK    0x01u           /* WLC_EVENT_MSG_LINK */
++#define SUP_WAIT_M1     4u              /* WLC_SUP_KEYXCHANGE_WAIT_M1 */
+ #define SUP_KEYED       6u              /* WLC_SUP_KEYED */
+ #define SUP_TIMEOUT     7u              /* WLC_SUP_TIMEOUT */
+ #define SUP_WAIT_G1     10u             /* WLC_SUP_KEYXCHANGE_WAIT_G1 */
+@@ -92,9 +96,11 @@
+ #define SUP_R_PTK       21u             /* WLC_E_SUP_PTK_UPDATE */
+ #define SUP_R_GTK       23u             /* WLC_E_SUP_GTK_UPDATE */
+ 
+-/* The blob tools/mkwifisecret.py makes: all little endian, no padding it doesn't name */
++/* The blob tools/mkwifisecret.py makes: all little endian, no padding it doesn't name. BWN2 = BWN1 + the passphrase */
+ #define NB_MAGIC        "BWN1"
+ #define NB_VERSION      1u
++#define NB2_MAGIC       "BWN2"
++#define NB2_VERSION     2u
+ #define NB_SSID_LEN     24u
+ #define NB_FLAGS        25u
+ #define NB_ABBREV       26u
+@@ -104,6 +110,9 @@
+ #define NB_SSID         44u
+ #define NB_PMK          76u
+ #define NB_BYTES        108u
++#define NB2_PASS_LEN    108u
++#define NB2_PASS        109u
++#define NB2_BYTES       176u            /* 109 + 63, then 4 zero bytes */
+ #define NB_F_OPEN       0x01u
+ #define NB_F_MAC        0x02u
+ 
+@@ -223,18 +232,20 @@ set_int(struct p1 *p, const char *name, uint32_t value, int32_t *status)
+ const char *
+ b4_net_parse(const uint8_t *blob, uint32_t bytes, struct b4_network *net)
+ {
+-	uint32_t ver, ssid_len;
++	uint32_t ver, ssid_len, pass_len = 0;
+ 	uint8_t flags;
++	bool two;
+ 	static const uint8_t none[6] = { 0 };
+ 
+-	if (blob == NULL || bytes != NB_BYTES) {
++	if (blob == NULL || (bytes != NB_BYTES && bytes != NB2_BYTES)) {
+ 		return "wrong size";
+ 	}
+-	if (!jn_same(blob, (const uint8_t *)NB_MAGIC, 4)) {
++	two = bytes == NB2_BYTES;
++	if (!jn_same(blob, (const uint8_t *)(two ? NB2_MAGIC : NB_MAGIC), 4)) {
+ 		return "wrong magic";
+ 	}
+ 	ver = jn_get32(blob, 4);
+-	if (ver != NB_VERSION) {
++	if (ver != (two ? NB2_VERSION : NB_VERSION)) {
+ 		return "wrong version";
+ 	}
+ 	ssid_len = blob[NB_SSID_LEN];
+@@ -265,11 +276,29 @@ b4_net_parse(const uint8_t *blob, uint32_t bytes, struct b4_network *net)
+ 			return "key";
+ 		}
+ 	}
++	/* The passphrase: 8 to 63 printable ASCII characters (802.11i), nothing after it but zeros. None for an open network */
++	if (two) {
++		pass_len = blob[NB2_PASS_LEN];
++		if ((flags & NB_F_OPEN) ? pass_len != 0 : (pass_len < PASS_MIN || pass_len > PASS_MAX)) {
++			return "passphrase's length";
++		}
++		for (uint32_t i = 0; i < NB2_BYTES - NB2_PASS; i++) {
++			uint8_t c = blob[NB2_PASS + i];
++
++			if (i < pass_len ? (c < 0x20u || c > 0x7eu) : c != 0) {
++				return "passphrase";
++			}
++		}
++	}
+ 	memset(net, 0, sizeof(*net));
+ 	memcpy(net->ssid, blob + NB_SSID, ssid_len);
+ 	net->ssid_len = (uint8_t)ssid_len;
+ 	net->open = (flags & NB_F_OPEN) != 0;
+ 	memcpy(net->pmk, blob + NB_PMK, PMK_BYTES);
++	if (pass_len != 0) {
++		memcpy(net->pass, blob + NB2_PASS, pass_len);
++		net->pass_len = (uint8_t)pass_len;
++	}
+ 	net->have_mac = (flags & NB_F_MAC) != 0;
+ 	memcpy(net->mac, blob + NB_MAC, 6);
+ 	net->abbrev[0] = (char)blob[NB_ABBREV];
+@@ -666,31 +695,67 @@ security_step(struct p1 *p, const char *name, uint32_t value)
+ 	return 0;
+ }
+ 
++/* One wsec_pmk_t (key_len, flags, key[256], opt_len 0) by WLC_SET_WSEC_PMK. The copy on this stack and what went through the ioctl buffers are wiped either way */
+ static int
+-set_key(struct p1 *p)
++give_key(struct p1 *p, const uint8_t *key, uint32_t len, uint16_t flags, int32_t *status)
+ {
+ 	uint8_t b[PMK_IOCTL_BYTES];
+-	struct b4_network *net = p->cfg.net;
+-	int32_t st;
+ 
+ 	memset(b, 0, sizeof(b));
+-	jn_put16(b, 0, PMK_BYTES);
+-	jn_put16(b, 2, 0);
+-	/* With no network in the image: all ones, which opens nothing */
+-	for (unsigned i = 0; i < PMK_BYTES; i++) {
+-		b[PMK_KEY_AT + i] = net != NULL ? net->pmk[i] : 0xff;
++	jn_put16(b, 0, (uint16_t)len);
++	jn_put16(b, 2, flags);
++	for (uint32_t i = 0; i < len; i++) {
++		b[PMK_KEY_AT + i] = key != NULL ? key[i] : 0xff;
+ 	}
+ 	if (b4_ioctl(p, WLC_SET_WSEC_PMK, b, sizeof(b))) {
+ 		jn_wipe(b, sizeof(b));
++		b4_wipe_ioctl(p);
+ 		return (int)p->stop;
+ 	}
+-	st = p->ioc_status;
+-	/* Every copy here: the one on this stack, the one in cfg.net, and what went through the ioctl buffers */
++	*status = p->ioc_status;
+ 	jn_wipe(b, sizeof(b));
++	b4_wipe_ioctl(p);
++	return 0;
++}
++
++/*
++ * Android's order (wl_config_assoc_security, physical dmesg of 2026-11-03: "Passphrase set", then "pmk added"): the passphrase, then the PMK.
++ * The passphrase, flags WSEC_PASSPHRASE, is what this firmware's supplicant runs on: wlc_keymgmt_set_wsec_pmk keeps it in its list
++ * (wlc_pmk_add_passphrase), and at the join wlc_join_infra says "Start PSK to PMK conversion", wlc_sup_set_ssid hashes it with the
++ * join's SSID on a timer and the M1 that came meanwhile is kept and answered (wlc_sup_pmk_notif_cb). A PMK alone, flags 0, goes to
++ * wlc_sup_set_pmk and the join finds no passphrase: physical a7-wifi-join-r1 waited for M1 (status 4) until the network gave up (reason 15).
++ * Stock's fallback when wsec_info is missing (wl_cfg80211_config_passphrase) is this same ioctl, so no new iovar.
++ */
++static int
++set_key(struct p1 *p)
++{
++	struct b4_network *net = p->cfg.net;
++	int32_t st = 0;
++	int rc;
++
++	if (net != NULL && net->pass_len != 0) {
++		rc = give_key(p, net->pass, net->pass_len, WSEC_PASSPHRASE, &st);
++		jn_wipe(net->pass, sizeof(net->pass));
++		net->pass_len = 0;
++		if (rc) {
++			jn_wipe(net->pmk, sizeof(net->pmk));
++			return rc;
++		}
++		/* Never its length: that says something about it */
++		p->ops.log(p->ops.ctx, "join: passphrase given to the firmware: status %d\n", st);
++		if (st != 0 && p->cfg.join_armed) {
++			jn_wipe(net->pmk, sizeof(net->pmk));
++			return p1_halt(p, P1_STOP_SECURITY, (uint32_t)st);
++		}
++	}
++	/* With no network in the image: all ones, which opens nothing */
++	rc = give_key(p, net != NULL ? net->pmk : NULL, PMK_BYTES, 0, &st);
+ 	if (net != NULL) {
+ 		jn_wipe(net->pmk, sizeof(net->pmk));
+ 	}
+-	b4_wipe_ioctl(p);
++	if (rc) {
++		return rc;
++	}
+ 	p->ops.log(p->ops.ctx, "join: key given to the firmware, %u bytes: status %d\n", PMK_BYTES, st);
+ 	if (st != 0 && p->cfg.join_armed) {
+ 		return p1_halt(p, P1_STOP_SECURITY, (uint32_t)st);
+@@ -807,7 +872,9 @@ join_wait(struct p1 *p)
+ 		}
+ 		/* No retries on a key that didn't work: the chip goes off, which ends the attempt on the air */
+ 		if (p->jn_sup_failed || p->jn_sup_status == SUP_TIMEOUT) {
+-			p->ops.log(p->ops.ctx, "join: the 4-way handshake failed: status %u, reason %u: most often a wrong password\n", p->jn_sup_status, p->jn_sup_reason);
++			/* WLC_SUP_KEYXCHANGE_WAIT_M1 (4): M1 never answered, so the firmware had no key to answer with. Past it (8 and on): M2 went out, most often with a wrong password's PMK */
++			p->ops.log(p->ops.ctx, "join: the 4-way handshake failed: status %u, reason %u: %s\n", p->jn_sup_status, p->jn_sup_reason,
++			    p->jn_sup_status == SUP_WAIT_M1 ? "the firmware never answered M1: it had no key it could use" : "most often a wrong password");
+ 			return p1_halt(p, P1_STOP_JOIN_FAILED, 0x100u | p->jn_sup_reason);
+ 		}
+ 		if (p->jn_was_up && !p->jn_link && !p->jn_keyed) {
+diff --git a/bsd/dev/blazer_pcie1.h b/bsd/dev/blazer_pcie1.h
+index 19dbb0e..b628f0c 100644
+--- a/bsd/dev/blazer_pcie1.h
++++ b/bsd/dev/blazer_pcie1.h
+@@ -75,6 +75,10 @@ struct b4_network {
+ 	uint8_t ssid[32];
+ 	uint8_t ssid_len;
+ 	uint8_t pmk[32];
++	/* BWN2: the passphrase too. This firmware's own supplicant makes its PMK from a passphrase and the join's SSID
++	 * (wlc_join_infra -> wlc_sup_set_ssid -> wlc_pmk_set_psk); a bare PMK left it waiting for M1 (a7-wifi-join-r1) */
++	uint8_t pass[63];
++	uint8_t pass_len;       /* 0: BWN1, PMK only */
+ 	bool open;              /* No password, and the network must have none either */
+ 	bool have_mac;
+ 	uint8_t mac[6];
+-- 
+2.54.0 (Apple Git-157)
+
