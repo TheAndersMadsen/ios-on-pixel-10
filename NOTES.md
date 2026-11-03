@@ -1,6 +1,6 @@
 # Current project notes
 
-Updated 2026-11-03. This is the **only default project-state document**. Keep it
+Updated 2026-11-03 (m1box run). This is the **only default project-state document**. Keep it
 short and current; do not append a session journal here. The previous full journal
 is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only.
 
@@ -35,12 +35,17 @@ recoverable. QEMU and host tools support development; they are not phone results
   reaches Android in 42 s. r7 put the startup menu on the panel (owner saw it), but Linux then panicked:
   the DPU power domain was left on. r9's attempt to switch it off hung CPM. Volume keys (r8) not run. Receipts:
   `research/ios26-dualboot-r8/attempts/A3-RESULT.md`.
-- **Apps (QEMU, 2026-11-02):** LaunchServices refuses every container-requiring
-  restored app. App-Placeholder (H1) and MCM-container (H2) causes were tested and
-  rejected; see `docs/IOS-APPS-IDENTITY.md`. With lsd's os_log mirrored to the console
-  (r11g/r11h), no user persona exists. usermanagerd finds no user session (no
-  `/var/keybags/usersession.kb`). Leading hypothesis H3: registration waits on a genuine
-  user-session/AKS bootstrap. Not yet tested.
+  Host fix for the handback (2026-11-03, 69b84d7): the phone's own vs_drm.ko (sha256 92e482be…) always quiesces the
+  DPU before any power-off (trigger off, layer/BE idle, BE interrupts and output clocks reset, isolation 0xf); r9 did
+  none of it. chooser-v1-r10 adds that sequence (host test 58/58, ARM64 code checked); not run on the phone. Receipt:
+  `research/ios26-dualboot-r8/display-handback/SUSPEND-ORDER.md`.
+- **Apps (QEMU, 2026-11-03):** LaunchServices refused every container-requiring app because no user persona
+  exists. Static pass (usermanagerd.otool): only `usermanagerd --init`, a launchd boot task, creates the primary
+  session and the system-session personas; the daemon only loads them. Every apps-lane QEMU boot used `rd=md0`,
+  which launchd treats like a restore boot (spec "ramdisk": only PerformAlways/PerformInRestore tasks run). r13 with
+  `rd=ufsroot0` (one change): boot spec "local", all boot tasks incl. UMD_INIT ran, type-6 persona errors 323 -> 0;
+  but lsd now aborts at launch and the registrar's app enumeration never returns. Registration not accepted.
+  Receipts: `research/ios26-apps-r1/receipts/h3-static-r12/` (incl. PRIOR-ART.md: qemu-t8030, ios-sweet, eshard).
 - **Not complete:** native Metal, stable compositing, strict GPT, a working Android chain
   and visible menu, higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.

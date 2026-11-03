@@ -5,21 +5,14 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Done: storage migrated and the owner's Android restored on slot b with Magisk (2026-11-03); return check PASS
-   against the post-restore baseline (`research/android-backup-20261103/RESTORE.md`). The phone may be used
-   normally; every boot test still uses bare `fastboot boot` with ANDROID_SERIAL set.
-2. A3 accepted (r3 x3, r4 in 42 s). Menu visible on the panel (r7), but the display handback to Linux
-   fails (r7 panic, r9 CPM hang on FE0 off). Next run, host first: take the vs_dc suspend order
-   (BE idle, `dc_hw_do_reset`, clock-domain isolation on; vs_dc.c:201-230) with register values from the
-   stock vs_dc module disassembly, never guessed, then r10 with the owner present. Bare `fastboot boot`, ANDROID_SERIAL set.
-3. Host: r4 (cached decode) and r6 (menu renderer) are built and QEMU-tested; next are the visible
-   menu (r6 plus the `tgl_dcs_run` full-screen layer, `research/ios26-dualboot-r8/menu-ui/SCANOUT-PATH.md`),
-   the volume-key pad read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).
-   A7 boot blocker fixed (QEMU): the root view now takes ios_system's real size; kernel
-   `research/ios26-dualboot-r8/rootview/kernel.rootview` mounted a 20 GiB ios_system root for 600 s in QEMU.
-   Flash/readback side is ready: `tools/ios_partition_flash.py`, `research/ios26-dualboot-r8/A7-READY.md`.
-   Apps lane (QEMU): registration is blocked behind a missing user session/persona
-   (`research/ios26-apps-r1/receipts/lslog-r11/result-r11h.json`); next is a genuine user-session bootstrap.
+1. Attended, owner present: chooser-v1-r10 (stock DPU quiesce before the display release) and/or A7 (flash
+   ios_system, read back, boot `a7-ios-system-r1`). Paste-ready commands and stop rules:
+   `research/ios26-dualboot-r8/NEEDS-OWNER.md` sections 4 and A7. Bare `fastboot boot`, ANDROID_SERIAL set.
+2. Apps lane (QEMU): repeat r13's route (`rd=ufsroot0`, `research/ios26-apps-r1/receipts/h3-static-r12/result-r13.json`)
+   with the r11g/r11h os_log mirror for lsd and usermanagerd (one diagnostic change) to read why lsd aborts and
+   whether `usersession.kb` was saved (ios-sweet: HFS has no RENAME_SWAP, errno 45, already seen in dirs_cleaner).
+3. Host: the visible menu (r6 + `tgl_dcs_run` full-screen layer, `menu-ui/SCANOUT-PATH.md`), the volume-key pad
+   read, and a kernel link plus QEMU negative test of XNU dd000c8 (ios_data persist).
 
 ## Latest completed maintenance
 
