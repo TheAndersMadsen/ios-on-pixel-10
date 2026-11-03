@@ -1,0 +1,15 @@
+___stack_chk_fail
+___stack_chk_guard
+__dyld_get_image_header
+__dyld_get_image_name
+__dyld_get_image_vmaddr_slide
+__dyld_image_count
+_close
+_dispatch_once_f
+_getenv
+_getprogname
+_open
+_snprintf
+_strcmp
+_strlen
+_write

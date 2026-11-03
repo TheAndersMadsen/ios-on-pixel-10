@@ -1,0 +1,22 @@
+{
+  "base": "research/ios26-opt-20261102/combined_ui_overlay/artifacts/artwork-container-battery-observe-r1.ovl",
+  "base_sha256": "7d610456642614367cb4262576efdf05fd751ebc480720e4d669e1882a820f58",
+  "library": "/private/var/hk/hk_accel_once.dylib",
+  "library_sha256": "c1a41d7d5832b59056dc3b9df014de54b5d88ab6a8b1a2eab11a79b8e701a39e",
+  "library_bytes": 50608,
+  "mode": "skip",
+  "mask": "0xa0080081",
+  "env_record_index": 39,
+  "env_group": 29,
+  "backboardd_rule_index": 0,
+  "old_backboardd_rule": "backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib;HK_CONTAINER_READY=probe",
+  "new_backboardd_rule": "backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib;HK_CONTAINER_READY=probe;HK_ACCEL_ONCE=skip",
+  "hk_env_bytes_with_NUL": 661,
+  "records": 47,
+  "preserved_records": 45,
+  "replaced_records": 1,
+  "appended_records": 1,
+  "overlay_sha256": "f5d4c3676d1cf78c1b21036b784819d66425ce6bb55c27a46eee17f277412a97",
+  "bytes": 541768,
+  "hk_env": "backboardd:DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib;HK_CONTAINER_READY=probe;HK_ACCEL_ONCE=skip,Preferences:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib;HK_SETTINGS_ARTWORK=1,iconservicesagent:DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib;HK_SETTINGS_ARTWORK=1,powerd:DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1,SpringBoard:FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome;DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib;HK_BATTERY_TRACE=1"
+}

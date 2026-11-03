@@ -1,0 +1,3 @@
+out/hk_accel_once.arm64e.o:  Mach-O 64-bit object arm64e
+out/hk_accel_once.raw.dylib: Mach-O 64-bit dynamically linked shared library arm64e
+out/hk_accel_once.dylib:     Mach-O 64-bit dynamically linked shared library arm64e

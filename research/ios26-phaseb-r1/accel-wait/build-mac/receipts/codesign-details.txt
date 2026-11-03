@@ -1,0 +1,25 @@
+Executable=/Users/andersmadsen/Developer/personal/hackios/research/ios26-phaseb-r1/accel-wait/build-mac/out/hk_accel_once.dylib
+Identifier=hk_accel_once-555549441e36637c5ddc30c78f56e54695c56c10
+Format=Mach-O thin (arm64e)
+CodeDirectory v=20400 size=335 flags=0x2(adhoc) hashes=4+2 location=embedded
+VersionPlatform=2
+VersionMin=1703936
+VersionSDK=1769728
+Hash type=sha256 size=32
+CandidateCDHash sha256=2416acb4325acda32bc4b242a5fb526f64a4ca0f
+CandidateCDHashFull sha256=2416acb4325acda32bc4b242a5fb526f64a4ca0fcde6a106221a5a2b8a3e5caf
+Hash choices=sha256
+CMSDigest=2416acb4325acda32bc4b242a5fb526f64a4ca0fcde6a106221a5a2b8a3e5caf
+CMSDigestType=2
+Executable Segment base=0
+Executable Segment limit=32768
+Executable Segment flags=0x0
+Page size=16384
+CDHash=2416acb4325acda32bc4b242a5fb526f64a4ca0f
+Signature=adhoc
+Info.plist=not bound
+TeamIdentifier=not set
+Sealed Resources=none
+Internal requirements count=0 size=12
+Total signatures=1
+Chosen signature=1

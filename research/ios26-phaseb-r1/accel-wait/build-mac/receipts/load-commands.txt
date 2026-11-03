@@ -1,0 +1,236 @@
+out/hk_accel_once.dylib:
+Load command 0
+      cmd LC_SEGMENT_64
+  cmdsize 552
+  segname __TEXT
+   vmaddr 0x0000000000000000
+   vmsize 0x0000000000008000
+  fileoff 0
+ filesize 32768
+  maxprot 0x00000005
+ initprot 0x00000005
+   nsects 6
+    flags 0x0
+Section
+  sectname __text
+   segname __TEXT
+      addr 0x0000000000004000
+      size 0x0000000000000458
+    offset 16384
+     align 2^2 (4)
+    reloff 0
+    nreloc 0
+     flags 0x80000400
+ reserved1 0
+ reserved2 0
+Section
+  sectname __auth_stubs
+   segname __TEXT
+      addr 0x0000000000004458
+      size 0x00000000000000e0
+    offset 17496
+     align 2^2 (4)
+    reloff 0
+    nreloc 0
+     flags 0x80000408
+ reserved1 0 (index into indirect symbol table)
+ reserved2 16 (size of stubs)
+Section
+  sectname __init_offsets
+   segname __TEXT
+      addr 0x0000000000004538
+      size 0x0000000000000004
+    offset 17720
+     align 2^2 (4)
+    reloff 0
+    nreloc 0
+     flags 0x00000016
+ reserved1 0
+ reserved2 0
+Section
+  sectname __cstring
+   segname __TEXT
+      addr 0x000000000000453c
+      size 0x0000000000000148
+    offset 17724
+     align 2^0 (1)
+    reloff 0
+    nreloc 0
+     flags 0x00000002
+ reserved1 0
+ reserved2 0
+Section
+  sectname __const
+   segname __TEXT
+      addr 0x0000000000004684
+      size 0x0000000000000010
+    offset 18052
+     align 2^0 (1)
+    reloff 0
+    nreloc 0
+     flags 0x00000000
+ reserved1 0
+ reserved2 0
+Section
+  sectname __unwind_info
+   segname __TEXT
+      addr 0x0000000000004694
+      size 0x0000000000000060
+    offset 18068
+     align 2^2 (4)
+    reloff 0
+    nreloc 0
+     flags 0x00000000
+ reserved1 0
+ reserved2 0
+Load command 1
+      cmd LC_SEGMENT_64
+  cmdsize 312
+  segname __DATA_CONST
+   vmaddr 0x0000000000008000
+   vmsize 0x0000000000004000
+  fileoff 32768
+ filesize 16384
+  maxprot 0x00000003
+ initprot 0x00000003
+   nsects 3
+    flags 0x10
+Section
+  sectname __const
+   segname __DATA_CONST
+      addr 0x0000000000008000
+      size 0x0000000000000040
+    offset 32768
+     align 2^3 (8)
+    reloff 0
+    nreloc 0
+     flags 0x00000000
+ reserved1 0
+ reserved2 0
+Section
+  sectname __auth_got
+   segname __DATA_CONST
+      addr 0x0000000000008040
+      size 0x0000000000000070
+    offset 32832
+     align 2^3 (8)
+    reloff 0
+    nreloc 0
+     flags 0x00000006
+ reserved1 14 (index into indirect symbol table)
+ reserved2 0
+Section
+  sectname __got
+   segname __DATA_CONST
+      addr 0x00000000000080b0
+      size 0x0000000000000008
+    offset 32944
+     align 2^3 (8)
+    reloff 0
+    nreloc 0
+     flags 0x00000006
+ reserved1 28 (index into indirect symbol table)
+ reserved2 0
+Load command 2
+      cmd LC_SEGMENT_64
+  cmdsize 72
+  segname __LINKEDIT
+   vmaddr 0x000000000000c000
+   vmsize 0x0000000000004000
+  fileoff 49152
+ filesize 1456
+  maxprot 0x00000001
+ initprot 0x00000001
+   nsects 0
+    flags 0x0
+Load command 3
+          cmd LC_ID_DYLIB
+      cmdsize 64
+         name /private/var/hk/hk_accel_once.dylib (offset 24)
+   time stamp 1 Thu Jan  1 01:00:01 1970
+      current version 0.0.0
+compatibility version 0.0.0
+Load command 4
+      cmd LC_DYLD_CHAINED_FIXUPS
+  cmdsize 16
+  dataoff 49152
+ datasize 352
+Load command 5
+      cmd LC_DYLD_EXPORTS_TRIE
+  cmdsize 16
+  dataoff 49504
+ datasize 8
+Load command 6
+     cmd LC_SYMTAB
+ cmdsize 24
+  symoff 49520
+   nsyms 19
+  stroff 49944
+ strsize 264
+Load command 7
+            cmd LC_DYSYMTAB
+        cmdsize 80
+      ilocalsym 0
+      nlocalsym 4
+     iextdefsym 4
+     nextdefsym 0
+      iundefsym 4
+      nundefsym 15
+         tocoff 0
+           ntoc 0
+      modtaboff 0
+        nmodtab 0
+   extrefsymoff 0
+    nextrefsyms 0
+ indirectsymoff 49824
+  nindirectsyms 29
+      extreloff 0
+        nextrel 0
+      locreloff 0
+        nlocrel 0
+Load command 8
+     cmd LC_UUID
+ cmdsize 24
+    uuid 1E36637C-5DDC-30C7-8F56-E54695C56C10
+Load command 9
+      cmd LC_BUILD_VERSION
+  cmdsize 32
+ platform 2
+    minos 26.0
+      sdk 27.1
+   ntools 1
+     tool 3
+  version 27037.1
+Load command 10
+      cmd LC_SOURCE_VERSION
+  cmdsize 16
+  version 0.0
+Load command 11
+          cmd LC_ENCRYPTION_INFO_64
+      cmdsize 24
+     cryptoff 16384
+    cryptsize 16384
+      cryptid 0
+          pad 0
+Load command 12
+          cmd LC_LOAD_DYLIB
+      cmdsize 56
+         name /usr/lib/libSystem.B.dylib (offset 24)
+   time stamp 2 Thu Jan  1 01:00:02 1970
+      current version 1359.0.0
+compatibility version 1.0.0
+Load command 13
+      cmd LC_FUNCTION_STARTS
+  cmdsize 16
+  dataoff 49512
+ datasize 8
+Load command 14
+      cmd LC_DATA_IN_CODE
+  cmdsize 16
+  dataoff 49520
+ datasize 0
+Load command 15
+      cmd LC_CODE_SIGNATURE
+  cmdsize 16
+  dataoff 50208
+ datasize 400

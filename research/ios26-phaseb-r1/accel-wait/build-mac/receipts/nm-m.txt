@@ -1,0 +1,19 @@
+                 (undefined) external ___stack_chk_fail (from libSystem)
+                 (undefined) external ___stack_chk_guard (from libSystem)
+                 (undefined) external __dyld_get_image_header (from libSystem)
+                 (undefined) external __dyld_get_image_name (from libSystem)
+                 (undefined) external __dyld_get_image_vmaddr_slide (from libSystem)
+                 (undefined) external __dyld_image_count (from libSystem)
+                 (undefined) external _close (from libSystem)
+                 (undefined) external _dispatch_once_f (from libSystem)
+                 (undefined) external _getenv (from libSystem)
+                 (undefined) external _getprogname (from libSystem)
+0000000000008000 (__DATA_CONST,__const) non-external _hka_name.n
+0000000000004454 (__TEXT,__text) non-external _hka_noop
+0000000000004684 (__TEXT,__const) non-external _hka_qc_uuid
+0000000000004000 (__TEXT,__text) non-external _hka_start
+                 (undefined) external _open (from libSystem)
+                 (undefined) external _snprintf (from libSystem)
+                 (undefined) external _strcmp (from libSystem)
+                 (undefined) external _strlen (from libSystem)
+                 (undefined) external _write (from libSystem)

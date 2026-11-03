@@ -1,0 +1,14 @@
+PASS records: 45 identical, 1 hk_env replaced, 1 file appended (/private/var/hk/hk_accel_once.dylib, group 29, 50608 B)
+EXEC backboardd DYLD_INSERT_LIBRARIES=/private/var/hk/hgltrack.dylib:/private/var/hk/hk_container_ready.dylib:/private/var/hk/hk_accel_once.dylib
+EXEC backboardd HK_CONTAINER_READY=probe
+EXEC backboardd HK_ACCEL_ONCE=skip
+EXEC SpringBoard FEATUREFLAGS_DISABLED=SpringBoard/Autobahn:SpringBoard/AutobahnLegacyMigration:SpringBoard/AutobahnLegacyMigrationSupportingDistinctHome
+EXEC SpringBoard DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC SpringBoard HK_BATTERY_TRACE=1
+EXEC Preferences DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+EXEC Preferences HK_SETTINGS_ARTWORK=1
+EXEC iconservicesagent DYLD_INSERT_LIBRARIES=/private/var/hk/hkart.dylib
+EXEC iconservicesagent HK_SETTINGS_ARTWORK=1
+EXEC powerd DYLD_INSERT_LIBRARIES=/private/var/hk/hkbattery.dylib
+EXEC powerd HK_BATTERY_TRACE=1
+PASS: release hk_env_next; only backboardd changed; cumulative_with_NUL=661; 304 checks
