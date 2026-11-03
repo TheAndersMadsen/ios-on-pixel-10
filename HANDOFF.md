@@ -5,7 +5,7 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Attended, owner present: `a7-ios-system-r3` = r2 (one core, deadline 1800) without `hk_bright=140`. The black
+1. Attended, owner present: `a7-ios-system-r3` = r1 (5 cores, deadline 300) without `hk_bright=140`; Home expected about 90 s after power-on (`research/ios26-phaseb-r1/home-budget/BUDGET.md`). The black
    screen is backboardd's CoreBrightness NULL read, which happens only when the kernel publishes `AppleARMBacklight`
    (hk_bright) without `backlight-calibration-parameters`: 0 crashes in every boot without it, including the 11-01 Home
    boot; 14-18 in every boot with it (`research/ios26-phaseb-r1/corebrightness/FINDINGS.md`). r2 (deadline 1800) still drew

@@ -1,0 +1,1024 @@
+{
+"watch": [
+{
+"t": 0.028,
+"stage": "takeover",
+"reads": 0,
+"blocks": 0,
+"busy_ms": 0
+},
+{
+"t": 0.029,
+"stage": "rootdev",
+"reads": 3,
+"blocks": 3,
+"busy_ms": 0
+},
+{
+"t": 0.032,
+"stage": "mounted",
+"reads": 13,
+"blocks": 18,
+"busy_ms": 1
+},
+{
+"t": 0.035,
+"stage": "varfs",
+"reads": 17,
+"blocks": 82,
+"busy_ms": 2
+},
+{
+"t": 0.092,
+"stage": "overlay",
+"reads": 85,
+"blocks": 204,
+"busy_ms": 10
+},
+{
+"t": 4.249,
+"stage": "pid1_exec",
+"reads": 103,
+"blocks": 253,
+"busy_ms": 12
+},
+{
+"t": 10.003,
+"stage": "pid1_exec",
+"reads": 27415,
+"blocks": 159778,
+"busy_ms": 3598
+},
+{
+"t": 20.008,
+"stage": "pid1_exec",
+"reads": 38688,
+"blocks": 213466,
+"busy_ms": 4975
+},
+{
+"t": 30.013,
+"stage": "pid1_exec",
+"reads": 42058,
+"blocks": 233243,
+"busy_ms": 5407
+},
+{
+"t": 40.016,
+"stage": "pid1_exec",
+"reads": 42058,
+"blocks": 233243,
+"busy_ms": 5407
+},
+{
+"t": 50.022,
+"stage": "pid1_exec",
+"reads": 50407,
+"blocks": 286086,
+"busy_ms": 6524
+},
+{
+"t": 60.023,
+"stage": "pid1_exec",
+"reads": 51360,
+"blocks": 292723,
+"busy_ms": 6662
+},
+{
+"t": 70.027,
+"stage": "pid1_exec",
+"reads": 52650,
+"blocks": 302107,
+"busy_ms": 6843
+},
+{
+"t": 80.033,
+"stage": "pid1_exec",
+"reads": 52652,
+"blocks": 302123,
+"busy_ms": 6844
+},
+{
+"t": 90.039,
+"stage": "pid1_exec",
+"reads": 52735,
+"blocks": 302736,
+"busy_ms": 6856
+},
+{
+"t": 100.043,
+"stage": "pid1_exec",
+"reads": 52746,
+"blocks": 302797,
+"busy_ms": 6857
+},
+{
+"t": 110.049,
+"stage": "pid1_exec",
+"reads": 52747,
+"blocks": 302798,
+"busy_ms": 6858
+},
+{
+"t": 120.052,
+"stage": "pid1_exec",
+"reads": 52750,
+"blocks": 302818,
+"busy_ms": 6858
+},
+{
+"t": 130.057,
+"stage": "pid1_exec",
+"reads": 52750,
+"blocks": 302818,
+"busy_ms": 6858
+},
+{
+"t": 140.063,
+"stage": "pid1_exec",
+"reads": 52750,
+"blocks": 302818,
+"busy_ms": 6858
+},
+{
+"t": 150.065,
+"stage": "pid1_exec",
+"reads": 52750,
+"blocks": 302818,
+"busy_ms": 6858
+},
+{
+"t": 160.068,
+"stage": "pid1_exec",
+"reads": 52753,
+"blocks": 302838,
+"busy_ms": 6858
+},
+{
+"t": 170.074,
+"stage": "pid1_exec",
+"reads": 52753,
+"blocks": 302838,
+"busy_ms": 6858
+},
+{
+"t": 180.08,
+"stage": "pid1_exec",
+"reads": 52759,
+"blocks": 302871,
+"busy_ms": 6859
+},
+{
+"t": 190.081,
+"stage": "pid1_exec",
+"reads": 52762,
+"blocks": 302891,
+"busy_ms": 6860
+},
+{
+"t": 200.085,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 210.09,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 220.096,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 230.102,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 240.108,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 250.114,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 260.121,
+"stage": "pid1_exec",
+"reads": 52766,
+"blocks": 302915,
+"busy_ms": 6860
+},
+{
+"t": 270.127,
+"stage": "pid1_exec",
+"reads": 52769,
+"blocks": 302935,
+"busy_ms": 6861
+},
+{
+"t": 280.133,
+"stage": "pid1_exec",
+"reads": 52771,
+"blocks": 302951,
+"busy_ms": 6861
+},
+{
+"t": 290.139,
+"stage": "pid1_exec",
+"reads": 52773,
+"blocks": 302967,
+"busy_ms": 6861
+},
+{
+"t": 300.145,
+"stage": "pid1_exec",
+"reads": 52775,
+"blocks": 302979,
+"busy_ms": 6861
+}
+],
+"top": [
+{
+"t": 222,
+"frames": 0,
+"cpu_ms": 61969,
+"kt": 20.008,
+"procs": "lsd[57]=10718 launchd[1]=8810 UserEventAgent[3]=3275 passd[66]=1617 SpringBoard[5]=1495 nehelper[73]=1394 audiomxd[58]=1384 CommCenter[43]=1310"
+},
+{
+"t": 252,
+"frames": 27,
+"cpu_ms": 45967,
+"kt": 50.022,
+"procs": "SpringBoard[5]=25582 Spotlight[142]=3918 launchd[1]=2693 iconservicesagen[83]=2667 backboardd[22]=2556 callservicesd[75]=619 runningboardd[4]=565 cfprefsd[51]=524"
+},
+{
+"t": 282,
+"frames": 13,
+"cpu_ms": 17507,
+"kt": 90.039,
+"procs": "iconservicesagen[83]=5247 SpringBoard[5]=3997 Preferences[147]=2640 backboardd[22]=2533 launchd[1]=697 kernel_task[0]=464 runningboardd[4]=366 splashboardd[146]=179"
+},
+{
+"t": 312,
+"frames": 30,
+"cpu_ms": 10785,
+"kt": 120.052,
+"procs": "backboardd[22]=6747 SpringBoard[5]=2255 kernel_task[0]=565 runningboardd[4]=300 launchd[1]=281 powerexceptionsd[28]=126 callservicesd[75]=52 mediaremoted[6]=42"
+},
+{
+"t": 342,
+"frames": 0,
+"cpu_ms": 3189,
+"kt": 150.065,
+"procs": "SpringBoard[5]=1270 backboardd[22]=1005 kernel_task[0]=454 launchd[1]=181 callservicesd[75]=39 thermalmonitord[19]=37 featureaccessd[91]=19 configd[8]=18"
+},
+{
+"t": 372,
+"frames": 38,
+"cpu_ms": 18037,
+"kt": 170.074,
+"procs": "backboardd[22]=14588 SpringBoard[5]=2267 kernel_task[0]=521 launchd[1]=202 runningboardd[4]=94 callservicesd[75]=50 thermalmonitord[19]=36 audiomxd[58]=27"
+},
+{
+"t": 402,
+"frames": 162,
+"cpu_ms": 54536,
+"kt": 210.09,
+"procs": "backboardd[22]=47764 SpringBoard[5]=4724 kernel_task[0]=979 runningboardd[4]=292 launchd[1]=189 callservicesd[75]=86 audiomxd[58]=53 UserEventAgent[3]=45"
+},
+{
+"t": 432,
+"frames": 1,
+"cpu_ms": 873,
+"kt": 240.108,
+"procs": "kernel_task[0]=294 launchd[1]=170 SpringBoard[5]=141 backboardd[22]=114 thermalmonitord[19]=39 clipserviced[105]=13 rapportd[38]=11 notifyd[48]=10"
+},
+{
+"t": 462,
+"frames": 0,
+"cpu_ms": 952,
+"kt": 270.127,
+"procs": "kernel_task[0]=329 launchd[1]=176 SpringBoard[5]=132 backboardd[22]=63 akd[87]=47 thermalmonitord[19]=37 featureaccessd[91]=19 securityd[54]=14"
+}
+],
+"spawn_first_kt": {
+"SpringBoard": 4.249,
+"configd": 4.249,
+"thermalmonitord": 4.249,
+"cameracaptured": 4.249,
+"timed": 4.249,
+"remoted": 4.249,
+"DumpPanic": 4.249,
+"containermanagerd": 4.249,
+"remotepairingdeviced": 4.249,
+"mobiletimerd": 4.249,
+"amfid": 4.249,
+"driverkitd": 4.249,
+"keybagd": 4.249,
+"sharingd": 4.249,
+"AppleCredentialManagerDaemon": 4.249,
+"mtmergeprops": 4.249,
+"sleepd": 4.249,
+"lockdownd": 4.249,
+"ptpd": 4.249,
+"backboardd": 4.249,
+"rapportd": 4.249,
+"fairplayd.H2": 4.249,
+"distnoted": 4.249,
+"fseventsd": 4.249,
+"IOMFB_FDR_Loader": 4.249,
+"logd": 4.249,
+"CommCenter": 4.249,
+"UserEventAgent": 4.249,
+"notifyd": 4.249,
+"wcd": 4.249,
+"atc": 4.249,
+"aonsensed": 4.249,
+"appprotectiond": 4.249,
+"powerexceptionsd": 4.249,
+"powerd": 4.249,
+"safetyalertsd": 4.249,
+"magicswitchd": 4.249,
+"runningboardd": 4.249,
+"peakpowermanagerd": 4.249,
+"audioaccessoryd": 4.249,
+"usermanagerd": 4.249,
+"amsaccountsd": 4.249,
+"ManagedSettingsAgent": 4.249,
+"accountsd": 4.249,
+"tccd": 4.249,
+"mediaremoted": 4.249,
+"containermanagerd_system": 4.249,
+"cfprefsd": 4.249,
+"systemstatusd": 10.003,
+"chronod": 10.003,
+"apfs_iosd": 10.003,
+"lsd": 10.003,
+"datamigrator": 10.003,
+"securityd": 10.003,
+"audiomxd": 10.003,
+"ACCHWComponentAuthService": 10.003,
+"MobileGestaltHelper": 10.003,
+"nanoregistryd": 10.003,
+"usernotificationsd": 10.003,
+"liveactivitiesd": 10.003,
+"dmd": 10.003,
+"passd": 10.003,
+"coreauthd": 10.003,
+"donotdisturbd": 10.003,
+"calaccessd": 10.003,
+"mDNSResponder": 10.003,
+"webinspectord": 10.003,
+"automationmode-writer": 10.003,
+"nehelper": 10.003,
+"apsd": 10.003,
+"callservicesd": 10.003,
+"CommCenterMobileHelper": 10.003,
+"networkserviceproxy": 10.003,
+"mobileactivationd": 10.003,
+"pkd": 10.003,
+"deviceaccessd": 10.003,
+"PerfPowerTelemetryClientRegistrationService": 10.003,
+"bluetoothuserd": 10.003,
+"iconservicesagent": 10.003,
+"contactsd": 10.003,
+"symptomsd": 10.003,
+"applekeystored": 10.003,
+"akd": 10.003,
+"misd": 10.003,
+"pfd": 10.003,
+"nsurlsessiond": 10.003,
+"featureaccessd": 10.003,
+"swcd": 10.003,
+"appleaccountd": 10.003,
+"cryptexd": 10.003,
+"AppSSODaemon": 10.003,
+"PosterBoard": 10.003,
+"migrationd": 10.003,
+"nanoregistrylaunchd": 10.003,
+"profiled": 10.003,
+"coreduetd": 10.003,
+"AudioConverterService": 10.003,
+"budd": 10.003,
+"clipserviced": 10.003,
+"corecaptured": 10.003,
+"linkd": 10.003,
+"misagent": 10.003,
+"fontservicesd": 10.003,
+"dataaccessd": 10.003,
+"tvremoted": 10.003,
+"tailspind": 10.003,
+"betaenrollmentd": 10.003,
+"installd": 20.008,
+"intelligentroutingd": 20.008,
+"MobileInstallationHelperService": 20.008,
+"installcoordinationd": 20.008,
+"UserFontManager": 20.008,
+"GSSCred": 20.008,
+"ctkd": 20.008,
+"nesessionmanager": 20.008,
+"financed": 20.008,
+"communicationtrustd": 20.008,
+"contactsdonationagent": 20.008,
+"FTConversationService": 40.016,
+"NeighborhoodActivityConduitService": 40.016,
+"AccessibilityUIServer": 40.016,
+"useractivityd": 40.016,
+"languageassetd": 40.016,
+"managedappdistributiond": 40.016,
+"CallDirectoryMaintenance": 40.016,
+"vmd": 40.016,
+"localizationswitcherd": 40.016,
+"localspeechrecognition": 40.016,
+"assetsubscriptiond": 40.016,
+"siriactionsd": 50.022,
+"Spotlight": 50.022,
+"splashboardd": 60.023,
+"Preferences": 60.023
+},
+"spawn_count": {
+"SpringBoard": 1,
+"configd": 1,
+"thermalmonitord": 1,
+"cameracaptured": 1,
+"timed": 1,
+"remoted": 1,
+"DumpPanic": 1,
+"containermanagerd": 1,
+"remotepairingdeviced": 1,
+"mobiletimerd": 1,
+"amfid": 1,
+"driverkitd": 1,
+"keybagd": 1,
+"sharingd": 1,
+"AppleCredentialManagerDaemon": 1,
+"mtmergeprops": 1,
+"sleepd": 1,
+"lockdownd": 1,
+"ptpd": 1,
+"backboardd": 1,
+"rapportd": 1,
+"fairplayd.H2": 30,
+"distnoted": 1,
+"fseventsd": 1,
+"IOMFB_FDR_Loader": 1,
+"logd": 1,
+"CommCenter": 1,
+"UserEventAgent": 1,
+"notifyd": 1,
+"wcd": 1,
+"atc": 1,
+"aonsensed": 1,
+"appprotectiond": 1,
+"powerexceptionsd": 1,
+"powerd": 1,
+"safetyalertsd": 1,
+"magicswitchd": 1,
+"runningboardd": 1,
+"peakpowermanagerd": 1,
+"audioaccessoryd": 1,
+"usermanagerd": 1,
+"amsaccountsd": 1,
+"ManagedSettingsAgent": 1,
+"accountsd": 1,
+"tccd": 1,
+"mediaremoted": 1,
+"containermanagerd_system": 1,
+"cfprefsd": 2,
+"systemstatusd": 1,
+"chronod": 1,
+"apfs_iosd": 1,
+"lsd": 1,
+"datamigrator": 2,
+"securityd": 1,
+"audiomxd": 1,
+"ACCHWComponentAuthService": 1,
+"MobileGestaltHelper": 1,
+"nanoregistryd": 1,
+"usernotificationsd": 1,
+"liveactivitiesd": 1,
+"dmd": 1,
+"passd": 1,
+"coreauthd": 1,
+"donotdisturbd": 1,
+"calaccessd": 1,
+"mDNSResponder": 1,
+"webinspectord": 1,
+"automationmode-writer": 1,
+"nehelper": 1,
+"apsd": 1,
+"callservicesd": 1,
+"CommCenterMobileHelper": 1,
+"networkserviceproxy": 1,
+"mobileactivationd": 1,
+"pkd": 1,
+"deviceaccessd": 1,
+"PerfPowerTelemetryClientRegistrationService": 1,
+"bluetoothuserd": 1,
+"iconservicesagent": 1,
+"contactsd": 1,
+"symptomsd": 1,
+"applekeystored": 1,
+"akd": 1,
+"misd": 1,
+"pfd": 1,
+"nsurlsessiond": 1,
+"featureaccessd": 1,
+"swcd": 1,
+"appleaccountd": 1,
+"cryptexd": 1,
+"AppSSODaemon": 1,
+"PosterBoard": 1,
+"migrationd": 1,
+"nanoregistrylaunchd": 1,
+"profiled": 1,
+"coreduetd": 1,
+"AudioConverterService": 2,
+"budd": 1,
+"clipserviced": 1,
+"corecaptured": 1,
+"linkd": 1,
+"misagent": 1,
+"fontservicesd": 1,
+"dataaccessd": 1,
+"tvremoted": 1,
+"tailspind": 1,
+"betaenrollmentd": 1,
+"installd": 1,
+"intelligentroutingd": 1,
+"MobileInstallationHelperService": 1,
+"installcoordinationd": 1,
+"UserFontManager": 1,
+"GSSCred": 1,
+"ctkd": 1,
+"nesessionmanager": 1,
+"financed": 1,
+"communicationtrustd": 1,
+"contactsdonationagent": 1,
+"FTConversationService": 1,
+"NeighborhoodActivityConduitService": 1,
+"AccessibilityUIServer": 10,
+"useractivityd": 1,
+"languageassetd": 1,
+"managedappdistributiond": 1,
+"CallDirectoryMaintenance": 1,
+"vmd": 1,
+"localizationswitcherd": 1,
+"localspeechrecognition": 1,
+"assetsubscriptiond": 1,
+"siriactionsd": 1,
+"Spotlight": 1,
+"splashboardd": 1,
+"Preferences": 1
+},
+"exits": {
+"bluetoothd": [
+[
+4.249,
+"exit(78)",
+310
+]
+],
+"fairplayd.H2": [
+[
+10.003,
+"exit(0)",
+2468
+],
+[
+10.003,
+"exit(0)",
+56
+],
+[
+20.008,
+"exit(0)",
+60
+],
+[
+30.013,
+"exit(0)",
+66
+],
+[
+40.016,
+"exit(0)",
+87
+],
+[
+50.022,
+"exit(0)",
+72
+],
+[
+60.023,
+"exit(0)",
+67
+],
+[
+70.027,
+"exit(0)",
+60
+],
+[
+80.033,
+"exit(0)",
+58
+],
+[
+90.039,
+"exit(0)",
+63
+],
+[
+100.043,
+"exit(0)",
+69
+],
+[
+110.049,
+"exit(0)",
+62
+],
+[
+120.052,
+"exit(0)",
+64
+],
+[
+130.057,
+"exit(0)",
+62
+],
+[
+140.063,
+"exit(0)",
+60
+],
+[
+150.065,
+"exit(0)",
+62
+],
+[
+160.068,
+"exit(0)",
+63
+],
+[
+170.074,
+"exit(0)",
+63
+],
+[
+180.08,
+"exit(0)",
+64
+],
+[
+190.081,
+"exit(0)",
+74
+],
+[
+200.085,
+"exit(0)",
+64
+],
+[
+210.09,
+"exit(0)",
+61
+],
+[
+220.096,
+"exit(0)",
+63
+],
+[
+230.102,
+"exit(0)",
+63
+],
+[
+240.108,
+"exit(0)",
+63
+],
+[
+250.114,
+"exit(0)",
+63
+],
+[
+260.121,
+"exit(0)",
+62
+],
+[
+270.127,
+"exit(0)",
+62
+],
+[
+280.133,
+"exit(0)",
+61
+],
+[
+290.139,
+"exit(0)",
+62
+]
+],
+"iomfb_fdr_loader": [
+[
+10.003,
+"exit(1)",
+2621
+]
+],
+"peakpowermanagerd": [
+[
+10.003,
+"exit(1)",
+5326
+]
+],
+"webinspectord": [
+[
+10.003,
+"exit(1)",
+2508
+]
+],
+"magicswitchd.companion": [
+[
+10.003,
+"SIGKILL | sent by launchd[1]",
+8897
+]
+],
+"DumpPanic": [
+[
+20.008,
+"exit(0)",
+17548
+]
+],
+"datamigrator": [
+[
+30.013,
+"exit(0)",
+24518
+],
+[
+50.022,
+"exit(0)",
+12053
+]
+],
+"AccessibilityUIServer": [
+[
+50.022,
+"SIGABRT | sent by AccessibilityUIServer[129]",
+5260
+],
+[
+50.022,
+"SIGABRT | sent by AccessibilityUIServer[141]",
+1210
+],
+[
+50.022,
+"SIGABRT | sent by AccessibilityUIServer[143]",
+1174
+],
+[
+60.023,
+"SIGABRT | sent by AccessibilityUIServer[145]",
+1184
+],
+[
+60.023,
+"SIGABRT | sent by AccessibilityUIServer[148]",
+1206
+],
+[
+70.027,
+"SIGABRT | sent by AccessibilityUIServer[150]",
+1172
+],
+[
+70.027,
+"SIGABRT | sent by AccessibilityUIServer[151]",
+1169
+],
+[
+80.033,
+"SIGABRT | sent by AccessibilityUIServer[153]",
+1168
+],
+[
+80.033,
+"SIGABRT | sent by AccessibilityUIServer[154]",
+1171
+],
+[
+90.039,
+"SIGABRT | sent by AccessibilityUIServer[156]",
+1178
+]
+],
+"mtmergeprops": [
+[
+60.023,
+"exit(0)",
+61497
+]
+],
+"corecaptured": [
+[
+70.027,
+"exit(0)",
+60070
+]
+]
+},
+"pushes": [
+[
+10.003,
+"user/501/com.apple.fairplayd.H2",
+8
+],
+[
+10.003,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+20.008,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+30.013,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+40.016,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+50.022,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+60.023,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+70.027,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+80.033,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+90.039,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+100.043,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+110.049,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+120.052,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+130.057,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+140.063,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+150.065,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+160.068,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+170.074,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+180.08,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+190.081,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+200.085,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+210.09,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+220.096,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+230.102,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+240.108,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+250.114,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+260.121,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+270.127,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+280.133,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+290.139,
+"user/501/com.apple.fairplayd.H2",
+10
+]
+],
+"n_offsets": 4852,
+"offset_min_max": [
+189.204877,
+202.41772000000003
+],
+"attempt": "20261102-111800-sampler-off-p29-r1",
+"source": "tools/read-ramdump.py --logs msgbuf mirror"
+}

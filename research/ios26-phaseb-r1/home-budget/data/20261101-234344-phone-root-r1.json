@@ -1,0 +1,3798 @@
+{
+"watch": [
+{
+"t": 0.112,
+"stage": "takeover",
+"reads": 0,
+"blocks": 0,
+"busy_ms": 0
+},
+{
+"t": 0.121,
+"stage": "rootdev",
+"reads": 3,
+"blocks": 3,
+"busy_ms": 0
+},
+{
+"t": 0.132,
+"stage": "mounted",
+"reads": 18,
+"blocks": 18,
+"busy_ms": 2
+},
+{
+"t": 0.142,
+"stage": "varfs",
+"reads": 18,
+"blocks": 18,
+"busy_ms": 2
+},
+{
+"t": 4.606,
+"stage": "pid1_exec",
+"reads": 250,
+"blocks": 250,
+"busy_ms": 36
+},
+{
+"t": 10.023,
+"stage": "pid1_exec",
+"reads": 10595,
+"blocks": 10595,
+"busy_ms": 1254
+},
+{
+"t": 20.026,
+"stage": "pid1_exec",
+"reads": 39549,
+"blocks": 39549,
+"busy_ms": 5090
+},
+{
+"t": 30.029,
+"stage": "pid1_exec",
+"reads": 57852,
+"blocks": 57852,
+"busy_ms": 7994
+},
+{
+"t": 40.031,
+"stage": "pid1_exec",
+"reads": 72294,
+"blocks": 72294,
+"busy_ms": 9842
+},
+{
+"t": 50.033,
+"stage": "pid1_exec",
+"reads": 81536,
+"blocks": 81536,
+"busy_ms": 10947
+},
+{
+"t": 60.066,
+"stage": "pid1_exec",
+"reads": 93116,
+"blocks": 93116,
+"busy_ms": 12382
+},
+{
+"t": 70.068,
+"stage": "pid1_exec",
+"reads": 110760,
+"blocks": 110760,
+"busy_ms": 14713
+},
+{
+"t": 80.068,
+"stage": "pid1_exec",
+"reads": 124995,
+"blocks": 124995,
+"busy_ms": 16687
+},
+{
+"t": 90.068,
+"stage": "pid1_exec",
+"reads": 138576,
+"blocks": 138576,
+"busy_ms": 18359
+},
+{
+"t": 100.069,
+"stage": "pid1_exec",
+"reads": 146538,
+"blocks": 146538,
+"busy_ms": 19544
+},
+{
+"t": 110.069,
+"stage": "pid1_exec",
+"reads": 162621,
+"blocks": 162621,
+"busy_ms": 21489
+},
+{
+"t": 120.07,
+"stage": "pid1_exec",
+"reads": 171494,
+"blocks": 171494,
+"busy_ms": 22715
+},
+{
+"t": 130.073,
+"stage": "pid1_exec",
+"reads": 180927,
+"blocks": 180927,
+"busy_ms": 23861
+},
+{
+"t": 140.076,
+"stage": "pid1_exec",
+"reads": 187394,
+"blocks": 187394,
+"busy_ms": 24656
+},
+{
+"t": 150.077,
+"stage": "pid1_exec",
+"reads": 195801,
+"blocks": 195801,
+"busy_ms": 25695
+},
+{
+"t": 160.078,
+"stage": "pid1_exec",
+"reads": 205532,
+"blocks": 205532,
+"busy_ms": 26871
+},
+{
+"t": 170.081,
+"stage": "pid1_exec",
+"reads": 214522,
+"blocks": 214522,
+"busy_ms": 27980
+},
+{
+"t": 180.084,
+"stage": "pid1_exec",
+"reads": 223826,
+"blocks": 223826,
+"busy_ms": 29119
+},
+{
+"t": 190.084,
+"stage": "pid1_exec",
+"reads": 234228,
+"blocks": 234228,
+"busy_ms": 30379
+},
+{
+"t": 200.086,
+"stage": "pid1_exec",
+"reads": 241362,
+"blocks": 241362,
+"busy_ms": 31270
+},
+{
+"t": 210.088,
+"stage": "pid1_exec",
+"reads": 246650,
+"blocks": 246650,
+"busy_ms": 31928
+},
+{
+"t": 220.089,
+"stage": "pid1_exec",
+"reads": 252451,
+"blocks": 252451,
+"busy_ms": 32651
+},
+{
+"t": 230.09,
+"stage": "pid1_exec",
+"reads": 257216,
+"blocks": 257216,
+"busy_ms": 33263
+},
+{
+"t": 240.091,
+"stage": "pid1_exec",
+"reads": 262200,
+"blocks": 262200,
+"busy_ms": 33886
+},
+{
+"t": 250.092,
+"stage": "pid1_exec",
+"reads": 268064,
+"blocks": 268064,
+"busy_ms": 34966
+},
+{
+"t": 260.094,
+"stage": "pid1_exec",
+"reads": 272736,
+"blocks": 272736,
+"busy_ms": 35796
+},
+{
+"t": 270.095,
+"stage": "pid1_exec",
+"reads": 275499,
+"blocks": 275499,
+"busy_ms": 36147
+},
+{
+"t": 280.096,
+"stage": "pid1_exec",
+"reads": 278793,
+"blocks": 278793,
+"busy_ms": 36568
+},
+{
+"t": 290.099,
+"stage": "pid1_exec",
+"reads": 283642,
+"blocks": 283642,
+"busy_ms": 37175
+},
+{
+"t": 300.1,
+"stage": "pid1_exec",
+"reads": 288048,
+"blocks": 288048,
+"busy_ms": 37727
+},
+{
+"t": 310.101,
+"stage": "pid1_exec",
+"reads": 291482,
+"blocks": 291482,
+"busy_ms": 38172
+},
+{
+"t": 320.104,
+"stage": "pid1_exec",
+"reads": 297046,
+"blocks": 297046,
+"busy_ms": 38858
+},
+{
+"t": 330.106,
+"stage": "pid1_exec",
+"reads": 299486,
+"blocks": 299486,
+"busy_ms": 39173
+},
+{
+"t": 340.107,
+"stage": "pid1_exec",
+"reads": 302174,
+"blocks": 302174,
+"busy_ms": 39575
+},
+{
+"t": 350.108,
+"stage": "pid1_exec",
+"reads": 303953,
+"blocks": 303953,
+"busy_ms": 39813
+},
+{
+"t": 360.11,
+"stage": "pid1_exec",
+"reads": 307315,
+"blocks": 307315,
+"busy_ms": 40222
+},
+{
+"t": 370.114,
+"stage": "pid1_exec",
+"reads": 311900,
+"blocks": 311900,
+"busy_ms": 40794
+},
+{
+"t": 380.115,
+"stage": "pid1_exec",
+"reads": 317515,
+"blocks": 317515,
+"busy_ms": 41485
+},
+{
+"t": 390.116,
+"stage": "pid1_exec",
+"reads": 321106,
+"blocks": 321106,
+"busy_ms": 41943
+},
+{
+"t": 400.119,
+"stage": "pid1_exec",
+"reads": 325034,
+"blocks": 325034,
+"busy_ms": 42443
+},
+{
+"t": 410.121,
+"stage": "pid1_exec",
+"reads": 327807,
+"blocks": 327807,
+"busy_ms": 42813
+},
+{
+"t": 420.122,
+"stage": "pid1_exec",
+"reads": 330343,
+"blocks": 330343,
+"busy_ms": 43129
+},
+{
+"t": 430.123,
+"stage": "pid1_exec",
+"reads": 333810,
+"blocks": 333810,
+"busy_ms": 43562
+},
+{
+"t": 440.125,
+"stage": "pid1_exec",
+"reads": 336123,
+"blocks": 336123,
+"busy_ms": 43850
+},
+{
+"t": 450.125,
+"stage": "pid1_exec",
+"reads": 338651,
+"blocks": 338651,
+"busy_ms": 44171
+},
+{
+"t": 460.126,
+"stage": "pid1_exec",
+"reads": 341363,
+"blocks": 341363,
+"busy_ms": 44506
+},
+{
+"t": 470.127,
+"stage": "pid1_exec",
+"reads": 343101,
+"blocks": 343101,
+"busy_ms": 44729
+},
+{
+"t": 480.128,
+"stage": "pid1_exec",
+"reads": 344994,
+"blocks": 344994,
+"busy_ms": 44977
+},
+{
+"t": 490.13,
+"stage": "pid1_exec",
+"reads": 346096,
+"blocks": 346096,
+"busy_ms": 45123
+},
+{
+"t": 500.131,
+"stage": "pid1_exec",
+"reads": 347527,
+"blocks": 347527,
+"busy_ms": 45315
+},
+{
+"t": 510.132,
+"stage": "pid1_exec",
+"reads": 348761,
+"blocks": 348761,
+"busy_ms": 45497
+},
+{
+"t": 520.134,
+"stage": "pid1_exec",
+"reads": 350207,
+"blocks": 350207,
+"busy_ms": 45718
+},
+{
+"t": 530.135,
+"stage": "pid1_exec",
+"reads": 351743,
+"blocks": 351743,
+"busy_ms": 45944
+},
+{
+"t": 540.136,
+"stage": "pid1_exec",
+"reads": 357204,
+"blocks": 357204,
+"busy_ms": 46854
+},
+{
+"t": 550.137,
+"stage": "pid1_exec",
+"reads": 360035,
+"blocks": 360035,
+"busy_ms": 47242
+},
+{
+"t": 560.139,
+"stage": "pid1_exec",
+"reads": 368499,
+"blocks": 368499,
+"busy_ms": 49156
+},
+{
+"t": 570.14,
+"stage": "pid1_exec",
+"reads": 379866,
+"blocks": 379866,
+"busy_ms": 51204
+},
+{
+"t": 580.143,
+"stage": "pid1_exec",
+"reads": 384857,
+"blocks": 384857,
+"busy_ms": 52139
+},
+{
+"t": 590.144,
+"stage": "pid1_exec",
+"reads": 386934,
+"blocks": 386934,
+"busy_ms": 52457
+},
+{
+"t": 600.148,
+"stage": "pid1_exec",
+"reads": 389780,
+"blocks": 389780,
+"busy_ms": 54416
+},
+{
+"t": 610.149,
+"stage": "pid1_exec",
+"reads": 392412,
+"blocks": 392412,
+"busy_ms": 55315
+},
+{
+"t": 620.15,
+"stage": "pid1_exec",
+"reads": 393747,
+"blocks": 393747,
+"busy_ms": 55517
+},
+{
+"t": 630.151,
+"stage": "pid1_exec",
+"reads": 396321,
+"blocks": 396321,
+"busy_ms": 56349
+},
+{
+"t": 640.155,
+"stage": "pid1_exec",
+"reads": 396902,
+"blocks": 396902,
+"busy_ms": 57494
+},
+{
+"t": 650.158,
+"stage": "pid1_exec",
+"reads": 397863,
+"blocks": 397863,
+"busy_ms": 58645
+},
+{
+"t": 660.159,
+"stage": "pid1_exec",
+"reads": 398896,
+"blocks": 398896,
+"busy_ms": 61655
+},
+{
+"t": 670.161,
+"stage": "pid1_exec",
+"reads": 399636,
+"blocks": 399636,
+"busy_ms": 63969
+},
+{
+"t": 680.164,
+"stage": "pid1_exec",
+"reads": 400319,
+"blocks": 400319,
+"busy_ms": 66075
+},
+{
+"t": 690.165,
+"stage": "pid1_exec",
+"reads": 401840,
+"blocks": 401840,
+"busy_ms": 66307
+},
+{
+"t": 700.166,
+"stage": "pid1_exec",
+"reads": 403160,
+"blocks": 403160,
+"busy_ms": 66485
+},
+{
+"t": 710.17,
+"stage": "pid1_exec",
+"reads": 405371,
+"blocks": 405371,
+"busy_ms": 67145
+},
+{
+"t": 720.171,
+"stage": "pid1_exec",
+"reads": 407269,
+"blocks": 407269,
+"busy_ms": 67409
+},
+{
+"t": 730.174,
+"stage": "pid1_exec",
+"reads": 408456,
+"blocks": 408456,
+"busy_ms": 67577
+},
+{
+"t": 740.174,
+"stage": "pid1_exec",
+"reads": 410661,
+"blocks": 410661,
+"busy_ms": 67855
+},
+{
+"t": 750.177,
+"stage": "pid1_exec",
+"reads": 411708,
+"blocks": 411708,
+"busy_ms": 68069
+},
+{
+"t": 760.178,
+"stage": "pid1_exec",
+"reads": 414298,
+"blocks": 414298,
+"busy_ms": 68417
+},
+{
+"t": 770.18,
+"stage": "pid1_exec",
+"reads": 415961,
+"blocks": 415961,
+"busy_ms": 68648
+},
+{
+"t": 780.183,
+"stage": "pid1_exec",
+"reads": 417596,
+"blocks": 417596,
+"busy_ms": 68950
+},
+{
+"t": 790.184,
+"stage": "pid1_exec",
+"reads": 418034,
+"blocks": 418034,
+"busy_ms": 69011
+},
+{
+"t": 800.187,
+"stage": "pid1_exec",
+"reads": 419743,
+"blocks": 419743,
+"busy_ms": 69247
+},
+{
+"t": 810.19,
+"stage": "pid1_exec",
+"reads": 420933,
+"blocks": 420933,
+"busy_ms": 69429
+},
+{
+"t": 820.192,
+"stage": "pid1_exec",
+"reads": 422482,
+"blocks": 422482,
+"busy_ms": 69641
+},
+{
+"t": 830.194,
+"stage": "pid1_exec",
+"reads": 422808,
+"blocks": 422808,
+"busy_ms": 69690
+},
+{
+"t": 840.197,
+"stage": "pid1_exec",
+"reads": 424528,
+"blocks": 424528,
+"busy_ms": 69917
+},
+{
+"t": 850.198,
+"stage": "pid1_exec",
+"reads": 425942,
+"blocks": 425942,
+"busy_ms": 70327
+},
+{
+"t": 860.2,
+"stage": "pid1_exec",
+"reads": 427194,
+"blocks": 427194,
+"busy_ms": 70495
+},
+{
+"t": 870.201,
+"stage": "pid1_exec",
+"reads": 428486,
+"blocks": 428486,
+"busy_ms": 70687
+},
+{
+"t": 880.204,
+"stage": "pid1_exec",
+"reads": 429233,
+"blocks": 429233,
+"busy_ms": 70780
+},
+{
+"t": 890.207,
+"stage": "pid1_exec",
+"reads": 430644,
+"blocks": 430644,
+"busy_ms": 70976
+},
+{
+"t": 900.209,
+"stage": "pid1_exec",
+"reads": 431545,
+"blocks": 431545,
+"busy_ms": 71179
+},
+{
+"t": 910.21,
+"stage": "pid1_exec",
+"reads": 431718,
+"blocks": 431718,
+"busy_ms": 71449
+},
+{
+"t": 920.21,
+"stage": "pid1_exec",
+"reads": 431996,
+"blocks": 431996,
+"busy_ms": 72125
+},
+{
+"t": 930.213,
+"stage": "pid1_exec",
+"reads": 432102,
+"blocks": 432102,
+"busy_ms": 72465
+},
+{
+"t": 940.215,
+"stage": "pid1_exec",
+"reads": 432269,
+"blocks": 432269,
+"busy_ms": 72735
+},
+{
+"t": 950.216,
+"stage": "pid1_exec",
+"reads": 432487,
+"blocks": 432487,
+"busy_ms": 73196
+},
+{
+"t": 960.219,
+"stage": "pid1_exec",
+"reads": 432770,
+"blocks": 432770,
+"busy_ms": 73697
+},
+{
+"t": 970.22,
+"stage": "pid1_exec",
+"reads": 433018,
+"blocks": 433018,
+"busy_ms": 74324
+},
+{
+"t": 980.221,
+"stage": "pid1_exec",
+"reads": 433331,
+"blocks": 433331,
+"busy_ms": 75076
+},
+{
+"t": 990.223,
+"stage": "pid1_exec",
+"reads": 433529,
+"blocks": 433529,
+"busy_ms": 75631
+},
+{
+"t": 1000.224,
+"stage": "pid1_exec",
+"reads": 433819,
+"blocks": 433819,
+"busy_ms": 76486
+},
+{
+"t": 1010.225,
+"stage": "pid1_exec",
+"reads": 434002,
+"blocks": 434002,
+"busy_ms": 76778
+},
+{
+"t": 1020.226,
+"stage": "pid1_exec",
+"reads": 434191,
+"blocks": 434191,
+"busy_ms": 77386
+},
+{
+"t": 1030.227,
+"stage": "pid1_exec",
+"reads": 434354,
+"blocks": 434354,
+"busy_ms": 77539
+},
+{
+"t": 1040.229,
+"stage": "pid1_exec",
+"reads": 434880,
+"blocks": 434880,
+"busy_ms": 78727
+},
+{
+"t": 1050.231,
+"stage": "pid1_exec",
+"reads": 435426,
+"blocks": 435426,
+"busy_ms": 79943
+},
+{
+"t": 1060.234,
+"stage": "pid1_exec",
+"reads": 435846,
+"blocks": 435846,
+"busy_ms": 81078
+},
+{
+"t": 1070.235,
+"stage": "pid1_exec",
+"reads": 436527,
+"blocks": 436527,
+"busy_ms": 82301
+},
+{
+"t": 1080.236,
+"stage": "pid1_exec",
+"reads": 437150,
+"blocks": 437150,
+"busy_ms": 83718
+},
+{
+"t": 1090.238,
+"stage": "pid1_exec",
+"reads": 437374,
+"blocks": 437374,
+"busy_ms": 84351
+},
+{
+"t": 1100.239,
+"stage": "pid1_exec",
+"reads": 437504,
+"blocks": 437504,
+"busy_ms": 84742
+},
+{
+"t": 1110.242,
+"stage": "pid1_exec",
+"reads": 437937,
+"blocks": 437937,
+"busy_ms": 85916
+},
+{
+"t": 1120.245,
+"stage": "pid1_exec",
+"reads": 438116,
+"blocks": 438116,
+"busy_ms": 86537
+},
+{
+"t": 1130.246,
+"stage": "pid1_exec",
+"reads": 439517,
+"blocks": 439517,
+"busy_ms": 86719
+},
+{
+"t": 1140.25,
+"stage": "pid1_exec",
+"reads": 440363,
+"blocks": 440363,
+"busy_ms": 86836
+},
+{
+"t": 1150.253,
+"stage": "pid1_exec",
+"reads": 442248,
+"blocks": 442248,
+"busy_ms": 87072
+},
+{
+"t": 1160.256,
+"stage": "pid1_exec",
+"reads": 442936,
+"blocks": 442936,
+"busy_ms": 87168
+},
+{
+"t": 1170.257,
+"stage": "pid1_exec",
+"reads": 443326,
+"blocks": 443326,
+"busy_ms": 87230
+},
+{
+"t": 1180.258,
+"stage": "pid1_exec",
+"reads": 443633,
+"blocks": 443633,
+"busy_ms": 87276
+},
+{
+"t": 1190.26,
+"stage": "pid1_exec",
+"reads": 443805,
+"blocks": 443805,
+"busy_ms": 87296
+},
+{
+"t": 1200.261,
+"stage": "pid1_exec",
+"reads": 444009,
+"blocks": 444009,
+"busy_ms": 87324
+},
+{
+"t": 1210.262,
+"stage": "pid1_exec",
+"reads": 444293,
+"blocks": 444293,
+"busy_ms": 87364
+},
+{
+"t": 1220.265,
+"stage": "pid1_exec",
+"reads": 444789,
+"blocks": 444789,
+"busy_ms": 87426
+},
+{
+"t": 1230.266,
+"stage": "pid1_exec",
+"reads": 445413,
+"blocks": 445413,
+"busy_ms": 87502
+},
+{
+"t": 1240.267,
+"stage": "pid1_exec",
+"reads": 446192,
+"blocks": 446192,
+"busy_ms": 87602
+},
+{
+"t": 1250.269,
+"stage": "pid1_exec",
+"reads": 446300,
+"blocks": 446300,
+"busy_ms": 87617
+},
+{
+"t": 1260.272,
+"stage": "pid1_exec",
+"reads": 446524,
+"blocks": 446524,
+"busy_ms": 87650
+},
+{
+"t": 1270.273,
+"stage": "pid1_exec",
+"reads": 446704,
+"blocks": 446704,
+"busy_ms": 87673
+},
+{
+"t": 1280.274,
+"stage": "pid1_exec",
+"reads": 446819,
+"blocks": 446819,
+"busy_ms": 87690
+},
+{
+"t": 1290.277,
+"stage": "pid1_exec",
+"reads": 448095,
+"blocks": 448095,
+"busy_ms": 87848
+},
+{
+"t": 1300.279,
+"stage": "pid1_exec",
+"reads": 448408,
+"blocks": 448408,
+"busy_ms": 87889
+},
+{
+"t": 1310.282,
+"stage": "pid1_exec",
+"reads": 448952,
+"blocks": 448952,
+"busy_ms": 87956
+},
+{
+"t": 1320.285,
+"stage": "pid1_exec",
+"reads": 449472,
+"blocks": 449472,
+"busy_ms": 88023
+},
+{
+"t": 1330.286,
+"stage": "pid1_exec",
+"reads": 461015,
+"blocks": 461015,
+"busy_ms": 89427
+},
+{
+"t": 1340.289,
+"stage": "pid1_exec",
+"reads": 471462,
+"blocks": 471462,
+"busy_ms": 90678
+},
+{
+"t": 1350.292,
+"stage": "pid1_exec",
+"reads": 471706,
+"blocks": 471706,
+"busy_ms": 90707
+},
+{
+"t": 1360.293,
+"stage": "pid1_exec",
+"reads": 471710,
+"blocks": 471710,
+"busy_ms": 90708
+},
+{
+"t": 1370.294,
+"stage": "pid1_exec",
+"reads": 474446,
+"blocks": 474446,
+"busy_ms": 91043
+},
+{
+"t": 1490.317,
+"stage": "pid1_exec",
+"reads": 476051,
+"blocks": 476051,
+"busy_ms": 91252
+},
+{
+"t": 1500.32,
+"stage": "pid1_exec",
+"reads": 477041,
+"blocks": 477041,
+"busy_ms": 91384
+},
+{
+"t": 1510.321,
+"stage": "pid1_exec",
+"reads": 478781,
+"blocks": 478781,
+"busy_ms": 91610
+},
+{
+"t": 1520.322,
+"stage": "pid1_exec",
+"reads": 479723,
+"blocks": 479723,
+"busy_ms": 91732
+},
+{
+"t": 1530.324,
+"stage": "pid1_exec",
+"reads": 481089,
+"blocks": 481089,
+"busy_ms": 91903
+},
+{
+"t": 1540.327,
+"stage": "pid1_exec",
+"reads": 483284,
+"blocks": 483284,
+"busy_ms": 92268
+},
+{
+"t": 1550.328,
+"stage": "pid1_exec",
+"reads": 484012,
+"blocks": 484012,
+"busy_ms": 92380
+},
+{
+"t": 1560.331,
+"stage": "pid1_exec",
+"reads": 484464,
+"blocks": 484464,
+"busy_ms": 92440
+},
+{
+"t": 1570.333,
+"stage": "pid1_exec",
+"reads": 485625,
+"blocks": 485625,
+"busy_ms": 92579
+},
+{
+"t": 1580.334,
+"stage": "pid1_exec",
+"reads": 485929,
+"blocks": 485929,
+"busy_ms": 92618
+},
+{
+"t": 1590.335,
+"stage": "pid1_exec",
+"reads": 485949,
+"blocks": 485949,
+"busy_ms": 92620
+},
+{
+"t": 1600.337,
+"stage": "pid1_exec",
+"reads": 485975,
+"blocks": 485975,
+"busy_ms": 92624
+},
+{
+"t": 1610.34,
+"stage": "pid1_exec",
+"reads": 485995,
+"blocks": 485995,
+"busy_ms": 92626
+},
+{
+"t": 1620.34,
+"stage": "pid1_exec",
+"reads": 486024,
+"blocks": 486024,
+"busy_ms": 92635
+},
+{
+"t": 1630.341,
+"stage": "pid1_exec",
+"reads": 487164,
+"blocks": 487164,
+"busy_ms": 92784
+},
+{
+"t": 1640.343,
+"stage": "pid1_exec",
+"reads": 487348,
+"blocks": 487348,
+"busy_ms": 92809
+},
+{
+"t": 1650.346,
+"stage": "pid1_exec",
+"reads": 487643,
+"blocks": 487643,
+"busy_ms": 92845
+},
+{
+"t": 1660.347,
+"stage": "pid1_exec",
+"reads": 488727,
+"blocks": 488727,
+"busy_ms": 92986
+},
+{
+"t": 1670.35,
+"stage": "pid1_exec",
+"reads": 489669,
+"blocks": 489669,
+"busy_ms": 93114
+},
+{
+"t": 1680.353,
+"stage": "pid1_exec",
+"reads": 490120,
+"blocks": 490120,
+"busy_ms": 93173
+},
+{
+"t": 1690.355,
+"stage": "pid1_exec",
+"reads": 490136,
+"blocks": 490136,
+"busy_ms": 93174
+},
+{
+"t": 1700.356,
+"stage": "pid1_exec",
+"reads": 490144,
+"blocks": 490144,
+"busy_ms": 93176
+},
+{
+"t": 1710.357,
+"stage": "pid1_exec",
+"reads": 490360,
+"blocks": 490360,
+"busy_ms": 93205
+},
+{
+"t": 1720.358,
+"stage": "pid1_exec",
+"reads": 491118,
+"blocks": 491118,
+"busy_ms": 93304
+},
+{
+"t": 1730.361,
+"stage": "pid1_exec",
+"reads": 491888,
+"blocks": 491888,
+"busy_ms": 93407
+},
+{
+"t": 1740.364,
+"stage": "pid1_exec",
+"reads": 492926,
+"blocks": 492926,
+"busy_ms": 93835
+},
+{
+"t": 1750.367,
+"stage": "pid1_exec",
+"reads": 493006,
+"blocks": 493006,
+"busy_ms": 93846
+},
+{
+"t": 1760.369,
+"stage": "pid1_exec",
+"reads": 493006,
+"blocks": 493006,
+"busy_ms": 93846
+},
+{
+"t": 1770.37,
+"stage": "pid1_exec",
+"reads": 493006,
+"blocks": 493006,
+"busy_ms": 93846
+},
+{
+"t": 1780.371,
+"stage": "pid1_exec",
+"reads": 493078,
+"blocks": 493078,
+"busy_ms": 93860
+},
+{
+"t": 1790.372,
+"stage": "pid1_exec",
+"reads": 493098,
+"blocks": 493098,
+"busy_ms": 93862
+},
+{
+"t": 1800.374,
+"stage": "pid1_exec",
+"reads": 493098,
+"blocks": 493098,
+"busy_ms": 93862
+}
+],
+"top": [],
+"spawn_first_kt": {
+"SpringBoard": 480.128,
+"notifyd": 590.144,
+"UserEventAgent": 590.144,
+"logd": 590.144,
+"logd_helper": 590.144,
+"cfprefsd": 600.148,
+"runningboardd": 600.148,
+"usermanagerd": 600.148,
+"backboardd": 600.148,
+"powerd": 630.151,
+"chronod": 640.155,
+"lsd": 640.155,
+"configd": 650.158,
+"containermanagerd": 650.158,
+"datamigrator": 740.174,
+"MobileGestaltHelper": 740.174,
+"mtmergeprops": 740.174,
+"nfcd": 740.174,
+"fairplayd.H2": 740.174,
+"containermanagerd_system": 740.174,
+"IOMFB_FDR_Loader": 740.174,
+"lockdownd": 740.174,
+"remoted": 740.174,
+"identityservicesd": 740.174,
+"sharingd": 740.174,
+"DumpPanic": 740.174,
+"distnoted": 740.174,
+"AppleCredentialManagerDaemon": 740.174,
+"cameracaptured": 740.174,
+"mobiletimerd": 740.174,
+"amfid": 740.174,
+"CommCenter": 740.174,
+"fseventsd": 740.174,
+"keybagd": 750.177,
+"remotepairingdeviced": 750.177,
+"rapportd": 760.178,
+"ptpd": 770.18,
+"thermalmonitord": 770.18,
+"locationd": 780.183,
+"driverkitd": 780.183,
+"imagent": 780.183,
+"sleepd": 790.184,
+"timed": 790.184,
+"PowerUIAgent": 790.184,
+"triald": 790.184,
+"dasd": 790.184,
+"apfs_iosd": 790.184,
+"bluetoothd": 790.184,
+"iconservicesagent": 790.184,
+"powerexperienced": 830.194,
+"contextstored": 840.197,
+"nanoregistryd": 890.207,
+"ACCHWComponentAuthService": 910.21,
+"contactsd": 960.219,
+"systemstatusd": 990.223,
+"liveactivitiesd": 1040.229,
+"securityd": 1040.229,
+"passd": 1050.231,
+"usernotificationsd": 1050.231,
+"mobileassetd": 1050.231,
+"audiomxd": 1050.231,
+"appprotectiond": 1050.231,
+"apsd": 1050.231,
+"accountsd": 1060.234,
+"mobileactivationd": 1060.234,
+"coreduetd": 1060.234,
+"AccessibilityUIServer": 1060.234,
+"mediaremoted": 1060.234,
+"coreauthd": 1070.235,
+"biomed": 1070.235,
+"findmydeviced": 1080.236,
+"nehelper": 1130.246,
+"dmd": 1140.25,
+"donotdisturbd": 1140.25,
+"callservicesd": 1170.257,
+"calaccessd": 1190.26,
+"AudioConverterService": 1190.26,
+"tccd": 1210.262,
+"WirelessRadioManagerd": 1250.269,
+"mDNSResponder": 1260.272,
+"CommCenterMobileHelper": 1280.274,
+"profiled": 1290.277,
+"audioanalyticsd": 1290.277,
+"ctkd": 1290.277,
+"corespeechd": 1290.277,
+"networkserviceproxy": 1310.282,
+"webinspectord": 1320.285,
+"replicatord": 1330.286,
+"remindd": 1330.286,
+"syncdefaultsd": 1340.289,
+"StatusKitAgent": 1350.292,
+"transparencyd": 1350.292,
+"familycircled": 1350.292,
+"cloudd": 1350.292,
+"wirelessinsightsd": 1360.293,
+"nsurlsessiond": 1360.293,
+"deviceaccessd": 1360.293,
+"automationmode-writer": 1360.293,
+"searchd": 1360.293,
+"linkd": 1360.293,
+"findmylocated": 1360.293,
+"symptomsd": 1360.293,
+"fmflocatord": 1360.293,
+"bluetoothuserd": 1360.293,
+"PerfPowerTelemetryClientRegistrationService": 1360.293,
+"ospredictiond": 1360.293,
+"geod": 1360.293,
+"IMDPersistenceAgent": 1360.293,
+"cdpd": 1360.293,
+"analyticsd": 1360.293,
+"pkd": 1360.293,
+"followupd": 1360.293,
+"ManagedSettingsAgent": 1370.294,
+"assistantd": 1370.294,
+"ScreenTimeAgent": 1370.294,
+"suggestd": 1370.294,
+"sociallayerd": 1370.294,
+"assetsd": 1370.294,
+"textunderstandingd": 1370.294,
+"routined": 1370.294,
+"amsaccountsd": 1370.294,
+"applekeystored": 1370.294,
+"milod": 1370.294,
+"CloudKeychainProxy": 1370.294,
+"akd": 1370.294,
+"appleidsetupd": 1370.294,
+"wifip2pd": 1370.294,
+"healthd": 1370.294,
+"spotlightknowledged.updater": 1370.294,
+"mobilerepaird": 1370.294,
+"maild": 1370.294,
+"UsageTrackingAgent": 1370.294,
+"corecaptured": 1370.294,
+"axassetsd": 1370.294,
+"gamed": 1370.294,
+"webbookmarksd": 1370.294,
+"lockdownmoded": 1370.294,
+"corerepaird": 1490.317,
+"managedassetsd": 1550.328,
+"featureaccessd": 1560.331,
+"mediaanalysisd": 1560.331,
+"remotemanagementd": 1560.331,
+"momentsd": 1560.331,
+"diagnosticspushd": 1560.331,
+"jetpackassetd": 1560.331,
+"fitnessintelligenced": 1570.333,
+"analyticsagent": 1570.333,
+"nearbyd": 1570.333,
+"MomentsUIService": 1610.34,
+"itunescloudd": 1610.34,
+"SafariConfigurationSubscriber": 1610.34,
+"ASConfigurationSubscriber": 1610.34,
+"AccountSubscriber": 1610.34,
+"InteractiveLegacyProfilesSubscriber": 1610.34,
+"LegacyProfilesSubscriber": 1610.34,
+"ManagedAppsSubscriber": 1610.34,
+"FitnessIntelligenceInferenceService": 1610.34,
+"sirittsd": 1610.34,
+"eyereliefd": 1610.34,
+"metrickitd": 1610.34,
+"mapssyncd": 1620.34,
+"assistant_cdmd": 1650.346,
+"OTACrashCopier": 1660.347,
+"hangtelemetryd": 1660.347,
+"homed": 1690.355,
+"batteryintelligenced": 1710.357,
+"icloudsubscriptionoptimizerd": 1760.369
+},
+"spawn_count": {
+"SpringBoard": 1,
+"notifyd": 1,
+"UserEventAgent": 1,
+"logd": 1,
+"logd_helper": 1,
+"cfprefsd": 2,
+"runningboardd": 1,
+"usermanagerd": 1,
+"backboardd": 1,
+"powerd": 1,
+"chronod": 1,
+"lsd": 1,
+"configd": 1,
+"containermanagerd": 1,
+"datamigrator": 9,
+"MobileGestaltHelper": 1,
+"mtmergeprops": 1,
+"nfcd": 1,
+"fairplayd.H2": 49,
+"containermanagerd_system": 1,
+"IOMFB_FDR_Loader": 1,
+"lockdownd": 1,
+"remoted": 1,
+"identityservicesd": 1,
+"sharingd": 1,
+"DumpPanic": 1,
+"distnoted": 1,
+"AppleCredentialManagerDaemon": 1,
+"cameracaptured": 1,
+"mobiletimerd": 1,
+"amfid": 1,
+"CommCenter": 1,
+"fseventsd": 1,
+"keybagd": 1,
+"remotepairingdeviced": 1,
+"rapportd": 1,
+"ptpd": 1,
+"thermalmonitord": 1,
+"locationd": 1,
+"driverkitd": 1,
+"imagent": 4,
+"sleepd": 1,
+"timed": 1,
+"PowerUIAgent": 1,
+"triald": 1,
+"dasd": 3,
+"apfs_iosd": 1,
+"bluetoothd": 55,
+"iconservicesagent": 1,
+"powerexperienced": 1,
+"contextstored": 1,
+"nanoregistryd": 1,
+"ACCHWComponentAuthService": 1,
+"contactsd": 1,
+"systemstatusd": 1,
+"liveactivitiesd": 1,
+"securityd": 1,
+"passd": 1,
+"usernotificationsd": 1,
+"mobileassetd": 1,
+"audiomxd": 1,
+"appprotectiond": 1,
+"apsd": 1,
+"accountsd": 1,
+"mobileactivationd": 1,
+"coreduetd": 1,
+"AccessibilityUIServer": 1,
+"mediaremoted": 1,
+"coreauthd": 1,
+"biomed": 5,
+"findmydeviced": 1,
+"nehelper": 1,
+"dmd": 1,
+"donotdisturbd": 1,
+"callservicesd": 1,
+"calaccessd": 1,
+"AudioConverterService": 1,
+"tccd": 1,
+"WirelessRadioManagerd": 1,
+"mDNSResponder": 1,
+"CommCenterMobileHelper": 1,
+"profiled": 1,
+"audioanalyticsd": 1,
+"ctkd": 1,
+"corespeechd": 1,
+"networkserviceproxy": 1,
+"webinspectord": 1,
+"replicatord": 1,
+"remindd": 1,
+"syncdefaultsd": 1,
+"StatusKitAgent": 1,
+"transparencyd": 1,
+"familycircled": 1,
+"cloudd": 1,
+"wirelessinsightsd": 1,
+"nsurlsessiond": 1,
+"deviceaccessd": 1,
+"automationmode-writer": 1,
+"searchd": 1,
+"linkd": 1,
+"findmylocated": 1,
+"symptomsd": 1,
+"fmflocatord": 1,
+"bluetoothuserd": 1,
+"PerfPowerTelemetryClientRegistrationService": 1,
+"ospredictiond": 1,
+"geod": 1,
+"IMDPersistenceAgent": 1,
+"cdpd": 1,
+"analyticsd": 1,
+"pkd": 1,
+"followupd": 1,
+"ManagedSettingsAgent": 1,
+"assistantd": 1,
+"ScreenTimeAgent": 1,
+"suggestd": 1,
+"sociallayerd": 1,
+"assetsd": 3,
+"textunderstandingd": 1,
+"routined": 1,
+"amsaccountsd": 1,
+"applekeystored": 1,
+"milod": 1,
+"CloudKeychainProxy": 1,
+"akd": 1,
+"appleidsetupd": 1,
+"wifip2pd": 44,
+"healthd": 4,
+"spotlightknowledged.updater": 1,
+"mobilerepaird": 1,
+"maild": 1,
+"UsageTrackingAgent": 1,
+"corecaptured": 1,
+"axassetsd": 2,
+"gamed": 2,
+"webbookmarksd": 1,
+"lockdownmoded": 1,
+"corerepaird": 1,
+"managedassetsd": 1,
+"featureaccessd": 1,
+"mediaanalysisd": 1,
+"remotemanagementd": 1,
+"momentsd": 1,
+"diagnosticspushd": 1,
+"jetpackassetd": 1,
+"fitnessintelligenced": 1,
+"analyticsagent": 1,
+"nearbyd": 1,
+"MomentsUIService": 1,
+"itunescloudd": 1,
+"SafariConfigurationSubscriber": 1,
+"ASConfigurationSubscriber": 1,
+"AccountSubscriber": 1,
+"InteractiveLegacyProfilesSubscriber": 1,
+"LegacyProfilesSubscriber": 1,
+"ManagedAppsSubscriber": 1,
+"FitnessIntelligenceInferenceService": 1,
+"sirittsd": 1,
+"eyereliefd": 1,
+"metrickitd": 1,
+"mapssyncd": 3,
+"assistant_cdmd": 1,
+"OTACrashCopier": 1,
+"hangtelemetryd": 1,
+"homed": 1,
+"batteryintelligenced": 1,
+"icloudsubscriptionoptimizerd": 1
+},
+"exits": {
+"datamigrator": [
+[
+960.219,
+"exit(0)",
+36126
+],
+[
+1330.286,
+"exit(0)",
+37104
+],
+[
+1370.294,
+"exit(0)",
+26724
+],
+[
+1610.34,
+"exit(0)",
+12907
+],
+[
+1610.34,
+"exit(0)",
+12141
+],
+[
+1640.343,
+"exit(0)",
+12571
+],
+[
+1690.355,
+"exit(0)",
+37358
+]
+],
+"fairplayd.H2": [
+[
+1000.224,
+"exit(0)",
+56351
+],
+[
+1110.242,
+"exit(0)",
+35896
+],
+[
+1330.286,
+"exit(0)",
+44358
+],
+[
+1360.293,
+"exit(0)",
+30414
+],
+[
+1360.293,
+"exit(0)",
+13630
+],
+[
+1370.294,
+"exit(0)",
+15012
+],
+[
+1370.294,
+"exit(0)",
+1129
+],
+[
+1370.294,
+"exit(0)",
+384
+],
+[
+1370.294,
+"exit(0)",
+487
+],
+[
+1370.294,
+"exit(0)",
+324
+],
+[
+1370.294,
+"exit(0)",
+523
+],
+[
+1370.294,
+"exit(0)",
+415
+],
+[
+1370.294,
+"exit(0)",
+366
+],
+[
+1370.294,
+"exit(0)",
+384
+],
+[
+1370.294,
+"exit(0)",
+613
+],
+[
+1370.294,
+"exit(0)",
+768
+],
+[
+1370.294,
+"exit(0)",
+381
+],
+[
+1370.294,
+"exit(0)",
+318
+],
+[
+1370.294,
+"exit(0)",
+462
+],
+[
+1370.294,
+"exit(0)",
+395
+],
+[
+1370.294,
+"exit(0)",
+419
+],
+[
+1370.294,
+"exit(0)",
+319
+],
+[
+1370.294,
+"exit(0)",
+314
+],
+[
+1370.294,
+"exit(0)",
+433
+],
+[
+1370.294,
+"exit(0)",
+690
+],
+[
+1570.333,
+"exit(0)",
+1036
+],
+[
+1610.34,
+"exit(0)",
+821
+],
+[
+1610.34,
+"exit(0)",
+380
+],
+[
+1610.34,
+"exit(0)",
+563
+],
+[
+1610.34,
+"exit(0)",
+558
+],
+[
+1610.34,
+"exit(0)",
+541
+],
+[
+1610.34,
+"exit(0)",
+379
+],
+[
+1610.34,
+"exit(0)",
+582
+],
+[
+1610.34,
+"exit(0)",
+401
+],
+[
+1610.34,
+"exit(0)",
+434
+],
+[
+1620.34,
+"exit(0)",
+518
+],
+[
+1640.343,
+"exit(0)",
+411
+],
+[
+1650.346,
+"exit(0)",
+472
+],
+[
+1650.346,
+"exit(0)",
+318
+],
+[
+1660.347,
+"exit(0)",
+365
+],
+[
+1680.353,
+"exit(0)",
+390
+],
+[
+1690.355,
+"exit(0)",
+538
+],
+[
+1700.356,
+"exit(0)",
+391
+],
+[
+1700.356,
+"exit(0)",
+405
+],
+[
+1720.358,
+"exit(0)",
+609
+],
+[
+1770.37,
+"exit(0)",
+464
+],
+[
+1780.371,
+"exit(0)",
+384
+]
+],
+"iomfb_fdr_loader": [
+[
+1050.231,
+"exit(1)",
+57832
+]
+],
+"DumpPanic": [
+[
+1060.234,
+"exit(0)",
+83493
+]
+],
+"bluetoothd": [
+[
+1060.234,
+"exit(0)",
+87614
+],
+[
+1140.25,
+"exit(0)",
+10770
+],
+[
+1260.272,
+"exit(0)",
+4711
+],
+[
+1290.277,
+"exit(0)",
+3028
+],
+[
+1290.277,
+"exit(0)",
+1020
+],
+[
+1330.286,
+"exit(0)",
+1572
+],
+[
+1360.293,
+"exit(0)",
+707
+],
+[
+1360.293,
+"exit(0)",
+1104
+],
+[
+1360.293,
+"exit(0)",
+1219
+],
+[
+1360.293,
+"exit(0)",
+704
+],
+[
+1370.294,
+"exit(0)",
+859
+],
+[
+1370.294,
+"exit(0)",
+2077
+],
+[
+1370.294,
+"exit(0)",
+786
+],
+[
+1370.294,
+"exit(0)",
+1154
+],
+[
+1370.294,
+"exit(0)",
+584
+],
+[
+1370.294,
+"exit(0)",
+1158
+],
+[
+1370.294,
+"exit(0)",
+808
+],
+[
+1370.294,
+"exit(0)",
+603
+],
+[
+1370.294,
+"exit(0)",
+924
+],
+[
+1370.294,
+"exit(0)",
+758
+],
+[
+1370.294,
+"exit(0)",
+975
+],
+[
+1370.294,
+"exit(0)",
+1025
+],
+[
+1370.294,
+"exit(0)",
+661
+],
+[
+1370.294,
+"exit(0)",
+1140
+],
+[
+1370.294,
+"exit(0)",
+749
+],
+[
+1370.294,
+"exit(0)",
+1064
+],
+[
+1370.294,
+"exit(0)",
+611
+],
+[
+1370.294,
+"exit(0)",
+582
+],
+[
+1370.294,
+"exit(0)",
+930
+],
+[
+1370.294,
+"exit(0)",
+906
+],
+[
+1540.327,
+"exit(0)",
+1633
+],
+[
+1570.333,
+"exit(0)",
+1248
+],
+[
+1610.34,
+"exit(0)",
+1474
+],
+[
+1610.34,
+"exit(0)",
+1307
+],
+[
+1610.34,
+"exit(0)",
+752
+],
+[
+1610.34,
+"exit(0)",
+1156
+],
+[
+1610.34,
+"exit(0)",
+745
+],
+[
+1610.34,
+"exit(0)",
+775
+],
+[
+1610.34,
+"exit(0)",
+1459
+],
+[
+1610.34,
+"exit(0)",
+751
+],
+[
+1610.34,
+"exit(0)",
+958
+],
+[
+1620.34,
+"exit(0)",
+668
+],
+[
+1640.343,
+"exit(0)",
+760
+],
+[
+1650.346,
+"exit(0)",
+1115
+],
+[
+1650.346,
+"exit(0)",
+581
+],
+[
+1660.347,
+"exit(0)",
+979
+],
+[
+1670.35,
+"exit(0)",
+782
+],
+[
+1690.355,
+"exit(0)",
+1166
+],
+[
+1700.356,
+"exit(0)",
+763
+],
+[
+1700.356,
+"exit(0)",
+830
+],
+[
+1720.358,
+"exit(0)",
+902
+],
+[
+1770.37,
+"exit(0)",
+1046
+],
+[
+1770.37,
+"exit(0)",
+1197
+],
+[
+1780.371,
+"exit(0)",
+934
+]
+],
+"PerfPowerServices": [
+[
+1290.277,
+"exit(78)",
+94929
+],
+[
+1360.293,
+"exit(78)",
+13906
+],
+[
+1360.293,
+"exit(78)",
+5911
+],
+[
+1360.293,
+"exit(78)",
+7283
+],
+[
+1360.293,
+"exit(78)",
+4925
+],
+[
+1360.293,
+"exit(78)",
+1385
+],
+[
+1370.294,
+"exit(78)",
+1835
+],
+[
+1370.294,
+"exit(78)",
+137
+],
+[
+1370.294,
+"exit(78)",
+140
+],
+[
+1370.294,
+"exit(78)",
+157
+],
+[
+1370.294,
+"exit(78)",
+115
+],
+[
+1370.294,
+"exit(78)",
+147
+],
+[
+1370.294,
+"exit(78)",
+169
+],
+[
+1370.294,
+"exit(78)",
+114
+],
+[
+1370.294,
+"exit(78)",
+112
+],
+[
+1370.294,
+"exit(78)",
+112
+],
+[
+1370.294,
+"exit(78)",
+154
+],
+[
+1370.294,
+"exit(78)",
+204
+],
+[
+1370.294,
+"exit(78)",
+148
+],
+[
+1370.294,
+"exit(78)",
+147
+],
+[
+1370.294,
+"exit(78)",
+150
+],
+[
+1370.294,
+"exit(78)",
+150
+],
+[
+1370.294,
+"exit(78)",
+111
+],
+[
+1370.294,
+"exit(78)",
+110
+],
+[
+1370.294,
+"exit(78)",
+109
+],
+[
+1370.294,
+"exit(78)",
+110
+],
+[
+1490.317,
+"exit(78)",
+137
+],
+[
+1540.327,
+"exit(78)",
+173
+],
+[
+1580.334,
+"exit(78)",
+153
+],
+[
+1610.34,
+"exit(78)",
+157
+],
+[
+1610.34,
+"exit(78)",
+164
+],
+[
+1610.34,
+"exit(78)",
+340
+],
+[
+1610.34,
+"exit(78)",
+149
+],
+[
+1610.34,
+"exit(78)",
+146
+],
+[
+1610.34,
+"exit(78)",
+279
+],
+[
+1610.34,
+"exit(78)",
+143
+],
+[
+1610.34,
+"exit(78)",
+169
+],
+[
+1610.34,
+"exit(78)",
+350
+],
+[
+1610.34,
+"exit(78)",
+115
+],
+[
+1620.34,
+"exit(78)",
+112
+],
+[
+1630.341,
+"exit(78)",
+154
+],
+[
+1650.346,
+"exit(78)",
+188
+],
+[
+1650.346,
+"exit(78)",
+146
+],
+[
+1660.347,
+"exit(78)",
+111
+],
+[
+1670.35,
+"exit(78)",
+130
+],
+[
+1700.356,
+"exit(78)",
+142
+],
+[
+1700.356,
+"exit(78)",
+440
+],
+[
+1710.357,
+"exit(78)",
+140
+],
+[
+1720.358,
+"exit(78)",
+122
+],
+[
+1770.37,
+"exit(78)",
+2506
+],
+[
+1770.37,
+"exit(78)",
+151
+],
+[
+1790.372,
+"exit(78)",
+146
+]
+],
+"webinspectord": [
+[
+1360.293,
+"exit(1)",
+56799
+]
+],
+"wifip2pd": [
+[
+1370.294,
+"exit(1)",
+1101
+],
+[
+1370.294,
+"exit(1)",
+804
+],
+[
+1370.294,
+"exit(1)",
+367
+],
+[
+1370.294,
+"exit(1)",
+336
+],
+[
+1370.294,
+"exit(1)",
+394
+],
+[
+1370.294,
+"exit(1)",
+360
+],
+[
+1370.294,
+"exit(1)",
+338
+],
+[
+1370.294,
+"exit(1)",
+345
+],
+[
+1370.294,
+"exit(1)",
+332
+],
+[
+1370.294,
+"exit(1)",
+1357
+],
+[
+1370.294,
+"exit(1)",
+354
+],
+[
+1370.294,
+"exit(1)",
+650
+],
+[
+1370.294,
+"exit(1)",
+1071
+],
+[
+1370.294,
+"exit(1)",
+548
+],
+[
+1370.294,
+"exit(1)",
+359
+],
+[
+1370.294,
+"exit(1)",
+334
+],
+[
+1370.294,
+"exit(1)",
+336
+],
+[
+1370.294,
+"exit(1)",
+392
+],
+[
+1370.294,
+"exit(1)",
+324
+],
+[
+1490.317,
+"exit(1)",
+333
+],
+[
+1610.34,
+"exit(1)",
+18369
+],
+[
+1610.34,
+"exit(1)",
+2998
+],
+[
+1610.34,
+"exit(1)",
+2629
+],
+[
+1610.34,
+"exit(1)",
+2722
+],
+[
+1610.34,
+"exit(1)",
+473
+],
+[
+1610.34,
+"exit(1)",
+551
+],
+[
+1610.34,
+"exit(1)",
+402
+],
+[
+1610.34,
+"exit(1)",
+537
+],
+[
+1610.34,
+"exit(1)",
+369
+],
+[
+1620.34,
+"exit(1)",
+329
+],
+[
+1630.341,
+"exit(1)",
+344
+],
+[
+1640.343,
+"exit(1)",
+425
+],
+[
+1650.346,
+"exit(1)",
+338
+],
+[
+1660.347,
+"exit(1)",
+323
+],
+[
+1670.35,
+"exit(1)",
+549
+],
+[
+1680.353,
+"exit(1)",
+331
+],
+[
+1690.355,
+"exit(1)",
+336
+],
+[
+1700.356,
+"exit(1)",
+348
+],
+[
+1710.357,
+"exit(1)",
+728
+],
+[
+1720.358,
+"exit(1)",
+322
+],
+[
+1770.37,
+"exit(1)",
+5429
+],
+[
+1770.37,
+"exit(1)",
+571
+],
+[
+1790.372,
+"exit(1)",
+554
+]
+],
+"imagent": [
+[
+1370.294,
+"SIGABRT | sent by imagent[707]",
+8013
+],
+[
+1370.294,
+"SIGABRT | sent by imagent[725]",
+5512
+],
+[
+1370.294,
+"SIGABRT | sent by imagent[765]",
+3844
+],
+[
+1610.34,
+"SIGABRT | sent by imagent[860]",
+19216
+]
+],
+"healthd": [
+[
+1370.294,
+"SIGABRT | sent by healthd[714]",
+6399
+],
+[
+1370.294,
+"SIGABRT | sent by healthd[728]",
+7660
+],
+[
+1370.294,
+"SIGABRT | sent by healthd[760]",
+2424
+],
+[
+1610.34,
+"SIGABRT | sent by healthd[828]",
+22445
+]
+],
+"itunescloudd": [
+[
+1370.294,
+"SIGABRT | sent by itunescloudd[513]",
+524654
+],
+[
+1670.35,
+"SIGABRT | sent by itunescloudd[751]",
+282436
+]
+],
+"accessibility.axassetsd": [
+[
+1370.294,
+"SIGTRAP | sent by exc handler[767]",
+978
+],
+[
+1770.37,
+"SIGTRAP | sent by exc handler[941]",
+1485
+]
+],
+"gamed": [
+[
+1370.294,
+"SIGTRAP | sent by exc handler[772]",
+1734
+],
+[
+1790.372,
+"SIGTRAP | sent by exc handler[945]",
+1963
+]
+],
+"peakpowermanagerd": [
+[
+1370.294,
+"exit(1)",
+1426292
+]
+],
+"corecaptured": [
+[
+1370.294,
+"exit(0)",
+65171
+]
+],
+"biomed": [
+[
+1550.328,
+"SIGTRAP | sent by exc handler[638]",
+323424
+],
+[
+1610.34,
+"SIGTRAP | sent by exc handler[816]",
+31577
+],
+[
+1610.34,
+"SIGTRAP | sent by exc handler[836]",
+44882
+],
+[
+1720.358,
+"SIGTRAP | sent by exc handler[865]",
+140280
+]
+],
+"assetsd": [
+[
+1610.34,
+"SIGABRT | sent by assetsd[167]",
+1340316
+],
+[
+1610.34,
+"SIGABRT | sent by assetsd[831]",
+19628
+]
+],
+"dasd": [
+[
+1610.34,
+"SIGABRT | sent by dasd[52]",
+1584075
+],
+[
+1620.34,
+"SIGABRT | sent by dasd[870]",
+28531
+]
+],
+"accessoryupdaterd": [
+[
+1610.34,
+"exit(0)",
+1601525
+]
+],
+"WebBookmarks.webbookmarksd": [
+[
+1620.34,
+"exit(0)",
+175033
+]
+],
+"Maps.mapssyncd": [
+[
+1630.341,
+"exit(1)",
+8886
+],
+[
+1650.346,
+"exit(1)",
+19021
+],
+[
+1780.371,
+"exit(1)",
+99049
+]
+],
+"email.maild": [
+[
+1660.347,
+"exit(0)",
+277695
+]
+],
+"homed": [
+[
+1690.355,
+"SIGABRT | sent by homed[913]",
+1308
+]
+]
+},
+"pushes": [
+[
+1290.277,
+"user/501/com.apple.bluetoothd",
+4
+],
+[
+1290.277,
+"user/501/com.apple.bluetoothd",
+6
+],
+[
+1330.286,
+"user/501/com.apple.bluetoothd",
+8
+],
+[
+1360.293,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1360.293,
+"user/501/com.apple.PerfPowerServices",
+3
+],
+[
+1360.293,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1360.293,
+"user/501/com.apple.PerfPowerServices",
+3
+],
+[
+1360.293,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1360.293,
+"user/501/com.apple.PerfPowerServices",
+6
+],
+[
+1360.293,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1360.293,
+"user/501/com.apple.PerfPowerServices",
+9
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+9
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+9
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+8
+],
+[
+1370.294,
+"user/501/com.apple.imagent",
+32
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.healthd",
+26
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.imagent",
+75
+],
+[
+1370.294,
+"user/501/com.apple.healthd",
+57
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.healthd",
+126
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.imagent",
+157
+],
+[
+1370.294,
+"user/501/com.apple.accessibility.axassetsd",
+319
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.gamed",
+319
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1370.294,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1370.294,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1370.294,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1490.317,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1490.317,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1530.324,
+"user/501/com.apple.fairplayd.H2",
+9
+],
+[
+1540.327,
+"user/501/com.apple.bluetoothd",
+8
+],
+[
+1550.328,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1570.333,
+"user/501/com.apple.fairplayd.H2",
+9
+],
+[
+1570.333,
+"user/501/com.apple.bluetoothd",
+8
+],
+[
+1580.334,
+"user/501/com.apple.PerfPowerServices",
+9
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+8
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+9
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+7
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+7
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+8
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+8
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.healthd",
+234
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+9
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1610.34,
+"user/501/com.apple.imagent",
+301
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1610.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1610.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1610.34,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1620.34,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1620.34,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1620.34,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1620.34,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1630.341,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1630.341,
+"user/501/com.apple.Maps.mapssyncd",
+2
+],
+[
+1630.341,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1640.343,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1640.343,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1640.343,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1650.346,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1650.346,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1650.346,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1650.346,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1650.346,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1650.346,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1650.346,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1660.347,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1660.347,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1660.347,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1660.347,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1670.35,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1670.35,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1670.35,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1680.353,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1680.353,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1680.353,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1690.355,
+"user/501/com.apple.homed",
+1199
+],
+[
+1690.355,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1690.355,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1690.355,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1700.356,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1700.356,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1700.356,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1700.356,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1700.356,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1700.356,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1700.356,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1710.357,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1710.357,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1720.358,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1720.358,
+"user/501/com.apple.bluetoothd",
+10
+],
+[
+1720.358,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1720.358,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1770.37,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1770.37,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1770.37,
+"user/501/com.apple.PerfPowerServices",
+8
+],
+[
+1770.37,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1770.37,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1770.37,
+"user/501/com.apple.accessibility.axassetsd",
+639
+],
+[
+1770.37,
+"user/501/com.apple.wifip2pd",
+10
+],
+[
+1770.37,
+"user/501/com.apple.PerfPowerServices",
+10
+],
+[
+1780.371,
+"user/501/com.apple.bluetoothd",
+9
+],
+[
+1780.371,
+"user/501/com.apple.fairplayd.H2",
+10
+],
+[
+1790.372,
+"user/501/com.apple.gamed",
+639
+],
+[
+1790.372,
+"user/501/com.apple.wifip2pd",
+10
+]
+],
+"n_offsets": 10830,
+"offset_min_max": [
+-1106.7901399999998,
+212.6887499999998
+],
+"attempt": "20261101-234344-phone-root-r1",
+"source": "tools/read-ramdump.py --logs msgbuf mirror + persistent_ram console zone (early part)"
+}
