@@ -341,6 +341,13 @@ static int stage_a(void)
     if ((rc = lpb_state(&st))) return rc;
     note(DCS_N_TOP_STATE_BEFORE, st);
     if ((rc = state_is(st, &on))) return rc;
+#if defined(TGL_DCS_MENU) && defined(TGL_CHOOSER_WARM) && TGL_CHOOSER_WARM
+    /* chooser-ios WARM-r1: the menu's release gives back only what this run switched on. Every proven handoff (r7, r9,
+     * r10: fastboot boot) had TOP off here; a domain ABL left on would come back on but quiesced, isolated and without
+     * our DSI0/FE0/clock votes, a state no stock boot hands Linux. So a live domain is not touched: no LPB/LPCM request,
+     * no DPU access. The menu runs dark on its countdown (Android by default) and the release has nothing to give back. */
+    if (on) return stop_with(DCS_C_TOP_LIVE, st);
+#endif
     if (on) return 0;
     d.held |= HELD_TOP;
     if ((rc = mba(LPB_SET, LPB_SSWRP_DPU, 1, 0, r))) return rc;

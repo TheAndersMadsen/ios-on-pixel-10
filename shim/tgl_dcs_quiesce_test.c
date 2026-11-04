@@ -22,12 +22,13 @@ static void logit(char k, uint64_t pa, uint32_t v) { if (n_ < sizeof log_ / size
 /* fake state */
 static uint32_t dpu_iso, be_en = 0x30000u, be_en1 = 0x100000u, l0_st = 0x18, l0_co = 0x02c80500u, gp_status;
 static int l0_busy_reads, be_busy_reads, be_busy_forever, top_on = 1, dsi0_on = 1, fe0_on = 1;
-static unsigned lpcm_offs, top_offs;
+static unsigned lpcm_offs, top_offs, top_ons;
 
 static void mba_service(void)
 {
     uint32_t r[4] = { 0x08c00000u, 0, 0, 0 };
     if (msg[0] == LPB_GET) { r[0] = 0x05000000u; r[1] = PROT_NO_ERR; r[2] = top_on ? 2 : 1; }
+    else if (msg[0] == LPB_SET && msg[2] == 1) { CHECK(msg[1] == LPB_SSWRP_DPU); top_on = 1; top_ons++; r[0] = 0x05000000u; r[1] = PROT_NO_ERR; r[2] = LPB_SUCCESS; r[3] = LPB_SSWRP_DPU; }
     else if (msg[0] == LPB_SET) { CHECK(msg[1] == LPB_SSWRP_DPU && msg[2] == 0); top_on = 0; top_offs++; r[0] = 0x05000000u; r[1] = 15; r[2] = 0; }
     else if (msg[0] == LPCM_HDR) {
         lpcm_offs++;
@@ -102,6 +103,32 @@ int main(int argc, char **argv)
 {
     if (argc < 2) return 2;
     sc = argv[1];
+    if (!strncmp(sc, "entry_", 6)) {
+        /* chooser-ios WARM-r1: stage A of the menu instance with the DPU domain ABL hands over off (every proven
+         * handoff) or on. With TGL_CHOOSER_WARM a live domain is refused before any request but the state query,
+         * and the release then sends nothing. */
+        int live = !strcmp(sc, "entry_top_on");
+        top_on = live; fe0_on = 0; dsi0_on = 0;
+        d.t0 = now_us; d.started = 1;
+        int rc = stage_a();
+        int refuse = 0;
+#if defined(TGL_DCS_MENU) && defined(TGL_CHOOSER_WARM) && TGL_CHOOSER_WARM
+        refuse = live;
+#endif
+        if (refuse) {
+            CHECK(rc == DCS_C_TOP_LIVE && d.stop == DCS_C_TOP_LIVE);
+            CHECK(d.held == 0 && top_ons == 0 && top_offs == 0 && lpcm_offs == 0);
+            CHECK(dpu_writes() == 0 && first('W', MBA_PAGE + MBA_MSG, 1, LPB_SET) < 0);
+            unsigned before = n_;
+            CHECK(tgl_dcs_release() == 0);
+            CHECK(n_ == before && top_on); /* nothing given back: the domain stays as ABL left it */
+        } else {
+            CHECK(rc == 0);
+            CHECK(live ? (d.held == 0 && top_ons == 0) : ((d.held & HELD_TOP) && top_ons == 1 && top_on));
+        }
+        printf("%s %s rc=%d accesses=%u held=%u\n", fails ? "FAIL" : "PASS", sc, rc, n_, d.held);
+        return fails ? 1 : 0;
+    }
     int want = DCS_C_OK, expect_quiesce = 1;
     uint32_t held = HELD_TOP | HELD_DSI0 | HELD_CLK | HELD_FE0;
 #define IS(x) (!strcmp(sc, x))

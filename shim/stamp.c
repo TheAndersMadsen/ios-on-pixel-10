@@ -192,9 +192,31 @@ void tgl_stamp_boot_entry(void)
 {
 	volatile struct tgl_stamp_header *h =
 	    (volatile struct tgl_stamp_header *)STAMP_BASE();
+	uint64_t entry_arg = 0;
 	boot_t0 = stamp_counter();
 	boot_freq = stamp_frequency();
 	if (!STAMP_BASE()) return;
+#if defined(TGL_STAMP_ROTATE_FREE) && TGL_STAMP_ROTATE_FREE > 0
+	/* chooser-ios WARM-r1 (TGL_CHOOSER_WARM builds): an installed image keeps one nonce across boots, DRAM survives a
+	 * warm reset, and one iOS session (shim + XNU tegu_early on this ring) fills all TGL_STAMP_SLOTS. The next warm
+	 * boot's stamps were then all dropped. With fewer than TGL_STAMP_ROTATE_FREE free slots the trail starts over
+	 * for this boot: count, dropped and reason reset, t0 = now, seq continues. The entry stamp's arg records what
+	 * was there: bit 63 set, bits 55:48 old count, 47:24 old dropped, 23:8 old last_stage, 7:0 old reason.
+	 * A short failing boot (a reset loop) still appends, as before. */
+	if (h->magic == TGL_STAMP_MAGIC && h->nonce == TGL_STAMP_NONCE &&
+	    h->count + TGL_STAMP_ROTATE_FREE > TGL_STAMP_SLOTS) {
+		entry_arg = UINT64_C(1) << 63 | (uint64_t)(h->count & 0xffu) << 48 |
+		    (uint64_t)(h->dropped & 0xffffffu) << 24 |
+		    (uint64_t)(h->last_stage & 0xffffu) << 8 | (h->reason & 0xffu);
+		h->count = 0;
+		stamp_dsb();
+		h->dropped = 0;
+		h->freq = stamp_frequency();
+		h->t0 = stamp_counter();
+		h->reason = TGL_STAMP_R_IN_PROGRESS;
+		stamp_dsb();
+	}
+#endif
 	if (h->magic != TGL_STAMP_MAGIC || h->nonce != TGL_STAMP_NONCE) {
 		/* Fresh channel: a mismatched nonce means the residue belongs to
 		 * another build, so it must not be read as this boot's history. */
@@ -218,7 +240,7 @@ void tgl_stamp_boot_entry(void)
 	focus_seen = 0;
 #endif
 	/* Same nonce: a PSCI-reset re-entry appends to the surviving trail. */
-	stamp_write(TGL_STAGE_ENTRY, TGL_STAMP_F_ENTER, 0);
+	stamp_write(TGL_STAGE_ENTRY, TGL_STAMP_F_ENTER, entry_arg);
 }
 
 void tgl_stamp(unsigned stage, unsigned flags, uint64_t arg)

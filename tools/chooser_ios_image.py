@@ -2,7 +2,7 @@
 """Chooser with the iOS branch: ONE boot image whose menu picks stock Android or iOS. HOST ONLY: no device access.
 
   chooser_ios_image.py image NAME --ios-image research/images/IOS --stock-kernel truth/boot_b.img --stock-kernel-sha SHA
-                       [--fdt truth/fdt.dtb] [--keys] [--default-ios] [--cold-safe]
+                       [--fdt truth/fdt.dtb] [--keys] [--default-ios] [--cold-safe] [--warm-safe]
   chooser_ios_image.py image test-NAME --payload payload-usb.bin ...   host check only: bootable=false
   chooser_ios_image.py check research/images/NAME
   chooser_ios_image.py budget --payload P --stock-kernel K [--shim-bytes N]
@@ -20,6 +20,9 @@ redraw on change, quiet presents with a record-room check; research/ios26-dualbo
 --cold-safe: the shim is built with TGL_USB_DISABLE (no EP0 console, no USB MMIO; the watchdog quiesce still runs). On a cold
 power-on ABL leaves the USB block unpowered and the shim's first USB read ended the boot (chooser-ios-r2 installed on boot_b,
 research/ios26-dualboot-r8/chooser-ios/COLD-r3.md). Installable images need it.
+--warm-safe: TGL_CHOOSER_WARM + TGL_STAMP_ROTATE_FREE=64 (chooser-ios/WARM-r1.md). The menu's display instance refuses a DPU
+domain ABL handed over ON (no request, no DPU access; the menu runs dark, Android by timeout), and a warm boot whose ring
+is nearly full (an earlier iOS session of the same nonce) starts its own stamp trail instead of dropping every stamp.
 research/ios26-dualboot-r8/chooser-ios/DESIGN.md."""
 import argparse, hashlib, json, os, re, shutil, struct, subprocess, sys, tempfile
 from pathlib import Path
@@ -54,6 +57,7 @@ IOS_NEEDS = ('-DTGL_ALL_DCS=1', '-DTGL_FRAME_RUNG=3', '-DTGL_DCS_HANDOFF=1')
 # --cold-safe (COLD-r3.md): no shim USB console. The USB entry points must be unreachable from the linked shim and the
 # pre-handoff watchdog quiesce must still be called from shim_main (TGL_USB_DISABLE skipped it before r3).
 COLD_SAFE_FLAGS = ' -DTGL_USB_DISABLE=1'
+WARM_FLAGS = ' -DTGL_CHOOSER_WARM=1 -DTGL_STAMP_ROTATE_FREE=64'
 USB_ENTRY = ('tgl_usb_console_start', 'tgl_usb_console_wait', 'laguna_usb_start', 'laguna_usb_board_resume')  # not tgl_cpm_init: display uses it
 
 
@@ -97,19 +101,21 @@ def budget(shim_bytes, payload_bytes, lz4_bytes, vbmeta_bytes=4096):
                 blob_limit=BLOB_LIMIT, blob_margin=BLOB_LIMIT - blob, blob_over_proven=blob - PROVEN_BLOB)
 
 
-def chooser_cflags(ios_cflags, keys, default_ios, cold_safe=False):
-    """The shim's EXTRA_CFLAGS: the iOS image's own, the chooser gates, then the default entry, the keys and the cold-safe USB gate."""
+def chooser_cflags(ios_cflags, keys, default_ios, cold_safe=False, warm_safe=False):
+    """The shim's EXTRA_CFLAGS: the iOS image's own, the chooser gates, then the default entry, the keys, the cold-safe USB gate
+    and the warm-safe gates."""
     return ios_cflags + ' ' + CHOOSER_IOS_FLAGS + (' -DTGL_CHOOSER_IOS_DEFAULT=1' if default_ios else '') + (KEYS_FLAGS if keys else '') \
-        + (COLD_SAFE_FLAGS if cold_safe else '')
+        + (COLD_SAFE_FLAGS if cold_safe else '') + (WARM_FLAGS if warm_safe else '')
 
 
 def chooser_src(ios_src, keys):
     return ios_src + ' ' + CHOOSER_IOS_SRC + (KEYS_SRC if keys else '')
 
 
-def menu_reference_flags(keys):
-    """What the renamed menu display instance must equal: r11's tgl_dcs.c build, plus r13's quiet present with --keys."""
-    return R11_MENU_FLAGS + (' -DTGL_DCS_PRESENT_QUIET=1' if keys else '')
+def menu_reference_flags(keys, warm_safe=False):
+    """What the renamed menu display instance must equal: r11's tgl_dcs.c build, plus r13's quiet present with --keys and the
+    live-domain refusal with --warm-safe."""
+    return R11_MENU_FLAGS + (' -DTGL_DCS_PRESENT_QUIET=1' if keys else '') + (' -DTGL_CHOOSER_WARM=1' if warm_safe else '')
 
 
 def installable(bootable, keys, default_ios, cold_safe=False):
@@ -182,7 +188,7 @@ def r13_loop_linked(disasm, tick_addr, hook_addr):
     return 0
 
 
-def text_identity(llvm, shim_dir, ios_cflags, keys=False, cold_safe=False):
+def text_identity(llvm, shim_dir, ios_cflags, keys=False, cold_safe=False, warm_safe=False):
     """Compile tgl_dcs.c several ways and compare .text/.rodata: the renamed menu instance must equal an r11-gated build
     (r11 + quiet present with --keys), and the iOS instance under the chooser gates must equal the iOS image's build.
     With --keys the menu instance must also differ from plain r11 (the quiet present is in). Fixed nonce values."""
@@ -190,8 +196,8 @@ def text_identity(llvm, shim_dir, ios_cflags, keys=False, cold_safe=False):
             '-fno-stack-protector', '-fno-jump-tables', '-w', '-DTGL_STAMP_NONCE=0x1234ULL', '-DTGL_UFS_EPOCH=1ULL', '-DTGL_UFS_RECORD_NONCE={0}',
             '-DTGL_UFS_ROUTE=1', '-DTGL_UFS_POST_LINK=1', '-DTGL_UFS_HANDOFF=1', '-DTGL_STAMP_UFS_FOCUS=1']
     ios = ios_cflags.split()
-    ref = menu_reference_flags(keys).split()
-    both = chooser_cflags(ios_cflags, keys, False, cold_safe).split()
+    ref = menu_reference_flags(keys, warm_safe).split()
+    both = chooser_cflags(ios_cflags, keys, False, cold_safe, warm_safe).split()
     out = {}
     with tempfile.TemporaryDirectory() as t:
         def obj(name, src, flags):
@@ -207,11 +213,18 @@ def text_identity(llvm, shim_dir, ios_cflags, keys=False, cold_safe=False):
         out['menu_reference_flags'] = ' '.join(ref)
         out['menu_instance'] = obj('menu', 'tgl_dcs_menu.c', both)
         if keys: out['menu_r11'] = obj('r11', 'tgl_dcs.c', R11_MENU_FLAGS.split())
+        if warm_safe:  # the refusal is in the menu instance only, and the trail rotation is in stamp.c
+            out['menu_cold_only'] = obj('menuc', 'tgl_dcs_menu.c', chooser_cflags(ios_cflags, keys, False, cold_safe, False).split())
+            out['stamp_warm'] = obj('stw', 'stamp.c', both)
+            out['stamp_plain'] = obj('stp', 'stamp.c', chooser_cflags(ios_cflags, keys, False, cold_safe, False).split())
         out['ios_alone'] = obj('ios', 'tgl_dcs.c', ios)
         out['ios_instance'] = obj('iosc', 'tgl_dcs.c', both)
     out['menu_equal'] = out['menu_reference'] == out['menu_instance']
     if keys: out['menu_quiet'] = out['menu_r11']['.text'] != out['menu_instance']['.text']
     out['ios_equal'] = out['ios_alone'] == out['ios_instance']
+    if warm_safe:
+        out['menu_warm'] = out['menu_cold_only']['.text'] != out['menu_instance']['.text']
+        out['stamp_rotates'] = out['stamp_warm']['.text'] != out['stamp_plain']['.text']
     return out
 
 
@@ -258,7 +271,7 @@ def build(a):
     out.mkdir(parents=True)
     log = (out / 'build.log').open('w')
     t = IT.scope(a.name)
-    cflags = chooser_cflags(ios_cflags, a.keys, a.default_ios, a.cold_safe)
+    cflags = chooser_cflags(ios_cflags, a.keys, a.default_ios, a.cold_safe, a.warm_safe)
     src = chooser_src(ios_src, a.keys)
     llvm = Path(os.environ.get('LLVM', str(IT.LLVM)))
     env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'LLVM': str(llvm), 'HOSTCC': os.environ.get('HOSTCC', '/usr/bin/cc'), 'TGL_UFS_HANDOFF': '1',
@@ -291,6 +304,16 @@ def build(a):
                 str(t / 'menu_ui.c'), str(t / 'menu_band_shadow_test.c')], log)
         test_out += CI.run([str(mbs)], log)
         if not re.search(r'menu band shadow test: \d+ checks, 0 failed', test_out): IT.die('menu band shadow host test did not pass')
+    if a.warm_safe:  # WARM-r1: the rotation passes with the gate and the same cases fail without it (they detect the old drop)
+        for g in (True, False):
+            exe = t / f'out/stamp_rotate_test_{int(g)}'
+            CI.run([env['HOSTCC'], '-O1', '-Wall', '-Wextra', '-fsanitize=address,undefined', '-DTGL_STAMP_HOST', '-DTGL_STAMP_HOST_CLOCK',
+                    '-DTGL_STAMP_NONCE=0x1122334455667788ULL', *(['-DTGL_STAMP_ROTATE_FREE=64'] if g else []), '-o', str(exe),
+                    str(t / 'stamp.c'), str(t / 'stamp_rotate_test.c')], log)
+            r = subprocess.run([str(exe)], capture_output=True, text=True)
+            log.write(r.stdout); test_out += r.stdout if g else f'stamp rotate self-check (gate off) exit {r.returncode}\n'
+            if g and (r.returncode or not re.search(r'stamp rotate host test: \d+ checks, 0 failed', r.stdout)): IT.die('stamp rotate host test failed')
+            if not g and r.returncode == 0: IT.die('stamp rotate test passes without the gate: it cannot detect the warm drop')
     test_out += CI.run([sys.executable, '-I', str(X / 'test_chooser_ios_image.py')], log)
     log.flush(); blog = (out / 'build.log').read_text()
     for pat in (r'chooser-ios host test: \d+ checks, 0 failed', r'lz4 host test: \d+ checks, 0 failed', r'chooser host test: \d+ checks, 0 failed',
@@ -326,10 +349,11 @@ def build(a):
     if why: IT.die(f'linked shim: {why} (USB gate {"cold-safe" if a.cold_safe else "console"})')
     usb_graph = {f: sorted(c) for f, c in sorted(usb_calls(full)[0].items())}
     (out / 'usb-calls.txt').write_text(json.dumps(usb_graph, indent=1) + '\n')
-    ident = text_identity(llvm, t, ios_cflags, bool(a.keys), bool(a.cold_safe))
+    ident = text_identity(llvm, t, ios_cflags, bool(a.keys), bool(a.cold_safe), bool(a.warm_safe))
     if not ident['menu_equal']: IT.die('menu display instance differs from the r11-gated tgl_dcs.c build (r11 + quiet present with --keys)')
     if a.keys and not ident['menu_quiet']: IT.die('menu display instance lacks the r13 quiet present')
     if not ident['ios_equal']: IT.die('iOS display instance changes under the chooser gates')
+    if a.warm_safe and not (ident['menu_warm'] and ident['stamp_rotates']): IT.die('warm-safe gates change neither the menu instance nor stamp.c')
 
     boot = out / 'boot.img'
     hdr = bytearray(stock_raw[:4096]); struct.pack_into('<I', hdr, 8, len(blob))
@@ -352,7 +376,7 @@ def build(a):
     real = budget(len(shim) - 16 - len(payload), len(payload), len(st['kernel']), len(vb))
     bootable = ios_bootable and not a.name.startswith('test-')
     rec = dict(kind='chooser-ios', version=1, name=a.name, bootable=bootable, installable=installable(bootable, a.keys, a.default_ios, a.cold_safe),
-               cold_safe=bool(a.cold_safe), usb_console=not a.cold_safe, usb_calls=usb_graph,
+               cold_safe=bool(a.cold_safe), warm_safe=bool(a.warm_safe), usb_console=not a.cold_safe, usb_calls=usb_graph,
                default_entry='ios' if a.default_ios else 'android', keys_read=bool(a.keys), keys_fix=bool(a.keys),
                menu_loop='r13' if a.keys else 'r11', ios=ios,
                image=IT.sha(boot), image_bytes=boot.stat().st_size, kernel_blob=IT.sha(out / 'kernel.bin'), kernel_blob_bytes=len(blob),
@@ -398,6 +422,8 @@ def check(d):
     if m['keys_read'] != fix or m.get('keys_fix', False) != fix: sys.exit('keys gates in cflags differ from the manifest (keys need the r13 loop)')
     cold = all(f in m['cflags'].split() for f in COLD_SAFE_FLAGS.split())
     if m.get('cold_safe', False) != cold: sys.exit('cold-safe gate in cflags differs from the manifest')
+    warm = all(f in m['cflags'].split() for f in WARM_FLAGS.split())
+    if m.get('warm_safe', False) != warm: sys.exit('warm-safe gates in cflags differ from the manifest')
     if m['installable'] and not cold:
         sys.exit('recorded installable, but the shim starts the USB console: it faults on a cold power-on (chooser-ios/COLD-r3.md)')
     if m['installable'] != installable(m['bootable'], m['keys_read'], m['default_entry'] == 'ios', cold): sys.exit('installable flag inconsistent')
@@ -405,7 +431,7 @@ def check(d):
         ios = Path(m['ios']['dir'])
         if IT.sha(ios / 'payload-usb.bin') != m['payload_sha256']: sys.exit('payload differs from the named iOS image')
     print('OK', m['name'], 'chooser-ios', 'bootable' if m['bootable'] else 'NOT BOOTABLE', 'default', m['default_entry'],
-          'installable' if m['installable'] else 'not installable', 'cold-safe' if cold else 'usb-console', m['image'])
+          'installable' if m['installable'] else 'not installable', 'cold-safe' if cold else 'usb-console', *(['warm-safe'] if warm else []), m['image'])
 
 
 def budget_cmd(a):
@@ -430,6 +456,7 @@ if __name__ == '__main__':
     i.add_argument('--keys', action='store_true', help='volume keys via shim/keys_laguna.c (TGL_KEYS_POLL) with the r13 menu loop (keys/DIAG-r13.md)')
     i.add_argument('--default-ios', action='store_true', help='countdown ends on iOS: attended iOS-branch test image, never installable')
     i.add_argument('--cold-safe', action='store_true', help='no shim USB console (TGL_USB_DISABLE): required to be installable (COLD-r3.md)')
+    i.add_argument('--warm-safe', action='store_true', help='TGL_CHOOSER_WARM + stamp trail rotation (chooser-ios/WARM-r1.md)')
     c = sub.add_parser('check'); c.add_argument('dir')
     g = sub.add_parser('budget'); g.add_argument('--payload', required=True); g.add_argument('--stock-kernel', required=True)
     g.add_argument('--shim-bytes', type=int, default=3 << 20)

@@ -15,6 +15,7 @@ CC = ['cc', '-std=gnu11', '-O1', '-g', '-fsanitize=address,undefined', '-fno-san
       '-DTGL_TAKEOVER_BASE=({ extern volatile uint32_t dcs_test_takeover[]; dcs_test_takeover; })',
       '-DTGL_FRAME_RUNG=3', '-DTGL_DCS_MENU=1']
 SCEN = ['ok', 'layer_off', 'layer_settles', 'layer_busy', 'be_settles', 'be_busy', 'no_fe0']
+SCEN_ENTRY = ['entry_top_off', 'entry_top_on']  # chooser-ios WARM-r1: stage A, gate TGL_CHOOSER_WARM off and on
 fails, checks = [], 0
 
 
@@ -90,16 +91,17 @@ else:
 
 # ---- fake bus, gate off and on
 OUT.mkdir(parents=True, exist_ok=True)
-for gate in (False, True):
-    exe = OUT / ('on' if gate else 'off')
-    p = subprocess.run(CC + (['-DTGL_DCS_QUIESCE=1'] if gate else []) + [f'-I{S}', str(S / 'tgl_dcs_quiesce_test.c'), '-o', str(exe)], capture_output=True, text=True)
-    ok(p.returncode == 0, f'build gate={gate}: {p.stderr[-800:]}')
+for gate, warm in ((False, False), (True, False), (True, True)):
+    exe = OUT / (('on' if gate else 'off') + ('-warm' if warm else ''))
+    p = subprocess.run(CC + (['-DTGL_DCS_QUIESCE=1'] if gate else []) + (['-DTGL_CHOOSER_WARM=1'] if warm else []) +
+                       [f'-I{S}', str(S / 'tgl_dcs_quiesce_test.c'), '-o', str(exe)], capture_output=True, text=True)
+    ok(p.returncode == 0, f'build gate={gate} warm={warm}: {p.stderr[-800:]}')
     if p.returncode:
         continue
-    for s in SCEN:
+    for s in SCEN + SCEN_ENTRY:
         r = subprocess.run([str(exe), s], capture_output=True, text=True, timeout=60)
-        print(f'gate={"on " if gate else "off"} {r.stdout.strip()}')
-        ok(r.returncode == 0, f'gate={gate} {s}: {r.stdout[-400:]}{r.stderr[-400:]}')
+        print(f'gate={"on " if gate else "off"} warm={int(warm)} {r.stdout.strip()}')
+        ok(r.returncode == 0, f'gate={gate} warm={warm} {s}: {r.stdout[-400:]}{r.stderr[-400:]}')
 
 print(f'{checks} checks, {len(fails)} failed')
 sys.exit(1 if fails else 0)
