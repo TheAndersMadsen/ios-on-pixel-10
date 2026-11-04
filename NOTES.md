@@ -19,16 +19,19 @@ recoverable. QEMU and host tools support development; they are not phone results
   FPS/speed acceptance still open.
 - **Live-debug queue (2026-11-04 04:51-05:51 CET, PHYSICAL):** int5-r2 PASS (above);
   GPU rung 8 (gpu5) + rung 9 (gpu6) PASS - MMUCACHE executed in firmware, ordered UFO
-  fence, 0 faults; aoc5 (first AoC phone run) PANICS: unaligned data abort at x0+0x40,
-  ramdump kept, AoC lane open; modem2 rung 5 STOP (controller already live at survey,
-  clean tidy, 0 errors); CA diagnostic answered: no AGXAccelerator in the IORegistry,
-  MTLCreateSystemDefaultDevice nil, CA selects SWContext - the native-GPU path must
-  publish the device first. All return checks PASS.
+  fence, 0 faults; **int5-r3 PASS (2026-11-04 09:50, queue 2 boot 1)**: 13/14 acceptance rows
+  green - softblur-free Home 70 s→1080 s deadline, epoch= honored as the RTC floor
+  (`source rtc … (floor image-epoch …)`, publish ok), settings-r1 disabled.plist 7397 B +
+  22 applied + MobileSMS/SocialLayer prefs seeded, 0 backboardd/LIBMALLOC/MobileSMS/
+  FaceTime/Preferences crashes, Spotlight denied (68). Misses: A4 medialibraryd still never
+  execs (launchd did not act on the applied plist; on-demand or needs a UI walk) and the
+  R3 recipe's UI walk (Settings/Spotlight shots) was not in the queue argv - both open.
   Receipts: `research/ios26-phaseb-r1/goal-pool/receipts/queue-20261104.md`,
-  `gpu5-20261104.md` (rungs 8-9), `int5-20261104.md` (regression). Built, not booted:
-  int5-r3, int4-perf-r1 (governor fix), gpu7 (rung 10), int4-spotlight-r1,
-  SweetSensorHub, nfc2; bt5-r2 (Mac-only) pending the owner's TX decision; periph-r1
-  needs an attended rotate.
+  `gpu5-20261104.md` (rungs 8-9), `int5-20261104.md` (regression),
+  `research/ios26-phaseb-r1/int5-r3/receipts/r3-phone-20261104.md`. Built, not booted:
+  int4-perf-r1 (governor fix, booting now), gpu7 (rung 10), int4-spotlight-r1,
+  SweetSensorHub, nfc2; bt5-r2 (Mac-only) TX approved, bt5-r3 pending the lane
+  (rate-limited until Nov 6 22:00 CET); periph-r1 needs an attended rotate.
 - **aoc5 panic symbolized (2026-11-04):** panic is `_aoc_xnu_zero`+0x58 -> `_bzero`+0x44,
   DFSC 0x21 alignment fault, far = x->carve+0x40 with x->carve = 0xfffffe304bdd0000:
   bzero takes the DC-ZVA path on the 48 MiB carve and `ml_io_map_wcomb` maps the carve
