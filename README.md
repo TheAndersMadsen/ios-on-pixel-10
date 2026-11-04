@@ -89,19 +89,13 @@
 
 ## Current checkpoint
 
-**Dual boot is installed, and iOS is usable by hand.** The boot chooser lives on `boot_b`: it falls
-through to Android on timeout, and the owner started iOS from a real power-on through its menu.
+**Updated 2026-11-04.** Dual boot is installed (Android untouched), and iOS 26 is usable by hand — touch, full-screen scaling, the volume and power keys, haptics, the brightness slider, and the real battery level and clock. A structured live-debug platform now drives the bring-up: a streaming kernel console, unattended screenshots, a user-stack sampler, per-daemon log mirroring, automatic crash triage (`tools/crashdoc.py`), evidence-based status probes (`tools/probe_eval.py`), a QEMU pre-flight, and one CLI over it all (`tools/hk`) feeding a shared, auto-generated backlog (`docs/debug/BACKLOG.md`).
 
-With the owner holding the phone, iOS 26 now responds to the volume keys, the power key locks and
-wakes it, touch gives a haptic buzz, the brightness slider changes the panel, and the status bar shows
-the real battery level (95%) and the correct local time. After a configd fix, Settings responds at once
-and the Phone app opens, though only partly. Settings > About still doesn't open.
+**Proven on the phone this session:** 120 Hz ProMotion (65 completed frames/s during scroll, past the old ~40 cap); the Settings>About, Messages/BlastDoor and AccessibilityUIServer crashes fixed live; a restored root (r5) that puts back the stock app resources an earlier prune removed (Phone, About, Messages, FaceTime, Spotlight), flashed and verified on the partition; and a consolidated image (int4) carrying the crash fixes, 120 Hz, the full 16 GiB memory map and a read-only charger reporter in one boot.
 
-The GPU firmware, started through Trusty, passes its health check: it executed a state command
-without faults. Real drawing commands come next. Screenshots can now be taken unattended from the
-RAM dump, at about 0.29 s each. They are a debug tool and add nothing to the percentage.
+**GPU / Liquid Glass.** The GPU is an Imagination PowerVR DXT (BVNC 71.2.2448.1212). Its firmware boots and passes health; the iOS 26 glass renders flat only because no accelerator is published yet, so the compositor falls back to software. A coordinated analysis mapped the full native path — coremem init -> command stream -> a custom `AGXAccelerator` with a native Metal plugin -> CoreAnimation compositing — and the first hardware step, the coremem init fix, is built and queued for its on-phone milestone.
 
-Native Metal, Wi-Fi traffic, cellular and audio are still incomplete.
+**Built and queued for on-phone tests:** the full 16 GiB RAM map, a Wi-Fi fix (the handshake fails from host RX-buffer starvation, not crypto), Bluetooth, NFC, the camera flash LED, sensors, the cellular modem's first PCIe link-up, USB host mode, and audio stage one. Native Metal, Wi-Fi traffic, cellular and audio are still incomplete.
 
 Read [NOTES.md](NOTES.md) for current state and [HANDOFF.md](HANDOFF.md) for next actions. The
 percentage above is a planning checklist, not release readiness.
