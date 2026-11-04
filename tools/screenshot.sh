@@ -3,7 +3,7 @@
 #
 # Live, during a boot started with tools/live_boot.sh (kernel with DBG3's snapshot, blazer_usbcon_snap=1):
 #   tools/screenshot.sh [RUN_DIR | SOCKET] [--step N] [--name NAME] [--scale S] [-o OUT.png]
-#     RUN_DIR: a live_boot run dir (its live.env names the socket); default: the newest
+#     RUN_DIR: a live_boot run dir (its live.env names the socket); default: the newest attempts/*/live-*/ or
 #     research/laguna-usb-fix/attempts/live-*/. Asks the running usbcon reader on the Mac for a snapshot
 #     (requests 0x67/0x68, every N-th pixel, default 6 = 188x419; the kernel raises N until it fits 160 KiB),
 #     copies the reader's .png/.rgb565/.json back and writes OUT (default RUN_DIR/screens/NAME-HHMMSS.png).
@@ -48,7 +48,7 @@ case $step in ''|*[!0-9]*) echo 'screenshot: --step 1..64' >&2; exit 2;; esac
 
 sock='' run=''
 if [ -z "$target" ]; then
-    run=$(ls -1dt "$ROOT"/research/laguna-usb-fix/attempts/live-*/ 2>/dev/null | head -1 || true)
+    run=$(ls -1dt "$ROOT"/attempts/*/live-*/ "$ROOT"/research/laguna-usb-fix/attempts/live-*/ 2>/dev/null | head -1 || true)
     [ -n "$run" ] || { echo 'screenshot: no live_boot run found; give RUN_DIR or SOCKET' >&2; exit 2; }
     run=${run%/}
 elif [ -d "$target" ]; then
@@ -82,19 +82,29 @@ if [ "$rc" != 0 ] || [ "$state" != snapshot ] || [ -z "$png" ]; then
     printf '%s\n' "$reply" >&2
     exit 4
 fi
-# The reader names files relative to the Mac checkout (live_boot passes a relative --output).
-case $png in /*) mac_dir=$(. "$HOME/.local/share/phone-bridge/lib.sh"; pb_mirror_of "$ROOT" || true)
-                 [ -n "$mac_dir" ] && [ "${png#"$mac_dir"/}" != "$png" ] || { echo "screenshot: $png is outside the Mac checkout" >&2; exit 4; }
-                 png=${png#"$mac_dir"/};;
-esac
-stem=${png%.png}
-(cd "$ROOT" && "$MAC" repo --force --back "$stem.png" --back "$stem.rgb565" --back "$stem.json" -- true >/dev/null 2>&1) || true
-[ -f "$ROOT/$stem.rgb565" ] || { echo "screenshot: could not copy $stem.rgb565 back from the Mac" >&2; exit 4; }
+# The reader names its files by absolute Mac path (live_boot runs it with --output under the Mac copy of the run dir, e.g.
+# /Users/x/Developer/personal/hackios/attempts/<id>/live-*/usbcon/usbcon.log.snaps/0001-screen.png) or relative to the
+# Mac checkout. Copy them back with `mac --cd MACDIR -- cat` (byte exact; `mac repo --back` refuses paths outside the
+# tracked tree, such as attempts/): OUT.rgb565 and OUT.json beside OUT, which fb_png renders from the raw frame.
+mac_dir=''
+[ -z "$run" ] || mac_dir=$(sed -n 's/^LIVE_MAC_DIR=//p' "$run/live.env" | tail -1)
+if [ -z "$mac_dir" ] && [ -f "$HOME/.local/share/phone-bridge/lib.sh" ]; then
+    mac_dir=$(. "$HOME/.local/share/phone-bridge/lib.sh"; pb_mirror_of "$ROOT" || true)
+fi
+mac_dir=${mac_dir:-Developer/personal/hackios}
 if [ -z "$out" ]; then
     dir=${run:-$ROOT}/screens
-    mkdir -p "$dir"
     out=$dir/$name-$stamp.png
 fi
-python3 -I "$ROOT/tools/fb_png.py" --rgb565 "$ROOT/$stem.rgb565" --size "${w}x${h}" --scale "$scale" -o "$out" >/dev/null
-echo "screenshot: ${w}x${h} (step $got_step, kernel ${took} us) from $sock; reader copy $stem.png" >&2
+mkdir -p "$(dirname "$out")"
+stem=${png%.png}
+fetch() {   # MAC_PATH LOCAL
+    if "$MAC" --cd "$mac_dir" -- cat "$1" > "$2.part" 2>/dev/null && [ -s "$2.part" ]; then mv "$2.part" "$2"; else rm -f "$2.part"; return 1; fi
+}
+fetch "$stem.rgb565" "${out%.png}.rgb565" || { echo "screenshot: could not copy $stem.rgb565 back from the Mac (dir $mac_dir)" >&2; exit 4; }
+fetch "$stem.json" "${out%.png}.json" || true
+size=$(stat -c %s "${out%.png}.rgb565")
+[ "$size" = $((w * h * 2)) ] || { echo "screenshot: $stem.rgb565 is $size bytes, expected $((w * h * 2)) for ${w}x${h}" >&2; exit 4; }
+python3 -I "$ROOT/tools/fb_png.py" --rgb565 "${out%.png}.rgb565" --size "${w}x${h}" --scale "$scale" -o "$out" >/dev/null
+echo "screenshot: ${w}x${h} (step $got_step, kernel ${took} us) from $sock; reader copy $png (Mac)" >&2
 echo "$out"

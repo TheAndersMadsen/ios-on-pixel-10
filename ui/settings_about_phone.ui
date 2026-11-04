@@ -1,0 +1,43 @@
+# Settings > General > About, back, then Phone and each tab, a screenshot at every step.
+# Canvas pixels (1125x2511; snapshot pixel x step = canvas pixel). Provenance: research/ios26-phaseb-r1/live/uidrive/UIDRIVE.md section 4;
+# home-screen icons re-measured 2026-11-04 from the int2-ui (step 6) and int4-confirm (step 8) home snapshots (HOST analysis of PHYSICAL frames).
+# Keep hands off the phone during a walk: ui_run marks steps with real touches or button presses INTERFERED.
+#   python3 -I tools/ui_run.py <live_boot run dir> ui/settings_about_phone.ui
+wait_home                                        # console + quiet + input + lit/still screen, then unlock swipe + HOME
+shot home
+mark settings
+tap 692 1780 app=Preferences retry=1 verify=25   # Settings icon, row 5 col 3: its grey square spans canvas 600..784 x 1688..1872
+                                                 # on the int2-ui and int4-confirm home snapshots (the old 170,279 is FaceTime's slot)
+shot settings
+swipe 562 1900 562 800 ms=300                    # scroll down
+shot settings-scrolled
+swipe 562 800 562 2000 ms=300                    # and back up
+shot settings-top
+tap_text "General" fallback=370,1008             # fallback inferred (UNATTENDED.md section 6)
+shot general
+tap_text "About" region=top fallback=370,640     # first row of General; fallback INFERENCE
+sleep 5                                          # pwr1: About did not open; give it time to fill
+shot about
+check_text "Version"                             # soft check: About lists "iOS Version"
+tap 110 200                                      # back to General (p31r1 back taps)
+shot general-again
+tap 110 200                                      # back to Settings
+shot settings-again
+home
+shot home-again
+mark phone
+tap 172 2340 app=MobilePhone retry=1 verify=25   # Phone, first in the dock: green square 80..264 x 2248..2432 (int2-ui, int4-confirm)
+sleep 5
+shot phone
+tap 112 2350 expect=any                          # tab bar, five slots across the bottom (iOS 26 layout INFERENCE)
+shot phone-tab1
+tap 337 2350 expect=any
+shot phone-tab2
+tap 562 2350 expect=any
+shot phone-tab3
+tap 787 2350 expect=any
+shot phone-tab4
+tap 1012 2350 expect=any
+shot phone-tab5
+home
+shot end

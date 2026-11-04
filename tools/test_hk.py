@@ -29,6 +29,11 @@ import hk  # noqa: E402
 PY = sys.executable
 
 
+def struct_pack_rgb565(pixels):
+    import struct
+    return struct.pack(f'<{len(pixels)}H', *pixels)
+
+
 def write(p, text, mode=0o644):
     p = Path(p)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -645,9 +650,192 @@ a = sys.argv[1:]; open(a[a.index('--json') + 1], 'w').write(json.dumps(dict(verd
 
     def test_help_lists_every_subcommand(self):
         out = self.hk('--help', code=0).stdout
-        for c in ('cycle', 'probe', 'crash', 'qemu', 'ui', 'logs', 'live', 'status', 'lock'):
+        for c in ('cycle', 'probe', 'crash', 'qemu', 'ui', 'logs', 'live', 'status', 'lock', 'timeline', 'diff', 'triage'):
             self.assertRegex(out, rf'\b{c}\b')
             self.hk(c, '--help', code=0)
+
+    # --- 2026-11-04 lane TOOLS: live attempts, late runner dirs, screenshots, timeline/diff/triage
+
+    def wall(self, t):
+        lt = time.localtime(t)
+        return time.strftime('%H:%M:%S', lt) + f'.{int(t % 1 * 1000):03d}'
+
+    def make_live_run(self, parent, name, ts, t0, console, markers=(), image=None, runner=None):
+        live = parent / f'live-{ts}-{name}'
+        write(live / 'live.env', f'LIVE_RUN={live}\nLIVE_NAME={name}\nLIVE_SOCK=/tmp/x.sock\nLIVE_MAC_DIR=Developer/personal/hackios\n'
+                                 f'LIVE_T0={t0}\n')
+        write(live / 'console.txt', ''.join(f'{self.wall(t0 + t)} [{t:9.2f}] {text}\n' for t, text in console))
+        mk = [f'LIVEBOOT {self.wall(t0 + 7)} +7.0 ATTEMPT_DIR /Users/x/Developer/personal/hackios/research/laguna-usb-fix/'
+              f'attempts/{runner}'] if runner else []
+        mk += [f'{who} {self.wall(t0 + t)} +{t:.1f} {text}' for who, t, text in markers]
+        write(live / 'markers.txt', '\n'.join(mk) + '\n')
+        if image:
+            write(live / 'bootios.txt', f'{self.wall(t0)} image:  /Users/x/Developer/personal/hackios/research/images/{image}/boot.img\n')
+        return live
+
+    def test_mid_boot_attempt_reads_its_live_console(self):
+        """hk boot records paths only when live_boot returns: a running (or killed) boot used to say 'nothing to read'."""
+        self.fake_crashdoc()
+        aid, t0 = '20261104-033817-a7-int4-confirm', time.time() - 600
+        d = self.store / aid
+        write(d / 'manifest.json', json.dumps(dict(schema='hk.manifest/1', id=aid, name='a7-int4-confirm', kind='phone',
+                                                   created_t=t0, paths={}, result={})))
+        write(self.store / 'index.jsonl', json.dumps(dict(id=aid, kind='phone', created_t=t0, paths={})) + '\n')
+        self.make_live_run(d, 'a7-int4-confirm', aid[:15], t0, [(40, 'exec SpringBoard'), (60, 'CRASH recentsd reason ns 1')],
+                       runner='20261103-120000-a7-late')
+        st = self.hkj('status', '--attempt', aid, '--no-probe')
+        self.assertTrue(st['paths']['live'].endswith(f'live-{aid[:15]}-a7-int4-confirm'))
+        self.assertNotIn('runner', st['paths'])                        # the runner copy is not on m1box yet
+        c = self.hkj('crash', '--attempt', aid)
+        self.assertTrue(c['inputs'][0].endswith('console.txt'), c['inputs'])
+        rd = self.make_runner('a7-late')                                # synced after the boot
+        i = self.hkj('ingest', '--all')
+        self.assertIn(aid, i['updated'])
+        self.assertEqual(i['imported'], 0)                              # joined, not a second attempt
+        c = self.hkj('crash', '--attempt', aid)
+        self.assertEqual(c['inputs'], [str(rd)])
+
+    def test_ingest_all_joins_late_runner_and_skips_scratch(self):
+        self.make_image('a7-ios-system-int4', 'debug=0x8 blazer_deadline=900')
+        root = self.repo / 'research/laguna-usb-fix/attempts'
+        t0 = time.time() - 3600
+        live = self.make_live_run(root, 'a7-j', '20261103-115955', t0, [(40, 'exec SpringBoard')],
+                              image='a7-ios-system-int4', runner='20261103-120000-a7-j')
+        write(root / '20261028-095321-audit' / 'notes.txt', 'scratch\n')
+        harvest = root / '20261029-v25-harvest-c1'
+        write(harvest / 'kernel.log', 'HKL wifid[120] up\npanic(cpu 0 caller 0x1): blazer-root: deadline 900 s, stage x\n')
+        a = self.hkj('ingest', '--all')
+        self.assertEqual(a['imported'], 2)
+        self.assertEqual(a['skipped'], [str(root / '20261028-095321-audit')])
+        self.assertFalse([x for x in a['items'] if x.get('error')])
+        rec = {r['paths'].get('live') or r['paths'].get('harvest'): r for r in self.hkj('find')['attempts']}
+        self.assertEqual(rec[str(live)]['image'], 'a7-ios-system-int4')        # from bootios.txt
+        self.assertEqual(rec[str(harvest)]['end']['kind'], 'deadline')
+        rd = self.make_runner('a7-j')
+        b = self.hkj('ingest', '--all')
+        self.assertEqual(b['imported'], 0)
+        f = self.hkj('find')['attempts']
+        self.assertEqual(len(f), 2)
+        joined = [r for r in f if r['paths'].get('live') == str(live)][0]
+        self.assertEqual(joined['paths']['runner'], str(rd))
+
+    def test_screenshot_copies_back_an_absolute_mac_path(self):
+        """The reader replies with /Users/<me>/Developer/personal/hackios/attempts/...: copy it back with mac -- cat."""
+        macroot = self.tmp / 'machome'
+        snap = 'Developer/personal/hackios/attempts/A/live-A/usbcon/usbcon.log.snaps/0001-shot'
+        write(macroot / (snap + '.rgb565'), '')
+        (macroot / (snap + '.rgb565')).write_bytes(struct_pack_rgb565([0xffff, 0x0000, 0xf800, 0x07e0]))
+        write(macroot / (snap + '.json'), '{"seq": 1}')
+        mac = write(self.fakes / 'fake-mac', f'''#!/bin/sh
+echo "$*" >> "$FAKE_LOG"
+if [ "$1" = repo ]; then
+  printf '%s\\n' '{{"state":"snapshot","snapshot":{{"png":"/Users/x/{snap}.png","width":2,"height":2,"step":6,"took_us":5}}}}'
+  exit 0
+fi
+if [ "$1" = --cd ] && [ "$3" = -- ] && [ "$4" = cat ]; then
+  cat "{macroot}${{5#/Users/x}}"; exit $?
+fi
+exit 1
+''', 0o755)
+        live = self.make_live_run(self.repo / 'research/laguna-usb-fix/attempts', 'a7-s', '20261103-115955', time.time(), [])
+        self.env['HK_TOOL_SCREENSHOT'] = str(HERE / 'screenshot.sh')
+        out = self.tmp / 'out' / 'home.png'
+        d = self.hkj('shot', '--run', str(live), '-o', str(out), env=dict(SCREENSHOT_MAC=str(mac)))
+        self.assertEqual(d['png'], str(out))
+        self.assertEqual(out.read_bytes()[:8], b'\x89PNG\r\n\x1a\n')
+        self.assertEqual(out.with_suffix('.rgb565').stat().st_size, 8)
+        self.assertEqual(out.with_suffix('.json').read_text(), '{"seq": 1}')
+        self.assertTrue(os.access(HERE / 'screenshot.sh', os.X_OK))
+
+    def make_family(self):
+        """Two boots of one family: int3 (older) and int4 (newer, with hands on the phone and a recentsd respawn loop)."""
+        self.make_image('a7-ios-system-int3', 'debug=0x8 blazer_deadline=900')
+        self.make_image('a7-ios-system-int4', 'debug=0x8 blazer_deadline=900')
+        root = self.repo / 'research/laguna-usb-fix/attempts'
+        t0 = time.time() - 7200
+        a = self.make_live_run(root, 'a7-int3', '20261103-100000', t0,
+                           [(41, 'exec SpringBoard'), (42, 'exec backboardd'), (90, 'usertrap: Photos[300] pc 0x1')],
+                           markers=[('LIVEBOOT', 41.0, 'SPRINGBOARD SpringBoard'), ('LIVEBOOT', 70.0, 'UI_READY')],
+                           image='a7-ios-system-int3')
+        t1 = time.time() - 3600
+        b = self.make_live_run(root, 'a7-int4-confirm', '20261103-110000', t1,
+                           [(40, 'exec SpringBoard'), (41, 'exec backboardd'), (100, 'blazer-touch: tcm: finger 0 down at 1, 2'),
+                            (110, 'HK LIVE dispatch gen=5 edge=down op=98 x=170 y=279 us=1'),
+                            (120, 'blazer-keys: volume down pressed'), (120.1, 'blazer-power-key: pressed'),
+                            (130, 'exec recentsd'), (131, 'CRASH recentsd reason ns 1'), (132, 'exec recentsd'),
+                            (133, 'exec xpcproxy'), (134, 'exec xpcproxy')],
+                           markers=[('LIVEBOOT', 40.0, 'SPRINGBOARD SpringBoard'), ('LIVEBOOT', 65.0, 'UI_READY'),
+                                    ('UIRUN', 109.0, 'ACTION tap --tap 170 279 -> dispatched'),
+                                    ('LIVEBOOT', 131.0, 'CRASH recentsd')],
+                           image='a7-ios-system-int4')
+        ing = self.hkj('ingest', str(a), str(b))
+        return [x['attempt'] for x in ing['items']]
+
+    def test_timeline(self):
+        _, b = self.make_family()
+        d = self.hkj('timeline', b)
+        kinds = [e['kind'] for e in d['events']]
+        self.assertEqual(d['source'], 'live')
+        self.assertEqual(kinds.count('physical'), 3)
+        self.assertEqual(kinds.count('input'), 1)
+        self.assertNotIn('xpcproxy', json.dumps(d['events']))
+        self.assertEqual(d['respawns'], {'recentsd': 2})
+        self.assertEqual([e['t'] for e in d['events']], sorted(e['t'] for e in d['events']))
+        sb = [e for e in d['events'] if e['text'] == 'exec SpringBoard'][0]
+        self.assertAlmostEqual(sb['t'], 40.0, places=0)
+        self.assertEqual(sum(1 for e in d['events'] if 'CRASH recentsd' in e['text']), 1)   # the marker repeats the console
+        f = self.hkj('timeline', b, '--kind', 'physical', '--since-t', '115')
+        self.assertEqual([e['text'][:11] for e in f['events']], ['blazer-keys', 'blazer-powe'])
+        self.assertTrue((self.store / b / 'timeline.txt').is_file())
+        self.assertIn('respawns', self.hk('timeline', b, code=0).stdout)
+
+    def test_diff_and_previous_of_family(self):
+        self.fake_probe()
+        self.fake_crashdoc()
+        a, b = self.make_family()
+        write(self.store / a / 'crashes' / 'crashes.json', json.dumps(dict(signatures=[
+            dict(sig='usertrap:Photos@0x1', proc='Photos', incidents=1, status='open'),
+            dict(sig='usertrap:backboardd@0x1', proc='backboardd', incidents=1, status='open')])))
+        d = self.hkj('diff', a, b, '--no-subsystems')
+        self.assertEqual((d['a'], d['b']), (a, b))
+        self.assertEqual([x['sig'] for x in d['crashes']['gone']], ['usertrap:Photos@0x1'])
+        self.assertEqual(d['crashes']['changed'], [dict(sig='usertrap:backboardd@0x1', a=1, b=3)])
+        self.assertIn(dict(proc='recentsd', a=0, b=2), d['respawns'])
+        self.assertEqual(d['head']['image'], dict(a='a7-ios-system-int3', b='a7-ios-system-int4'))
+        tl = {x['event']: x for x in d['timeline']}
+        self.assertAlmostEqual(tl['UI_READY']['delta'], -5.0, places=0)
+        self.assertAlmostEqual(tl['exec SpringBoard']['delta'], -1.0, places=0)
+        self.assertEqual(self.hkj('diff', b, '--no-subsystems')['a'], a)        # B alone: its previous same-family boot
+        self.assertEqual(self.hkj('diff', a, code=3)['error'], 'no_attempt')     # nothing earlier
+        self.assertIn('crash signatures: 0 new, 1 gone, 1 count changes', self.hk('diff', a, b, '--no-subsystems', code=0).stdout)
+
+    def test_triage_writes_triage_md(self):
+        self.fake_probe()
+        self.fake_crashdoc()
+        a, b = self.make_family()
+        r = self.hkj('triage', b, code=3)                              # backlog.py missing: still written, error listed
+        self.assertEqual(r['prev'], a)
+        self.assertEqual(r['errors'][0]['tool'], 'backlog')
+        md = (self.store / b / 'TRIAGE.md').read_text()
+        for want in ('# Triage', 'PHYSICAL input during the boot: 3', 'recentsd 2', f'## Diff vs {a}', 'hk logs backboardd',
+                     'hk timeline'):
+            self.assertIn(want, md)
+        self.fake_tool('backlog', '''import json, sys
+a = sys.argv[1:]
+json.dump(dict(items=[dict(id='probe:wifi', severity='med', title='Wi-Fi', next=dict(test='join a network')),
+                      dict(id='probe:gps', severity='high', title='GPS (no verdict in this boot)'),
+                      dict(id='crash:c1aa', severity='high', title='userabort:recentsd', owner='UNASSIGNED')]),
+          open(a[a.index('--json') + 1], 'w'))
+''')
+        r = self.hkj('triage', b)
+        self.assertEqual(r['errors'], [])
+        md = (self.store / b / 'TRIAGE.md').read_text()
+        self.assertIn('[high] crash:c1aa: userabort:recentsd — owner UNASSIGNED', md)
+        self.assertIn('[med] probe:wifi: Wi-Fi — owner UNASSIGNED; next: join a network', md)   # partial in this boot
+        self.assertLess(md.index('crash:c1aa'), md.index('probe:wifi'))
+        self.assertNotIn('probe:gps', md)                               # not this boot's evidence
+        self.assertEqual(self.hkj('triage', b, '--no-backlog', '--prev', a)['prev'], a)
+
 
 
 CYCLE_CHECKS_TOKEN = """import sys, json, os, pathlib

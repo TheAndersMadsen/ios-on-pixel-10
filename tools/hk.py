@@ -8,6 +8,7 @@ research/ios26-phaseb-r1/hub/HUB.md). Progress of long steps goes to stderr; std
   boot           hk boot IMAGE (= hk live, tools/live_boot.sh) | hk cycle IMAGE (tools/hk_cycle.py) | hk back
   while booted   hk ui SCRIPT | hk shot | hk shell CMD | hk push LOCAL REMOTE | hk restart DAEMON
   analysis       hk status | hk logs [PROC] | hk stacks PROC | hk crash | hk probe [ROW…] | hk report ATTEMPT | hk note ATTEMPT TEXT
+                 hk timeline [ATTEMPT] | hk diff A [B] | hk triage [ATTEMPT] (-> attempts/<id>/TRIAGE.md)
                  (status/logs/stacks/crash/probe take --attempt ID or --path RUN_DIR; default the newest)
   catalogue      hk images | hk find | hk ingest | hk tools | hk schema
   shared phone   hk queue add|list|show|admit|cancel|run
@@ -130,6 +131,7 @@ TOOLS = {
     'image_tool':  ('tools/image_tool.py', 'images', 'iOS image build/check'),
     'chooser_tool': ('tools/chooser_ios_image.py', 'dual boot', 'chooser image build/check'),
     'return_check': ('research/ios26-dualboot-r8/return-check.sh', 'dual boot', 'Android return check'),
+    'backlog':     ('tools/backlog.py', 'BACKLOG', 'probe + crash census -> assignable backlog items'),
 }
 # Default argv templates for tools whose interface is still settling. {tool} expands to the interpreter + path.
 ARGV = {
@@ -729,10 +731,44 @@ def kernel_log(m):
 
 
 def console_log(m):
-    p = (m.get('paths') or {}).get('live')
+    p = (m.get('paths') or {}).get('live') or discover_live(m)
     if p and (Path(p) / 'console.txt').is_file():
         return Path(p) / 'console.txt'
     return None
+
+
+def discover_live(m):
+    """The live_boot run dir inside attempts/<id>/ (hk boot points LIVE_ATTEMPTS there). hk boot records paths.live only
+    when live_boot returns, so while the boot runs (or after the boot command was killed) the manifest has none."""
+    d = attempt_dir(m['id'])
+    cands = [p.parent for p in d.glob('live-*/live.env')]
+    if (d / 'live' / 'live.env').is_file():
+        cands.append((d / 'live').resolve())
+    return max(cands, key=lambda p: p.stat().st_mtime) if cands else None
+
+
+def runner_of_live(live):
+    """The runner dir a live_boot run used: live.env ATTEMPT=, else its ATTEMPT_DIR marker (a Mac path), mapped to m1box."""
+    live = Path(live)
+    rp = map_runner_path(read_kv(live / 'live.env', '=').get('ATTEMPT', ''))
+    if rp:
+        return rp
+    for mk in read_markers(live / 'markers.txt'):
+        if mk['name'] == 'ATTEMPT_DIR':
+            rp = map_runner_path(mk['detail'])
+            if rp:
+                return rp
+    return None
+
+
+def crash_src(m):
+    """What crashdoc reads for an attempt: the runner dir when it holds the ramdump (reader.txt/meta.txt add the nonce),
+    else the ramdump file, else the live console (a boot still running, or a live run whose runner dir has no dump)."""
+    k = kernel_log(m)
+    r = runner_dir(m)
+    if k and r and str(k).startswith(str(r) + '/'):
+        return r
+    return k or console_log(m) or r
 
 
 def map_runner_path(text):
@@ -794,6 +830,14 @@ def finalize_from_paths(m):
     """Fill result/paths from what the runner, live_boot and hk_cycle left."""
     paths, r = m.setdefault('paths', {}), m.setdefault('result', {})
     d = attempt_dir(m['id'])
+    if not paths.get('live') and m.get('kind', 'phone') == 'phone':
+        live = discover_live(m)
+        if live:
+            paths['live'] = str(live)
+    if paths.get('live') and not paths.get('runner'):
+        rp = runner_of_live(paths['live'])
+        if rp:
+            paths['runner'] = str(rp)
     if paths.get('runner'):
         rd = Path(paths['runner'])
         rel_link(rd, d / 'runner')
@@ -1125,14 +1169,16 @@ def cmd_shot(args):
         src = runner_dir(m) or (kernel_log(m).parent.parent if kernel_log(m) else None)
         if not src:
             raise HkError(3, 'no_dump', f'{aid} has no ramdump')
-        outp = attempt_dir(aid) / 'screens' / 'dump.png'
+        outp = Path(args.output) if args.output else attempt_dir(aid) / 'screens' / 'dump.png'
+        outp.parent.mkdir(parents=True, exist_ok=True)
         argv = tool_cmd('screenshot') + ['--dump', str(src), '-o', str(outp)] + (['--allow-stale'] if args.allow_stale else [])
         mode = 'dump'
     else:
         live, _ = need_live(args)
         aid = attempt_for_live(live)
         name = safe_name(args.name or 'shot')
-        outp = (attempt_dir(aid) if aid else live) / 'screens' / f"{name}-{time.strftime('%H%M%S')}.png"
+        outp = Path(args.output) if args.output else \
+            (attempt_dir(aid) if aid else live) / 'screens' / f"{name}-{time.strftime('%H%M%S')}.png"
         outp.parent.mkdir(parents=True, exist_ok=True)
         argv = tool_cmd('screenshot') + [str(live), '--name', name, '--step', str(args.step), '-o', str(outp)]
         mode = 'live'
@@ -1266,14 +1312,14 @@ def cmd_crash(args):
         inputs = []
         for aid in ids:
             m = load_manifest(aid)
-            src = runner_dir(m) or (kernel_log(m) and kernel_log(m).parent.parent) or (console_log(m) and console_log(m).parent)
+            src = crash_src(m)
             if src:
                 inputs.append(str(src))
         aid = None
     else:
         aid = attempt_of(args)
         m = load_manifest(aid)
-        src = runner_dir(m) or kernel_log(m) or console_log(m)
+        src = crash_src(m)
         if not src:
             raise HkError(3, 'no_log', f'{aid}: nothing to read')
         inputs = [str(src)]
@@ -1579,7 +1625,7 @@ def cmd_status(args):
     crashes = r.get('crash_signatures')
     cj = attempt_dir(aid) / 'crashes' / 'crashes.json'
     if crashes is None and not args.no_crash:
-        src = runner_dir(m) or kernel_log(m) or console_log(m)
+        src = crash_src(m)
         if src:
             out = attempt_dir(aid) / 'crashes'
             out.mkdir(parents=True, exist_ok=True)
@@ -1742,6 +1788,12 @@ def ingest_one(path):
         return known[str(p)], False
     paths, name, created, kind, img = {}, p.name, None, 'phone', None
     if (p / 'meta.txt').is_file():
+        owner = live_owner_of_runner(p)
+        if owner:                       # its live_boot run was imported first (the runner copy reached m1box later)
+            m = load_manifest(owner)
+            m['paths']['runner'] = str(p)
+            write_manifest(finalize_from_paths(m))
+            return owner, False
         meta = read_kv(p / 'meta.txt')
         name = meta.get('attempt', name)
         paths['runner'] = str(p)
@@ -1759,7 +1811,7 @@ def ingest_one(path):
         kv = read_kv(p / 'live.env', '=')
         name = kv.get('LIVE_NAME', name)
         paths['live'] = str(p)
-        rp = map_runner_path(kv.get('ATTEMPT', ''))
+        rp = runner_of_live(p)
         if rp:
             if str(rp) in known:
                 aid = known[str(rp)]
@@ -1774,6 +1826,16 @@ def ingest_one(path):
                 with contextlib.suppress(HkError):
                     d, _, man = resolve_image(imgname)
                     img = image_summary(d, man)
+        if img is None:                 # no runner copy on m1box: bootios.txt names the image ("HH:MM:SS.mmm image:  PATH")
+            with contextlib.suppress(OSError):
+                hit = re.search(r'^\S+ image:\s+(\S+)', (p / 'bootios.txt').read_text(errors='replace'), re.M)
+                if hit:
+                    imgname = Path(hit.group(1)).parent.name
+                    try:
+                        d, _, man = resolve_image(imgname)
+                        img = image_summary(d, man)
+                    except HkError:
+                        img = dict(name=imgname, features=features_of(imgname))
     elif (p / 'report.json').is_file() or (p / 'summary.json').is_file():
         paths['cycle'] = str(p)
         with contextlib.suppress(OSError, ValueError):
@@ -1786,9 +1848,44 @@ def ingest_one(path):
     elif (p / 'intent.json').is_file() or (p / 'preflight.json').is_file():
         kind = 'qemu'
         paths['qemu'] = str(p)
+    elif (p / 'ramdump/kernel.log').is_file() or (p / 'kernel.log').is_file():
+        # a bare ramdump harvest (no runner meta.txt): still a boot's evidence for crash census and timelines
+        paths['harvest'] = str(p)
+        paths['ramdump'] = str(p / 'ramdump/kernel.log' if (p / 'ramdump/kernel.log').is_file() else p / 'kernel.log')
     else:
         raise HkError(3, 'unknown_dir', f'{p}: not a runner, live_boot, hk_cycle or QEMU run directory')
     return _ingest_make(name, paths, created, kind, img, p)
+
+
+def live_owner_of_runner(p):
+    """The attempt whose live run (with no runner yet) names runner dir p in live.env or its ATTEMPT_DIR marker."""
+    for r in reversed(index_load()):
+        paths = r.get('paths') or {}
+        if paths.get('live') and not paths.get('runner'):
+            rp = runner_of_live(paths['live'])
+            if rp and rp.resolve() == p:
+                return r['id']
+    return None
+
+
+def refresh_store():
+    """Re-finalize phone attempts that still lack a runner dir (it is synced to m1box after the live run ends), or that
+    have no paths at all (a live boot whose hk boot never returned). Returns the ids whose paths changed."""
+    changed = []
+    for r in index_load():
+        paths = r.get('paths') or {}
+        if r.get('kind', 'phone') != 'phone' or paths.get('runner'):
+            continue
+        if paths and not paths.get('live'):
+            continue
+        with contextlib.suppress(HkError):
+            m = load_manifest(r['id'])
+            before = json.dumps(m.get('paths'), sort_keys=True)
+            m = finalize_from_paths(m)
+            if json.dumps(m.get('paths'), sort_keys=True) != before:
+                write_manifest(m)
+                changed.append(r['id'])
+    return changed
 
 
 def _ingest_make(name, paths, created, kind, img, p):
@@ -1816,15 +1913,19 @@ def _ingest_make(name, paths, created, kind, img, p):
 
 def cmd_ingest(args):
     paths = [Path(x) for x in args.paths]
-    if args.all:
-        for root in (MAIN_CHECKOUT / RUNNER_ATTEMPTS, MAIN_CHECKOUT / CYCLES):
+    if args.all:                        # runner and hk_cycle dirs first, so each live run joins its runner's attempt
+        bases = list(dict.fromkeys(b.resolve() for b in (MAIN_CHECKOUT, REPO) if b.is_dir()))
+        for base in bases:
+            for root in (base / RUNNER_ATTEMPTS, base / CYCLES):
+                if root.is_dir():
+                    paths += sorted(x for x in root.iterdir() if x.is_dir() and not x.name.startswith('live-'))
+        for base in bases:
+            root = base / RUNNER_ATTEMPTS
             if root.is_dir():
-                paths += sorted(x for x in root.iterdir() if x.is_dir() and not x.name.startswith('live-'))
-        root = MAIN_CHECKOUT / RUNNER_ATTEMPTS
-        if root.is_dir():
-            paths += sorted(x for x in root.iterdir() if x.is_dir() and x.name.startswith('live-'))
+                paths += sorted(x for x in root.iterdir() if x.is_dir() and x.name.startswith('live-'))
     since = parse_since(args.since)
-    done = []
+    done, skipped = [], []
+    updated = refresh_store() if args.all else []
     for p in paths:
         if since and p.stat().st_mtime < since:
             continue
@@ -1832,11 +1933,18 @@ def cmd_ingest(args):
             aid, new = ingest_one(p)
             done.append(dict(path=str(p), attempt=aid, new=new))
         except HkError as e:
-            done.append(dict(path=str(p), error=e.message))
+            if args.all and e.error == 'unknown_dir':
+                skipped.append(str(p))          # --all walks every dir; scratch dirs are not errors
+            else:
+                done.append(dict(path=str(p), error=e.message))
+    if args.all:
+        updated += [x for x in refresh_store() if x not in updated]
     n = sum(1 for x in done if x.get('new'))
-    return emit(args, 'ingest', dict(imported=n, items=done), [f"{x.get('attempt') or 'ERR'}  {x['path']}  {x.get('error', '')}"
-                                                               for x in done if args.verbose or x.get('new') or x.get('error')]
-                + [f'{n} new, {len(done)} seen'])
+    return emit(args, 'ingest', dict(imported=n, items=done, updated=updated, skipped=skipped),
+                [f"{x.get('attempt') or 'ERR'}  {x['path']}  {x.get('error', '')}"
+                 for x in done if args.verbose or x.get('new') or x.get('error')]
+                + [f'updated {a}' for a in updated] + ([f'skipped {s}' for s in skipped] if args.verbose else [])
+                + [f'{n} new, {len(updated)} updated, {len(done)} seen, {len(skipped)} skipped (not run dirs)'])
 
 
 def cmd_tools(args):
@@ -2017,6 +2125,441 @@ def cmd_qemu(args):
 
 # ------------------------------------------------------------------------------------------------------------- schema
 
+# ------------------------------------------------------------------------------------------------------------- timeline / diff / triage
+
+# One event table for timeline, diff and triage. Live console lines are "HH:MM:SS.mmm [ uptime] text"; a ramdump has
+# "[ uptime] text" only. kind: what the line says about the boot (filters: hk timeline --kind).
+EVENT_RX = (
+    ('panic', re.compile(r'panic\(cpu \d+ caller')),
+    ('deadline', re.compile(r'blazer-root: deadline \d+ s')),
+    ('crash', re.compile(r'\bCRASH \S+|\busertrap: |\buserabort: |exited due to (?:SIG\w+|exit\([1-9]\d*\))|exec: SIGKILL to')),
+    ('physical', re.compile(r'\btcm: finger \d+ down|blazer-keys: volume (?:up|down) pressed|blazer-power-key: pressed')),
+    ('input', re.compile(r'HK LIVE dispatch gen=\d+ edge=down|HK LIVE done gen=\d+ result=[1-9]|usbcon: input \{"state":"(?:refused|unknown)')),
+    ('exec', re.compile(r'(?:^|\] )exec (\S+)')),
+    ('stall', re.compile(r'HKMAIN: stall|HKMAIN: gap \d{5,} ms')),
+)
+EXEC_NOISE = {'xpcproxy'}
+EXEC_KEEP = 3              # exec lines per process kept in a timeline; the rest are counted (respawns)
+WALL_RE = re.compile(r'^(\d\d):(\d\d):(\d\d)\.(\d{3}) (.*)$')
+UPTIME_RE = re.compile(r'^\[ *(\d+\.\d+)\] (.*)$')
+TAGGED_RE = re.compile(r'^(LIVEBOOT|UIRUN) (\d\d:\d\d:\d\d\.\d{3}) \+(-?[\d.]+) (\S+) ?(.*)$')
+MARKER_SKIP = {'CRASH', 'INPUT', 'SNAPSHOT'}       # the console lines say the same, with more detail
+
+
+def sod(h, m, s, ms):
+    return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
+
+
+def classify(text):
+    for kind, rx in EVENT_RX:
+        hit = rx.search(text)
+        if hit:
+            if kind == 'exec':
+                return kind, hit.group(1)
+            return kind, None
+    return None, None
+
+
+def boot_lines(m):
+    """(source kind, lines, T0 seconds-of-day or None). The live console when there is one (it has wall times), else
+    the ramdump up to its first panic line (hklog's rule: what follows is residue of older boots)."""
+    con = console_log(m)
+    if con:
+        t0 = None
+        live = con.parent
+        kv = read_kv(live / 'live.env', '=')
+        with contextlib.suppress(ValueError, KeyError):
+            lt = dt.datetime.fromtimestamp(float(kv['LIVE_T0']))
+            t0 = lt.hour * 3600 + lt.minute * 60 + lt.second + lt.microsecond / 1e6
+        return 'live', con.read_text(errors='replace').splitlines(), t0
+    k = kernel_log(m)
+    if k:
+        lines = raw_lines(k)
+        for i, l in enumerate(lines):
+            if 'panic(cpu' in l:
+                lines = lines[:i + 1]
+                break
+        return 'dump', lines, None
+    return None, [], None
+
+
+def boot_events(m):
+    """Every classified event of an attempt's boot, sorted by t (s since LIVE_T0 on a live console, kernel uptime in a
+    dump). Also returns exec counts per process (respawns) and how t is measured."""
+    src, lines, t0 = boot_lines(m)
+    events, execs = [], {}
+    first_wall = None
+
+    def rel(wall_s):
+        nonlocal first_wall
+        base = t0 if t0 is not None else first_wall
+        if base is None:
+            first_wall = base = wall_s
+        d = wall_s - base
+        return d + 86400 if d < -43200 else d
+
+    for line in lines:
+        wall, t, text = None, None, line
+        w = WALL_RE.match(line)
+        if w:
+            wall, text = line[:12], w.group(5)
+            t = rel(sod(*w.groups()[:4]))
+        u = UPTIME_RE.match(text)
+        if u:
+            text = u.group(2)
+            if t is None:
+                t = float(u.group(1))
+        kind, proc = classify(text)
+        if not kind:
+            continue
+        if kind == 'exec':
+            if proc in EXEC_NOISE:
+                continue
+            execs[proc] = execs.get(proc, 0) + 1
+            if execs[proc] > EXEC_KEEP:
+                continue
+        events.append(dict(t=None if t is None else round(t, 2), wall=wall, src=src, kind=kind, text=text.strip()[:240]))
+    live = (m.get('paths') or {}).get('live') or discover_live(m)
+    if live:
+        tagged = []
+        for f in (Path(live) / 'markers.txt',):
+            with contextlib.suppress(OSError):
+                tagged += f.read_text(errors='replace').splitlines()
+        for line in tagged:
+            g = TAGGED_RE.match(line)
+            if not g:
+                continue
+            who, wall, t, name, detail = g.groups()
+            if who == 'LIVEBOOT' and name in MARKER_SKIP:
+                continue
+            kind = 'milestone' if who == 'LIVEBOOT' else 'ui'
+            if who == 'UIRUN' and name not in ('START', 'STEP', 'ACTION', 'OCR', 'PHYSICAL', 'MARK', 'RECOVERY', 'END', 'STOP',
+                                               'NOTE', 'HOME'):
+                continue
+            events.append(dict(t=float(t), wall=wall, src='markers', kind=kind, text=f'{name} {detail}'.strip()[:240]))
+    events.sort(key=lambda e: (e['t'] is None, e['t'] or 0))
+    return dict(source=src, clock='s since LIVE_T0' if src == 'live' else 'kernel uptime s', events=events,
+                respawns={p: n for p, n in sorted(execs.items(), key=lambda x: -x[1]) if n > 1})
+
+
+def timeline_text(e):
+    t = '        ?' if e['t'] is None else f"{e['t']:+9.1f}"
+    return f"{t}  {e['wall'] or '            '}  {e['kind']:<9} {e['text'][:170]}"
+
+
+def cmd_timeline(args):
+    aid = args.attempt_pos or attempt_of(args)
+    m = finalize_from_paths(load_manifest(aid))
+    tl = boot_events(m)
+    if tl['source'] is None:
+        raise HkError(3, 'no_log', f'{aid}: no live console and no ramdump')
+    kinds = set(args.kind.split(',')) if args.kind else None
+    ev = [e for e in tl['events'] if (not kinds or e['kind'] in kinds) and (not args.grep or re.search(args.grep, e['text']))
+          and (args.since_t is None or (e['t'] is not None and e['t'] >= args.since_t))
+          and (args.until_t is None or (e['t'] is not None and e['t'] <= args.until_t))]
+    total = len(ev)
+    if args.limit:
+        ev = ev[-args.limit:]
+    out = attempt_dir(aid) / 'timeline.txt'
+    lines = [timeline_text(e) for e in ev]
+    resp = [f"respawns (exec count, first {EXEC_KEEP} shown above): " +
+            ', '.join(f'{p} {n}' for p, n in tl['respawns'].items())] if tl['respawns'] else []
+    with contextlib.suppress(OSError):
+        out.write_text(f"# {aid} timeline ({tl['source']}; t = {tl['clock']})\n" + '\n'.join(lines + resp) + '\n')
+    return emit(args, 'timeline', dict(attempt=aid, source=tl['source'], clock=tl['clock'], total=total, events=ev,
+                                       respawns=tl['respawns'], file=str(out)),
+                [f"# {aid}: {total} events ({tl['source']}; t = {tl['clock']})"] + lines + resp)
+
+
+def family_key(name):
+    n = re.sub(r'^a7-(ios-system-)?', '', name or '')
+    n = re.sub(r'-(confirm|live|dbg|ui|imp)$', '', n)
+    prev = None
+    while prev != n:
+        prev = n
+        n = re.sub(r'(-r\d+[a-z]?|-s\d+[a-z]?|\d+[a-z]?)$', '', n)
+    return n
+
+
+def has_evidence(r):
+    paths = r.get('paths') or {}
+    return bool(paths.get('live') or paths.get('ramdump') or paths.get('runner'))
+
+
+def previous_same_family(aid):
+    """The newest earlier phone attempt with evidence: same image, else same image family, else same name family."""
+    recs = index_load()
+    me = next((r for r in recs if r['id'] == aid), None)
+    if not me:
+        return None
+    earlier = [r for r in recs if (r.get('created_t') or 0) < (me.get('created_t') or 0) and r['id'] != aid
+               and r.get('kind', 'phone') == 'phone' and has_evidence(r) and manifest_path(r['id']).is_file()]
+    same = [r for r in earlier if me.get('image') and r.get('image') == me.get('image')]
+    if same:
+        return same[-1]['id']
+    keys = {family_key(me.get('name') or me['id'])} | ({family_key(me['image'])} if me.get('image') else set())
+    fam = [r for r in earlier if family_key(r.get('name') or r['id']) in keys or (r.get('image') and family_key(r['image']) in keys)]
+    return fam[-1]['id'] if fam else None
+
+
+def cached_or_run_probes(m, errors, fresh=False):
+    aid = m['id']
+    pj = attempt_dir(aid) / 'probes' / 'all.json'
+    if not fresh:
+        with contextlib.suppress(OSError, ValueError):
+            j = json.loads(pj.read_text())
+            if j.get('summary') is not None:
+                return j['summary']
+    inputs = probe_inputs(m)
+    if not inputs:
+        return []
+    try:
+        rc, doc, compact, raw = run_probe(inputs, attempt=aid)
+    except HkError as e:
+        errors.append(dict(error=e.error, message=e.message, attempt=aid, **e.extra))
+        return None
+    pj.parent.mkdir(parents=True, exist_ok=True)
+    pj.write_text(json.dumps(dict(row='all', inputs=inputs, rc=rc, summary=compact), indent=1) + '\n')
+    return compact
+
+
+def cached_or_run_crashes(m, errors, fresh=False):
+    aid = m['id']
+    cj = attempt_dir(aid) / 'crashes' / 'crashes.json'
+    if cj.is_file() and not fresh:
+        return crash_brief(cj)
+    src = crash_src(m)
+    if not src:
+        return []
+    out = attempt_dir(aid) / 'crashes'
+    out.mkdir(parents=True, exist_ok=True)
+    try:
+        run(tool_argv('crashdoc', input=str(src), out=str(out)) + ['--no-symbols'], timeout=900, log=out / 'hk-crashdoc.log')
+    except HkError as e:
+        errors.append(dict(error=e.error, message=e.message, attempt=aid, **e.extra))
+        return None
+    sigs = crash_brief(cj)
+    m['result']['crash_signatures'] = sigs[:20]
+    write_manifest(m)
+    return sigs
+
+
+def subsystem_counts(m):
+    src = console_log(m) or kernel_log(m)
+    if not src:
+        return {}
+    try:
+        split = split_logs(m, src)
+    except HkError:
+        return {}
+    if not split:
+        return {}
+    out = {}
+    for f in sorted(split.glob('*.log')) + sorted(split.glob('hkl/*.log')):
+        with contextlib.suppress(OSError):
+            out[str(f.relative_to(split))[:-4]] = sum(1 for _ in open(f, 'rb'))
+    return out
+
+
+def attempt_facts(aid, errors, fresh=False, subsystems=True):
+    m = finalize_from_paths(load_manifest(aid))
+    write_manifest(m)
+    r = m.get('result') or {}
+    tl = boot_events(m)
+    first = {}
+    for e in tl['events']:
+        key = None
+        if e['kind'] == 'milestone':
+            key = e['text'].split()[0]
+        elif e['kind'] in ('panic', 'deadline'):
+            key = e['kind'].upper()
+        elif e['kind'] == 'exec' and e['text'].split()[-1] in ('SpringBoard', 'backboardd', 'Preferences', 'MobilePhone'):
+            key = 'exec ' + e['text'].split()[-1]
+        if key and key not in first and e['t'] is not None:
+            first[key] = e['t']
+    crashes_by_proc = {}
+    for e in tl['events']:
+        if e['kind'] == 'crash':
+            p = re.search(r'CRASH (\S+)|usertrap: (\S+)|userabort: (\S+)|\(\S*?([A-Za-z]+)\[\d+\]\)', e['text'])
+            name = next((g for g in (p.groups() if p else ()) if g), 'other')
+            crashes_by_proc[name] = crashes_by_proc.get(name, 0) + 1
+    return dict(id=aid, name=m.get('name'), image=(m.get('image') or {}).get('name'), verdict=r.get('verdict'),
+                reader=r.get('reader'), end=r.get('end'), ui=r.get('ui'), markers=r.get('markers') or [],
+                source=tl['source'], clock=tl['clock'], first=first, respawns=tl['respawns'],
+                physical=sum(1 for e in tl['events'] if e['kind'] == 'physical'),
+                crash_lines=crashes_by_proc,
+                probes=cached_or_run_probes(m, errors, fresh), crashes=cached_or_run_crashes(m, errors, fresh),
+                subsystems=subsystem_counts(m) if subsystems else {}), m
+
+
+def diff_facts(a, b):
+    """What changed from attempt a to attempt b (b is usually the newer)."""
+    pa = {x['id']: x['verdict'] for x in a['probes'] or []}
+    pb = {x['id']: x['verdict'] for x in b['probes'] or []}
+    probes = [dict(id=k, a=pa.get(k), b=pb.get(k)) for k in sorted(set(pa) | set(pb)) if pa.get(k) != pb.get(k)]
+    ca = {c['sig']: c for c in a['crashes'] or [] if c.get('sig')}
+    cb = {c['sig']: c for c in b['crashes'] or [] if c.get('sig')}
+    crashes = dict(new=[dict(sig=s, count=cb[s].get('count'), hint=cb[s].get('hint')) for s in cb if s not in ca],
+                   gone=[dict(sig=s, count=ca[s].get('count')) for s in ca if s not in cb],
+                   changed=[dict(sig=s, a=ca[s].get('count'), b=cb[s].get('count')) for s in cb
+                            if s in ca and ca[s].get('count') != cb[s].get('count')])
+    resp = [dict(proc=p, a=a['respawns'].get(p, 0), b=b['respawns'].get(p, 0))
+            for p in sorted(set(a['respawns']) | set(b['respawns'])) if a['respawns'].get(p, 0) != b['respawns'].get(p, 0)]
+    subs = []
+    for k in sorted(set(a['subsystems']) | set(b['subsystems'])):
+        x, y = a['subsystems'].get(k, 0), b['subsystems'].get(k, 0)
+        if x != y and (max(x, y) >= 20 and abs(y - x) >= max(10, 0.25 * max(x, y)) or min(x, y) == 0):
+            subs.append(dict(file=k, a=x, b=y))
+    tl = [dict(event=k, a=a['first'].get(k), b=b['first'].get(k),
+               delta=None if a['first'].get(k) is None or b['first'].get(k) is None else round(b['first'][k] - a['first'][k], 1))
+          for k in sorted(set(a['first']) | set(b['first']), key=lambda k: b['first'].get(k, a['first'].get(k, 1e9)))]
+    head = {k: dict(a=a.get(k), b=b.get(k)) for k in ('image', 'verdict', 'reader', 'ui', 'source', 'physical')
+            if a.get(k) != b.get(k)}
+    head['end'] = dict(a=(a.get('end') or {}).get('line'), b=(b.get('end') or {}).get('line'))
+    markers = dict(only_a=sorted(set(a['markers']) - set(b['markers'])), only_b=sorted(set(b['markers']) - set(a['markers'])))
+    return dict(head=head, markers=markers, probes=probes, crashes=crashes, respawns=resp, subsystems=subs, timeline=tl,
+                crash_lines=dict(a=a['crash_lines'], b=b['crash_lines']))
+
+
+def diff_text(a, b, d):
+    t = [f"diff {a['id']} -> {b['id']}"]
+    for k, v in d['head'].items():
+        if v['a'] != v['b']:
+            t.append(f"  {k}: {v['a']} -> {v['b']}")
+    if d['markers']['only_a'] or d['markers']['only_b']:
+        t.append(f"markers: lost {' '.join(d['markers']['only_a']) or '-'}; new {' '.join(d['markers']['only_b']) or '-'}")
+    t.append(f"probes: {len(d['probes'])} changed" + ''.join(f"\n  {p['id']:<26} {p['a'] or '-'} -> {p['b'] or '-'}"
+                                                           for p in d['probes']))
+    c = d['crashes']
+    t.append(f"crash signatures: {len(c['new'])} new, {len(c['gone'])} gone, {len(c['changed'])} count changes")
+    t += [f"  new  {x['count'] or '?':>4}x {x['sig']}  [{x.get('hint') or 'no known cause'}]" for x in c['new']]
+    t += [f"  gone {x['count'] or '?':>4}x {x['sig']}" for x in c['gone']]
+    t += [f"  {x['a']} -> {x['b']}  {x['sig']}" for x in c['changed']]
+    if d['respawns']:
+        t.append('respawns (exec count): ' + ', '.join(f"{x['proc']} {x['a']}->{x['b']}" for x in d['respawns']))
+    if d['subsystems']:
+        t.append('subsystem lines: ' + ', '.join(f"{x['file']} {x['a']}->{x['b']}" for x in d['subsystems']))
+    t.append(f"timeline (first t, {b['clock']}):")
+    for x in d['timeline']:
+        a_, b_ = ('-' if x['a'] is None else f"{x['a']:.1f}"), ('-' if x['b'] is None else f"{x['b']:.1f}")
+        t.append(f"  {x['event']:<28} {a_:>8} -> {b_:>8}" + (f"  ({x['delta']:+.1f})" if x['delta'] else ''))
+    return t
+
+
+def cmd_diff(args):
+    errors = []
+    b_id = args.b
+    a_id = args.a
+    if not b_id:                                     # hk diff X: X against the previous boot of its family
+        b_id = a_id
+        a_id = previous_same_family(b_id)
+        if not a_id:
+            raise HkError(3, 'no_attempt', f'no earlier attempt of the same family as {b_id}; name both: hk diff A B')
+    a, _ = attempt_facts(a_id, errors, args.fresh, subsystems=not args.no_subsystems)
+    b, _ = attempt_facts(b_id, errors, args.fresh, subsystems=not args.no_subsystems)
+    d = diff_facts(a, b)
+    txt = diff_text(a, b, d) + [f"error: {e['message']}" for e in errors]
+    return emit(args, 'diff', dict(a=a_id, b=b_id, **d, errors=errors), txt, 3 if errors else 0)
+
+
+def run_backlog(m, out_dir, errors):
+    inputs = probe_inputs(m)
+    if not inputs:
+        return None
+    try:
+        argv = tool_cmd('backlog') + inputs + ['--out', str(out_dir / 'BACKLOG.md'), '--json', str(out_dir / 'backlog.json')]
+    except HkError as e:
+        errors.append(dict(error=e.error, message=e.message, **e.extra))
+        return None
+    rc, o = run(argv, timeout=1800, log=out_dir / 'hk-backlog.log')
+    with contextlib.suppress(OSError, ValueError):
+        doc = json.loads((out_dir / 'backlog.json').read_text())
+        return doc.get('items') if isinstance(doc, dict) else doc
+    errors.append(dict(error='backlog_failed', message=f'backlog.py rc {rc}: {o.strip()[-200:]}'))
+    return None
+
+
+def cmd_triage(args):
+    """crashdoc + probe_eval + diff vs the previous same-family boot + backlog -> attempts/<id>/TRIAGE.md."""
+    errors = []
+    aid = args.attempt_pos or attempt_of(args)
+    me, m = attempt_facts(aid, errors, args.fresh)
+    prev_id = args.prev or previous_same_family(aid)
+    prev = d = None
+    if prev_id:
+        prev, _ = attempt_facts(prev_id, errors, args.fresh)
+        d = diff_facts(prev, me)
+    tdir = attempt_dir(aid) / 'triage'
+    tdir.mkdir(parents=True, exist_ok=True)
+    backlog = None if args.no_backlog else run_backlog(m, tdir, errors)
+    tl = boot_events(m)
+    new_sigs = {x['sig'] for x in (d or {}).get('crashes', {}).get('new', [])} if d else None
+    open_c = [c for c in me['crashes'] or [] if 'open' in str(c.get('status') or '') or c.get('status') is None]
+    probes = me['probes'] or []
+    works = [p['id'] for p in probes if p['verdict'] == 'works']
+    regress = [p for p in (d or {}).get('probes', []) if p['a'] in ('works', 'partial') and p['b'] not in ('works', 'partial')]
+    gains = [p for p in (d or {}).get('probes', []) if p['b'] == 'works' and p['a'] != 'works']
+    end = (me.get('end') or {}).get('line') or '-'
+    L = [f"# Triage {aid}", '',
+         f"- image {me['image'] or '-'}; verdict {me['verdict'] or '-'}; reader {me['reader'] or '-'}; ui {me['ui'] or '-'}",
+         f"- end: {end}", f"- evidence: {me['source'] or 'none'} ({me['clock']}); previous same-family boot: {prev_id or 'none'}",
+         f"- markers: {' '.join(me['markers']) or '-'}"]
+    if me['physical']:
+        phys = [e for e in tl['events'] if e['kind'] == 'physical']
+        L.append(f"- PHYSICAL input during the boot: {me['physical']} touch/button events (first {phys[0]['wall'] or phys[0]['t']}): "
+                 'UI results after it are not the script\'s alone')
+    L += ['', '## Crashes', '']
+    if me['crashes'] is None:
+        L.append('- crashdoc unavailable (see errors)')
+    for c in me['crashes'] or []:
+        tag = ' **NEW**' if new_sigs is not None and c['sig'] in new_sigs else ''
+        L.append(f"- {c.get('count') or '?'}x `{c['sig']}` {c.get('loc') or ''} [{c.get('hint') or 'no known cause'}] "
+                 f"{(c.get('status') or '')[:60]}{tag}")
+    if me['crashes'] == []:
+        L.append('- none')
+    if d and d['crashes']['gone']:
+        L.append('- gone since ' + prev_id + ': ' + ', '.join(f"`{x['sig']}`" for x in d['crashes']['gone']))
+    L += ['', '## Probes', '', f"- works ({len(works)}): {' '.join(works) or '-'}"]
+    if d:
+        L.append('- regressions vs previous: ' + (', '.join(f"{p['id']} {p['a']}->{p['b'] or '-'}" for p in regress) or 'none'))
+        L.append('- newly working: ' + (', '.join(p['id'] for p in gains) or 'none'))
+    if me['respawns']:
+        L += ['', '## Respawns (exec count)', '', '- ' + ', '.join(f'{p} {n}' for p, n in me['respawns'].items())]
+    if d:
+        L += ['', f'## Diff vs {prev_id}', '', '```'] + diff_text(prev, me, d) + ['```']
+    if backlog:
+        hot = {p['id'] for p in regress} | {p['id'] for p in probes if p['verdict'] == 'partial'}
+
+        def rank(i):
+            iid = str(i.get('id'))
+            r = 0 if iid.startswith('crash:') else 1 if iid.startswith('probe:') and iid[6:] in hot else \
+                2 if iid.startswith('finding:') else 3
+            return r, {'high': 0, 'med': 1, 'low': 2}.get(i.get('severity'), 3), iid
+
+        def nxt_text(n):
+            return (n.get('test') or '-') if isinstance(n, dict) else (n or '-')
+        items = sorted((i for i in backlog if isinstance(i, dict)), key=rank)
+        L += ['', '## Backlog: this boot\'s crashes, its partial or regressed probes, then findings (all: triage/BACKLOG.md)', '']
+        L += [f"- [{i.get('severity')}] {i.get('id')}: {i.get('title')} — owner {i.get('owner') or 'UNASSIGNED'}; "
+              f"next: {str(nxt_text(i.get('next')))[:200]}" for i in items if rank(i)[0] < 3][:15]
+    nxt = []
+    for c in open_c[:5]:
+        proc = c.get('proc') or (str(c['sig']).split(':')[1].split('@')[0] if ':' in str(c['sig']) else None)
+        if proc and proc != 'kernel':
+            nxt.append(f"hk logs {proc} --attempt {aid}   # then hk stacks {proc} (needs hk_ustack={proc} in the image)")
+    if regress:
+        nxt.append(f"hk probe {' '.join(p['id'] for p in regress)} --attempt {aid} --verbose")
+    nxt.append(f"hk timeline {aid} --kind crash,physical,ui,milestone")
+    L += ['', '## Next', ''] + [f'- `{x}`' for x in dict.fromkeys(nxt)]
+    if errors:
+        L += ['', '## Errors', ''] + [f"- {e['message']}" for e in errors]
+    md = attempt_dir(aid) / 'TRIAGE.md'
+    md.write_text('\n'.join(L) + '\n')
+    data = dict(attempt=aid, prev=prev_id, triage_md=str(md), facts={k: v for k, v in me.items() if k != 'subsystems'},
+                diff=d, backlog=(backlog or [])[:50], errors=errors)
+    return emit(args, 'triage', data, [f'triage: {md}'] + L[2:6] + [f"error: {e['message']}" for e in errors], 3 if errors else 0)
+
+
 SCHEMAS = {
     'error': 'ok=false, error ("tool not present" (reason tool_missing)|phone_busy|lock_required|not_holder|no_attempt|no_image|no_log|no_live_run|shell_down|'
              'unsupported|wrong_state|fastboot_failed|usage|...), message, code (exit status), plus context (tool, path, owner, lease)',
@@ -2036,7 +2579,7 @@ SCHEMAS = {
              'phone_only, attempt, evidence[], next}]',
     'report': 'attempt, manifest, probes{}, screens[], report_md', 'images': 'images[{name, dir, sha256, kernel_sha256, kind, '
               'bootable, installable, cpus, deadline, overlay, features[], built, attempts[]}]',
-    'find': 'count, attempts[hk.index records]', 'ingest': 'imported, items[{path, attempt, new | error}]',
+    'find': 'count, attempts[hk.index records]', 'ingest': 'imported, items[{path, attempt, new | error}], updated[], skipped[]',
     'queue': 'item | items[], counts{} | ran[]', 'qemu': 'attempt, rc, verdict, result', 'tools': 'tools[{key, path, present, owner, what, argv}]',
     'note': 'attempt, owner_actions[]', 'installed': 'image, readback, when, by, source',
     'manifest': 'attempts/<id>/manifest.json: id, name, kind (phone|qemu), created, created_t, created_by, agent, command[], '
@@ -2047,6 +2590,12 @@ SCHEMAS = {
     'index': 'attempts/index.jsonl, append-only, last line per id wins: id, name, kind, created, created_t, image, image_sha256, '
              'kernel_sha256, features[], verdict, rc, end, crashes, return_check, ui, queue_id, dir, paths',
     'lease': '/tmp/fleet/hk-phone.lease.json; events in /tmp/fleet/hk-phone.events.jsonl',
+    'timeline': 'attempt, source (live|dump), clock, total, events[{t, wall, src, kind (panic|deadline|crash|physical|input|exec|'
+                'stall|milestone|ui), text}], respawns{proc: exec count}, file (attempts/<id>/timeline.txt)',
+    'diff': 'a, b, head{field: {a, b}}, markers{only_a, only_b}, probes[{id, a, b}], crashes{new[], gone[], changed[]}, '
+            'respawns[{proc, a, b}], subsystems[{file, a, b}], timeline[{event, a, b, delta}], crash_lines{a, b}, errors[]',
+    'triage': 'attempt, prev, triage_md, facts{verdict, end, markers, first{event: t}, respawns, physical, probes[], crashes[]}, '
+              'diff (as hk.diff, null without a previous boot), backlog[], errors[]',
 }
 
 
@@ -2117,6 +2666,7 @@ def parser():
     q.add_argument('--name')
     q.add_argument('--step', type=int, default=6)
     q.add_argument('--allow-stale', action='store_true')
+    q.add_argument('-o', '--output', help='PNG path (default attempts/<id>/screens/NAME-HHMMSS.png)')
     q = add('logs', cmd_logs, 'console lines: per HKL program (OBS mirror), subsystem, regex')
     q.add_argument('proc', nargs='?')
     q.add_argument('--attempt')
@@ -2168,6 +2718,27 @@ def parser():
     q.add_argument('--path', help='a run dir (imported into the index)')
     q.add_argument('--no-probe', action='store_true')
     q.add_argument('--no-crash', action='store_true', help='do not run crashdoc when no census is cached')
+    q = add('timeline', cmd_timeline, 'one boot as time-ordered events: milestones, UI steps, input, physical touches, crashes, panics')
+    q.add_argument('attempt_pos', nargs='?', metavar='ATTEMPT')
+    q.add_argument('--attempt')
+    q.add_argument('--path', help='a run dir (imported into the index)')
+    q.add_argument('--kind', help='comma list: milestone,ui,input,physical,crash,panic,deadline,exec,stall')
+    q.add_argument('--grep')
+    q.add_argument('--since-t', type=float, help='only events at t >= S')
+    q.add_argument('--until-t', type=float, help='only events at t <= S')
+    q.add_argument('--limit', type=int, default=0, help='last N events')
+    q = add('diff', cmd_diff, 'two boots side by side: probe verdicts, crash census, respawns, subsystem lines, timeline')
+    q.add_argument('a', metavar='A', help='the older attempt (with no B: the newer one, against its previous same-family boot)')
+    q.add_argument('b', metavar='B', nargs='?')
+    q.add_argument('--fresh', action='store_true', help='re-run probe_eval and crashdoc instead of using cached results')
+    q.add_argument('--no-subsystems', action='store_true', help='skip the hklog split (faster)')
+    q = add('triage', cmd_triage, 'crashdoc + probe_eval + diff vs the previous same-family boot + backlog -> TRIAGE.md')
+    q.add_argument('attempt_pos', nargs='?', metavar='ATTEMPT')
+    q.add_argument('--attempt')
+    q.add_argument('--path', help='a run dir (imported into the index)')
+    q.add_argument('--prev', help='compare with this attempt instead of the previous same-family boot')
+    q.add_argument('--fresh', action='store_true')
+    q.add_argument('--no-backlog', action='store_true')
     q = add('note', cmd_note, 'record an owner action on an attempt')
     q.add_argument('attempt')
     q.add_argument('text', nargs='+')
