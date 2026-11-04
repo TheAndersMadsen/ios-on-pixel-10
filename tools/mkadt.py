@@ -13,6 +13,7 @@ import hashlib, os, struct, sys, zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import adt  # noqa: E402
+import adt_patch  # noqa: E402
 
 # Kernel-managed RAM: the low DRAM bank (live FDT /memory@80000000 + 7 upper
 # banks). On the device the first *declared-clean* window may be bank 1 (the
@@ -35,7 +36,6 @@ GICR, GICR_SIZE = 0x05900000, 0x200000  # laguna live FDT (confirmed; 8 x 0x4000
 # node, the QEMU smoke and the shim console use; NEEDS-DEVICE-PROBE (DC9x00
 # layer regs 0x0ee00000+0x18060/64) replaces it on the first hardware session.
 FB, FB_SIZE = 0xf0000000, 0x2000000
-LAGUNA_ECID = 0x4c47413100000001  # 'LGA1' + 1, synthetic (tegu pattern: 'TEGU'+1)
 FB_W, FB_H, FB_STRIDE = 1280, 2856, 1280 * 4   # laguna panel 6.3" 1280x2856, stride 5120
 # DC9x00 display-controller windows (live /proc/iomem "ee00000.dc9x00
 # dpu-fe-be"; dsi2host@3d8000). /device-tree/laguna-dpu carries them as an
@@ -97,17 +97,15 @@ QEMU_VTIMER_INTID = 27
 QEMU_TIMER, QEMU_TIMER_SIZE = 0x0a000000, 0x1000
 QEMU_DBG_IFACE, QEMU_DBG_IFACE_SIZE = 0x0a001000, 0x1000
 
-BOOT_MANIFEST_HASH = hashlib.sha384(b'laguna boot manifest').digest()
-
 # iOS 26 identity: iPhone12,3 / D421AP, tegu's choice (lowest iOS 26 class, no SPTM, TXM
 # or ExclaveOS in the 23G90 BuildManifest, @3x 1125x2436). /product comes from the real
 # tree, an Apple artifact kept out of git: root agent's handoffs/iphone12-dt.md.
 D421AP_ADT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                           '../research/ios26-root-r1/apple/dt/DeviceTree.d421ap.bin')
 D421AP_SHA256 = '6bb989988c897e13295219e2f5bbd9df34c766e6863debcf13ec1b407b46d8ad'
-IDENTITY = dict(compatible=('D421AP', 'iPhone12,3'), model='iPhone12,3', target_type='D421',
-                target_sub_type='D421AP', platform_name='t8030', chip_id=0x8030, board_id=0x06,
-                canvas=(1125, 2436), scale=3)
+# The identity itself lives in adt/identity.yaml (with the capability manifest); the userland-facing
+# nodes and properties are declarative patches in adt/patches/*.yaml, applied at the end of build().
+IDENTITY = adt_patch.identity_tuple(adt_patch.load_identity())
 # Children of /product carried over. tegu carries none (physical on its phone); our
 # phone's iOS 16 boots had haptics. camera, facetime, maps, audio: --product-children=all.
 PRODUCT_CHILDREN = ('haptics',)
@@ -117,7 +115,6 @@ PRODUCT_CHILDREN = ('haptics',)
 ROOT_COMPAT = ('google,lga-blazer', 'google,tegu', 'google,lga', 'AppleARM')
 CPU_COMPAT = ('google,lga-cpu', 'tegu,cpu', 'ARM,v8')
 DISPLAY_COMPAT = ('sweet,display', 'laguna,display')
-MAC_WIFI0 = bytes.fromhex('024c47413101')  # synthetic, locally administered
 
 
 def donor_product(path=D421AP_ADT, children=PRODUCT_CHILDREN):
@@ -200,12 +197,15 @@ def node(name, props=(), children=()):
 
 
 def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpus=1,
-          canvas=None, gamut=None, product_children=PRODUCT_CHILDREN, nvram=False, donor=D421AP_ADT, headless=False, disp0=False, boot_mpidr=0, cpu_order=None):
+          canvas=None, gamut=None, product_children=PRODUCT_CHILDREN, nvram=False, donor=D421AP_ADT, headless=False, disp0=False, boot_mpidr=0, cpu_order=None,
+          patches=None, record=None, gates=()):
     """qemu=True: same tree, but with QEMU virt's GIC/UART addresses and CNTFRQ
     (tests/smoke-qemu-laguna.sh). bank1=True: kernel RAM in the first upper bank
     (device only; QEMU virt has no RAM there). mem_size overrides the kernel
     RAM window size (v2 device default: 256M, the kexec-proven geometry that
-    avoids sec_dram 0xf7000000 / bl31_dram 0xffe00000)."""
+    avoids sec_dram 0xf7000000 / bl31_dram 0xffe00000). patches: adt_patch.load_patches() output
+    (default: adt/patches); record: a dict that receives the applied/skipped patch record; gates: patch
+    gates to enable (entries with `gate:` in adt/patches, e.g. bt_nub)."""
     phys_base_d, size = (BANK1_PHYS_BASE, BANK1_MEM_SIZE) if bank1 else (PHYS_BASE, MEM_SIZE)
     phys_base = phys_base_d if phys_base is None else phys_base
     mem_size = size if mem_size is None else mem_size
@@ -251,6 +251,11 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
     canvas = canvas or IDENTITY['canvas']
     phandle = iter(range(1, 1000))
     ph = lambda: ('AAPL,phandle', u32(next(phandle)))
+    # Nodes that moved to adt/patches keep the phandle they had as code: the number is reserved here,
+    # at the node's historical place in creation order, and the patch that adds the node takes it.
+    slots = {}
+    def slot(path):
+        slots[path] = next(phandle)
 
     chosen = node('chosen', [
         ph(),
@@ -267,28 +272,8 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
         # PSCI conduit for psci_smp.c (live FDT /psci: method "smc"; QEMU
         # virt advertises hvc — the kernel's default is smc without this).
         ('psci-method', cstr('hvc' if qemu else 'smc')),
-        # iBoot's SHA-384 of the boot manifest; /sbin/mount -P 1 exits unless
-        # it exists (bind mounts /private/preboot/<hex>/usr/standalone/firmware,
-        # tolerating a missing directory). Fixed stand-in value.
-        ('boot-manifest-hash', BOOT_MANIFEST_HASH),
-        # libimg4 (cryptexd) aborts "failed to get crypto algorithm" without
-        # it; real A11+ device trees say sha2-384.
-        ('crypto-hash-method', cstr('sha2-384')),
-        # MobileGestalt's screen class: display-scale (u32, default 0) comes
-        # from /chosen, the pixel size from IOMobileFramebuffer. Scale 0 makes
-        # SpringBoard's FBSDisplayMode "infxinf@0x" invalid. 1280x2856 @3x =
-        # ~427x952 points (iPhone X class).
-        ('display-scale', u32(IDENTITY['scale'])),
-        # XNU derives IOPlatformUUID (gethostuuid) from these on arm; without
-        # them CFPreferences cannot use kCFPreferencesCurrentHost (no ByHost
-        # files), so e.g. DataMigration never records LastSystemVersion and
-        # migrates on every boot. Synthetic ECID (not the phone's); chip-id
-        # of the A11 that the iPhone X userland expects.
-        ('unique-chip-id', struct.pack('<Q', LAGUNA_ECID)),
-        ('chip-id', u32(IDENTITY['chip_id'])),
-        ('board-id', u32(IDENTITY['board_id'])),
-        # MobileGestalt reads this CFData before waiting for a Wi-Fi service (tegu). No Wi-Fi.
-        ('mac-address-wifi0', MAC_WIFI0),
+        # adt/patches: boot-manifest-hash, crypto-hash-method (10-boot-userland), display-scale,
+        # unique-chip-id, chip-id, board-id (20-identity), mac-address-wifi0 (30-wifi) go here.
         # No CTRR or PPL monitor. 12377's ml_unsafe_kernel_text() asserts it was set from this
         # property, and pmap_bootstrap calls it (machine_routines.c, pmap.c): new with 12377.
         ('kernel-ctrr-to-be-enabled', u32(0)),
@@ -297,38 +282,16 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
         # header (osfmk/kern/debug.c debug_log_init). Device mode only; QEMU
         # keeps the benign "gPanicBase is still not initialized" warning.
         *([('embedded-panic-log-size', u32(PANIC_LOG_SIZE))] if not qemu else []),
-        # Security status as on a dev-fused, undemoted board (tuple 0,0,1,1):
-        # MobileGestalt reads these from /chosen, and mobileactivationd's
-        # DeviceType then takes its native "Hactivation" branch (state
-        # Activated without an activation record; no SEP, no baseband here).
-        ('certificate-production-status', u32(0)),
-        ('effective-production-status-ap', u32(0)),
-        ('certificate-security-mode', u32(1)),
-        ('effective-security-mode-sep', u32(1)),
+        # adt/patches/20-identity: the security-status tuple 0,0,1,1 goes here.
         # IONVRAMCHRPHandler needs the 4 NVRAM properties above on /chosen
         # (v55 wall fix; empty_nvram_proxy documents the exact read order and
         # the adler panic if the bank image checksums drift).
         *(empty_nvram_proxy() if nvram else []),
-    ], [node('memory-map', [ph()]),
-        # libimage4 panics without this node: cryptexd crash loop on iOS 26 (husky 9b587a5, author
-        # record, via scout). Empty: kern_csr.c:140 finds no iuos, so false, as with no node.
-        node('manifest-properties', [ph()]),
-        # 12377's TEGU config HAS config_csr: this is live. tegu's value 2 =
-        # CSR_ALLOW_UNRESTRICTED_FS, for root-owned dyld caches on an unsealed HFS root. Older note:
-        # Local boot policy, read only if CONFIG_CSR is ever enabled: kern_csr.c
-        # csr_bootstrap (STARTUP TUNABLES RANK_FIRST) takes csr_config from
-        # /chosen/asmb lp-sip0 (u64) and CSR_ALLOW_UNAUTHENTICATED_ROOT from
-        # lp-sip1. In the current DEVELOPMENT_ARM64_* builds kern_csr.c is
-        # "optional config_csr" (bsd/conf/files:428) and NOT compiled — no csr
-        # symbol exists in mach.blazer (nm-verified 2026-10-27, Q2) — so this
-        # node is inert today; unknown /chosen children are ignored by XNU.
-        # Kept because the day CONFIG_CSR comes on, lp-sip0 0x6f is exactly
-        # `csrutil disable` (untrusted kexts | unrestricted FS | task_for-pid |
-        # kernel debugger | dtrace | nvram) and lp-sip1 keeps an unsealed root
-        # mountable; with CSR off, the shared-cache gate instead runs the
-        # vm_unix.c:2539 "#else /* CONFIG_CSR */" mount-identity check, which
-        # the root-v7 RAMDisk satisfies (QEMU proof: N1 cache probe, 0 refusals).
-        node('asmb', [ph(), ('lp-sip0', u64(2)), ('lp-sip1', u32(1))])])
+    ], [node('memory-map', [ph()])])
+    # adt/patches/10-boot-userland: /chosen/manifest-properties (libimage4) and /chosen/asmb (CSR
+    # lp-sip0/1, the long csr_bootstrap history is in the patch reason and mkadt.py ad0f50ed).
+    slot('chosen/manifest-properties')
+    slot('chosen/asmb')
 
     # LAGUNA SMP: all eight cores in physical-core order (0-1 Cortex-A520,
     # 2-6 Cortex-A725, 7 Cortex-X4; MPIDR Aff1 0x000-0x700), one homogeneous
@@ -404,11 +367,8 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
             ('device_type', cstr('cpu-debug-interface')),
             ('reg', u64(dbg_iface - soc_base, dbg_iface_size)),
         ]),
-        # No hardware: watchdogd checks IODeviceTree:/arm-io/wdt for no-pmu and
-        # otherwise crashes trying to set the PMU boot stage (customer builds
-        # ignore the -wdt_no_pmu boot-arg). The hardware WDTs themselves
-        # (0x200c4000/0x200c5000) are a shim quiesce action on the device.
-        node('wdt', [ph(), ('no-pmu', u32(1))]),
+        # /arm-io/wdt no-pmu (watchdogd): adt/patches/10-boot-userland; its phandle is reserved here.
+        *(slot('arm-io/wdt') or ()),
         # QEMU-only serial console (virt PL011): stock pe_serial drives it via
         # boot-console, giving the emulated boots a real serial log. laguna has
         # no PL011 (DW-APB uart@db62000 is disabled and driverless), so the
@@ -442,20 +402,10 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
         ('stride', u32(FB_STRIDE)),
     ]) for n in ('sweet-fbcon', 'laguna-fbcon')]
 
-    # pmap_compute_max_asids requires the node even when no overrides are set.
-    # An absent pmap-max-asids property selects XNU's own MAX_ASIDS default.
-    # No effaceable storage: keybagd then reads /private/var/keybags/systembag.kb
-    # as a plain plist instead of decrypting it with the effaceable key.
-    defaults = node('defaults', [ph(), ('no-effaceable-storage', u32(1))])
-
-    # MobileGestalt HomeButtonType = IODeviceTree:/buttons home-button-type
-    # (D22AP: 2, no Home button; absent = 0 = Home-button device).
-    buttons = node('buttons', [
-        ph(),
-        ('button-names', cstr('volup') + cstr('voldown') + cstr('hold')),
-        ('home-button-type', u32(2)),
-        ('opposed-power-vol-buttons', u32(1)),
-    ])
+    # /defaults (pmap_compute_max_asids; no-effaceable-storage) and /buttons (HomeButtonType):
+    # adt/patches/10-boot-userland and 40-buttons. Phandles reserved in their old order.
+    slot('defaults')
+    slot('buttons')
 
     pprops, pkids = donor_product(donor, product_children)
     if gamut:
@@ -494,28 +444,23 @@ def build(seed=None, qemu=False, bank1=False, mem_size=None, phys_base=None, cpu
         ph(),
         ('reg', u64(DPU_FE_BE, DPU_FE_BE_SIZE, DPU_DSI2H0, DPU_DSI2H0_SIZE)),
     ])] if not qemu else []
-    pad = lambda t: t.encode().ljust(32, b'\0')
     if headless:  # first phone boot, blazer's contract: nothing that starts a display driver
         if not disp0:  # disp0=True: second boot, AppleCLCD matches it; still no fbcon, no laguna-dpu
             arm_io.children = [c for c in arm_io.children if c.name != 'disp0']
         fbcons, laguna_dpu = [], []
-    return node('device-tree', [
+    root = node('device-tree', [
         ph(),
+        # model, target-type, target-sub-type, manufacturer, platform-name and the syscfg strings:
+        # adt/patches/20-identity from adt/identity.yaml.
         ('compatible', b''.join(cstr(x) for x in IDENTITY['compatible'] + ROOT_COMPAT)),
-        ('model', cstr(IDENTITY['model'])),
-        ('target-type', cstr(IDENTITY['target_type'])),
-        ('target-sub-type', cstr(IDENTITY['target_sub_type'])),
-        ('manufacturer', cstr('Apple Inc.')),
         ('#address-cells', u32(2)),
         ('#size-cells', u32(2)),
-        # What iBoot fills from syscfg. Synthetic, not any real device's.
-        ('platform-name', cstr(IDENTITY['platform_name'])),
-        ('serial-number', pad('LGA00BLAZER1')),
-        ('mlb-serial-number', pad('LGA00BLAZER1MLB00')),
-        ('model-number', pad('MWC22')),
-        ('region-info', pad('LL/A')),
-        ('regulatory-model-number', pad('A2160')),
-    ], [chosen, defaults, cpus, arm_io] + fbcons + laguna_dpu + [buttons] + product + pram + options)
+    ], [chosen, cpus, arm_io] + fbcons + laguna_dpu + product + pram + options)
+    rec = adt_patch.apply(root, dict(qemu=qemu, headless=headless, disp0=disp0, nvram=nvram, gates=tuple(gates)),
+                          slots=slots, files=patches)
+    if record is not None:
+        record.update(rec)
+    return root
 
 
 def _phys_base_arg(argv):

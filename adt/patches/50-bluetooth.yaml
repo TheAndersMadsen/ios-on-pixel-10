@@ -1,0 +1,25 @@
+schema: 1
+subsystem: bluetooth
+entries:
+  - id: arm-io.bluetooth
+    op: add-node
+    path: /arm-io/bluetooth
+    phandle: false
+    gate: bt_nub
+    props:
+      - name: device_type
+        type: str
+        value: bluetooth
+      - name: compatible
+        type: str
+        value: "bluetooth,n88"
+      - name: transport-encoding
+        type: u32
+        value: 7
+      - name: local-mac-address
+        type: bytes
+        value: "020000000001"
+    capability: bluetooth
+    lane: BT
+    evidence: research/ios26-phaseb-r1/int5/tools/image_tool_int5.py (--bt-nub, image a7-ios-system-int5)
+    reason: "B2: bluetoothd reads IODeviceTree bluetooth/local-mac-address. Same node as bt3's image: a locally administered placeholder (02:00:00:00:00:01), never the phone's bt_addr. Nothing transmits at gate level 0. Appended last under /arm-io with no phandle, as image_tool_int5 did."

@@ -1,0 +1,20 @@
+schema: 1
+subsystem: buttons
+entries:
+  - id: buttons.node
+    op: add-node
+    path: /buttons
+    before: product
+    props:
+      - name: button-names
+        type: strs
+        value: [volup, voldown, hold]
+      - name: home-button-type
+        type: u32
+        value: 2
+      - name: opposed-power-vol-buttons
+        type: u32
+        value: 1
+    capability: buttons
+    lane: PERIPH
+    reason: "MobileGestalt HomeButtonType = IODeviceTree:/buttons home-button-type (2: no Home button; absent = 0 = Home-button device). SpringBoard and backboardd look the node up (console IOK path IODeviceTree:/buttons)."

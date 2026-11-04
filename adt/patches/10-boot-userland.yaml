@@ -1,0 +1,63 @@
+# Userland-facing boot nodes and /chosen properties that were code in tools/mkadt.py build() up to
+# mkadt.py ad0f50ed. Platform-core nodes (memory, CPUs, GIC, timers, fbcon, DPU, pram, NVRAM) stay code.
+schema: 1
+subsystem: boot
+entries:
+  - id: chosen.boot-manifest-hash
+    op: set
+    path: /chosen
+    prop: boot-manifest-hash
+    type: sha384
+    value: laguna boot manifest
+    after: psci-method
+    lane: boot
+    reason: "iBoot's SHA-384 of the boot manifest; /sbin/mount -P 1 exits unless it exists (bind mounts /private/preboot/<hex>/usr/standalone/firmware, tolerating a missing directory). Fixed stand-in value."
+  - id: chosen.crypto-hash-method
+    op: set
+    path: /chosen
+    prop: crypto-hash-method
+    type: str
+    value: sha2-384
+    after: boot-manifest-hash
+    lane: boot
+    reason: "libimg4 (cryptexd) aborts 'failed to get crypto algorithm' without it; real A11+ device trees say sha2-384."
+  - id: chosen.manifest-properties
+    op: add-node
+    path: /chosen/manifest-properties
+    after: memory-map
+    lane: boot
+    reason: "libimage4 panics without this node: cryptexd crash loop on iOS 26 (husky 9b587a5). Empty: kern_csr.c:140 finds no iuos, so false, as with no node."
+  - id: chosen.asmb
+    op: add-node
+    path: /chosen/asmb
+    after: manifest-properties
+    props:
+      - name: lp-sip0
+        type: u64
+        value: 2
+      - name: lp-sip1
+        type: u32
+        value: 1
+    lane: boot
+    reason: "12377's TEGU config has config_csr: csr_bootstrap takes csr_config from /chosen/asmb lp-sip0 (u64; 2 = CSR_ALLOW_UNRESTRICTED_FS, root-owned dyld caches on an unsealed HFS root) and CSR_ALLOW_UNAUTHENTICATED_ROOT from lp-sip1."
+  - id: defaults.node
+    op: add-node
+    path: /defaults
+    after: chosen
+    props:
+      - name: no-effaceable-storage
+        type: u32
+        value: 1
+    capability: data-protection
+    lane: boot
+    reason: "pmap_compute_max_asids requires /defaults even with no overrides. No effaceable storage: keybagd reads /private/var/keybags/systembag.kb as a plain plist instead of decrypting it with the effaceable key."
+  - id: arm-io.wdt
+    op: add-node
+    path: /arm-io/wdt
+    after: cpu-debug-interface
+    props:
+      - name: no-pmu
+        type: u32
+        value: 1
+    lane: boot
+    reason: "No hardware: watchdogd checks IODeviceTree:/arm-io/wdt for no-pmu and otherwise crashes trying to set the PMU boot stage (customer builds ignore -wdt_no_pmu). The hardware WDTs are a shim quiesce action."

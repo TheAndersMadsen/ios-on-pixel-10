@@ -1,0 +1,171 @@
+# Who we say we are: root identity properties and /chosen identity, from adt/identity.yaml.
+schema: 1
+subsystem: identity
+entries:
+  - id: root.model
+    op: set
+    path: /
+    prop: model
+    type: str
+    value: $identity.model
+    after: compatible
+    lane: identity
+    reason: "hw.machine / hw.product: the iPhone whose userland runs here. compatible[0] (code, with the kernel's IONameMatch names) is hw.model / hw.target."
+  - id: root.target-type
+    op: set
+    path: /
+    prop: target-type
+    type: str
+    value: $identity.target_type
+    after: model
+    lane: identity
+    reason: "launchd LimitLoadToHardware targettype lists name D421 (anomalydetectiond, safetyalertsd)."
+  - id: root.target-sub-type
+    op: set
+    path: /
+    prop: target-sub-type
+    type: str
+    value: $identity.target_sub_type
+    after: target-type
+    lane: identity
+    reason: "Board config name D421AP, as iBoot publishes it."
+  - id: root.manufacturer
+    op: set
+    path: /
+    prop: manufacturer
+    type: str
+    value: $identity.manufacturer
+    after: target-sub-type
+    lane: identity
+    reason: "As on every Apple ADT."
+  - id: root.platform-name
+    op: set
+    path: /
+    prop: platform-name
+    type: str
+    value: $identity.platform_name
+    after: "#size-cells"
+    lane: identity
+    reason: "What iBoot fills from syscfg: t8030 for the A13 the userland expects."
+  - id: root.serial-number
+    op: set
+    path: /
+    prop: serial-number
+    type: pad32
+    value: $identity.serial_number
+    after: platform-name
+    lane: identity
+    reason: "syscfg SrNm; synthetic, not any real device's."
+  - id: root.mlb-serial-number
+    op: set
+    path: /
+    prop: mlb-serial-number
+    type: pad32
+    value: $identity.mlb_serial_number
+    after: serial-number
+    lane: identity
+    reason: "syscfg MLB#; synthetic."
+  - id: root.model-number
+    op: set
+    path: /
+    prop: model-number
+    type: pad32
+    value: $identity.model_number
+    after: mlb-serial-number
+    lane: identity
+    reason: "syscfg Mod#; synthetic."
+  - id: root.region-info
+    op: set
+    path: /
+    prop: region-info
+    type: pad32
+    value: $identity.region_info
+    after: model-number
+    lane: identity
+    reason: "syscfg Regn; LL/A."
+  - id: root.regulatory-model-number
+    op: set
+    path: /
+    prop: regulatory-model-number
+    type: pad32
+    value: $identity.regulatory_model_number
+    after: region-info
+    lane: identity
+    reason: "syscfg RMd#; A2160 = iPhone 11 Pro."
+  - id: chosen.display-scale
+    op: set
+    path: /chosen
+    prop: display-scale
+    type: u32
+    value: $identity.scale
+    after: crypto-hash-method
+    capability: display
+    lane: display
+    reason: "MobileGestalt's screen class: display-scale (u32, default 0) comes from /chosen, the pixel size from IOMobileFramebuffer. Scale 0 makes SpringBoard's FBSDisplayMode 'infxinf@0x' invalid."
+  - id: chosen.unique-chip-id
+    op: set
+    path: /chosen
+    prop: unique-chip-id
+    type: u64
+    value: $identity.ecid
+    after: display-scale
+    lane: identity
+    reason: "XNU derives IOPlatformUUID (gethostuuid) from unique-chip-id/chip-id/board-id; without them CFPreferences has no kCFPreferencesCurrentHost, so DataMigration migrates on every boot. Synthetic ECID."
+  - id: chosen.chip-id
+    op: set
+    path: /chosen
+    prop: chip-id
+    type: u32
+    value: $identity.chip_id
+    after: unique-chip-id
+    lane: identity
+    reason: "chip-id of the SoC the userland expects (see unique-chip-id)."
+  - id: chosen.board-id
+    op: set
+    path: /chosen
+    prop: board-id
+    type: u32
+    value: $identity.board_id
+    after: chip-id
+    lane: identity
+    reason: "D421AP board-id (see unique-chip-id)."
+  - id: chosen.certificate-production-status
+    op: set
+    path: /chosen
+    prop: certificate-production-status
+    type: u32
+    value: 0
+    after: [embedded-panic-log-size, kernel-ctrr-to-be-enabled]
+    capability: activation
+    lane: activation
+    reason: "Security status of a dev-fused, undemoted board (tuple 0,0,1,1): MobileGestalt reads these from /chosen and mobileactivationd's DeviceType takes its native Hactivation branch (Activated without an activation record; no SEP, no baseband)."
+  - id: chosen.effective-production-status-ap
+    op: set
+    path: /chosen
+    prop: effective-production-status-ap
+    type: u32
+    value: 0
+    after: certificate-production-status
+    capability: activation
+    lane: activation
+    reason: "Tuple 0,0,1,1 (see certificate-production-status)."
+  - id: chosen.certificate-security-mode
+    op: set
+    path: /chosen
+    prop: certificate-security-mode
+    type: u32
+    value: 1
+    after: effective-production-status-ap
+    capability: activation
+    lane: activation
+    reason: "Tuple 0,0,1,1 (see certificate-production-status)."
+  - id: chosen.effective-security-mode-sep
+    op: set
+    path: /chosen
+    prop: effective-security-mode-sep
+    type: u32
+    value: 1
+    after: certificate-security-mode
+    capability: activation
+    lane: activation
+    reason: "Tuple 0,0,1,1 (see certificate-production-status)."

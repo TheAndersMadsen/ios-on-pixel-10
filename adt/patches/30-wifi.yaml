@@ -1,0 +1,27 @@
+schema: 1
+subsystem: wifi
+entries:
+  - id: chosen.mac-address-wifi0
+    op: set
+    path: /chosen
+    prop: mac-address-wifi0
+    type: bytes
+    value: $identity.mac_wifi0
+    after: board-id
+    capability: wifi
+    lane: WIFI-W4
+    reason: "MobileGestalt reads this CFData before waiting for a Wi-Fi service (tegu). Synthetic, locally administered."
+  - id: arm-io.wlan
+    op: add-node
+    path: /arm-io/wlan
+    after: [disp0, wdt]
+    gate: wifid_wlan
+    status: inference
+    props:
+      - name: device_type
+        type: str
+        value: wlan
+    capability: wifi
+    lane: WIFI-W4
+    evidence: research/ios26-phaseb-r1/adt-patch/ERROR138.md
+    reason: "PROPOSED, not booted. com.apple.wifid carries _LimitLoadToDeviceTree [wlan, marconi-wifi, centauri-alpha, centauri-alpha-protium] in the root's launchd.plist (HOST), our ADT has none of them, so launchd never loads wifid and com.apple.wifi.manager is never published: configd and Preferences log 'bootstrap_look_up of WiFiManager server failed' (PHYSICAL, int4 + W2). The D421AP tree has /arm-io/wlan with device_type wlan, no compatible (HOST). INFERENCE: launchd matches the gate by node name and does not read wlan.* properties; wifid then needs the IO80211 surface (HACKINTOSH-REUSE 2.2), so keep the gate off until that exists."

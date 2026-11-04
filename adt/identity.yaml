@@ -1,0 +1,150 @@
+# Identity + capability manifest (research/ios26-phaseb-r1/goal-pool/HACKINTOSH-REUSE.md section 2.4).
+# One place for who the ADT says we are and which of that model's capabilities we claim vs provide.
+# tools/mkadt.py reads `identity` (its IDENTITY), the patch files take `$identity.<key>` / syscfg values,
+# and tools/adt_patch.py checks every patch entry tagged `capability:` against this table.
+#
+# capabilities[].model_has  the real iPhone12,3 (D421AP, iPhone 11 Pro) has it
+# capabilities[].provide    yes | partial | no: what this phone gives userland today (OURS, NOTES.md)
+# capabilities[].claim      yes: an ADT patch entry here claims it; implicit: the D421AP donor /product
+#                           or the model identity claims it whether we like it or not; no: nothing claims it
+# capabilities[].adt        where the claim lives (donor /product property names are implicit claims)
+# capabilities[].gestalt    MobileGestalt questions that follow it: INFERENCE until checked in 23G90 libMobileGestalt
+# adt_patch reports: overclaim (model_has, provide no, claim not no: daemons spin, the CommCenter case),
+# hidden (we provide it, nothing claims it: the UI never shows it), unbacked (claim yes, no entry applied).
+schema: 1
+
+identity:
+  model: "iPhone12,3"
+  compatible: [D421AP, "iPhone12,3"]
+  target_type: D421
+  target_sub_type: D421AP
+  platform_name: t8030
+  chip_id: 0x8030
+  board_id: 0x06
+  canvas: [1125, 2436]
+  scale: 3
+  manufacturer: "Apple Inc."
+  ecid: 0x4c47413100000001       # 'LGA1' + 1, synthetic (not the phone's)
+
+# What iBoot fills from syscfg. Synthetic, not any real device's.
+syscfg:
+  serial_number: LGA00BLAZER1
+  mlb_serial_number: LGA00BLAZER1MLB00
+  model_number: MWC22
+  region_info: LL/A
+  regulatory_model_number: A2160
+  mac_wifi0: 024c47413101         # locally administered, synthetic
+
+capabilities:
+  - id: wifi
+    model_has: true
+    provide: partial
+    claim: yes
+    adt: [/chosen:mac-address-wifi0, "/product:wifi-chipset (4378, ours is BCM4390)"]
+    gestalt: [WiFiCapability, wifi-chipset]
+    lane: WIFI-W4
+    notes: "Physical W2: our BCM4390 driver joins, DHCP, HTTP 200 via en0. wifid is gated by launchd _LimitLoadToDeviceTree [wlan, ...] and no such node exists, so wifi.manager is never published (adt/patches/30-wifi.yaml arm-io.wlan, gate wifid_wlan)."
+    evidence: research/ios26-phaseb-r1/adt-patch/ERROR138.md
+  - id: bluetooth
+    model_has: true
+    provide: partial
+    claim: implicit
+    adt: ["/product:bluetooth-le", "/product:bluetooth-lea2"]
+    gestalt: [BluetoothCapability, bluetooth-le]
+    lane: BT
+    notes: "Firmware/H4 replies physically; bluetoothd attachment not stable; the int4 root has no /usr/sbin/bluetoothd (launchd Missing executable)."
+  - id: cellular
+    model_has: true
+    provide: no
+    claim: implicit
+    adt: ["/product:baseband-chipset (ice19)"]
+    gestalt: [cellular-data, telephony]
+    lane: MODEM
+    notes: "No baseband. Every app asks com.apple.commcenter.coretelephony.xpc and fails at lookup (SpringBoard, Preferences, MobilePhone, configd)."
+  - id: nfc
+    model_has: true
+    provide: no
+    claim: implicit
+    adt: ["/product:nfc-express", "/product:low-power-express"]
+    gestalt: [NFCRadio, nfc-express]
+    notes: "No NFC controller driver."
+  - id: gps
+    model_has: true
+    provide: no
+    claim: implicit
+    adt: ["/product:gps-capable"]
+    gestalt: [gps-capable]
+    notes: "No GNSS path."
+  - id: torch
+    model_has: true
+    provide: no
+    claim: no
+    gestalt: [camera-flash]
+    lane: PERIPH
+    notes: "Flashlight in Control Center needs a flash-capable camera service (INFERENCE)."
+  - id: cameras
+    model_has: true
+    provide: no
+    claim: implicit
+    adt: ["/product:rear-cam-offset-from-center", "/product:front-cam-offset-from-center"]
+    gestalt: [front-facing-camera, rear-facing-camera]
+    notes: "/product/camera is not carried (PRODUCT_CHILDREN = haptics); SpringBoard looks up IODeviceTree:/product/camera and /arm-io/isp and finds none."
+  - id: faceid
+    model_has: true
+    provide: no
+    claim: no
+    gestalt: [pearl-id-capability]
+    notes: "No SEP, no pearl-sep: biometrickitd.pearl stays gated off (_LimitLoadToDeviceTree pearl-sep), which is right."
+  - id: home-button
+    model_has: false
+    provide: no
+    claim: no
+    adt: ["/buttons:home-button-type = 2"]
+    gestalt: [HomeButtonType]
+    notes: "D421AP has no Home button; home-button-type 2 states the absence."
+  - id: buttons
+    model_has: true
+    provide: yes
+    claim: yes
+    adt: [/buttons]
+    gestalt: [HomeButtonType]
+    lane: PERIPH
+    notes: "Volume and side keys through blazer_keys / blazer_power_key."
+  - id: haptics
+    model_has: true
+    provide: partial
+    claim: implicit
+    adt: [/product/haptics]
+    lane: PERIPH
+    notes: "blazer_haptic_tap; /product/haptics carried from the donor."
+  - id: audio
+    model_has: true
+    provide: no
+    claim: implicit
+    adt: ["/product:builtin-mics"]
+    lane: AOC
+    notes: "No IOAudio engine; /product/audio not carried (SpringBoard path lookup -> none)."
+  - id: als
+    model_has: true
+    provide: no
+    claim: no
+    lane: PERIPH
+    notes: "SpringBoard IONameMatch als -> none: no ambient light sensor service."
+  - id: display
+    model_has: true
+    provide: yes
+    claim: yes
+    adt: [/arm-io/disp0, /chosen:display-scale]
+    notes: "SweetFramebuffer scanout; 120 Hz proven."
+  - id: activation
+    model_has: true
+    provide: yes
+    claim: yes
+    adt: ["/chosen:certificate-production-status ... effective-security-mode-sep"]
+    notes: "Dev-fused tuple 0,0,1,1: mobileactivationd takes its Hactivation branch."
+  - id: data-protection
+    model_has: true
+    provide: partial
+    claim: yes
+    adt: [/defaults:no-effaceable-storage]
+    notes: "No effaceable storage; software AKS wrap."
