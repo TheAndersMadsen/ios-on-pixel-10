@@ -511,12 +511,18 @@ FEATURE_NAME_RULES = [
     ('cpu', r'cpu|dvfs|gov'), ('perf', r'perf|fast-start|accel'), ('settings', r'settings|configd|cfg'),
     ('compositor', r'backboardd|compositor|container|cc\d|flatmat'), ('security', r'aks|amfi|sep'), ('audio', r'audio|aud\d'),
     ('sensors', r'sens'), ('integration', r'\bint\d|-int\d'), ('dualboot', r'chooser|return|boot_b|install'),
+    ('charger', r'chg\d|charg'), ('modem', r'modem|cellular|gnss|s5400'), ('usbhost', r'usbhost|otg|dpalt|-dp\d'),
+    ('camera', r'cam\d|camera|torch'),  # research/ios26-camera-r1
+    ('nfc', r'nfc'),  # research/ios26-nfc-r1
 ]
 FEATURE_TOKEN_RULES = [
     ('wifi', r'^blazer_wifi'), ('bt', r'^blazer_bt'), ('net', r'^blazer_(usbnet|netstack|net)'), ('screen', r'^(hk_screen|blazer_usbcon_snap)'),
     ('ustack', r'^hk_ustack'), ('input', r'^(blazer_usbcon_input|blazer_touch|hk_ui)'), ('display', r'^(hk_bright|hk_fb|sweetfb)'),
     ('gpu', r'^blazer_gpu'), ('storage', r'^(blazer_persist|blazer_ufs_fake)'), ('security', r'^blazer_aks'), ('audio', r'^blazer_audio'),
     ('sensors', r'^blazer_sensors'), ('perf', r'^hk_top'), ('apps', r'^blazer_persona'), ('usb', r'^blazer_usbcon'),
+    ('charger', r'^blazer_battery_chg'), ('modem', r'^blazer_modem'), ('usbhost', r'^blazer_(usbhost|dp)'),
+    ('camera', r'^blazer_(torch|cam)'),  # research/ios26-camera-r1
+    ('nfc', r'^blazer_nfc'),  # research/ios26-nfc-r1
 ]
 SUBSYSTEMS = sorted({f for f, _ in FEATURE_NAME_RULES} | {f for f, _ in FEATURE_TOKEN_RULES} | {'shim', 'xnu', 'qemu'})
 

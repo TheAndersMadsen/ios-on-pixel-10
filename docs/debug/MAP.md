@@ -75,6 +75,18 @@ TOOLS: `hk boot` (live_boot.sh starts the single usbcon reader first); `hk shot`
 DOCS: research/ios26-phaseb-r1/live/UNATTENDED.md
 OPEN: EP0 requests 0x71+ unassigned (0x60..0x6b HLI1+snapshot, 0x70 hk_ustack)
 
+## usbhost
+SUBSYS: usbhost
+SRC: xnu/osfmk/arm64/blazer_usbhost.c, blazer_usbhost_core.inc (branch hk-usbhost1 = hk-obs1 + research/ios26-phaseb-r1/usbhost/patches/0001); host model usbhost/tests/test_usbhost.c
+ARGS: blazer_usbhost=1 (refused with any blazer_usbcon*/blazer_usbnet*: one controller, one owner), blazer_usbhost_wait=S (90), blazer_usbhost_window=S (150); image a7-ios-system-usbhost1
+TAGS: `blazer-usbhost:` (survey, gadget halted, host mode, xhci, root ports, running, port N connect/reset, slot, ENUM, PASS, stop), `blazer-dp:` (planned, DP alt mode)
+SIG: `blazer-usbhost: stop: no device` → no USB2 connect in the window: the phone does not source VBUS, so the device needs a powered hub
+SIG: `blazer-usbhost: gadget no halt after 100 ms` → the shim's gadget kept running; nothing was reset (by design, the result is that line)
+SIG: `blazer-usbhost: refused: blazer_usbcon owns the controller` → image has both; host mode needs a console-free image (ramdump path)
+TOOLS: `hk logs --sub usbhost` (ramdump); `python3 -I tools/probe_eval.py --row usb-host --row usb-host-enumerate --row dp-video-out <attempt>`; host test `usbhost/tests/run.sh`
+DOCS: research/ios26-phaseb-r1/usbhost/USBHOST.md (hardware map, role-switch safety, attended test, DP alt-mode stages D0-D5)
+OPEN: never booted (HOST + ARM64 object only); VBUS sourcing (TCPC + charger OTG over SPMI) and PD/DP alt mode are owner decisions
+
 ## net
 SUBSYS: net
 SRC: xnu/bsd/dev/blazer_usbnet.c, blazer_usbnet_queue.h (UNQ_PHONE_IP/UNQ_MAC_IP), blazer_usbnet_log.h (dbg1-net branch); tools/usbnet_mac.py (Mac plan)
@@ -147,15 +159,29 @@ TOOLS: `hk logs --sub power`
 DOCS: research/ios26-phaseb-r1/pwr/
 OPEN: none recorded here
 
+## charger
+SUBSYS: charger
+SRC: xnu/iokit/Kernel/arm/blazer_gauge.c (SPMI spmi@53f1000, EXT_REG_READ frames only), blazer_charger.h (pure decode) on branch hk-chg1; blazer_charge_policy.c (pure planner, not built)
+ARGS: blazer_battery_chg=1 (status → iOS external/charging), blazer_battery_chg=2 (report only: one line per gauge sample, iOS state unchanged; needs hk-chg1); both need blazer_battery=1
+TAGS: `blazer-battery: charger N in=usb|wireless|both|none chg=cc|cv|topoff|done|off… mode= cp= wdt= cc= cv= icl= wicl= ichgin= iwcin= vwcin=` (hklog power split)
+SIG: `blazer-battery: charger report N unread` → one charger frame came back with SPMI error bits; the gauge sample still stands
+SIG: `leaving the controller alone from here on` → a frame timed out or CONTROL/REQ_COMMAND moved: gauge and charger both stop for the boot
+TOOLS: `hk logs --sub power --grep 'charger '`; `python3 -I tools/probe_eval.py --row charging --row wireless-charging <attempt>`
+DOCS: research/ios26-phaseb-r1/chg/PLAN.md (tests), REGISTERS.md (map, vendor links), CONTROL.md (write design, owner approval)
+OPEN: never booted; charger IC max77779chrg SPMI SID 3; wireless RX CPS4041 is behind the max77779 I2C master (SID 2, 0x30), detected only via WCIN; any write (CHGCC limit) needs owner approval
+
 ## cpu
 SUBSYS: cpu
-SRC: xnu/iokit/Kernel/arm/SweetCPU.cpp; shim/tgl_cpu_audit.c, tgl_fastcore.c; tools/cpu_audit.py, cpu_dvfs_check.py
-ARGS: cpus=5, bootcpu (image_tool --bootcpu 0x200)
-TAGS: `blazer-gov`, `blazer-clock`, `blazer-cpu`, `SWEET CPU`
-SIG: none recorded
-TOOLS: `hk logs --sub power`
-DOCS: docs/CPU.md, research/ios26-cpu-complete-r3/
-OPEN: higher clocks and the A520 cores not accepted
+SRC: xnu/iokit/Kernel/arm/SweetCPU.cpp (PSCI CPU_ON per ADT cpu node, `startAll`), xnu/pexpert/pexpert/arm64/SWEET.h (SWEET_SMP_MAX_CPUS 8); shim/tgl_fastcore.c (cpu0 hands XNU to 0x200, stays parked), shim/tgl_cpu_audit.c (cpu0 reads; mode 2 Errata ABI queries); tools/image_tool.py `cpu_order` (core 7 refused), tools/cpu_audit.py, tools/cpu_dvfs_check.py
+ARGS: cpus=N (the ADT holds N nodes: N is the count), blazer_bootcpu=0x200, blazer_smp_report=1, blazer_smp_test=1, blazer_cpu0_audit=1|2 (shim, needs --cpu-audit), image_tool --cpus/--cpu-order/--bootcpu
+TAGS: `SWEET CPU: requested=N selected=N`, `SWEET CPU: cpu=N mpidr=0xM came alive; SGI1 OK`, `SWEET CPU: N/N CPUs initialized`, `blazer-gov`, `blazer-clock`, `blazer-cpu`; stamps `cpu0-actlr`, `cpu0-em-version`, `cpu0-em-features`, `cpu0-em-erratum` (stamps-decode.txt)
+SIG: `SWEET CPU: 5/5 CPUs initialized` → the built topology (five A725 nodes 0x200-0x600), not a startup failure; A520 0x0/0x100 and X4 0x700 are left out of the ADT on purpose (research/ios26-cpu-smp-r1/SMP.md)
+SIG: `SWEET CPU: cpu=N NOT alive: PSCI CPU_ON rc=-4` → ALREADY_ON: that core is cpu0 (0x0), parked in the shim under blazer_bootcpu
+SIG: `SWEET CPU: cpu=N mpidr=0xM NOT alive after 5s` → CPU_ON accepted but the core never reached initCPU (entry/MMU/GIC); stop, no retry
+SIG: stamps-decode `cpu0-em-version DONE 0xffffffffffffffff (EM not-supported)` → firmware has no Errata Management ABI; the A520 answers must come from elsewhere
+TOOLS: `hk logs --sub power`; `python3 -I tools/probe_eval.py --row a520-cores --row x4-core <attempt>`; `python3 -I tools/cpu_audit.py <attempt>/ramdump/kernel.log <image>/manifest.json` (mode 1 or 2)
+DOCS: docs/CPU.md, research/ios26-cpu-smp-r1/SMP.md, research/ios26-cpu-complete-r3/
+OPEN: firmware's own answer for A520 erratum 3685825 (CPUACTLR[9] clear on cpu0; a7-cpu0-em-r1 built, not booted); X4 errata (3076789, 2957258, 4118414) cannot be queried from cpu0; cpu0 release from the shim park; higher clocks
 
 ## perf
 SUBSYS: perf
@@ -224,6 +250,18 @@ TOOLS: `hk logs --sub bt`
 DOCS: docs/CONNECTIVITY.md
 OPEN: bluetoothd is denied (hk_deny) in perf-r1-based overlays; enabling it is B2/B3
 
+## modem
+SUBSYS: modem
+SRC: xnu/bsd/dev/blazer_modem.c (glue), blazer_modem_core.c/.h (hardware-free ladder; branch hk-modem1 = hk-int3 + research/ios26-modem-r1/src); host test research/ios26-modem-r1/tests/run.sh
+ARGS: hk_dbg bits 24..27 = stage (1 read, 2 ctrl, 3 phy, 4 link), bit 28 hold; or blazer_modem=N, blazer_modem_hold=1, blazer_modem_force=1. Off by default
+TAGS: `blazer-modem:` (read:, pad, ctrl:, phy:, rc:, cp:, link:, id:, tidy:, verdict:, stopped:); planned `cell:`, `blazer-gnss:`/`gnss:`; `HKL CommCenter[` (net.log), `HKL locationd[` (location.log)
+SIG: `blazer-modem: verdict: STOP stage N, at X: <reason>` → the named rung failed; everything driven was tidied (tidy: errors 0x0)
+SIG: `read: CP as found: NOT off` → stage 4 refuses to power the CP (`CP not off as found`); rerun stage 1 and compare pad TX values
+SIG: `link: attempt 4 failed … LTSSM 0x…` with `cp: powered` → CP ROM did not train: check CP2AP pads after power, PHY table, phy_fw clock
+TOOLS: `hk logs --grep blazer-modem`; `python3 -I tools/probe_eval.py --row Cellular <attempt>`; `hk find --feature modem`
+DOCS: research/ios26-modem-r1/MODEM.md (S5400 map, CommCenter/ARI gap, rungs 5..11 and GNSS G1..G2), PHONE-TEST.md, docs/CONNECTIVITY.md
+OPEN: no physical run yet (rung 0 659b370 and stages 1..4 never booted). CP firmware (rung 6+) needs an owner decision; CommCenter on iPhone12,3 speaks ARI, the S5400 SIPC
+
 ## audio
 SUBSYS: audio
 SRC: xnu/bsd/dev/blazer_audio.c, blazer_aoc.c
@@ -243,6 +281,31 @@ SIG: none recorded
 TOOLS: `hk logs --sub location`
 DOCS: research/ios26-phaseb-r1/ (sens2 image)
 OPEN: none recorded here
+
+## nfc
+SUBSYS: nfc
+SRC: xnu/bsd/dev/blazer_nfc_hw.c (pure, host-tested), blazer_nfc.c, blazer_cli10_bus.h + the cli10 lock in blazer_haptic.c (branch hk-nfc1); research/ios26-nfc-r1/tests/
+ARGS: blazer_nfc=1..4 (1 pads read-only, 2 power + identify, 3 NCI init, 4 RF discovery), blazer_nfc_wait=1..60 (stage 4 listen s), blazer_nfc_delay=30..600 (default 60), blazer_nfc_keep=1
+TAGS: `blazer-nfc:` (pad …, chip st21nfc fw/hw/loader/nci, address 0x08 acked/never acked, rsp <CMD> status, nci init ok, tag: <tech> … id, discovery: …, ends: <stop>)
+SIG: `blazer-nfc: address 0x08 never acked` → ST21NFC not powered (enable pad hsion 1 polarity/mux) or needs the 19.2 MHz clock (OPEN)
+SIG: `blazer-nfc: chip in loader mode` → controller firmware not in router mode; no NCI is sent
+SIG: `blazer-nfc: core generic error ntf` during stage 4 → RF needs ST config/clock (OPEN)
+SIG: haptic `tap N rc 16` while blazer-nfc runs → EBUSY by design (the cli10 bus lock), the tap is skipped
+TOOLS: `hk logs --grep blazer-nfc`; `python3 -I tools/probe_eval.py --row nfc <attempt>`; host `sh research/ios26-nfc-r1/tests/run.sh`
+DOCS: research/ios26-nfc-r1/DESIGN.md (pins, ST HAL facts, phone test and expected lines)
+OPEN: never booted on the phone (a7-ios-system-nfc1 built); RF clock pads not driven; no iOS nfcd service or mirror rule yet
+
+## camera
+SUBSYS: camera
+SRC: xnu/bsd/dev/blazer_torch.c, blazer_torch_hw.c (LM3644 flash on CLI7 i2c@3a301000 0x63; p1 = stages 1-2, branch hk-cam1 2e8d777 = stages 3-4); research/ios26-camera-r1/tests/test_blazer_torch.c (host model)
+ARGS: blazer_torch=1 look, 2 id (needs CLI7 already I2C), 3 select I2C + id, 4 + torch LED1 then LED2 at 12 mA (hk-cam1 only); blazer_torch_ms=500..5000 (default 2000), blazer_torch_delay=30..600 (default 45)
+TAGS: `blazer-torch:` (cli was, cli select, pads were, chip answered, ledN on/off, stop, ends, summary); planned `blazer-cam:` (PMIC/sensor ID); `HKL cameracaptured[` once mirrored
+SIG: `cli was 2,1,1` then `stop cli, detail 0x2` → loader left CLI7 in UART; p1 stages 1-2 never reach the controller (torch-1-r1). Use hk-cam1 blazer_torch=3|4
+SIG: `stop lines-low` after `pads muxed to cli7` → SCL/SDA low: bus pull-up rail off (INFERENCE: CAMIO ldo_22s); F2 rail check
+SIG: `stop flags, detail 0x<f1><f2>` → LM3644 fault flag in torch (Flags1 0x7e / Flags2 0x1b bits); LED already in standby, EN dropped
+TOOLS: `hk find --feature camera`; `hk logs --grep blazer-torch`; `python3 -I tools/probe_eval.py --row 'Cameras, flash' <attempt>`
+DOCS: research/ios26-camera-r1/CAMERA.md (camera path map, stage plan), research/ios26-camera-r1/PHONE-TEST.md (cam1 boot)
+OPEN: cam1 (blazer_torch=4) not booted; sensors need PMIC GPIO/rail frames (da9188 GPIO 2,5,8,9,15 + SLG51002 LDOs) and MCLK; ISP/CSI capture needs vendor register tables
 
 ## screen
 SUBSYS: screen

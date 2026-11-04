@@ -111,29 +111,57 @@ probes:
     owner: 'None: needs a boot with a higher governor cap'
     next: {kind: build, minutes: 18, test: 'Build int1 with gov cap above level 16 after checker admission; one unattended 900 s boot, thermal guard on'}
 
+  # Topology (research/ios26-dualboot-r8/truth/fdt.dts): one DSU cluster, PSCI for all eight. A520 "hayes" MPIDR 0x0
+  # and 0x100, A725 "hunter" 0x200-0x600, X4 "hunterELP" 0x700. SweetCPU prints MPIDRs with %x: 0x0, 0x100, 0x700.
+  # cpu0 (0x0) runs the shim and stays parked in it under blazer_bootcpu, so PSCI calls it ON: CPU_ON rc=-4.
+  # Why only five today and what each step needs: research/ios26-cpu-smp-r1/SMP.md.
   - id: a520-cores
     phone_only: true
     row: 2 A520 cores
     needs:
       markers: ['SWEET CPU: requested=']
-      boot_args: ['cpus=[67]']
+      boot_args: ['cpus=[78]|blazer_cpu0_audit=2']   # 7-8 cores, or the read-only Errata ABI query image
     works:
       all:
-        - {re: 'SWEET CPU: (?P<cpus>[67])/[67] CPUs initialized'}
+        - {re: 'SWEET CPU: (?P<cpus>[78])/[78] CPUs initialized, SGI1 verified', label: seven or eight cores up}
+        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x0 came alive; SGI1 OK', label: A520 cpu0 (0x0) alive under XNU}
+        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x100 came alive; SGI1 OK', label: A520 cpu1 (0x100) alive under XNU}
         - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
         - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
-      note: '{cpus} cores incl. A520 ran {deadline} s under iOS ({attempt})'
+      note: '{cpus} cores incl. both A520s ran {deadline} s under iOS ({attempt})'
     partial:
+      any:
+        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x(?:0|100) came alive; SGI1 OK', label: an A520 came alive}
+    active:
+      # blazer_cpu0_audit=2 image: the firmware's own Errata ABI answer for the CAS erratum on cpu0 (read only).
       all:
-        - {re: 'SWEET CPU: cpu=[56] mpidr=\S+ came alive', label: an A520 came alive}
-    owner: 'None: host audit (tools/cpu_audit.py) is the current evidence'
-    next: {kind: build, minutes: 18, test: 'cpus=6 boot after the CAS-workaround (bit9) fix; unattended 900 s'}
+        - {re: 'cpu0-em-erratum\s+DONE\s+0x\S+\s+\S+\s+\(erratum 3685825: \S+\)', src: [reader], label: firmware answered for erratum 3685825}
+    fails:
+      - {re: 'SWEET CPU: cpu=\d+ mpidr=0x(?:0|100) NOT alive', label: an A520 did not start}
+      - {re: 'SWEET CPU: cpu=\d+ NOT alive: PSCI CPU_ON rc=-4', label: 'CPU_ON ALREADY_ON (cpu0 is parked in the shim)'}
+    owner: 'None for the query image; any A520 CPU_ON needs the owner decision in research/ios26-cpu-smp-r1/SMP.md'
+    next: {kind: unattended, minutes: 8, test: 'a7-cpu0-em-r1 (blazer_cpu0_audit=2, 300 s, five A725s): read the Errata ABI answers in stamps-decode.txt'}
 
   - id: x4-core
     phone_only: true
     row: X4 core
-    owner: 'Out of reach for now: errata not fixed'
-    next: {kind: none, minutes: 0, test: 'No test until the errata work exists'}
+    needs:
+      markers: ['SWEET CPU: requested=']
+      boot_args: ['cpus=[678]']
+    works:
+      all:
+        - {re: 'SWEET CPU: (?P<cpus>[678])/[678] CPUs initialized, SGI1 verified'}
+        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x700 came alive; SGI1 OK', label: X4 (0x700) alive under XNU}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
+      note: 'X4 ran {deadline} s under iOS with {cpus} cores ({attempt})'
+    partial:
+      all:
+        - {re: 'SWEET CPU: cpu=\d+ mpidr=0x700 came alive; SGI1 OK', label: X4 came alive}
+    fails:
+      - {re: 'SWEET CPU: cpu=\d+ mpidr=0x700 NOT alive', label: X4 did not start}
+    owner: 'Out of reach for now: X4 errata 3076789, 2957258, 4118414 not fixed; image_tool refuses core 7 (research/ios26-cpu-smp-r1/SMP.md)'
+    next: {kind: none, minutes: 0, test: 'No test until the X4 errata are answered (an Errata ABI query must run on the X4 itself)'}
 
   - id: idle-sleep
     phone_only: true
@@ -179,13 +207,23 @@ probes:
   - id: ram-rest
     phone_only: true
     row: The rest of the 16 GiB
+    # blazer_mem=14..16 (XNU hk-ram-full, research/ios26-ram-r1/RAM.md): the high bank up to the MTE tag base
+    # (0x35ef80000 = 13.48 GiB managed) and hw.memsize = the installed 16 GiB. The low bank's 2 GiB (DT carve-outs,
+    # shim, ABL) and the 496 MiB from the tag base up are never managed: this is the whole of what can be.
     needs:
       markers: ['blazer-mem: window']
+    works:
+      all:
+        - {re: 'blazer-mem: window 0x882000000 \+ (?P<window>0x35ef80000), was \+ 0x[0-9a-f]+, hw.memsize 0x400000000', label: full map}
+        - {re: 'blazer-mem: vm max_mem (?P<max_mem>0x35ef80000), hw.memsize (?P<memsize>0x400000000)', label: VM readback}
+        - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0}
+      note: 'Window {window} managed, hw.memsize {memsize} under iOS for {deadline} s ({attempt})'
     partial:
       all:
-        - {re: 'blazer-mem: window 0x[0-9a-f]+ \+ (?P<window>0x3[c-f][0-9a-f]{7}|0x[4-9a-f][0-9a-f]{8})', label: window above 15 GiB}
+        - {re: 'blazer-mem: full map, installed 0x400000000', label: full map applied}
     owner: 'None'
-    next: {kind: build, minutes: 18, test: 'Kernel with the carve-out map extended; unattended 900 s boot plus the memory test'}
+    next: {kind: unattended, minutes: 25, test: 'a7-ios-system-ramfull (int1 + blazer_mem=16), unattended 900 s boot; then a blazer_mem_test=4096 boot'}
 
   # ---------------------------------------------------------------- Display
   - id: picture
@@ -547,40 +585,98 @@ probes:
   - id: cellular
     phone_only: true
     row: Cellular
+    # S5400 modem on PCIe0. Rungs and lines: research/ios26-modem-r1/MODEM.md (hk-modem1 kernel, hk_dbg bits 24..27 = stage).
     needs:
-      markers: ['cell: |blazer-modem|s5400']
+      markers: ['blazer-modem: |cell: ']
+      image: 'hk-modem1 kernel (research/ios26-modem-r1/PHONE-TEST.md): hk_dbg | 0x04000000 for stage 4'
     works:
       all:
-        - {re: 'cell: the data session is up'}
+        - {re: 'cell: the data session is up', label: 'planned (rung 10): packet service'}
+        - {re: 'cell: registered (?P<rat>\S+)', label: 'planned (rung 9): network registration'}
       confirm: owner
+      note: 'Registered on {rat}, data session up ({attempt})'
     partial:
+      all:
+        - {re: 'blazer-modem: cp: ONLINE', label: 'planned (rung 7): CP firmware booted, INIT_END sent'}
+      note: 'S5400 firmware booted under iOS ({attempt})'
+    built:
+      all:
+        - {re: 'blazer-modem: rom: boot_stage 0x(?P<boot_stage>[0-9a-f]+)', label: 'planned (rung 5): CP ROM boot handshake'}
+      note: 'CP ROM handshake, boot_stage 0x{boot_stage} ({attempt})'
+    active:
+      all:
+        - {re: 'blazer-modem: verdict: PASS stage 4, at id: PCIe0 link gen (?P<gen>\d) x(?P<width>\d+), endpoint 144d:(?P<dev>[0-9a-f]{4})', label: 'S5400 boot ROM linked on PCIe0, config ID read'}
       any:
-        - {re: 'blazer-modem: .*boot(ed)?', label: planned modem boot}
+        - {re: 'blazer-modem: id: 144d:a5a5 class 0x028000', label: 'the ID Android reads (144d:a5a5)'}
+        - {re: 'blazer-modem: link: UP, attempt \d+'}
+      note: 'S5400 boot ROM on PCIe0 under iOS: gen {gen} x{width}, 144d:{dev}, no firmware ({attempt})'
+    fails:
+      - {re: 'blazer-modem: verdict: STOP stage (?P<stage>\d), at (?P<at>\S+): (?P<why>[^,]+), detail 0x(?P<detail>[0-9a-f]+)', label: modem rung stopped}
+      - {re: 'blazer-modem: read: CP as found: NOT off', label: CP not off as found (stage 4 refuses)}
+      - {re: 'blazer-modem: link: attempt 4 failed', label: CP ROM never trained}
+      - {re: 'blazer-modem: tidy: .*errors 0x[1-9a-f]', label: tidy could not restore a pad}
     owner: 'Does the status bar show a carrier?'
-    next: {kind: build, minutes: 15, test: 'PCIe0 link-up kernel; unattended boot logs link state'}
+    next: {kind: unattended, minutes: 15, test: 'research/ios26-modem-r1/PHONE-TEST.md: the int3/obs image on hk-modem1 with hk_dbg | 0x04000000 (stage 4); verdict line + return check'}
 
   - id: sim
     phone_only: true
     row: SIM, eSIM
+    # Read by the CP firmware only (Dual SIM detect = 2 on Android); the AP sees it through RIL IPC. Needs Cellular rung 9.
     needs:
-      markers: ['blazer-sim|cell: ']
+      markers: ['blazer-modem: |cell: ']
+    works:
+      all:
+        - {re: 'cell: SIM ready', label: 'planned (rung 9): SIM status over umts_ipc0'}
+      confirm: owner
     partial:
       any:
-        - {re: 'blazer-sim: .*ATR', label: planned SIM ATR}
-    owner: 'Is the SIM read?'
-    next: {kind: build, minutes: 15, test: 'Depends on the modem boot'}
+        - {re: 'cell: SIM (?P<sim>ready|absent|locked|error)', label: 'planned (rung 9): SIM status answered'}
+      note: 'CP reports SIM {sim} ({attempt})'
+    owner: 'Does Settings > Cellular show the SIM (carrier name)?'
+    next: {kind: build, minutes: 15, test: 'Blocked on Cellular rungs 5..9 (CP firmware boot, RFS, RIL): research/ios26-modem-r1/MODEM.md section 6'}
 
   - id: gps
     phone_only: true
     row: GPS
-    owner: 'Not assigned'
-    next: {kind: none, minutes: 0, test: 'Not assigned'}
+    # Samsung KEPLER GNSS: SPI (lsios_cli6_spi) for IPC, firmware loaded through the CP (gnss_boot into GNSS_FW). Needs the CP running.
+    needs:
+      markers: ['blazer-gnss: |gnss: ']
+    works:
+      all:
+        - {re: 'gnss: fix', label: 'planned (G2): a position fix'}
+      confirm: owner
+    partial:
+      any:
+        - {re: 'blazer-gnss: KEPLER ready', label: 'planned (G1): GNSS firmware up, SPI link'}
+    owner: 'Does Maps show the position?'
+    next: {kind: build, minutes: 15, test: 'Blocked on Cellular rung 7 (CP online), then G1: research/ios26-modem-r1/MODEM.md section 6'}
 
   - id: nfc
     phone_only: true
     row: NFC
-    owner: 'Not assigned'
-    next: {kind: none, minutes: 0, test: 'Not assigned'}
+    needs:
+      boot_args: ['blazer_nfc=[1-4]']
+      markers: ['blazer-nfc: ']
+      image: 'hk-nfc1 kernel (research/ios26-nfc-r1/DESIGN.md), e.g. a7-ios-system-nfc1'
+    works:
+      all:
+        - {re: 'blazer-nfc: tag: (?P<tech>nfc-[abfv]|other), protocol 0x[0-9a-f]+, id (?P<tag_id>[0-9a-f]+)', label: 'a tag read by RF discovery'}
+        - {re: 'blazer-nfc: ends: ok, stage 4'}
+      note: 'Kernel driver reads tags: {tech} id {tag_id} ({attempt}); no iOS NFC service'
+    partial:
+      all:
+        - {re: 'blazer-nfc: chip st21nfc fw 0x(?P<fw>[0-9a-f]{8}) hw 0x(?P<hw>[0-9a-f]{2})', label: 'ST21NFC identified (power-up CORE_RESET_NTF)'}
+      any:
+        - {re: 'blazer-nfc: nci init ok'}
+        - {re: 'blazer-nfc: address 0x08 acked, power-up reset ntf received'}
+      note: 'ST21NFC powered and identified in the kernel: fw 0x{fw} hw 0x{hw} ({attempt})'
+    fails:
+      - {re: 'blazer-nfc: address 0x08 never acked', label: 'controller never answered (enable polarity, mux or clock)'}
+      - {re: 'blazer-nfc: chip in loader mode', label: 'controller in loader mode'}
+      - {re: 'blazer-nfc: core generic error ntf, status 0x(?P<nci_err>[0-9a-f]+)', label: 'NCI generic error (RF config/clock)'}
+      - {re: 'blazer-nfc: ends: (?!ok)(?P<nfc_stop>[a-z-]+), stage', label: 'driver stopped'}
+    owner: 'Was an NFC card held on the back of the phone during the 30 s window?'
+    next: {kind: unattended, minutes: 15, test: 'Boot a7-ios-system-nfc1 (obs1 + blazer_nfc=4 blazer_nfc_wait=30): identify line unattended; a tag line if the owner holds a card at ~60-90 s'}
 
   - id: uwb
     phone_only: true
@@ -657,8 +753,38 @@ probes:
   - id: usb-host
     phone_only: true
     row: USB host, video out
-    owner: 'Out of reach: no host stack in open XNU'
-    next: {kind: none, minutes: 0, test: 'None'}
+    # research/ios26-phaseb-r1/usbhost/USBHOST.md: XNU hk-usbhost1 (blazer_usbhost=1, no blazer_usbcon in that image). Result in
+    # the ramdump. Video out has no driver yet: works needs the planned blazer-dp line, so the row stops at partial with host only.
+    needs:
+      markers: ['blazer-usbhost: ']
+      boot_args: ['blazer_usbhost=1']
+      image: 'a7-ios-system-usbhost1 (usbhost/tools/mkimg_usbhost.sh); owner swaps the Mac cable for a powered hub + device'
+    works:
+      all:
+        - {re: 'blazer-usbhost: PASS, port \d+ enumerated (?P<vidpid>[0-9a-f]{4}:[0-9a-f]{4})', label: a device enumerated}
+        - {re: 'blazer-dp: video out (?P<mode>\d+x\d+@\d+)', label: 'planned: DP alt mode picture (no driver yet)'}
+      confirm: owner
+      note: 'USB host ({vidpid}) and DP video out {mode} under iOS ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-usbhost: ENUM port (?P<port>\d+) speed (?P<speed>\w+) dev (?P<vidpid>[0-9a-f]{4}:[0-9a-f]{4})', label: device descriptor read}
+        - {re: 'blazer-usbhost: PASS, port \d+ enumerated', label: enumeration complete}
+      note: 'USB host: {speed}-speed device {vidpid} enumerated on port {port} (kernel only, no iOS USB stack; no video out) ({attempt})'
+    built:
+      all:
+        - {re: 'blazer-usbhost: host mode, GCTL [0-9a-f]+', label: DWC3 in host mode}
+        - {re: 'blazer-usbhost: running, USBSTS [0-9a-f]+', label: xHCI running}
+      note: 'DWC3 switched to host and the xHCI ran; no device enumerated ({attempt})'
+    active:
+      all:
+        - {re: 'blazer-usbhost: survey GSNPSID 33313130', label: 'controller read, survey'}
+      note: 'Host-mode kernel admitted and surveyed the controller ({attempt})'
+    fails:
+      - {re: 'blazer-usbhost: refused: (?P<why>.*)', label: refused before any write}
+      - {re: 'blazer-usbhost: stop: (?P<why>(?!no device).*?), events', label: host bring-up or enumeration failed}
+      - {re: 'blazer-usbhost: stop: no device', label: 'no connect on the USB2 ports (device unpowered? VBUS is not sourced by the phone)'}
+    owner: 'Was the hub (with its charger) and a device plugged in within 90 s of the boot, and which device was it?'
+    next: {kind: attended, minutes: 12, test: 'a7-ios-system-usbhost1: owner swaps the Mac cable for a powered USB-C hub + USB stick within 90 s, re-plugs the Mac after ~5 min for the ramdump (USBHOST.md test plan)'}
 
   # ---------------------------------------------------------------- Audio
   - id: audio
@@ -752,17 +878,53 @@ probes:
     owner: 'Is the battery percentage shown in the status bar?'
     next: {kind: unattended, minutes: 10, test: 'int1 with hk_screen=30: fb_png screenshot of the status bar; compare against the HKBATT percent'}
 
+  # Charger: max77779chrg on SPMI SID 3 (spmi@53f1000), read by blazer_gauge.c. blazer_battery_chg=2 (XNU hk-chg1) prints one
+  # report-only line per gauge sample; nothing is written. research/ios26-phaseb-r1/chg/PLAN.md, REGISTERS.md, CONTROL.md.
   - id: charging
     phone_only: true
     row: Charging control
-    owner: 'Left at the bootloader settings'
-    next: {kind: build, minutes: 10, test: 'Log charger state (max77779 CHG registers) read-only; any unattended boot'}
+    needs:
+      boot_args: ['blazer_battery_chg=2']
+      markers: ['blazer-battery: charger ']
+    works:
+      # planned (CONTROL.md): a limit-only CHGCC write, owner approval required; no kernel prints this yet
+      all:
+        - {re: 'blazer-charge: limit applied cc=(?P<cc>\d+) mA readback (?P<rb>\d+) mA', label: planned limit write read back}
+      confirm: owner
+      note: 'Charge current limited to {cc} mA under iOS, read back {rb} mA ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-battery: charger \d+ in=(?P<in>usb|both|wireless|none) chg=(?P<chg>[a-z0-9-]+) mode=(?P<mode>[0-9a-f]) cp=\d wdt=(?P<wdt>\d) cc=(?P<cc>\d+) mA cv=(?P<cv>\d+) mV icl=(?P<icl>\d+) mA', min: 2, label: charger state and programmed limits read}
+      note: 'Charger read under iOS (read only): in={in}, chg={chg}, mode {mode}, CC {cc} mA, CV {cv} mV, input limit {icl} mA, watchdog {wdt} ({attempt})'
+    active:
+      all:
+        - {re: 'blazer-battery: mapping 0x53f1000 size 0x300, mode 1, charger reads report only', label: report-only reader armed}
+    fails:
+      - {re: 'blazer-battery: charger report \d+ unread', label: charger frame failed}
+      - {re: 'blazer-battery: leaving the controller alone from here on', label: SPMI controller given up (gauge too)}
+      - {re: 'blazer-battery: charger \d+ CHG_CV_PRM [0-9a-f]+ has no voltage', label: CV code outside the vendor table}
+    owner: 'Was the phone on the USB cable for the whole boot? (expect in=usb)'
+    next: {kind: unattended, minutes: 15, test: 'Boot a7-ios-system-chg1 (hk-chg1, built, not booted): blazer-battery: charger lines with in=usb and the ABL limits; read only'}
 
+  # Wireless: the CPS4041 receiver sits on the max77779's own I2C master (SPMI SID 2, i2c 0x30), not on an AP I2C bus; the
+  # charger's WCIN input (DETAILS_00 WCIN_DTLS, WCIN ADCs) shows a pad without touching the receiver.
   - id: wireless-charging
     phone_only: true
     row: Wireless charging
-    owner: 'Not assigned'
-    next: {kind: none, minutes: 0, test: 'Not assigned'}
+    needs:
+      boot_args: ['blazer_battery_chg=2']
+      markers: ['blazer-battery: charger \d+ in=']
+    works:
+      all:
+        - {re: 'blazer-battery: charger \d+ in=wireless chg=(?:cc|cv|topoff) .* iwcin=(?P<iwcin>\d+) mA vwcin=(?P<vwcin>\d+) mV', group: iwcin, ge: 50, min: 2, label: charging from WCIN}
+      confirm: owner
+      note: 'Wireless charging under iOS: up to {iwcin} mA at {vwcin} mV from the pad ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-battery: charger \d+ in=(?P<in>wireless|both) chg=(?P<chg>[a-z0-9-]+) .* vwcin=(?P<vwcin>\d+) mV', label: wireless input detected}
+      note: 'Wireless pad detected under iOS (in={in}, chg={chg}, {vwcin} mV) ({attempt})'
+    owner: 'Was the phone on a Qi pad, USB unplugged, for 3 minutes during the boot?'
+    next: {kind: attended, minutes: 20, test: 'a7-ios-system-chg1: owner puts the phone on a Qi pad, unplugs USB ~3 min, replugs before the deadline; ramdump charger lines (PLAN.md W1)'}
 
   - id: rtc
     phone_only: true
@@ -785,11 +947,56 @@ probes:
     next: {kind: unattended, minutes: 10, test: 'int1 with hk_screen=30: status-bar clock in the fb_png screenshot vs the blazer-rtc line'}
 
   # ---------------------------------------------------------------- Cameras, Security, Apple services
+  # research/ios26-camera-r1/CAMERA.md (hk-cam1). Flash = TI LM3644 on CLI7 (i2c@3a301000, 0x63). The flash alone never makes
+  # this row "works": that needs a camera sensor (camera-sensor below) and a capture path.
   - id: cameras
     phone_only: true
     row: Cameras, flash
-    owner: 'Out of reach: sensor details are not public'
-    next: {kind: none, minutes: 0, test: 'None'}
+    needs:
+      markers: ['blazer-torch: ']
+      boot_args: ['blazer_torch=[1-4]']
+      image: 'a7-ios-system-cam1 (kernel.cam1 c4c47954, r3 line + blazer_torch=4)'
+    partial:
+      all:
+        - {re: 'blazer-torch: led1 off: standby, (?P<ms>\d+) ms lit, flags 0x0 0x0', label: 'LED1 torch lit and back to standby, no fault'}
+        - {re: 'blazer-torch: led2 off: standby, \d+ ms lit, flags 0x0 0x0', label: 'LED2 torch lit and back to standby, no fault'}
+        - {re: 'blazer-torch: ends: ok, chip answered 1', label: 'clean exit (EN low, pads and CLI7 put back)'}
+      confirm: owner
+      note: 'Flash LED (LM3644) lit under iOS: LED1 then LED2, {ms} ms each at 12 mA, kernel only; no camera sensor ({attempt})'
+    built:
+      all:
+        - {re: 'blazer-torch: chip answered: id register 0x(?P<id>[24]), enable register 0x80', label: LM3644 id read on CLI7}
+      note: 'LM3644 answered on CLI7: id 0x{id}, standby (kernel only, nothing lit) ({attempt})'
+    active:
+      all:
+        - {re: 'blazer-torch: cli select uart -> i2c', label: CLI7 switched from the loader's UART to I2C}
+      note: 'CLI7 selected as I2C under iOS; the chip did not answer ({attempt})'
+    fails:
+      - {re: 'blazer-torch: stop (?P<why>[a-z0-9-]+), detail 0x(?P<detail>[0-9a-f]+)', label: torch probe stopped (first stop wins)}
+      - {re: 'blazer-torch: cleanup failed: (?P<why>[a-z0-9-]+)', label: restoration step failed (EN low still follows)}
+      - {re: 'blazer-torch: cli not i2c; pad inventory only', label: 'CLI7 left in UART: stage 1/2 kernel (needs blazer_torch=3|4 on hk-cam1)'}
+    owner: 'About 45 s after boot, did the rear flash glow twice (two short, dim pulses about 3 s apart)?'
+    next: {kind: attended, minutes: 8, test: 'Boot a7-ios-system-cam1 (research/ios26-camera-r1/PHONE-TEST.md): owner watches the rear flash ~45-55 s after fastboot boot'}
+
+  - id: camera-sensor
+    phone_only: true
+    milestone: true
+    row: Camera sensor ID
+    needs:
+      markers: ['blazer-cam: ']
+    built:
+      all:
+        - {re: 'blazer-cam: pmic slg51002 id 0x(?P<id>[0-9a-f]+)', label: 'planned (F2): camera PMIC id on CLI7'}
+      note: 'Camera PMIC SLG51002 answered: id 0x{id} ({attempt})'
+    works:
+      all:
+        - {re: 'blazer-cam: sensor (?P<name>[a-z-]+) bus (?P<bus>\S+) addr 0x(?P<addr>[0-9a-f]+) id 0x(?P<sid>[0-9a-f]+)', label: 'planned (S2): sensor powered, out of reset, chip id read'}
+        - {re: 'blazer-cam: sensor \S+ powered down, rails off', label: 'planned (S2): power-down sequence completed'}
+      note: 'Camera sensor {name} on {bus} 0x{addr}: id 0x{sid} ({attempt})'
+    fails:
+      - {re: 'blazer-cam: stop (?P<why>[a-z0-9-]+), detail 0x(?P<detail>[0-9a-f]+)', label: 'planned: camera bring-up stopped'}
+    owner: 'No owner check: a log result'
+    next: {kind: build, minutes: 0, test: 'F2 then S1/S2 in research/ios26-camera-r1/CAMERA.md section 4 (PMIC GPIO frames need owner approval)'}
 
   - id: biometrics
     phone_only: true
@@ -897,3 +1104,68 @@ probes:
       - {re: '^(?:\S+ \[\s*[\d.]+\] )?CRASH MessagesBlastDoo\S* reason ns 2 code 0x5', label: BlastDoor SIGTRAP}
     owner: 'None'
     next: {kind: unattended, minutes: 5, test: 'QEMU first with a sandbox stub that reports a real container profile; then any unattended int1 boot'}
+
+  # ---------------------------------------------------------------- USB host / DP alt mode (research/ios26-phaseb-r1/usbhost/USBHOST.md)
+  - id: usb-host-enumerate
+    phone_only: true
+    milestone: true
+    row: USB host enumerates a device (milestone)
+    needs:
+      markers: ['blazer-usbhost: ']
+      boot_args: ['blazer_usbhost=1']
+      image: 'a7-ios-system-usbhost1; the device needs its own power (powered hub): the phone does not source VBUS'
+    works:
+      all:
+        - {re: 'blazer-usbhost: ENUM port (?P<port>\d+) speed (?P<speed>\w+) dev (?P<vidpid>[0-9a-f]{4}:[0-9a-f]{4}) usb [0-9a-f]+\.[0-9a-f]{2} class (?P<class>[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{2})', label: device descriptor}
+        - {re: 'blazer-usbhost: PASS, port \d+ enumerated', label: PASS line}
+        - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|HK GPUTA: rung \d+ PASS)', min: 0, max: 0, label: no unplanned panic}
+      confirm: owner
+      note: 'Port {port}: {speed}-speed {vidpid} class {class} enumerated by the kernel xHCI ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-usbhost: port \d+ reset done, enabled 1', label: port reset and enabled}
+      note: 'A device connected and its port was enabled ({attempt}); an ENUM + PASS log stops here until the owner confirms the device'
+    built:
+      all:
+        - {re: 'blazer-usbhost: running, USBSTS [0-9a-f]+', label: xHCI running}
+      note: 'xHCI running in host mode, no device connected ({attempt})'
+    active:
+      all:
+        - {re: 'blazer-usbhost: (mode 1, wait|survey GSNPSID)', label: admitted}
+    fails:
+      - {re: 'blazer-usbhost: refused: (?P<why>.*)', label: refused (no register written)}
+      - {re: 'blazer-usbhost: gadget no halt after', label: 'shim gadget did not halt: nothing reset (by design)'}
+      - {re: 'blazer-usbhost: (core soft reset stuck|host error|port \d+ reset timeout)', label: controller fault}
+      - {re: 'blazer-usbhost: (enable slot|device descriptor|first 8 bytes): ', label: command or transfer failed}
+      - {re: 'blazer-usbhost: stop: no device', label: 'no connect in the window (device unpowered, or not plugged in time)'}
+    owner: 'Which device (VID:PID on its label or `system_profiler SPUSBDataType` on the Mac) was plugged in, via which hub?'
+    next: {kind: attended, minutes: 12, test: 'a7-ios-system-usbhost1 with a powered USB-C hub (charger on its PD input) + a USB stick (USBHOST.md)'}
+
+  - id: dp-video-out
+    phone_only: true
+    milestone: true
+    row: DisplayPort alt-mode picture (milestone)
+    # Stage map in USBHOST.md (DP alt mode). Only stage D0 (read-only TCA/dp_top survey) exists; the rest are planned lines.
+    needs:
+      markers: ['blazer-usbhost: survey TCA|blazer-dp: ']
+    works:
+      all:
+        - {re: 'blazer-dp: video out (?P<mode>\d+x\d+@\d+)', label: 'planned (D5): DPU stream on the DP encoder'}
+      confirm: owner_or_screenshot
+      note: 'External display shows {mode} from iOS ({attempt})'
+    partial:
+      all:
+        - {re: 'blazer-dp: link trained (?P<rate>\w+) x(?P<lanes>\d)', label: 'planned (D4): DPTX link training'}
+      note: 'DP link trained {rate} x{lanes}, no picture ({attempt})'
+    built:
+      all:
+        - {re: 'blazer-dp: sink DPCD rev (?P<rev>[0-9a-f.]+)', label: 'planned (D3): AUX read of the sink DPCD'}
+      any:
+        - {re: 'blazer-dp: altmode entered, pin assignment (?P<pin>[CDE])', label: 'planned (D1/D2): PD Enter Mode + Configure'}
+      note: 'AUX channel up, sink DPCD {rev} ({attempt})'
+    active:
+      all:
+        - {re: 'blazer-usbhost: survey TCA clk_rst [0-9a-f]+ intr_sts [0-9a-f]+ gcfg [0-9a-f]+ tcpc (?P<tcpc>[0-9a-f]+)', label: 'D0: TCA mux state read (read only)'}
+      note: 'USB/DP combo PHY TCA read: TCA_TCPC {tcpc} (mux [2:0]: 1 USB, 2 DP, 3 both) ({attempt})'
+    owner: 'Was a USB-C DisplayPort adapter or monitor plugged in, and did it show anything?'
+    next: {kind: build, minutes: 0, test: 'D1: read-only TCPC registers over SPMI (SID 4: CC_STATUS, TCPC_CONTROL, SBUSW_CTRL 0x94) with the power owner (blazer_gauge transport); then a PD VDM engine (owner decision: PD transmit)'}

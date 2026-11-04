@@ -118,6 +118,9 @@ STAGES = {
     0x00ea: "cpu0-sctlr-el2",
     0x00eb: "cpu0-revidr",
     0x00ec: "cpu0-actlr",
+    0x00ed: "cpu0-em-version",   # blazer_cpu0_audit=2: Errata Management ABI, read only
+    0x00ee: "cpu0-em-erratum",   # ENTER arg = erratum id; DONE arg = id << 32 | (u32)answer
+    0x00ef: "cpu0-em-features",
     0x00f1: "fast-start",  # TGL_FAST_START=1, shim/tgl_fast_start.h
 }
 
@@ -154,7 +157,22 @@ def arg_note(stage, flags, arg):
         if step == 4:
             return name + ": cached window %.1f ms" % (value / 1000.0)
         return name + ": 0x%x" % value
+    if stage in (0x00ed, 0x00ee, 0x00ef) and flags & 0x0002:
+        # shim/tgl_cpu_audit.c mode 2: Arm Errata Management ABI answers for cpu0 (read only).
+        def em(v):
+            v &= 0xffffffff
+            v = v - (1 << 32) if v & 0x80000000 else v
+            return EM_ANSWERS.get(v, str(v))
+        if stage == 0x00ed:
+            v = arg & 0xffffffff
+            return "EM %d.%d" % (v >> 16, v & 0xffff) if not v & 0x80000000 else "EM " + em(arg)
+        if stage == 0x00ef:
+            return "EM_CPU_ERRATUM_FEATURES " + ("offered" if arg & 0xffffffff == 0 else em(arg))
+        return "erratum %d: %s" % (arg >> 32, em(arg))
     return ""
+
+EM_ANSWERS = {3: "higher-el-mitigation", 2: "not-affected", 1: "affected", 0: "success",
+              -1: "not-supported", -2: "invalid-parameters", -3: "unknown-erratum"}
 
 FLAGS = [(0x0001, "ENTER"), (0x0002, "DONE"), (0x0004, "TIMEOUT"),
          (0x0008, "FAULT"), (0x0010, "REFUSED")]

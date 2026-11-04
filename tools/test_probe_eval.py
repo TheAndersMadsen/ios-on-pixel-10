@@ -262,6 +262,59 @@ class Evaluate(unittest.TestCase):
         self.assertFalse(shot["content_checked"])
 
 
+class Sustain(unittest.TestCase):
+    """sustain: N consecutive matching lines with the group >= ge (display/fps1/FPS1.md)."""
+    RX = r'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s'
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_kicks(self, kicks, sustain, ge, name="live-x"):
+        d = self.base / name
+        d.mkdir()
+        lines = [f"00:00:{i:02d}.000 [ {i}.00] SWEET FB: rate swaps {k + 1}/s kicks {k}/s max_gap_us 9000 busy 0 staged 0" for i, k in enumerate(kicks)]
+        (d / "console.txt").write_text("\n".join(lines) + "\n")
+        check = {"re": self.RX, "group": "kicks", "ge": ge, "sustain": sustain}
+        pe._compile_check(check, "test")
+        return pe.run_check(check, pe.load_attempt(str(d)))
+
+    def test_one_good_window_is_not_sustained(self):
+        r = self.run_kicks([25.0, 65.3, 58.7, 7.6], 2, 60.5)   # the fb120 boot's shape
+        self.assertFalse(r["passed"])
+        self.assertEqual(r["ctx"]["kicks"], "65.3")
+        self.assertEqual(r["ctx"]["kicks_windows"], "1")
+
+    def test_run_passes_and_reports_its_floor(self):
+        r = self.run_kicks([30.0, 101.0, 118.5, 110.2, 40.0], 3, 100)
+        self.assertTrue(r["passed"])
+        self.assertEqual(r["ctx"]["kicks"], "101")
+        self.assertEqual(r["ctx"]["kicks_windows"], "3")
+        self.assertEqual(len(r["cites"]), 2)
+        self.assertIn("kicks 101", r["cites"][0])
+        self.assertIn("kicks 110.2", r["cites"][1])
+
+    def test_gap_breaks_the_run(self):
+        self.assertFalse(self.run_kicks([101.0, 102.0, 50.0, 103.0, 104.0], 3, 100)["passed"])
+        self.assertTrue(self.run_kicks([101.0, 102.0, 50.0, 103.0, 104.0], 2, 100, name="live-y")["passed"])
+
+    def test_equal_length_runs_keep_the_higher_floor(self):
+        r = self.run_kicks([61.0, 62.0, 10.0, 90.0, 95.0], 2, 60.5)
+        self.assertTrue(r["passed"])
+        self.assertEqual(r["ctx"]["kicks"], "90")
+
+    def test_sustain_needs_group_and_ge(self):
+        with self.assertRaises(ValueError):
+            pe._compile_check({"re": self.RX, "group": "kicks", "sustain": 2}, "t")
+        with self.assertRaises(ValueError):
+            pe._compile_check({"re": self.RX, "ge": 1, "sustain": 2}, "t")
+        with self.assertRaises(ValueError):
+            pe._compile_check({"re": self.RX, "group": "kicks", "ge": 1, "sustain": 0}, "t")
+
+
 class Status(unittest.TestCase):
     def status(self, **rows):
         feats = [[name, st, "note"] for name, st in rows.items()]

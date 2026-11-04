@@ -350,6 +350,8 @@ def _compile_check(c, where):
     group = c.get("group")
     if group and group not in c["_rx"].groupindex:
         raise ValueError(f"{where}: group {group!r} not in {c['re']!r}")
+    if "sustain" in c and (not group or "ge" not in c or int(c["sustain"]) < 1):
+        raise ValueError(f"{where}: sustain needs a group, ge and a count >= 1: {c!r}")
 
 
 # ---------------------------------------------------------------- sources
@@ -504,8 +506,8 @@ def run_check(check, attempt, trust=False, max_cites=3):
                         return result
         return result
     rx, group = check["_rx"], check.get("group")
-    values, last = [], {}
-    for s in sources:
+    values, last, where = [], {}, []
+    for si, s in enumerate(sources):
         for n, line in enumerate(s.lines, 1):
             m = rx.search(line)
             if not m:
@@ -516,6 +518,7 @@ def run_check(check, attempt, trust=False, max_cites=3):
                 v = _num(m.group(group))
                 if v is not None:
                     values.append((v, f"{s.cite}:{n}: {line.strip()[:160]}"))
+                    where.append(si)
             if len(result["cites"]) < max_cites:
                 result["cites"].append(f"{s.cite}:{n}: {line.strip()[:160]}")
     lo, hi = check.get("min", 1), check.get("max")
@@ -541,7 +544,22 @@ def run_check(check, attempt, trust=False, max_cites=3):
             ok = ok and (best_hi[0] - best_lo[0]) >= check["span_min"]
             ctx[group] = f"{_fmt_num(best_lo[0])}–{_fmt_num(best_hi[0])}"
             result["cites"] = [best_lo[1], best_hi[1]] + result["cites"][:max(0, max_cites - 2)]
-    elif group and any(k in check for k in ("ge", "le", "distinct_min", "span_min")):
+        if "sustain" in check:
+            # N consecutive matches (log order) all >= ge: a rate held, not one good window. {group} becomes the run's lowest value,
+            # {group}_windows its length; the cites are the run's first and last lines.
+            best, run, prev = [], [], None
+            for v, si in zip(values, where):
+                if si != prev:
+                    run, prev = [], si          # a run never spans two sources (a ramdump and a console of the same boot)
+                run = run + [v] if v[0] >= check["ge"] else []
+                if len(run) > len(best) or (run and len(run) == len(best) and min(run)[0] > min(best)[0]):
+                    best = run
+            ok = ok and len(best) >= int(check["sustain"])
+            if best:
+                ctx[group] = _fmt_num(min(best)[0])
+                ctx[f"{group}_windows"] = str(len(best))
+                result["cites"] = [best[0][1], best[-1][1]][:max(1, max_cites)]
+    elif group and any(k in check for k in ("ge", "le", "distinct_min", "span_min", "sustain")):
         ok = False
     result["passed"] = ok
     result["ctx"] = ctx
