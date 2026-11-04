@@ -5,12 +5,16 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Owner decision pending: Bluetooth transmit (bt5-r2 is receive-only gate level 1; pairing in
-   Settings needs TX gate 2-3). bt5-r2's image is Mac-only (carries the Wi-Fi password).
-2. Next unattended `fastboot boot` queue, owner to admit (all built, QEMU-checked, none booted):
-   int5-r3 (settings + epoch), int4-perf-r1 (governor demand-rule fix), gpu7 (GPU rung 10:
-   carve-out page tables + MMUCACHE + 2 KICKs), int4-spotlight-r1 (Spotlight spin fix),
-   SweetSensorHub, nfc2 (ID + NCI). One at a time, return check PASS between boots.
+1. **Owner decision 2026-11-04 ~09:40: Bluetooth transmit APPROVED.** Gate levels 2-3 allowed
+   (`blazer_bt_tx=2|3`: classic inquiry, active LE scan, then pairing in Settings). The BT lane
+   builds bt5-r3 on this; bt5-r2 (receive-only, BlueTool boot-script fix, Mac-only image) remains
+   its pending boot. The lane's provider (claude_madsen) is rate-limited until Nov 6 22:00 CET.
+2. **Owner decision 2026-11-04 ~09:40: all six next boots ADMITTED** (one sequential unattended
+   queue, return check PASS before each): int5-r3 (settings + epoch), int4-perf-r1 (governor
+   demand-rule fix), gpu7 (GPU rung 10: carve-out page tables + MMUCACHE + 2 KICKs),
+   int4-spotlight-r1 (Spotlight spin fix), SweetSensorHub, nfc2 (ID + NCI). The phone is
+   currently in a cold iOS boot (owner's hands, invisible to tooling); the queue starts when
+   the owner returns it to fastboot.
 3. Attended: periph-r1 boot needs the owner to rotate the phone on request.
 4. Lanes open: aoc5 panicked on its first phone run (unaligned data abort, ramdump in
    `attempts/20261104-051235-a7-aoc5/`, AoC lane symbolizes `kernel.aoc5.unstripped`);
