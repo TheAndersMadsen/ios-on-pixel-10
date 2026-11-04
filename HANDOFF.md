@@ -16,10 +16,11 @@ it is not a second project journal.
    currently in a cold iOS boot (owner's hands, invisible to tooling); the queue starts when
    the owner returns it to fastboot.
 3. Attended: periph-r1 boot needs the owner to rotate the phone on request.
-4. Lanes open: aoc5 panicked on its first phone run (unaligned data abort, ramdump in
-   `attempts/20261104-051235-a7-aoc5/`, AoC lane symbolizes `kernel.aoc5.unstripped`);
-   modem2 rung 5 stopped because the controller was already live at survey (modem lane
-   interprets); CA diagnostic answered - no AGXAccelerator, CA selects SWContext
+4. Lanes: aoc5 panic symbolized - `ml_io_map_wcomb` device-class carve + bzero DC-ZVA path
+   (`research/ios26-aoc-r1/receipts/aoc5-panic-symbolized-20261104.md`, AoC lane builds aoc6);
+   modem2 rung 5 STOP interpreted - endpoint self-configures after link, as-found survey
+   refused (`research/ios26-modem-r1/receipts/modem2-rung5-stop-20261104.md`); CA diagnostic
+   answered - no AGXAccelerator, CA selects SWContext
    (`research/ios26-phaseb-r1/goal-pool/receipts/queue-20261104.md`).
 5. Apps lane is stopped behind the AKS user-session keybag (owner decision,
    `research/ios26-apps-r1/receipts/h3-static-r12/VERDICT.md`).

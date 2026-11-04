@@ -29,6 +29,19 @@ recoverable. QEMU and host tools support development; they are not phone results
   int5-r3, int4-perf-r1 (governor fix), gpu7 (rung 10), int4-spotlight-r1,
   SweetSensorHub, nfc2; bt5-r2 (Mac-only) pending the owner's TX decision; periph-r1
   needs an attended rotate.
+- **aoc5 panic symbolized (2026-11-04):** panic is `_aoc_xnu_zero`+0x58 -> `_bzero`+0x44,
+  DFSC 0x21 alignment fault, far = x->carve+0x40 with x->carve = 0xfffffe304bdd0000:
+  bzero takes the DC-ZVA path on the 48 MiB carve and `ml_io_map_wcomb` maps the carve
+  with a device-class attribute (DC ZVA to device memory -> alignment fault on the phone;
+  TCG does not model it, which is why QEMU passed). Preferred fix: map the carve normal
+  cacheable - it is DRAM, not a register window. Receipt:
+  `research/ios26-aoc-r1/receipts/aoc5-panic-symbolized-20261104.md` (AoC lane owns aoc6).
+- **modem2 rung 5 STOP interpreted (2026-11-04):** halt at `blazer_modem_core.c:1003`,
+  detail 0x100106 = the endpoint's own command/status (memory space + bus master set,
+  capabilities list present): after link training the modem endpoint configures itself, so
+  the as-found survey refused before any BAR write. Rung 5 unexercised. Options for the
+  modem lane: PERST re-cold-reset before survey, read-only survey, or scoped force.
+  Receipt: `research/ios26-modem-r1/receipts/modem2-rung5-stop-20261104.md`.
 - **Android (2026-11-03, PHYSICAL):** slot b, Magisk 31.1 with its 7 modules active, owner data restored
   after the migration (files, apps, app data; exceptions and Keystore-bound apps in
   `research/android-backup-20261103/RESTORE.md`). Return check PASS against the new post-restore baseline
