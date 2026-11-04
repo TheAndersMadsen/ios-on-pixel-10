@@ -1,6 +1,6 @@
 # Current project notes
 
-Updated 2026-11-03 (Phase B run, m1box). This is the **only default project-state document**. Keep it
+Updated 2026-11-04 (Phase C live-debug run, m1box). This is the **only default project-state document**. Keep it
 short and current; do not append a session journal here. The previous full journal
 is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only.
 
@@ -12,8 +12,23 @@ recoverable. QEMU and host tools support development; they are not phone results
 - **Best physical iOS result:** XNU 12377 and the real iOS userland reached
   human-confirmed Home and Settings in p32. Five A725 cores, 12.92 GiB RAM,
   display/touch, UFS reads, RTC publication and native battery samples have
-  physical evidence. Backboardd respawns and queued presentations mean the UI is
-  interactive but unstable; there is no clean-compositor, FPS or speed acceptance.
+  physical evidence. **Backboardd crash loop fixed (2026-11-04, int5-r2):** the
+  `HK_FLATMAT=softblur` material corrupted QuartzCore CABackingStore free blocks
+  (3-exec crash loop in int5); int5-r2 drops it and ran the full 900 s deadline at Home
+  with 0 LIBMALLOC/usertrap crashes (frames flowing, touch/button clients up).
+  FPS/speed acceptance still open.
+- **Live-debug queue (2026-11-04 04:51-05:51 CET, PHYSICAL):** int5-r2 PASS (above);
+  GPU rung 8 (gpu5) + rung 9 (gpu6) PASS - MMUCACHE executed in firmware, ordered UFO
+  fence, 0 faults; aoc5 (first AoC phone run) PANICS: unaligned data abort at x0+0x40,
+  ramdump kept, AoC lane open; modem2 rung 5 STOP (controller already live at survey,
+  clean tidy, 0 errors); CA diagnostic answered: no AGXAccelerator in the IORegistry,
+  MTLCreateSystemDefaultDevice nil, CA selects SWContext - the native-GPU path must
+  publish the device first. All return checks PASS.
+  Receipts: `research/ios26-phaseb-r1/goal-pool/receipts/queue-20261104.md`,
+  `gpu5-20261104.md` (rungs 8-9), `int5-20261104.md` (regression). Built, not booted:
+  int5-r3, int4-perf-r1 (governor fix), gpu7 (rung 10), int4-spotlight-r1,
+  SweetSensorHub, nfc2; bt5-r2 (Mac-only) pending the owner's TX decision; periph-r1
+  needs an attended rotate.
 - **Android (2026-11-03, PHYSICAL):** slot b, Magisk 31.1 with its 7 modules active, owner data restored
   after the migration (files, apps, app data; exceptions and Keystore-bound apps in
   `research/android-backup-20261103/RESTORE.md`). Return check PASS against the new post-restore baseline

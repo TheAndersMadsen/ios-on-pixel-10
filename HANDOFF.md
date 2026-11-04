@@ -5,14 +5,19 @@ it is not a second project journal.
 
 ## Next actions
 
-1. Done: `a7-ios-system-r3` reached Home from ios_system (owner confirmed). Next attended boots, all bare
-   `fastboot boot`: chooser `chooser-v1-r12` volume keys (`research/ios26-dualboot-r8/keys/BOOT-r12.md`), then the
-   chooser-iOS image built from r3's recipe (`research/ios26-dualboot-r8/chooser-ios/DESIGN.md`, C1 Android by timeout,
-   C2 iOS picked). Host: build the 0001 backlight calibration kernel patch and hk_accel_once on the Mac.
-2. Physical, attended: chooser volume keys (r8 line) and the iOS entry from the chooser (r11 display handback works).
-3. After a visible A7 boot: a physical ios_data persist test (QEMU negative test PASS,
-   `research/ios26-dualboot-r8/ios-data-persist/NEGATIVE-r1.md`); `image_tool` refuses `blazer_persist` until then.
-4. Apps lane is stopped behind the AKS user-session keybag (owner decision,
+1. Owner decision pending: Bluetooth transmit (bt5-r2 is receive-only gate level 1; pairing in
+   Settings needs TX gate 2-3). bt5-r2's image is Mac-only (carries the Wi-Fi password).
+2. Next unattended `fastboot boot` queue, owner to admit (all built, QEMU-checked, none booted):
+   int5-r3 (settings + epoch), int4-perf-r1 (governor demand-rule fix), gpu7 (GPU rung 10:
+   carve-out page tables + MMUCACHE + 2 KICKs), int4-spotlight-r1 (Spotlight spin fix),
+   SweetSensorHub, nfc2 (ID + NCI). One at a time, return check PASS between boots.
+3. Attended: periph-r1 boot needs the owner to rotate the phone on request.
+4. Lanes open: aoc5 panicked on its first phone run (unaligned data abort, ramdump in
+   `attempts/20261104-051235-a7-aoc5/`, AoC lane symbolizes `kernel.aoc5.unstripped`);
+   modem2 rung 5 stopped because the controller was already live at survey (modem lane
+   interprets); CA diagnostic answered - no AGXAccelerator, CA selects SWContext
+   (`research/ios26-phaseb-r1/goal-pool/receipts/queue-20261104.md`).
+5. Apps lane is stopped behind the AKS user-session keybag (owner decision,
    `research/ios26-apps-r1/receipts/h3-static-r12/VERDICT.md`).
 
 Bare `fastboot boot` only, ANDROID_SERIAL set, disks resolved by-name, return check after every boot.
