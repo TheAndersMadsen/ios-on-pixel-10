@@ -20,6 +20,7 @@ import tempfile
 import threading
 import time
 import unittest
+import unittest.mock
 
 HERE = Path(__file__).resolve().parent
 HK = HERE / 'hk.py'
@@ -119,7 +120,7 @@ class HkTest(unittest.TestCase):
         self.state = self.tmp / 'phone-state'
         self.state.write_text('fastboot')
         self.env = dict(os.environ, HK_REPO=str(self.repo), HK_STORE=str(self.store), HK_LOCKDIR=str(self.locks),
-                        HK_PB=str(self.pb), HK_HOLDER='tester', HK_LOCK='tester', HK_MAIN=str(self.tmp / 'no-main'), FAKE_STATE=str(self.state), FAKE_LOG=str(self.tmp / 'calls.log'))
+                        HK_PB=str(self.pb), HK_HOLDER='tester', HK_LOCK='tester', HK_MAIN=str(self.tmp / 'no-main'), HK_AUTO_POLL_S='0.1', HK_AUTO_RETRY_S='0.2', FAKE_STATE=str(self.state), FAKE_LOG=str(self.tmp / 'calls.log'))
         for k in list(self.env):
             if k.startswith(('HK_TOOL_', 'HK_ARGV_')) or k == 'HK_LOCK_TOKEN':
                 del self.env[k]
@@ -836,6 +837,216 @@ json.dump(dict(items=[dict(id='probe:wifi', severity='med', title='Wi-Fi', next=
         self.assertNotIn('probe:gps', md)                               # not this boot's evidence
         self.assertEqual(self.hkj('triage', b, '--no-backlog', '--prev', a)['prev'], a)
 
+
+
+    # --- 2026-11-04 lane TOOLS-2: boot post-hooks, hk probes, hk watch
+
+    FAKE_SHOT = """#!/bin/sh
+# fake screenshot.sh: the first call is refused busy (a UI step's picture in flight), later ones save a PNG
+echo "shot $*" >> "$FAKE_LOG"
+n=$(grep -c '^shot ' "$FAKE_LOG")
+out=''
+while [ $# -gt 0 ]; do [ "$1" = -o ] && out=$2; shift; done
+if [ "$n" = 1 ]; then echo 'screenshot: reader refused: busy' >&2; exit 4; fi
+mkdir -p "$(dirname "$out")"; printf '\\211PNG\\r\\n\\032\\n' > "$out"; echo "$out"
+"""
+
+    def fake_live_boot(self, body_after_ready='sleep 1.2'):
+        self.fake_tool('live_boot', f"""#!/bin/sh
+run="$LIVE_ATTEMPTS/live-20261104-050000-$2"
+mkdir -p "$run"
+printf 'LIVE_RUN=%s\\nLIVE_NAME=%s\\nLIVE_SOCK=/tmp/s\\nLIVE_T0=%s\\n' "$run" "$2" "$(date +%s)" > "$run/live.env"
+echo "05:00:00.000 [    0.10] exec launchd" > "$run/console.txt"
+printf 'LIVEBOOT 05:00:01.000 +1.0 CONSOLE_CONNECTED nonce 1\\n' > "$run/markers.txt"
+sleep 0.4
+printf 'LIVEBOOT 05:01:00.000 +60.0 UI_READY\\n' >> "$run/markers.txt"
+{body_after_ready}
+printf 'LIVEBOOT 05:10:00.000 +600.0 BOOT_RC 0\\n' >> "$run/markers.txt"
+echo BOOT_RC=0 >> "$run/live.env"
+echo "live_boot: run $run"
+""", '.sh')
+
+    def test_boot_post_hooks_picture_at_ui_ready_periodic_and_triage(self):
+        self.make_image('a7-ios-system-int5', 'debug=0x8 blazer_deadline=900 blazer_usbcon=1 hk_dbg=0x1e1e1f')
+        self.fake_live_boot()
+        self.fake_tool('screenshot', self.FAKE_SHOT, '.sh')
+        d = self.hkj('boot', 'a7-ios-system-int5', '--mach', '/k', '--shot-every', '0.3', env=dict(HK_AUTO_FIRST_S='0.6'))
+        a = self.store / d['attempt']
+        self.assertTrue((a / 'screens' / 'ui-ready.png').is_file())
+        shots = d['auto']['shots']
+        self.assertEqual(shots[0]['name'], 'ui-ready')
+        self.assertTrue(shots[0]['ok'], shots[0])                              # retried once after "busy"
+        self.assertTrue(any(s['name'].startswith('auto-') and s['ok'] for s in shots), shots)
+        self.assertTrue(list((a / 'screens').glob('auto-001-t*.png')))
+        calls = [l for l in (self.tmp / 'calls.log').read_text().splitlines() if l.startswith('shot ')]
+        self.assertIn('--step 8', calls[0])
+        self.assertEqual(len((a / 'screens' / 'auto.jsonl').read_text().splitlines()), len(shots))
+        self.assertEqual(d['auto']['triage']['md'], str(a / 'TRIAGE.md'))     # crashdoc/probe missing: still written
+        self.assertTrue((a / 'TRIAGE.md').is_file())
+        self.assertTrue((a / 'auto.json').is_file())
+        self.assertEqual(d['rc'], 0)
+        self.assertIn('pictures: ', self.hk('boot', 'a7-ios-system-int5', '--mach', '/k', '--no-triage', code=0).stdout)
+
+    def test_boot_post_hooks_opt_out_and_no_snapshot_gate(self):
+        self.fake_live_boot('sleep 0.3')
+        self.fake_tool('screenshot', self.FAKE_SHOT, '.sh')
+        d = self.hkj('boot', 'a7-ios-system-wifi1', '--mach', '/k', '--no-auto')
+        self.assertIsNone(d['auto'])
+        self.assertFalse((self.store / d['attempt'] / 'TRIAGE.md').exists())
+        d = self.hkj('boot', 'a7-ios-system-wifi1', '--mach', '/k', env=dict(HK_AUTO='0'))
+        self.assertIsNone(d['auto'])
+        # the image has no usbcon snapshot gate: no live picture is asked for, triage still runs
+        d = self.hkj('boot', 'a7-ios-system-wifi1', '--mach', '/k')
+        self.assertEqual(d['auto']['shots'], [])
+        self.assertIn('no live pictures', ' '.join(d['auto']['notes']))
+        self.assertTrue((self.store / d['attempt'] / 'TRIAGE.md').is_file())
+        self.assertFalse((self.tmp / 'calls.log').exists() and 'shot ' in (self.tmp / 'calls.log').read_text())
+        # --no-triage keeps the pictures
+        self.make_image('a7-ios-system-int5', 'blazer_usbcon=1 blazer_usbcon_snap=1')
+        d = self.hkj('boot', 'a7-ios-system-int5', '--mach', '/k', '--no-triage', '--shot-every', '0')
+        self.assertNotIn('triage', d['auto'])
+        self.assertEqual([s['name'] for s in d['auto']['shots']], ['ui-ready'])
+
+    def test_boot_gates_and_ui_run_window(self):
+        g = hk.boot_gates('blazer_usbcon=1 hk_dbg=0x1e1e1f')
+        self.assertEqual(g, dict(console=True, snap=True, input=True, screen=0x1e))
+        self.assertFalse(hk.boot_gates('blazer_usbcon_snap=1')['snap'])          # no console, no snapshot
+        self.assertTrue(hk.boot_gates('blazer_usbcon=2 blazer_usbcon_snap=1')['snap'])
+        self.assertEqual(hk.boot_gates('hk_screen=30 hk_dbg=junk')['screen'], 30)
+        mk = write(self.tmp / 'markers.txt', 'UIRUN 05:00:00.000 +1.0 START 3 steps\n')
+        self.assertTrue(hk.ui_run_active(mk))
+        write(mk, 'UIRUN 05:00:00.000 +1.0 START 3 steps\nUIRUN 05:00:09.000 +9.0 END PASS\n')
+        self.assertFalse(hk.ui_run_active(mk))
+
+    def make_probe_files(self):
+        write(self.repo / 'research/r1/int5/int5.probes.yaml',
+              '# INT5: one probe file for a7-ios-system-int5 / a7-ios-system-int5-wifi-r1 (x).\n'
+              '#   probe_eval.py --probes x <fastboot attempt> <live-...-a7-int5>\nversion: 1\nprobes: []\n')
+        write(self.repo / 'research/r1/int4/int4.probes.yaml',
+              '# int4: every feature merged into a7-ios-system-int4.\n#   live-<...>-a7-int4\n\nversion: 1\nprobes: []\n')
+        write(self.repo / 'research/r2/b3/bt3.probes.yaml', '# bt3: phone acceptance rows.\nversion: 1\nprobes: []\n')
+        write(self.repo / 'research/r2/w2/w2.probes.yaml', '# W2: one probe file for a7-wifi-w2-r1.\nversion: 1\nprobes: []\n')
+
+    def test_probes_finds_the_image_family_file(self):
+        self.make_probe_files()
+        with unittest.mock.patch.dict(os.environ, self.env):
+            for repo_attr in ('REPO', 'MAIN_CHECKOUT'):
+                setattr(hk, '_saved_' + repo_attr, getattr(hk, repo_attr))
+            hk.REPO, hk.MAIN_CHECKOUT = self.repo, self.tmp / 'no-main'
+            try:
+                def best(*names):
+                    hits = hk.probes_for_image(list(names))
+                    return (hits[0][0]['stem'], hits[0][1].split()[0]) if hits else None
+                self.assertEqual(best('a7-ios-system-int5'), ('int5', 'header'))
+                self.assertEqual(best('a7-ios-system-int5-wifi-r1'), ('int5', 'header'))
+                self.assertEqual(best('a7-ios-system-int4-softblur-r3'), ('int4', 'family'))
+                self.assertEqual(best('a7-int4-confirm'), ('int4', 'family'))
+                self.assertEqual(best('a7-ios-system-bt3'), ('bt3', 'stem'))
+                self.assertEqual(best('20261104-030612-a7-wifi-w2-r1'), ('w2', 'header'))
+                self.assertIsNone(best('a7-ios-system-jb1'))
+                own = write(self.repo / 'research/images/a7-ios-system-int5/own.probes.yaml', 'version: 1\nprobes: []\n')
+                self.assertEqual(hk.probes_for_image(['a7-ios-system-int5'])[0], (unittest.mock.ANY, 'image dir'))
+                own.unlink()
+            finally:
+                hk.REPO, hk.MAIN_CHECKOUT = hk._saved_REPO, hk._saved_MAIN_CHECKOUT
+        lst = self.hkj('probes', '--list')
+        self.assertEqual(len(lst['files']), 4)
+        self.assertEqual(self.hkj('probes', 'a7-ios-system-int4-r9', '--list')['files'][0]['rule'], 'family int4 (of int4-r9)')
+        self.assertEqual(self.hkj('probes', 'a7-ios-system-int5', code=3)['error'], 'no_attempt')
+        self.assertEqual(self.hkj('probes', 'a7-ios-system-jb1', code=3)['error'], 'no_probes')
+        # run over the image's newest attempt; probe_eval gets --probes
+        self.fake_tool('probe', 'import json, sys\nd = ' + repr(PROBE_DOC) +
+                       f'\njson.dump(sys.argv[1:], open({str(self.tmp / "probe-argv.json")!r}, "w"))' + FAKE_PROBE_TAIL)
+        self.make_image('a7-ios-system-int5', 'blazer_usbcon=1')
+        live = self.make_live_run(self.repo / 'research/laguna-usb-fix/attempts', 'a7-int5', '20261104-050000', time.time() - 900,
+                                  [(40, 'exec SpringBoard')], image='a7-ios-system-int5')
+        aid = self.hkj('ingest', str(live))['items'][0]['attempt']
+        r = self.hkj('probes', 'a7-ios-system-int5')
+        self.assertEqual(r['attempt'], aid)
+        res = r['results'][0]
+        self.assertTrue(res['probes'].endswith('int5/int5.probes.yaml'))
+        self.assertEqual(res['counts'], dict(partial=1, works=2, none=1))
+        argv = json.loads((self.tmp / 'probe-argv.json').read_text())
+        self.assertEqual(argv[argv.index('--probes') + 1], str(self.repo / 'research/r1/int5/int5.probes.yaml'))
+        cached = json.loads((self.store / aid / 'probes' / 'image-int5.json').read_text())
+        self.assertTrue(cached['probes'].endswith('int5.probes.yaml'))
+        self.assertEqual(self.hkj('probes', 'a7-ios-system-int5', '--row', 'wifi')['results'][0]['rows'][0]['id'], 'wifi')
+        # triage shows the image probe rows
+        self.hkj('triage', aid, '--no-backlog', code=3)
+        md = (self.store / aid / 'TRIAGE.md').read_text()
+        self.assertIn('## Image probes (research/r1/int5/int5.probes.yaml)', md)
+        self.assertIn('partial  wifi: Wi-Fi', md)
+
+    def test_watch_one_frame_text_json_html(self):
+        self.fake_probe()
+        self.make_image('a7-ios-system-int4', 'blazer_usbcon=1')
+        self.make_probe_files()
+        t0 = time.time() - 300
+        con = [(40, 'exec SpringBoard'), (41, 'exec backboardd'),
+               (50, 'HK TOP: t=200 frames+770 cpu_ms=99250: SpringBoard[28]=35333 iconservicesagen[95]=24703 lsd[82]=4449'),
+               (60, 'userabort: recentsd[1939] reason ns 1'), (60.1, 'CRASH recentsd'), (61, 'userabort: recentsd[1941] x'),
+               (62, 'exec: SIGKILL to InputUI[1186] (x)'), (70, 'blazer-touch: tcm: finger 0 down at 1, 2'),
+               (71, 'HK LIVE dispatch gen=5 edge=down op=98 x=1 y=2 us=1'), (72, 'HKMAIN: stall 900 ms Preferences')]
+        con += [(80 + i, 'exec fairplayd.H2') for i in range(6)]
+        live = self.make_live_run(self.repo / 'research/laguna-usb-fix/attempts', 'a7-int4-x', '20261104-050000', t0, con,
+                                  markers=[('LIVEBOOT', 41.0, 'CONSOLE_CONNECTED nonce 1'), ('LIVEBOOT', 43.0, 'SPRINGBOARD SpringBoard'),
+                                           ('LIVEBOOT', 70.0, 'UI_READY'), ('UIRUN', 90.0, 'START 3 steps')],
+                                  image='a7-ios-system-int4')
+        aid = self.hkj('ingest', str(live))['items'][0]['attempt']
+        write(self.store / aid / 'screens' / 'ui-ready.png', 'png')
+        w = self.hkj('watch', aid, '--html')
+        self.assertEqual(w['state'], 'running')
+        self.assertTrue(w['ui_run'])
+        self.assertEqual([m['name'] for m in w['milestones']], ['CONSOLE_CONNECTED', 'SPRINGBOARD', 'UI_READY'])
+        self.assertEqual(w['missing'], ['LAUNCHD'])
+        self.assertEqual(w['crashes'], [dict(proc='recentsd', count=2), dict(proc='InputUI', count=1)])
+        self.assertEqual(w['respawns'], {'fairplayd.H2': 6})
+        self.assertEqual(w['counts'], dict(physical=1, input=1, stall=1))
+        self.assertEqual(w['top']['frames'], 770)
+        self.assertEqual(w['top']['procs'][0], dict(proc='SpringBoard', pid=28, ms=35333))
+        self.assertTrue(w['probes_file'].endswith('int4/int4.probes.yaml'))
+        self.assertEqual({r['id']: r['verdict'] for r in w['probes']}['touch'], 'works')
+        self.assertEqual(w['pictures'][0], str(self.store / aid / 'screens' / 'ui-ready.png'))
+        html = Path(w['html']).read_text()
+        self.assertIn("src='screens/ui-ready.png?", html)
+        self.assertIn('http-equiv=refresh', html)
+        txt = self.hk('watch', '--run', str(live), '--once', '--no-probe', code=0).stdout
+        for want in ('[RUNNING]', 'UI SCRIPT RUNNING', 'recentsd x2', 'fairplayd.H2 6', 'PHYSICAL: 1', 'HK TOP t=200 frames+770',
+                     'latest picture: '):
+            self.assertIn(want, txt)
+        # a boot that ended: the frame loop stops by itself
+        with open(live / 'markers.txt', 'a') as f:
+            f.write(f'LIVEBOOT {self.wall(t0 + 600)} +600.0 BOOT_RC 0\n')
+        r = self.hk('watch', aid, '--interval', '0.1', '--no-probe', code=0)
+        self.assertEqual(r.stdout.count('hk watch '), 1)
+        self.assertIn('[ENDED]  t+600s', r.stdout)
+
+    def test_watch_state_reads_only_new_bytes(self):
+        live = self.make_live_run(self.tmp, 'a7-w', '20261104-050000', time.time(), [(1, 'exec launchd')])
+        ws = hk.WatchState(live)
+        ws.poll()
+        self.assertEqual(ws.execs, {'launchd': 1})
+        with open(live / 'console.txt', 'a') as f:
+            f.write('05:00:02.000 [    2.00] userabort: Pho')          # half a line: nothing yet
+        ws.poll()
+        self.assertEqual(ws.crashes(), [])
+        with open(live / 'console.txt', 'a') as f:
+            f.write('tos[300] pc 0x1\n')
+        ws.poll()
+        self.assertEqual(ws.crashes(), [dict(proc='Photos', count=1)])
+        self.assertEqual(ws.lines, 2)
+
+    def test_note_and_back_keep_the_live_paths_of_a_killed_boot(self):
+        """bt3 (2026-11-04): hk boot never returned (paths={}), hk back wrote that manifest back over the index."""
+        aid, t0 = '20261104-041625-a7-bt3', time.time() - 600
+        d = self.store / aid
+        write(d / 'manifest.json', json.dumps(dict(schema='hk.manifest/1', id=aid, name='a7-bt3', kind='phone', created_t=t0,
+                                                   image=dict(name='a7-ios-system-bt3'), paths={}, result={})))
+        write(self.store / 'index.jsonl', json.dumps(dict(id=aid, kind='phone', created_t=t0, paths={})) + '\n')
+        live = self.make_live_run(d, 'a7-bt3', aid[:15], t0, [(40, 'exec SpringBoard')])
+        self.hkj('note', aid, 'owner', 'looked')
+        rec = [r for r in self.hkj('find')['attempts'] if r['id'] == aid][0]
+        self.assertEqual(rec['paths']['live'], str(live))
 
 
 CYCLE_CHECKS_TOKEN = """import sys, json, os, pathlib

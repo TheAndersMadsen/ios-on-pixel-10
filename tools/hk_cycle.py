@@ -120,6 +120,14 @@ def cmdline_args(cmdline):
     return out
 
 
+def hk_dbg_bits(cargs):
+    """The packed hk_dbg=0x... switches (tools/hk_dbg.py): bit 0 live input, bit 1 snapshots. 0 when absent or unreadable."""
+    try:
+        return int(cargs.get('hk_dbg') or '0', 0)
+    except ValueError:
+        return 0
+
+
 def mach_uuid(path):
     with open(path, 'rb') as f:
         head = f.read(0x10000)
@@ -697,14 +705,16 @@ class Cycle:
         mode = a.mode if a.mode != 'auto' else ('plain' if chooser else 'bootios')
         cold_safe = 'TGL_USB_DISABLE=1' in json.dumps(manifest.get('cflags', ''))
         console = cargs.get('blazer_usbcon') == '1' and not cold_safe and not a.no_console
-        snap = console and cargs.get('blazer_usbcon_snap') == '1'
+        # int4/int5 carry these as hk_dbg bits, not as the separate tokens (1023-byte boot-arg budget)
+        snap = console and (cargs.get('blazer_usbcon_snap') == '1' or bool(hk_dbg_bits(cargs) & 0x02))
         deadline = int(cargs['blazer_deadline']) if cargs.get('blazer_deadline', '').isdigit() else None
         wait = a.deadline_wait or ((deadline + 180) if deadline else 1200)
         info = dict(image=str(image.relative_to(ROOT)), image_dir=str(idir.relative_to(ROOT)), image_sha256=sha256(image),
                     image_name=manifest.get('name', idir.name), kind=kind or 'a7', mode=mode, chooser=chooser,
                     mach=str(mach.relative_to(ROOT)) if mach else None, mach_sha256=sha256(mach) if mach else None,
                     deadline_s=deadline, wait_s=wait, console=console, live_snapshots=snap,
-                    live_input=cargs.get('blazer_usbcon_input') == '1', hk_screen=cargs.get('hk_screen'),
+                    live_input=cargs.get('blazer_usbcon_input') == '1' or bool(hk_dbg_bits(cargs) & 0x01),
+                    hk_screen=cargs.get('hk_screen') or (str(hk_dbg_bits(cargs) >> 8 & 0xff) if hk_dbg_bits(cargs) >> 8 & 0xff else None),
                     hk_ustack=cargs.get('hk_ustack'), cold_safe=cold_safe, cmdline_bytes=len(cmdline))
         self.report['image'] = info
         self.image, self.idir, self.mach = image, idir, mach

@@ -378,6 +378,19 @@ class CycleTests(unittest.TestCase):
             if f.is_file():
                 self.assertNotIn(SERIAL, f.read_text(errors='replace'), f)
 
+    def test_hk_dbg_bits_enable_live_snapshots_and_input(self):
+        """int4/int5 pack blazer_usbcon_snap/_input into hk_dbg=0x1e1e1f: the cycle still takes live pictures."""
+        r = self.rig(mode='android', boot_completed_at=0,
+                     cmdline='blazer_deadline=4 blazer_usbcon=1 blazer_usbcon_ch9=1 hk_dbg=0x1e1e1f')
+        p = r.run()
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        rep = r.report()
+        self.assertTrue(rep['image']['live_snapshots'])
+        self.assertTrue(rep['image']['live_input'])
+        self.assertEqual(rep['image']['hk_screen'], '30')
+        self.assertTrue(any(s['kind'] == 'live' and s['ok'] for s in rep['screenshots']))
+        self.assertEqual(hc.hk_dbg_bits({'hk_dbg': 'junk'}), 0)
+
     def test_phone_in_ios_is_refused_untouched(self):
         r = self.rig(mode='ios')
         p = r.run()

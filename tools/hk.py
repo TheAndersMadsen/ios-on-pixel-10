@@ -895,7 +895,7 @@ def finalize_from_paths(m):
 
 
 def cmd_note(args):
-    m = load_manifest(args.attempt)
+    m = finalize_from_paths(load_manifest(args.attempt))
     m.setdefault('owner_actions', []).append(dict(t=iso(), by=holder_name(args), text=' '.join(args.text)))
     write_manifest(m)
     return emit(args, 'note', dict(attempt=m['id'], owner_actions=m['owner_actions']), f"noted on {m['id']}")
@@ -996,6 +996,212 @@ def cmd_installed(args):
 
 # ------------------------------------------------------------------------------------------------------------- boot / cycle / back
 
+# ------------------------------------------------------------------------------------------------------------- boot post-hooks
+# Owner rule: every boot gets a screenshot, a probe and a diagnosis. hk boot / hk cycle run AutoBoot beside the boot:
+# a picture at UI_READY (attempts/<id>/screens/ui-ready.png), one every --shot-every s, and hk triage when the boot ends.
+
+AUTO_POLL_S = float(os.environ.get('HK_AUTO_POLL_S', 2.0))
+AUTO_RETRY_S = float(os.environ.get('HK_AUTO_RETRY_S', 15.0))
+AUTO_FIRST_S = float(os.environ.get('HK_AUTO_FIRST_S', 30.0))   # first periodic picture after the console connects (hk_cycle's shot_start)
+END_MARKERS = {'BOOT_RC', 'CONSOLE_GONE', 'PARKED', 'PANIC', 'DEADLINE'}
+SHOT_BUSY = re.compile(r'busy|expired|in flight|deadline|not ?ready|timed? ?out', re.I)
+
+
+def cmdline_tokens(cmdline):
+    out = {}
+    for tok in (cmdline or '').split():
+        k, _, v = tok.partition('=')
+        out[k] = v
+    return out
+
+
+def boot_gates(cmdline):
+    """What a command line lets the host do live: usbcon console, snapshots (blazer_usbcon_snap=1 or hk_dbg bit 1), live
+    input (blazer_usbcon_input=1 or hk_dbg bit 0), and the ramdump's HKSCR1 period (hk_screen= or hk_dbg bits 8..15)."""
+    t = cmdline_tokens(cmdline)
+    dbg = 0
+    with contextlib.suppress(ValueError):
+        dbg = int(t.get('hk_dbg') or '0', 0)
+    console = t.get('blazer_usbcon') in ('1', '2')
+    screen = 0
+    with contextlib.suppress(ValueError):
+        screen = int(t.get('hk_screen') or '0', 0)
+    return dict(console=console, snap=console and (t.get('blazer_usbcon_snap') == '1' or bool(dbg & 0x02)),
+                input=console and (t.get('blazer_usbcon_input') == '1' or bool(dbg & 0x01)),
+                screen=screen or (dbg >> 8 & 0xff))
+
+
+def ui_run_active(markers_path):
+    """A UI script owns the snapshot path between UIRUN START and its END/STOP (its own pictures pace it)."""
+    active = False
+    with contextlib.suppress(OSError):
+        for line in Path(markers_path).read_text(errors='replace').splitlines():
+            g = TAGGED_RE.match(line)
+            if g and g.group(1) == 'UIRUN':
+                if g.group(4) == 'START':
+                    active = True
+                elif g.group(4) in ('END', 'STOP'):
+                    active = False
+    return active
+
+
+class AutoBoot(threading.Thread):
+    """Beside a running boot: find its live run, take the UI_READY picture and the periodic ones. Never raises; every
+    picture (or why there was none) goes to attempts/<id>/screens/auto.jsonl."""
+
+    def __init__(self, aid, gates, every=120.0, step=8, shots=True, find_live=None, started=None):
+        super().__init__(name='hk-auto', daemon=True)
+        self.aid, self.gates, self.every, self.step, self.shots = aid, gates, every, step, shots
+        self.find_live = find_live
+        self.started = time.time() if started is None else started
+        self.stop_ev = threading.Event()
+        self.records, self.live, self.notes = [], None, []
+        self.screens = attempt_dir(aid) / 'screens'
+
+    def note(self, text):
+        self.notes.append(text)
+        progress(f'hk auto: {text}')
+
+    def locate(self):
+        if self.live is None and self.find_live:
+            with contextlib.suppress(Exception):
+                self.live = self.find_live()
+        return self.live
+
+    def shot(self, name, out):
+        """One live picture through tools/screenshot.sh. One retry when the reader was busy (a UI step's own picture)."""
+        rec = dict(name=name, t=round(time.time() - self.started, 1), png=None)
+        for attempt in (1, 2):
+            try:
+                rc, o = run(tool_cmd('screenshot') + [str(self.live), '--name', safe_name(name)[:24], '--step', str(self.step),
+                                                      '-o', str(out)], timeout=90)
+            except HkError as e:
+                rec.update(rc=e.code, error=e.message)
+                break
+            rec.update(rc=rc, out=o.strip()[-200:])
+            if rc == 0 and out.is_file():
+                rec['png'] = str(out)
+                break
+            if attempt == 1 and SHOT_BUSY.search(o or '') and not self.stop_ev.wait(AUTO_RETRY_S):
+                continue
+            break
+        rec['ok'] = bool(rec['png'])
+        self.records.append(rec)
+        with contextlib.suppress(OSError):
+            self.screens.mkdir(parents=True, exist_ok=True)
+            with open(self.screens / 'auto.jsonl', 'a') as f:
+                f.write(json.dumps(rec) + '\n')
+        self.note(f"{name}: {rec['png'] or 'no picture (rc %s) %s' % (rec.get('rc'), (rec.get('out') or rec.get('error') or '')[-120:])}")
+        return rec
+
+    def run(self):
+        try:
+            self.loop()
+        except Exception as e:          # a picture never takes the boot down
+            self.note(f'stopped: {e!r}')
+
+    def loop(self):
+        if not self.shots:
+            return
+        if not self.gates.get('snap'):
+            self.note('no live pictures: the image has no blazer_usbcon_snap=1 (or hk_dbg bit 1); the dump picture follows the boot'
+                      if self.gates.get('screen') else 'no live pictures: no blazer_usbcon_snap=1 and no hk_screen in this image')
+            return
+        ui_done, next_at, n = False, None, 0
+        while not self.stop_ev.wait(AUTO_POLL_S):
+            live = self.locate()
+            if not live:
+                continue
+            marks = {m['name']: m for m in read_markers(Path(live) / 'markers.txt')}
+            if END_MARKERS & set(marks):
+                return
+            if next_at is None and ('CONSOLE_CONNECTED' in marks or 'DISPLAY' in marks):
+                next_at = time.time() + AUTO_FIRST_S
+            if not ui_done and 'UI_READY' in marks:
+                ui_done = True
+                self.shot('ui-ready', self.screens / 'ui-ready.png')
+                if next_at is not None:
+                    next_at = max(next_at, time.time() + (self.every or 0))
+                continue
+            if self.every and next_at is not None and time.time() >= next_at:
+                next_at = time.time() + self.every
+                if ui_run_active(Path(live) / 'markers.txt'):
+                    continue
+                n += 1
+                t0 = read_kv(Path(live) / 'live.env', '=').get('LIVE_T0')
+                rel = int(time.time() - float(t0)) if t0 and t0.replace('.', '', 1).isdigit() else int(time.time() - self.started)
+                self.shot(f'auto-{n:03d}', self.screens / f'auto-{n:03d}-t{rel:04d}.png')
+
+    def finish(self, m):
+        """After the boot: stop, take the dump picture when nothing live was saved, then triage. Returns the summary."""
+        self.stop_ev.set()
+        self.join(timeout=120)
+        out = dict(shots=self.records, notes=self.notes)
+        if self.shots and not any(r['ok'] for r in self.records) and self.gates.get('screen') and kernel_log(m):
+            src = runner_dir(m) or kernel_log(m).parent.parent
+            png = self.screens / 'dump.png'
+            with contextlib.suppress(HkError):
+                rc, o = run(tool_cmd('screenshot') + ['--dump', str(src), '-o', str(png)], timeout=120)
+                out['dump_shot'] = dict(rc=rc, png=str(png) if rc == 0 and png.is_file() else None, out=o.strip()[-200:])
+        return out
+
+
+def auto_enabled(args):
+    return not getattr(args, 'no_auto', False) and os.environ.get('HK_AUTO', '1') != '0'
+
+
+def start_auto(args, m, find_live, every):
+    if not auto_enabled(args):
+        return None
+    gates = boot_gates((m.get('image') or {}).get('cmdline') or m.get('cmdline') or '')
+    a = AutoBoot(m['id'], gates, every=every, step=getattr(args, 'shot_step', 8), shots=not getattr(args, 'no_shots', False),
+                 find_live=find_live)
+    a.start()
+    return a
+
+
+def finish_auto(args, auto, m):
+    """Stop the picture thread and run triage on what the boot left. Errors are reported, never raised."""
+    if auto is None:
+        return None
+    out = auto.finish(m)
+    if not getattr(args, 'no_triage', False):
+        progress(f"hk auto: triage {m['id']}")
+        try:
+            data, _, errors = triage_attempt(m['id'])
+            out['triage'] = dict(md=data['triage_md'], prev=data['prev'], errors=[e['message'] for e in errors])
+        except HkError as e:
+            out['triage'] = dict(md=None, errors=[e.message])
+        except Exception as e:                   # noqa: BLE001 - a broken analysis must not lose the boot's result
+            out['triage'] = dict(md=None, errors=[f'triage failed: {e!r}'])
+    with contextlib.suppress(OSError):
+        (attempt_dir(m['id']) / 'auto.json').write_text(json.dumps(out, indent=1) + '\n')
+    return out
+
+
+def auto_lines(auto):
+    if not auto:
+        return []
+    ok = [r['png'] for r in auto['shots'] if r['ok']]
+    L = [f"pictures: {len(ok)} of {len(auto['shots'])}" + (f" (first {ok[0]})" if ok else '')]
+    L += [f'auto: {n}' for n in auto['notes'] if n.startswith('no live')]
+    if auto.get('dump_shot'):
+        L.append(f"dump picture: {auto['dump_shot']['png'] or 'none'}")
+    t = auto.get('triage')
+    if t:
+        L.append(f"triage: {t['md'] or 'failed'}" + (f" ({len(t['errors'])} errors)" if t['errors'] else ''))
+    return L
+
+
+def add_auto_args(q, every):
+    g = q.add_argument_group('post-hooks (owner rule: every boot gets a picture, a probe and a diagnosis)')
+    g.add_argument('--no-auto', action='store_true', help='no pictures and no triage (also HK_AUTO=0)')
+    g.add_argument('--no-shots', action='store_true', help='no live pictures from hk (triage still runs)')
+    g.add_argument('--no-triage', action='store_true', help='no hk triage at the end')
+    g.add_argument('--shot-every', type=float, default=every, help=f'seconds between periodic pictures (0: UI_READY only; default {every:g})')
+    g.add_argument('--shot-step', type=int, default=8, help='snapshot step (every Nth pixel; default 8 = 160x357, ~10 s)')
+
+
 def boot_ttl(args, extra=900):
     return int(getattr(args, 'wait', 0) or 1200) + extra
 
@@ -1021,7 +1227,12 @@ def cmd_boot(args):
         m['command'] = argv
         write_manifest(m)
         progress(f"attempt {m['id']}: {' '.join(shlex.quote(a) for a in argv)}")
-        rc, out = run(argv, env=dict(LIVE_ATTEMPTS=str(ad)), log=ad / 'hk-boot.log', echo=not args.json)
+        auto = start_auto(args, m, lambda: discover_live(m), getattr(args, 'shot_every', 120))
+        try:
+            rc, out = run(argv, env=dict(LIVE_ATTEMPTS=str(ad)), log=ad / 'hk-boot.log', echo=not args.json)
+        finally:
+            if auto:
+                auto.stop_ev.set()
     live = re.findall(r'^live_boot: run (\S+)', out, re.M)
     att = re.findall(r'^live_boot: attempt (\S+)', out, re.M) or re.findall(r'^attempt: (\S+)', out, re.M)
     if live:
@@ -1035,9 +1246,11 @@ def cmd_boot(args):
     finalize_from_paths(m)
     m['result'].setdefault('verdict', 'BOOTED' if rc == 0 else 'BOOT_FAILED')
     write_manifest(m)
-    return emit(args, 'boot', dict(attempt=m['id'], dir=str(ad), rc=rc, result=m['result'], paths=m['paths']),
+    post = finish_auto(args, auto, m)
+    return emit(args, 'boot', dict(attempt=m['id'], dir=str(ad), rc=rc, result=m['result'], paths=m['paths'], auto=post),
                 [f"attempt {m['id']} rc {rc}", f"dir {ad}", f"markers: {' '.join(m['result'].get('markers', []))}",
-                 f"end: {m['result'].get('end')}", 'next: hk back (return to Android + check), hk crash, hk report'],
+                 f"end: {m['result'].get('end')}"] + auto_lines(post) +
+                ['next: hk back (return to Android + check), hk crash, hk report'],
                 0 if rc == 0 else 1)
 
 
@@ -1062,7 +1275,14 @@ def cmd_cycle(args):
         m['paths']['cycle'] = str(out_dir)
         write_manifest(m)
         progress(f"attempt {m['id']}: {' '.join(shlex.quote(a) for a in argv)}")
-        rc, out = run(argv, log=ad / 'hk-cycle.log', echo=not args.json)
+        started = time.time()
+        # hk_cycle takes its own periodic pictures (--shot-every there); hk adds the UI_READY one.
+        auto = start_auto(args, m, lambda: discover_live(m) or cycle_live(out_dir, started), 0)
+        try:
+            rc, out = run(argv, log=ad / 'hk-cycle.log', echo=not args.json)
+        finally:
+            if auto:
+                auto.stop_ev.set()
     for pat, key in ((r'live run (\S+)', 'live'), (r'attempt dir: (\S+)', 'runner'), (r'^attempt: (\S+)', 'runner')):
         for hit in re.findall(pat, out, re.M)[-1:]:
             if key == 'runner':
@@ -1075,16 +1295,29 @@ def cmd_cycle(args):
     finalize_from_paths(m)
     m['result'].setdefault('verdict', {0: 'PASS', 1: 'FAIL', 3: 'REFUSED', 5: 'PHONE_NOT_IN_ANDROID'}.get(rc, f'rc {rc}'))
     write_manifest(m)
-    return emit(args, 'cycle', dict(attempt=m['id'], dir=str(ad), rc=rc, result=m['result'], paths=m['paths']),
+    post = finish_auto(args, auto, m) if rc != 3 else None        # a refused cycle booted nothing
+    return emit(args, 'cycle', dict(attempt=m['id'], dir=str(ad), rc=rc, result=m['result'], paths=m['paths'], auto=post),
                 [f"attempt {m['id']} verdict {m['result'].get('verdict')} (hk_cycle rc {rc})",
-                 f"report {out_dir / 'report.md'}"], 0 if rc == 0 else 1)
+                 f"report {out_dir / 'report.md'}"] + auto_lines(post), 0 if rc == 0 else 1)
+
+
+def cycle_live(out_dir, started):
+    """hk_cycle's live run: the one its log names, else the newest live run that started after the cycle did."""
+    with contextlib.suppress(OSError):
+        for hit in reversed(re.findall(r'live run (\S+)', Path(out_dir, 'cycle.log').read_text(errors='replace'))):
+            if Path(hit).is_dir():
+                return Path(hit)
+    live, _ = active_live_run()
+    if live and (Path(live) / 'live.env').stat().st_mtime >= started - 5:
+        return Path(live)
+    return None
 
 
 def cmd_back(args):
     """Return to Android: force-fastboot off + fastboot reboot (the installed chooser times out to Android), then the
     read-only return check into attempts/<id>/return/."""
     aid = attempt_of(args)
-    m = load_manifest(aid)
+    m = finalize_from_paths(load_manifest(aid))       # a killed hk boot left paths={}: don't write that back over the index
     out = attempt_dir(aid) / 'return'
     steps = []
     with phone_lease(args, f'back {aid}', ttl=1200, attempt=aid):
@@ -1530,16 +1763,188 @@ def probe_rows(doc):
             for r in doc['rows']]
 
 
-def run_probe(inputs, rows=(), qemu=False, attempt=''):
-    """(rc, doc, compact rows | None, raw tail). Raises tool_missing before running anything."""
+def run_probe(inputs, rows=(), qemu=False, attempt='', probes=None):
+    """(rc, doc, compact rows | None, raw tail). Raises tool_missing before running anything. probes: a probe file other
+    than docs/probes.yaml (hk probes)."""
     argv = tool_argv('probe', inputs=list(inputs), input=inputs[0] if inputs else '', row=rows[0] if rows else '',
                      row_args=[x for r in rows for x in ('--row', r)], qemu_args=['--qemu'] if qemu else [],
                      attempt=attempt)
+    if probes:
+        argv += ['--probes', str(probes)]
     rc, out = run(argv, timeout=600)
     doc = None
     with contextlib.suppress(ValueError):
         doc = json.loads(out[out.index('{'):]) if '{' in out else None
     return rc, doc, probe_rows(doc), None if doc else out[-2000:]
+
+
+# ------------------------------------------------------------------------------------------------------------- image probe files
+
+PROBE_FILE_GLOBS = ('research/*.probes.yaml', 'research/*/*.probes.yaml', 'research/*/*/*.probes.yaml',
+                    'research/*/*/*/*.probes.yaml', 'research/*/*/*/*/*.probes.yaml')
+HEADER_IMAGE = re.compile(r'(?<![\w-])a7-[A-Za-z0-9][\w.-]*[A-Za-z0-9]')
+
+
+def image_norm(name):
+    """a7-ios-system-int5-wifi-r1 / a7-int5-wifi-r1 / int5-wifi-r1 -> int5-wifi-r1 (probe file headers use both spellings)."""
+    n = Path(str(name or '')).name
+    n = re.sub(r'^\d{8}-\d{6}-', '', n)
+    n = re.sub(r'^a7-', '', n)
+    return re.sub(r'^ios-system-', '', n)
+
+
+def probe_files():
+    """Every *.probes.yaml under research/ (this checkout, then the main one), with the image names its header comment
+    gives: the convention is '# <name>: ... for a7-ios-system-<image>' and a live-<...>-a7-<image> usage line."""
+    seen, out = set(), []
+    for root in dict.fromkeys((REPO, MAIN_CHECKOUT)):
+        for g in PROBE_FILE_GLOBS:
+            for f in sorted(root.glob(g)):
+                rel = str(f.relative_to(root))
+                if rel in seen or '/attempts/' in rel:
+                    continue
+                seen.add(rel)
+                head = []
+                with contextlib.suppress(OSError):
+                    with open(f, errors='replace') as fh:
+                        for line in fh:
+                            if not line.startswith('#'):
+                                if line.strip():
+                                    break
+                                continue
+                            head.append(line)
+                images = sorted({image_norm(x) for x in HEADER_IMAGE.findall(''.join(head))})
+                out.append(dict(path=str(f), rel=rel, stem=f.name[:-len('.probes.yaml')], images=images,
+                                title=(head[0][1:].strip() if head else '')[:120]))
+    return out
+
+
+def probes_for_image(names, files=None):
+    """The probe files for an image (or attempt) name, best first: [(file, rule)]. Rules, in order: the image dir's own
+    probes (manifest "probes" or a *.probes.yaml beside boot.img); a header naming the image; the longest header image
+    that is a dash-prefix of it (int4-softblur-r1 -> int4); the file stem as one of its dash tokens (bt3)."""
+    files = probe_files() if files is None else files
+    names = [n for n in dict.fromkeys(names) if n]
+    for n in names:
+        d = REPO / IMAGES / Path(n).name
+        if not d.is_dir():
+            d = MAIN_CHECKOUT / IMAGES / Path(n).name
+        own = []
+        with contextlib.suppress(OSError, ValueError):
+            p = json.loads((d / 'manifest.json').read_text()).get('probes')
+            for x in ([p] if isinstance(p, str) else p or []):
+                cand = Path(x) if Path(x).is_absolute() else (d / x if (d / x).is_file() else REPO / x)
+                if cand.is_file():
+                    own.append(cand)
+        own += sorted(d.glob('*.probes.yaml')) if d.is_dir() else []
+        if own:
+            return [(dict(path=str(f), rel=str(f), stem=f.name.split('.probes.yaml')[0], images=[image_norm(n)], title=''),
+                     'image dir') for f in dict.fromkeys(own)]
+    norms = [image_norm(n) for n in names]
+    exact = [(f, 'header names ' + n) for n in norms for f in files if n in f['images']]
+    if exact:
+        return list({f['path']: (f, why) for f, why in exact}.values())
+    best = None
+    for n in norms:
+        for f in files:
+            for i in f['images']:
+                if n.startswith(i + '-') and (best is None or len(i) > best[0]):
+                    best = (len(i), i, n)
+    if best:
+        return [(f, f'family {best[1]} (of {best[2]})') for f in files if best[1] in f['images']]
+    tok = [(f, f'stem {f["stem"]} in {n}') for n in norms for f in files if f['stem'] in n.split('-')]
+    return list({f['path']: (f, why) for f, why in tok}.values())
+
+
+def attempt_image_names(m):
+    return [(m.get('image') or {}).get('name'), m.get('name'), m.get('id')]
+
+
+def image_probe_rows(m, errors, fresh=False):
+    """The image's own probe file over an attempt (cached in attempts/<id>/probes/image-<stem>.json). None: no file."""
+    found = probes_for_image(attempt_image_names(m))
+    if not found:
+        return None
+    f, why = found[0]
+    pj = attempt_dir(m['id']) / 'probes' / f"image-{safe_name(f['stem'])}.json"
+    if not fresh:
+        with contextlib.suppress(OSError, ValueError):
+            j = json.loads(pj.read_text())
+            if j.get('probes') == f['path'] and j.get('summary') is not None:
+                return dict(probes=f['rel'], rule=why, rows=j['summary'])
+    inputs = probe_inputs(m)
+    if not inputs:
+        return dict(probes=f['rel'], rule=why, rows=None)
+    try:
+        rc, doc, compact, raw = run_probe(inputs, attempt=m['id'], probes=f['path'])
+    except HkError as e:
+        errors.append(dict(error=e.error, message=e.message, attempt=m['id'], **e.extra))
+        return dict(probes=f['rel'], rule=why, rows=None)
+    if compact is None:
+        errors.append(dict(error='probe_failed', message=f"probe_eval --probes {f['rel']} rc {rc}: {(raw or '')[-160:]}",
+                           attempt=m['id']))
+        return dict(probes=f['rel'], rule=why, rows=None)
+    pj.parent.mkdir(parents=True, exist_ok=True)
+    pj.write_text(json.dumps(dict(probes=f['path'], rule=why, inputs=inputs, rc=rc, summary=compact), indent=1) + '\n')
+    return dict(probes=f['rel'], rule=why, rows=compact)
+
+
+def cmd_probes(args):
+    """hk probes IMAGE: the probe file(s) for an image family, run over that image's newest attempt (or --attempt)."""
+    files = probe_files()
+    if args.list or not args.image:
+        rows = []
+        for f in files:
+            rows.append(dict(probes=f['rel'], images=f['images'], title=f['title']))
+        if args.image:
+            hits = probes_for_image([args.image], files)
+            rows = [dict(probes=f['rel'], images=f['images'], rule=why) for f, why in hits]
+        return emit(args, 'probes', dict(image=args.image, files=rows),
+                    [f"{r['probes']:<64} {' '.join(r['images']) or '-'}" + (f"  [{r['rule']}]" if r.get('rule') else '')
+                     for r in rows] or ['no probe files'])
+    m = None
+    if args.attempt or args.path:
+        m = finalize_from_paths(load_manifest(attempt_of(args)))
+    else:
+        want = {args.image, Path(args.image).name}
+        norm = image_norm(args.image)
+        recs = [r for r in index_load() if r.get('image') in want or image_norm(r.get('image') or '') == norm
+                or image_norm(r.get('name') or '') == norm]
+        recs = [r for r in recs if has_evidence(r) and manifest_path(r['id']).is_file()]
+        if recs:
+            m = finalize_from_paths(load_manifest(recs[-1]['id']))
+    hits = probes_for_image([args.image] + (attempt_image_names(m) if m and (args.attempt or args.path) else []), files)
+    if not hits:
+        raise HkError(3, 'no_probes', f'no *.probes.yaml names {args.image} (hk probes --list shows every file and its images)',
+                      image=args.image)
+    if not args.all_matches:
+        hits = hits[:1]
+    if m is None:
+        raise HkError(3, 'no_attempt', f'no attempt of {args.image} with evidence; pass --attempt or --path',
+                      probes=[f['rel'] for f, _ in hits])
+    inputs = [args.run] if args.run else probe_inputs(m)
+    if not inputs:
+        raise HkError(3, 'no_log', f"{m['id']}: nothing to evaluate")
+    out, txt, worst = [], [], 0
+    for f, why in hits:
+        rc, doc, compact, raw = run_probe(inputs, list(args.row or []), qemu=args.qemu, attempt=m['id'], probes=f['path'])
+        worst = max(worst, rc)
+        counts = {}
+        for r in compact or []:
+            counts[r['verdict'] or 'none'] = counts.get(r['verdict'] or 'none', 0) + 1
+        pd = attempt_dir(m['id']) / 'probes'
+        pd.mkdir(parents=True, exist_ok=True)
+        if compact is not None and not args.row:
+            (pd / f"image-{safe_name(f['stem'])}.json").write_text(json.dumps(dict(probes=f['path'], rule=why, inputs=inputs, rc=rc,
+                                                                                   summary=compact), indent=1) + '\n')
+        out.append(dict(probes=f['rel'], rule=why, rc=rc, counts=counts, rows=compact, raw=raw))
+        txt.append(f"# {f['rel']} [{why}] over {m['id']}")
+        txt += [f"{(r['verdict'] or '-'):<8} {r['id']:<26} {r['row'] or ''}" for r in compact or []]
+        if compact is None:
+            txt.append(f'probe_eval rc {rc}: {(raw or "")[-300:]}')
+        else:
+            txt.append(f"{len(compact)} rows: " + ', '.join(f'{k} {v}' for k, v in sorted(counts.items())))
+    return emit(args, 'probes', dict(image=args.image, attempt=m['id'], inputs=inputs, results=out), txt, 0 if worst == 0 else 1)
 
 
 def cmd_probe(args):
@@ -2056,7 +2461,8 @@ def queue_run(args):
                                  holder=args.holder or 'hk-queue-runner', lock_wait=args.lock_wait, queue_id=item['id'],
                                  lock=caller_lock_name(args) or args.holder or 'hk-queue-runner',
                                  wait=item.get('deadline_wait') or 1200, sync_tools=True, no_console=False,
-                                 ui_test=item.get('ui') == 'settings')
+                                 ui_test=item.get('ui') == 'settings', no_auto=False, no_shots=False, no_triage=False,
+                                 shot_every=120 if item.get('mode') == 'boot' else 0, shot_step=8)
         progress(f"queue: running {item['id']} ({item.get('mode')})")
         buf = []
         try:
@@ -2271,6 +2677,242 @@ def cmd_timeline(args):
                 [f"# {aid}: {total} events ({tl['source']}; t = {tl['clock']})"] + lines + resp)
 
 
+# ------------------------------------------------------------------------------------------------------------- watch
+
+CRASH_PROC_RE = re.compile(r'\bCRASH (?P<c>[^\s\[]+)|\buser(?:trap|abort): (?P<u>[^\s\[]+)\[(?P<up>\d+)\]|'
+                           r'exec: SIGKILL to (?P<k>[^\s\[]+)\[(?P<kp>\d+)\]|(?P<e>[^\s\[]+)\[(?P<ep>\d+)\] exited due to')
+TOP_RE = re.compile(r'HK TOP: t=(\d+) frames\+(\d+) cpu_ms=(\d+): (.*)$')
+TOP_PROC_RE = re.compile(r'([^\s\[]+)\[(\d+)\]=(\d+)')
+WATCH_MILESTONES = ('EP0_LIVE', 'CONSOLE_CONNECTED', 'DISPLAY', 'ROOT', 'LAUNCHD', 'USB_CONFIGURED', 'SPRINGBOARD',
+                    'TOUCH_CLIENT', 'BUTTON_CLIENT', 'FRAMES', 'UI_READY', 'PARKED', 'PANIC', 'DEADLINE', 'CONSOLE_GONE', 'BOOT_RC')
+
+
+class WatchState:
+    """A running boot's console, read incrementally (only the new bytes each frame), plus its markers and pictures."""
+
+    def __init__(self, live, attempt=None):
+        self.live, self.attempt = Path(live), attempt
+        self.offset, self.partial = 0, b''
+        self.lines = 0
+        self.crash_lines, self.crash_pids = {}, {}
+        self.execs, self.counts = {}, dict(physical=0, input=0, stall=0)
+        self.top, self.top_n, self.end, self.last_line = None, 0, None, ''
+        self.probe, self.probe_at, self.probe_file = None, 0.0, None
+
+    def feed(self, data):
+        data = self.partial + data
+        cut = data.rfind(b'\n') + 1
+        self.partial = data[cut:]
+        for raw in data[:cut].splitlines():
+            line = raw.decode('utf-8', 'replace')
+            self.lines += 1
+            text = line
+            w = WALL_RE.match(text)
+            if w:
+                text = w.group(5)
+            u = UPTIME_RE.match(text)
+            if u:
+                text = u.group(2)
+            if text.strip():
+                self.last_line = line[:200]
+            t = TOP_RE.search(text)
+            if t:
+                self.top_n += 1
+                self.top = dict(t=int(t[1]), frames=int(t[2]), cpu_ms=int(t[3]), wall=line[:12] if w else None,
+                                procs=[dict(proc=p, pid=int(pid), ms=int(ms)) for p, pid, ms in TOP_PROC_RE.findall(t[4])][:8])
+                continue
+            kind, proc = classify(text)
+            if kind in ('panic', 'deadline'):
+                self.end = self.end or dict(kind=kind, line=text.strip()[:200])
+            elif kind == 'crash':
+                c = CRASH_PROC_RE.search(text)
+                if c:
+                    if c['c']:
+                        self.crash_lines[c['c']] = self.crash_lines.get(c['c'], 0) + 1
+                    else:
+                        name, pid = next((c[a], c[b]) for a, b in (('u', 'up'), ('k', 'kp'), ('e', 'ep')) if c[a])
+                        self.crash_pids.setdefault(name, set()).add(pid)
+            elif kind == 'exec' and proc not in EXEC_NOISE:
+                self.execs[proc] = self.execs.get(proc, 0) + 1
+            elif kind in self.counts:
+                self.counts[kind] += 1
+
+    def poll(self):
+        con = self.live / 'console.txt'
+        with contextlib.suppress(OSError):
+            size = con.stat().st_size
+            if size < self.offset:                    # rewritten: start over
+                self.__init__(self.live, self.attempt)
+            with open(con, 'rb') as f:
+                f.seek(self.offset)
+                data = f.read()
+            self.offset += len(data)
+            self.feed(data)
+
+    def crashes(self):
+        names = set(self.crash_lines) | set(self.crash_pids)
+        return sorted(({'proc': n, 'count': max(self.crash_lines.get(n, 0), len(self.crash_pids.get(n, ())))} for n in names),
+                      key=lambda x: (-x['count'], x['proc']))
+
+    def pictures(self, n=1):
+        roots = [self.live / 'screens', self.live / 'ui'] + list(self.live.glob('usbcon/*.snaps'))
+        if self.attempt:
+            roots.insert(0, attempt_dir(self.attempt) / 'screens')
+        pngs = [p for r in roots if r.is_dir() for p in r.glob('*.png')]
+        return [str(p) for p in sorted(pngs, key=lambda p: p.stat().st_mtime, reverse=True)[:n]]
+
+    def run_probes(self, every, m=None):
+        """The image's probe file (else docs/probes.yaml) over the live run, at most every `every` s."""
+        if every <= 0 or time.time() - self.probe_at < every:
+            return
+        self.probe_at = time.time()
+        names = attempt_image_names(m) if m else []
+        img = read_kv(self.live / 'bootios.txt').get('image', '')
+        if img:
+            names.append(Path(img).parent.name)
+        names.append(read_kv(self.live / 'live.env', '=').get('LIVE_NAME'))
+        found = probes_for_image(names)
+        self.probe_file = found[0][0]['rel'] if found else 'docs/probes.yaml'
+        inputs = [str(self.live)] + ([str(runner_dir(m))] if m and runner_dir(m) and runner_dir(m).is_dir() else [])
+        try:
+            rc, doc, compact, raw = run_probe(inputs, attempt=self.attempt or '', probes=found[0][0]['path'] if found else None)
+            self.probe = compact if compact is not None else dict(error=f'probe_eval rc {rc}: {(raw or "")[-160:]}')
+        except HkError as e:
+            self.probe = dict(error=e.message)
+
+    def snapshot(self, now_t=None):
+        now_t = time.time() if now_t is None else now_t
+        kv = read_kv(self.live / 'live.env', '=')
+        marks = read_markers(self.live / 'markers.txt')
+        first = {}
+        for x in marks:
+            first.setdefault(x['name'], x)
+        con = self.live / 'console.txt'
+        age = now_t - con.stat().st_mtime if con.is_file() else None
+        t0 = kv.get('LIVE_T0')
+        el = now_t - float(t0) if t0 and t0.replace('.', '', 1).isdigit() else None
+        state = 'ended' if 'BOOT_RC' in kv or 'BOOT_RC' in first else \
+            'stale' if age is None or age > LIVE_STALE_S else 'running'
+        ui = state == 'running' and ui_run_active(self.live / 'markers.txt')
+        if state == 'ended' and 'BOOT_RC' in first and first['BOOT_RC']['s'] is not None:
+            el = first['BOOT_RC']['s']
+        elif state == 'stale' and el is not None and age is not None:
+            el -= age                                 # when the console last moved
+        return dict(live=str(self.live), attempt=self.attempt, name=kv.get('LIVE_NAME'), state=state,
+                    elapsed_s=None if el is None else round(el, 1), console_lines=self.lines, console_bytes=self.offset,
+                    console_age_s=None if age is None else round(age, 1), last_line=self.last_line,
+                    milestones=[dict(name=k, t=first[k]['s'], detail=first[k]['detail'][:80]) for k in WATCH_MILESTONES if k in first],
+                    missing=[k for k in ('CONSOLE_CONNECTED', 'LAUNCHD', 'SPRINGBOARD', 'UI_READY') if k not in first],
+                    ui_run=ui, crashes=self.crashes(), respawns={p: n for p, n in sorted(self.execs.items(), key=lambda x: -x[1])
+                                                                  if n > EXEC_KEEP},
+                    counts=self.counts, top=self.top, end=self.end, probes_file=self.probe_file, probes=self.probe,
+                    pictures=self.pictures(3))
+
+
+def watch_text(s):
+    el = '-' if s['elapsed_s'] is None else f"{s['elapsed_s']:.0f}s"
+    L = [f"hk watch {s['attempt'] or s['live']}  [{s['state'].upper()}]  t+{el}  console {s['console_lines']} lines, "
+         f"{s['console_bytes'] // 1024} KiB, last write {s['console_age_s']}s ago" + ('  UI SCRIPT RUNNING' if s['ui_run'] else '')]
+    if s['end']:
+        L.append(f"END {s['end']['kind']}: {s['end']['line']}")
+    L += ['', 'milestones: ' + '  '.join(f"{x['name']} +{x['t']:.0f}" if x['t'] is not None else x['name'] for x in s['milestones'])]
+    if s['missing']:
+        L.append('not yet: ' + ' '.join(s['missing']))
+    c = s['counts']
+    L.append(f"crashes: {sum(x['count'] for x in s['crashes'])} in {len(s['crashes'])} procs  " +
+             '  '.join(f"{x['proc']} x{x['count']}" for x in s['crashes'][:8]))
+    if s['respawns']:
+        L.append('respawns: ' + '  '.join(f'{p} {n}' for p, n in list(s['respawns'].items())[:8]))
+    L.append(f"input: {c['input']} live ops  PHYSICAL: {c['physical']} touches/buttons  stalls: {c['stall']}")
+    t = s['top']
+    if t:
+        L.append(f"HK TOP t={t['t']} frames+{t['frames']} cpu_ms={t['cpu_ms']}: " +
+                 ' '.join(f"{p['proc']}={p['ms']}" for p in t['procs'][:6]))
+    p = s['probes']
+    L += ['', f"probes ({s['probes_file'] or 'not run yet'}):"]
+    if isinstance(p, dict):
+        L.append(f"  {p['error']}")
+    for r in p or [] if isinstance(p, list) else []:
+        mark = {'works': 'PASS', 'broken': 'FAIL', 'partial': 'PART'}.get(r['verdict'], ' -- ')
+        L.append(f"  {mark:<4} {r['id']:<26} {(r['row'] or '')[:90]}")
+    L += ['', 'latest picture: ' + (s['pictures'][0] if s['pictures'] else 'none'), f"last line: {s['last_line']}"]
+    return L
+
+
+def watch_html(s, out):
+    import html as H
+    rows = ''.join(f"<tr class='{H.escape(str(r['verdict']))}'><td>{H.escape(str(r['verdict'] or '-'))}</td><td>{H.escape(r['id'])}</td>"
+                   f"<td>{H.escape(r['row'] or '')}</td></tr>" for r in (s['probes'] if isinstance(s['probes'], list) else []))
+    pic = ''
+    if s['pictures']:
+        rel = os.path.relpath(s['pictures'][0], Path(out).parent)
+        pic = f"<img src='{H.escape(rel)}?{int(time.time())}' style='max-height:90vh;float:right;margin-left:1em'>"
+    body = H.escape('\n'.join(watch_text(s)))
+    doc = (f"<!doctype html><meta charset=utf-8><meta http-equiv=refresh content=3><title>hk watch {H.escape(str(s['attempt']))}</title>"
+           "<style>body{font:13px ui-monospace,monospace;background:#111;color:#ddd}pre{white-space:pre-wrap}"
+           "td{padding:1px 8px}.works td:first-child{color:#6c6}.partial td:first-child{color:#db6}.broken td:first-child{color:#e66}</style>"
+           f"{pic}<pre>{body}</pre><table>{rows}</table>")
+    tmp = Path(str(out) + '.tmp')
+    tmp.write_text(doc)
+    tmp.replace(out)
+
+
+def watch_target(args):
+    """(live dir, attempt id or None, manifest or None) for hk watch."""
+    if args.run:
+        live = Path(args.run)
+        aid = attempt_for_live(live)
+    else:
+        aid = args.attempt_pos or args.attempt
+        if not aid:
+            live, _ = active_live_run()
+            if live:
+                return Path(live), attempt_for_live(live) or None, None
+            aid = latest_attempt()
+        m = finalize_from_paths(load_manifest(aid))
+        live = (m.get('paths') or {}).get('live')
+        if not live:
+            raise HkError(3, 'no_log', f'{aid}: no live run (hk watch follows a live_boot console)')
+        return Path(live), aid, m
+    return live, aid, load_manifest(aid) if aid and manifest_path(aid).is_file() else None
+
+
+def cmd_watch(args):
+    live, aid, m = watch_target(args)
+    if not (live / 'live.env').is_file():
+        raise HkError(3, 'no_log', f'{live} is not a live_boot run (no live.env)')
+    ws = WatchState(live, aid)
+    html_out = None
+    if args.html is not None:
+        html_out = Path(args.html) if args.html else (attempt_dir(aid) if aid else live) / 'watch.html'
+    once = args.once or args.json
+    tty = sys.stdout.isatty() and not once
+    t_end = time.time() + args.max_s if args.max_s else None
+    try:
+        while True:
+            ws.poll()
+            if not args.no_probe:
+                ws.run_probes(args.probe_every if not once else 0.001, m)
+            s = ws.snapshot()
+            if html_out:
+                with contextlib.suppress(OSError):
+                    watch_html(s, html_out)
+            s['html'] = str(html_out) if html_out else None
+            if once:
+                break
+            text = '\n'.join(watch_text(s) + ([f'html: {html_out}'] if html_out else []))
+            sys.stdout.write(('\x1b[H\x1b[2J' if tty else '\n') + text + '\n')
+            sys.stdout.flush()
+            if s['state'] != 'running' or (t_end and time.time() >= t_end):
+                break
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        pass
+    if once:
+        return emit(args, 'watch', s, watch_text(s) + ([f'html: {html_out}'] if html_out else []))
+    return 0
+
+
 def family_key(name):
     n = re.sub(r'^a7-(ios-system-)?', '', name or '')
     n = re.sub(r'-(confirm|live|dbg|ui|imp)$', '', n)
@@ -2282,8 +2924,11 @@ def family_key(name):
 
 
 def has_evidence(r):
+    """Paths in the record, or a live run inside the attempt dir (a boot whose hk process never returned has paths={})."""
     paths = r.get('paths') or {}
-    return bool(paths.get('live') or paths.get('ramdump') or paths.get('runner'))
+    if paths.get('live') or paths.get('ramdump') or paths.get('runner'):
+        return True
+    return r.get('kind', 'phone') == 'phone' and 'id' in r and any(attempt_dir(r['id']).glob('live-*/console.txt'))
 
 
 def previous_same_family(aid):
@@ -2481,17 +3126,25 @@ def run_backlog(m, out_dir, errors):
 
 def cmd_triage(args):
     """crashdoc + probe_eval + diff vs the previous same-family boot + backlog -> attempts/<id>/TRIAGE.md."""
-    errors = []
     aid = args.attempt_pos or attempt_of(args)
-    me, m = attempt_facts(aid, errors, args.fresh)
-    prev_id = args.prev or previous_same_family(aid)
+    data, L, errors = triage_attempt(aid, prev=args.prev, fresh=args.fresh, no_backlog=args.no_backlog)
+    return emit(args, 'triage', data, [f"triage: {data['triage_md']}"] + L[2:6] + [f"error: {e['message']}" for e in errors],
+                3 if errors else 0)
+
+
+def triage_attempt(aid, prev=None, fresh=False, no_backlog=False):
+    """TRIAGE.md for one attempt. Returns (data, markdown lines, errors); hk boot / hk cycle call it when a boot ends."""
+    errors = []
+    me, m = attempt_facts(aid, errors, fresh)
+    prev_id = prev or previous_same_family(aid)
     prev = d = None
     if prev_id:
-        prev, _ = attempt_facts(prev_id, errors, args.fresh)
+        prev, _ = attempt_facts(prev_id, errors, fresh)
         d = diff_facts(prev, me)
     tdir = attempt_dir(aid) / 'triage'
     tdir.mkdir(parents=True, exist_ok=True)
-    backlog = None if args.no_backlog else run_backlog(m, tdir, errors)
+    backlog = None if no_backlog else run_backlog(m, tdir, errors)
+    image_probes = image_probe_rows(m, errors, fresh)
     tl = boot_events(m)
     new_sigs = {x['sig'] for x in (d or {}).get('crashes', {}).get('new', [])} if d else None
     open_c = [c for c in me['crashes'] or [] if 'open' in str(c.get('status') or '') or c.get('status') is None]
@@ -2523,6 +3176,11 @@ def cmd_triage(args):
     if d:
         L.append('- regressions vs previous: ' + (', '.join(f"{p['id']} {p['a']}->{p['b'] or '-'}" for p in regress) or 'none'))
         L.append('- newly working: ' + (', '.join(p['id'] for p in gains) or 'none'))
+    if image_probes:
+        L += ['', f"## Image probes ({image_probes['probes']})", '']
+        L += [f"- {(r['verdict'] or '-'):<8} {r['id']}: {r['row'] or ''}" for r in image_probes['rows'] or []]
+        if image_probes['rows'] == []:
+            L.append('- no rows')
     if me['respawns']:
         L += ['', '## Respawns (exec count)', '', '- ' + ', '.join(f'{p} {n}' for p, n in me['respawns'].items())]
     if d:
@@ -2556,8 +3214,8 @@ def cmd_triage(args):
     md = attempt_dir(aid) / 'TRIAGE.md'
     md.write_text('\n'.join(L) + '\n')
     data = dict(attempt=aid, prev=prev_id, triage_md=str(md), facts={k: v for k, v in me.items() if k != 'subsystems'},
-                diff=d, backlog=(backlog or [])[:50], errors=errors)
-    return emit(args, 'triage', data, [f'triage: {md}'] + L[2:6] + [f"error: {e['message']}" for e in errors], 3 if errors else 0)
+                diff=d, image_probes=image_probes, backlog=(backlog or [])[:50], errors=errors)
+    return data, L, errors
 
 
 SCHEMAS = {
@@ -2595,7 +3253,16 @@ SCHEMAS = {
     'diff': 'a, b, head{field: {a, b}}, markers{only_a, only_b}, probes[{id, a, b}], crashes{new[], gone[], changed[]}, '
             'respawns[{proc, a, b}], subsystems[{file, a, b}], timeline[{event, a, b, delta}], crash_lines{a, b}, errors[]',
     'triage': 'attempt, prev, triage_md, facts{verdict, end, markers, first{event: t}, respawns, physical, probes[], crashes[]}, '
-              'diff (as hk.diff, null without a previous boot), backlog[], errors[]',
+              'diff (as hk.diff, null without a previous boot), image_probes{probes, rule, rows[]} (null: no image probe file), '
+              'backlog[], errors[]',
+    'boot': 'attempt, dir, rc, result, paths, auto (null with --no-auto) {shots[{name, t, png, ok, rc}], notes[], dump_shot, '
+            'triage{md, prev, errors[]}}; also attempts/<id>/auto.json and screens/auto.jsonl',
+    'probes': 'with IMAGE: image, attempt, inputs[], results[{probes, rule, rc, counts{verdict: n}, rows[] (as hk.probe), raw}]; '
+              '--list: image, files[{probes, images[], title|rule}]',
+    'watch': 'live, attempt, name, state (running|stale|ended), elapsed_s, console_lines, console_bytes, console_age_s, last_line, '
+             'milestones[{name, t, detail}], missing[], ui_run, crashes[{proc, count}], respawns{proc: n}, counts{physical, '
+             'input, stall}, top{t, frames, cpu_ms, wall, procs[{proc, pid, ms}]}, end{kind, line}, probes_file, probes[] | '
+             '{error}, pictures[], html',
 }
 
 
@@ -2645,6 +3312,7 @@ def parser():
         q.add_argument('--sync-tools', action='store_true')
         q.add_argument('--no-console', action='store_true')
         q.add_argument('--ui-test', action='store_true')
+        add_auto_args(q, 120)
     q = add('cycle', cmd_cycle, 'one full unattended cycle via tools/hk_cycle.py')
     q.add_argument('image')
     q.add_argument('--name')
@@ -2652,7 +3320,9 @@ def parser():
     q.add_argument('--ui')
     q.add_argument('--expect')
     q.add_argument('--deadline-wait', type=int)
-    q.epilog = 'arguments after -- go to hk_cycle.py unchanged'
+    add_auto_args(q, 0)
+    q.epilog = ('arguments after -- go to hk_cycle.py unchanged. hk takes the UI_READY picture and triages; '
+                'the periodic pictures are hk_cycle\'s own (-- --shot-every S / --no-shots)')
     q = add('back', cmd_back, 'return to Android and run the return check')
     q.add_argument('--attempt')
     q = add('ui', cmd_ui, 'run a UI script on the live boot (tools/ui_run.py; "settings" = ui_settings_test.py)')
@@ -2711,6 +3381,15 @@ def parser():
     q.add_argument('--verbose', action='store_true', help='text: also rows with no verdict')
     q.add_argument('--live', action='store_true')
     q.add_argument('--run')
+    q = add('probes', cmd_probes, "the image family's own probe file (int5.probes.yaml, sweep1.probes.yaml, ...) over its newest attempt")
+    q.add_argument('image', nargs='?', help='image name or dir (a7-ios-system-int5), or an attempt name; none: --list')
+    q.add_argument('--list', action='store_true', help='only show which probe files match (no evaluation)')
+    q.add_argument('--attempt')
+    q.add_argument('--path', help='a run dir instead of the newest attempt of the image (imported into the index)')
+    q.add_argument('--run', help='evaluate this live run dir only (a boot still running)')
+    q.add_argument('--row', action='append', help='only these probe ids (repeatable)')
+    q.add_argument('--qemu', action='store_true', help='skip phone_only probes')
+    q.add_argument('--all-matches', action='store_true', help='every matching file, not only the best')
     q = add('report', cmd_report, 'one attempt as REPORT.md + JSON')
     q.add_argument('attempt', nargs='?')
     q = add('status', cmd_status, 'summary of the newest run (or --attempt/--path): milestones, probes, crashes')
@@ -2739,6 +3418,17 @@ def parser():
     q.add_argument('--prev', help='compare with this attempt instead of the previous same-family boot')
     q.add_argument('--fresh', action='store_true')
     q.add_argument('--no-backlog', action='store_true')
+    q = add('watch', cmd_watch, 'live dashboard of a running boot: milestones, crashes, respawns, HK TOP, probe rows, latest picture')
+    q.add_argument('attempt_pos', nargs='?', metavar='ATTEMPT', help='default: the running live boot, else the newest attempt')
+    q.add_argument('--attempt')
+    q.add_argument('--run', help='a live_boot run dir')
+    q.add_argument('--once', action='store_true', help='one frame and exit (--json implies it)')
+    q.add_argument('--interval', type=float, default=2.0, help='seconds between frames (default 2)')
+    q.add_argument('--probe-every', type=float, default=20.0, help='re-run the probe file at most this often (default 20 s)')
+    q.add_argument('--no-probe', action='store_true')
+    q.add_argument('--html', nargs='?', const='', metavar='PATH', help='also write a self-refreshing HTML page '
+                   '(default attempts/<id>/watch.html)')
+    q.add_argument('--max-s', type=float, default=0, help='stop after S seconds (default: when the boot ends)')
     q = add('note', cmd_note, 'record an owner action on an attempt')
     q.add_argument('attempt')
     q.add_argument('text', nargs='+')
