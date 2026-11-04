@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03",
+  "updated": "2026-11-04",
   "scores": {
     "works": 100,
     "partial": 60,
@@ -43,16 +43,28 @@
       "unit": "°C",
       "label": "p32 end temperature",
       "note": "Five A725s; guarded 300-second capture"
+    },
+    {
+      "value": "98",
+      "unit": "%",
+      "label": "busy window at 1075 MHz",
+      "note": "governor frames stage, sustained UI load (perf1)"
+    },
+    {
+      "value": "19/19",
+      "unit": "",
+      "label": "thermal services bound",
+      "note": "thermalmonitord polls incl. battery TG0B (sensorhub1)"
     }
   ],
   "roadmap": [
     {
       "stage": "Now",
       "items": [
-                "Resolve startup/compositor crashes and measure frame completion before promoting sampler speed",
-        "Send the first real GPU command stream through the healthy firmware (M3)",
+        "Backboardd crash loop fixed live (softblur material removed, int5-r2); the Spotlight spin is root-caused (aks_get_device_state poll) - ship its fix and measure frame completion",
+        "GPU command stream: rungs 8-9 executed on the phone; land rung 10 (page tables + first memory-writing job), then publish the AGXAccelerator for Metal",
         "Qualify interactive scripted TAP/HOME behavior; screenshots already run unattended",
-        "Get the Wi-Fi WPA2 handshake through (the firmware never answers M1) and attach Bluetooth HCI natively",
+        "Get the Wi-Fi WPA2 handshake through (RX-starvation fix built, boot pending) and pair Bluetooth in Settings (transmit owner-approved, image pending)",
         "Make the Phone app (now opens, partly) and Settings > About fully usable, then more stock-app launches"
       ]
     },
@@ -93,7 +105,7 @@
         [
           "Higher clocks, up to the 3052 MHz top",
           "partial",
-          "533–1075 MHz under iOS; p30 health image bytes agree, checker repairs/admission pending. Sustained higher-clock acceptance still pending"
+          "Governor frames stage proven under UI load: 98% of a busy window at the proven 1075 MHz cap (perf1). Above-1075 acceptance and A520 admission still pending"
         ],
         [
           "2 A520 cores",
@@ -183,12 +195,12 @@
         [
           "GPU firmware through Trusty",
           "works",
-          "Health PASS (gpu2): STATEFLAGS_CTRL executed, HEALTH_CHECK consumed, 0 firmware faults, empty assert (log). First real command stream is next"
+          "Health PASS (gpu2); rungs 8-9 executed on the phone: MMUCACHE 0x807 ran in firmware, UFO fence in order, 0 faults (gpu5/gpu6). Rung 10 built and queued"
         ],
         [
           "Metal drawing",
           "active",
-          "Native GPU rendering remains incomplete. Startup's 30 s GPU wait removed: first frames at 68 s, was 136 s (r5-accel)"
+          "CA diagnostic: no AGXAccelerator exists in the IORegistry, so CoreAnimation selects the software context. Native path mapped; coremem S1 and rung 10 (page tables, MMUCACHE, first memory-writing job) built, booting"
         ],
         [
           "Video encode and decode",
@@ -268,7 +280,7 @@
         [
           "Bluetooth",
           "partial",
-          "Firmware/H4 proven; keychain wrap/unwrap PASS on the phone (B1). Native HCI attachment, Settings pairing and profiles unproved"
+          "Native HCI attached on the phone (HCI 6.0 Broadcom, 4 Mbaud RTS/CTS, Read Local Version status 0); keychain wrap/unwrap PASS (B1). Settings pairing needs radio transmit: owner-approved, pairing image pending"
         ],
         [
           "Cellular",
@@ -348,12 +360,12 @@
         [
           "Accelerometer, gyro, proximity, light, barometer",
           "active",
-          "Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved"
+          "Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved. SweetSensorHub publishes 19 temperature services, all bound by thermalmonitord"
         ],
         [
           "Always-on chip",
           "active",
-          "First test built"
+          "First phone run panicked in the carve zeroing (DC-ZVA alignment fault on the device-class map); root-caused, the aoc6 fix is next"
         ]
       ]
     },
@@ -363,7 +375,7 @@
         [
           "Temperature and thermal guard",
           "works",
-          "Live temperatures; guard panic verified at a test limit"
+          "Live temperatures; guard panic verified at a test limit. SweetSensorHub: thermalmonitord binds all 19 published services incl. battery TG0B (32.7 °C)"
         ],
         [
           "Battery gauge",

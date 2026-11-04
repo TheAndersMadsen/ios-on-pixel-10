@@ -9,7 +9,7 @@
 
 <a id="progress"></a>
 <h2 align="center">Every block. Tracked.</h2>
-<p align="center"><b>56%</b> of 49 reachable features · updated 2026-11-03</p>
+<p align="center"><b>56%</b> of 49 reachable features · updated 2026-11-04</p>
 
 <p align="center"><img src="docs/assets/blocks.svg" alt="Progress by hardware block" width="100%"></p>
 
@@ -21,7 +21,7 @@
 | --- | --- | --- |
 | **CPU** | 5 A725 cores | ✅ Ran 15 min under iOS at 1075 MHz, no kernel crash |
 |  | CPU clock control | ✅ Governor ran 15 min under iOS: 533–1075 MHz on demand, 125 clock reads within 2%, 33–35 °C |
-|  | Higher clocks, up to the 3052 MHz top | 🟡 533–1075 MHz under iOS; p30 health image bytes agree, checker repairs/admission pending. Sustained higher-clock acceptance still pending |
+|  | Higher clocks, up to the 3052 MHz top | 🟡 Governor frames stage proven under UI load: 98% of a busy window at the proven 1075 MHz cap (perf1). Above-1075 acceptance and A520 admission still pending |
 |  | 2 A520 cores | 🟡 cpu0 audit found CAS workaround bit9 clear; both A520s remain excluded. Firmware query/reference sources pinned |
 |  | X4 core | 🚫 For now: its errata aren't fixed |
 |  | Idle sleep | ✅ By code reading: cores already idle in WFI |
@@ -36,8 +36,8 @@
 |  | HDR, peak brightness, colour calibration | ❌ Not assigned |
 |  | Always-on display, self-refresh | ❌ Not assigned |
 | **Graphics** | GPU power-on and ID | ✅ GPU answers: core id read from XNU, clean power-off |
-|  | GPU firmware through Trusty | ✅ Health PASS (gpu2): STATEFLAGS_CTRL executed, HEALTH_CHECK consumed, 0 firmware faults, empty assert (log). First real command stream is next |
-|  | Metal drawing | ⏳ Native GPU rendering remains incomplete. Startup's 30 s GPU wait removed: first frames at 68 s, was 136 s (r5-accel) |
+|  | GPU firmware through Trusty | ✅ Health PASS (gpu2); rungs 8-9 executed on the phone: MMUCACHE 0x807 ran in firmware, UFO fence in order, 0 faults (gpu5/gpu6). Rung 10 built and queued |
+|  | Metal drawing | ⏳ CA diagnostic: no AGXAccelerator exists in the IORegistry, so CoreAnimation selects the software context. Native path mapped; coremem S1 and rung 10 (page tables, MMUCACHE, first memory-writing job) built, booting |
 |  | Video encode and decode | ❌ Not assigned |
 | **Storage** | Reading | ✅ Multi-block reads, 0 errors |
 |  | Writing (persistent /var) | 🟡 Saves and restore across reset verified on the old root; writer now bound to the GPT-resolved ios_data (host-tested), not yet run there |
@@ -50,7 +50,7 @@
 |  | Power key | ✅ Owner: locks and wakes the phone under iOS (pwr1) |
 |  | Tap to wake, palm rejection | ❌ Not assigned |
 | **Connectivity** | Wi-Fi | 🟡 BCM4390 under iOS: scan found 26 networks, authentication and association OK; the WPA2 4-way handshake fails. No packet traffic yet |
-|  | Bluetooth | 🟡 Firmware/H4 proven; keychain wrap/unwrap PASS on the phone (B1). Native HCI attachment, Settings pairing and profiles unproved |
+|  | Bluetooth | 🟡 Native HCI attached on the phone (HCI 6.0 Broadcom, 4 Mbaud RTS/CTS, Read Local Version status 0); keychain wrap/unwrap PASS (B1). Settings pairing needs radio transmit: owner-approved, pairing image pending |
 |  | Cellular | ⏳ S5400 identified; pad probe only. PCIe0, modem boot and native CommCenter service remain unfinished |
 |  | SIM, eSIM | ⏳ No qualified SIM access or native cellular service yet; depends on modem transport and boot |
 |  | GPS | ❌ Not assigned |
@@ -63,9 +63,9 @@
 |  | USB host, video out | 🚫 No host stack in open XNU |
 | **Audio** | Speakers, microphones | ⏳ QEMU test queued; depends on always-on chip |
 |  | Haptics | ✅ Owner: a buzz on touch under iOS (pwr1) |
-| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved |
-|  | Always-on chip | ⏳ First test built |
-| **Power** | Temperature and thermal guard | ✅ Live temperatures; guard panic verified at a test limit |
+| **Sensors** | Accelerometer, gyro, proximity, light, barometer | ⏳ Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved. SweetSensorHub publishes 19 temperature services, all bound by thermalmonitord |
+|  | Always-on chip | ⏳ First phone run panicked in the carve zeroing (DC-ZVA alignment fault on the device-class map); root-caused, the aoc6 fix is next |
+| **Power** | Temperature and thermal guard | ✅ Live temperatures; guard panic verified at a test limit. SweetSensorHub: thermalmonitord binds all 19 published services incl. battery TG0B (32.7 °C) |
 |  | Battery gauge | ✅ Owner: 95% shown in the status bar and Control Center (pwr1) |
 |  | Charging control | ❌ Left at the bootloader's settings |
 |  | Wireless charging | ❌ Not assigned |
@@ -89,13 +89,13 @@
 
 ## Current checkpoint
 
-**Updated 2026-11-04.** Dual boot is installed (Android untouched), and iOS 26 is usable by hand — touch, full-screen scaling, the volume and power keys, haptics, the brightness slider, and the real battery level and clock. A structured live-debug platform now drives the bring-up: a streaming kernel console, unattended screenshots, a user-stack sampler, per-daemon log mirroring, automatic crash triage (`tools/crashdoc.py`), evidence-based status probes (`tools/probe_eval.py`), a QEMU pre-flight, and one CLI over it all (`tools/hk`) feeding a shared, auto-generated backlog (`docs/debug/BACKLOG.md`).
+**Updated 2026-11-04 (second session).** Dual boot is installed (Android untouched), and iOS 26 is usable by hand — touch, full-screen scaling, the volume and power keys, haptics, the brightness slider, and the real battery level and clock. A structured live-debug platform now drives the bring-up: a streaming kernel console, unattended screenshots, a user-stack sampler, per-daemon log mirroring, automatic crash triage (`tools/crashdoc.py`), evidence-based status probes (`tools/probe_eval.py`), a QEMU pre-flight, and one CLI over it all (`tools/hk`) feeding a shared, auto-generated backlog (`docs/debug/BACKLOG.md`).
 
-**Proven on the phone this session:** 120 Hz ProMotion (65 completed frames/s during scroll, past the old ~40 cap); the Settings>About, Messages/BlastDoor and AccessibilityUIServer crashes fixed live; a restored root (r5) that puts back the stock app resources an earlier prune removed (Phone, About, Messages, FaceTime, Spotlight), flashed and verified on the partition; and a consolidated image (int4) carrying the crash fixes, 120 Hz, the full 16 GiB memory map and a read-only charger reporter in one boot.
+**Proven on the phone this session:** 120 Hz ProMotion (65 completed frames/s during scroll, past the old ~40 cap); the Settings>About, Messages/BlastDoor and AccessibilityUIServer crashes fixed live; a restored root (r5) that puts back the stock app resources an earlier prune removed (Phone, About, Messages, FaceTime, Spotlight), flashed and verified on the partition; a consolidated image (int4) carrying the crash fixes, 120 Hz, the full 16 GiB memory map and a read-only charger reporter in one boot; **and, in the second session:** the backboardd crash loop fixed by dropping the soft-blur compositor material (int5-r2: 0 LIBMALLOC/usertrap crashes over a full 18-minute window at Home, where int5 crashed in 3 execs); the CPU governor's new frames stage holding the proven 1075 MHz cap for 98% of a busy window under sustained UI load (int4-perf1, with SpringBoard's telephony-restart error flood down 96%); and SweetSensorHub's 19 published temperature services all bound and polled by thermalmonitord, including the battery gauge TG0B (sensorhub1). Bluetooth attached its native HCI on the phone (HCI 6.0 Broadcom, 4 Mbaud RTS/CTS).
 
-**GPU / Liquid Glass.** The GPU is an Imagination PowerVR DXT (BVNC 71.2.2448.1212). Its firmware boots and passes health; the iOS 26 glass renders flat only because no accelerator is published yet, so the compositor falls back to software. A coordinated analysis mapped the full native path — coremem init -> command stream -> a custom `AGXAccelerator` with a native Metal plugin -> CoreAnimation compositing — and the first hardware step, the coremem init fix, is built and queued for its on-phone milestone.
+**GPU / Liquid Glass.** The GPU is an Imagination PowerVR DXT (BVNC 71.2.2448.1212). Its firmware boots and passes health, and the first real command-stream steps are now executed on the phone: MMUCACHE 0x807 ran in firmware with the UFO fence advancing in order and zero faults (rungs 8–9, gpu5/gpu6). A CA diagnostic answered why the iOS 26 glass still renders flat: no `AGXAccelerator` exists in the IORegistry, so CoreAnimation selects the software context. The mapped native path — coremem init -> command stream -> a custom `AGXAccelerator` with a native Metal plugin -> CoreAnimation compositing — has its next rung (10: client page tables, MMUCACHE, the first memory-writing job) built and queued for its on-phone boot.
 
-**Built and queued for on-phone tests:** the full 16 GiB RAM map, a Wi-Fi fix (the handshake fails from host RX-buffer starvation, not crypto), Bluetooth, NFC, the camera flash LED, sensors, the cellular modem's first PCIe link-up, USB host mode, and audio stage one. Native Metal, Wi-Fi traffic, cellular and audio are still incomplete.
+**Built and queued for on-phone tests:** NFC (the reset pulse and I2C open), Bluetooth pairing in Settings (radio transmit owner-approved), the Spotlight spin fix (root-caused this session: an `aks_get_device_state` poll at 175/s when the device reads unlocked), the camera flash LED, USB host mode and audio stage one. The first AoC phone run panicked in the carve zeroing (a DC-ZVA alignment fault on the device-class mapping) — root-caused, the aoc6 fix is next; the modem's rung 5 stopped safely because the endpoint configures itself after link training. Native Metal, Wi-Fi traffic, cellular and audio are still incomplete.
 
 Read [NOTES.md](NOTES.md) for current state and [HANDOFF.md](HANDOFF.md) for next actions. The
 percentage above is a planning checklist, not release readiness.
@@ -125,10 +125,10 @@ Generated from `docs/status.json`. Order can change with each physical result.
 
 **Now**
 
-- Resolve startup/compositor crashes and measure frame completion before promoting sampler speed
-- Send the first real GPU command stream through the healthy firmware (M3)
+- Backboardd crash loop fixed live (softblur material removed, int5-r2); the Spotlight spin is root-caused (aks_get_device_state poll) - ship its fix and measure frame completion
+- GPU command stream: rungs 8-9 executed on the phone; land rung 10 (page tables + first memory-writing job), then publish the AGXAccelerator for Metal
 - Qualify interactive scripted TAP/HOME behavior; screenshots already run unattended
-- Get the Wi-Fi WPA2 handshake through (the firmware never answers M1) and attach Bluetooth HCI natively
+- Get the Wi-Fi WPA2 handshake through (RX-starvation fix built, boot pending) and pair Bluetooth in Settings (transmit owner-approved, image pending)
 - Make the Phone app (now opens, partly) and Settings > About fully usable, then more stock-app launches
 
 **Next**

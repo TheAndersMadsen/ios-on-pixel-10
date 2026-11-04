@@ -22,7 +22,13 @@ it is not a second project journal.
    refused (`research/ios26-modem-r1/receipts/modem2-rung5-stop-20261104.md`); CA diagnostic
    answered - no AGXAccelerator, CA selects SWContext
    (`research/ios26-phaseb-r1/goal-pool/receipts/queue-20261104.md`).
-5. Apps lane is stopped behind the AKS user-session keybag (owner decision,
+5. Tools lane, pre-existing CI red (flagged 2026-11-04, not tonight's work):
+   `tools/test_boot_summary.py` RealAttempts tests fail/errors against the old on-disk
+   attempts (KeyError 'match') — `boot-summary.py` only sets `kernel["match"]` when a
+   `--mach` kernel exists, and the November-1 HANDED_OFF attempts predate that. Expectation
+   drift from `fab03af`. Not blocking docs commits (readme_status --check and check_tracked
+   pass); the tools owner aligns the test or the summary key.
+6. Apps lane is stopped behind the AKS user-session keybag (owner decision,
    `research/ios26-apps-r1/receipts/h3-static-r12/VERDICT.md`).
 
 Bare `fastboot boot` only, ANDROID_SERIAL set, disks resolved by-name, return check after every boot.
