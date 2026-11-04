@@ -252,14 +252,16 @@ OPEN: bluetoothd is denied (hk_deny) in perf-r1-based overlays; enabling it is B
 
 ## modem
 SUBSYS: modem
-SRC: xnu/bsd/dev/blazer_modem.c (glue), blazer_modem_core.c/.h (hardware-free ladder; branch hk-modem1 = hk-int3 + research/ios26-modem-r1/src); host test research/ios26-modem-r1/tests/run.sh
-ARGS: hk_dbg bits 24..27 = stage (1 read, 2 ctrl, 3 phy, 4 link), bit 28 hold; or blazer_modem=N, blazer_modem_hold=1, blazer_modem_force=1. Off by default
-TAGS: `blazer-modem:` (read:, pad, ctrl:, phy:, rc:, cp:, link:, id:, tidy:, verdict:, stopped:); planned `cell:`, `blazer-gnss:`/`gnss:`; `HKL CommCenter[` (net.log), `HKL locationd[` (location.log)
+SRC: xnu/bsd/dev/blazer_modem.c (glue), blazer_modem_core.c/.h (hardware-free ladder; hk-modem1 = hk-int3 + research/ios26-modem-r1/src; hk-modem2 f9f81c5 = hk-int4 + research/ios26-modem-r1/modem2/src); host tests research/ios26-modem-r1/{tests,modem2/tests}/run.sh
+ARGS: hk_dbg bits 24..27 = stage (1 read, 2 ctrl, 3 phy, 4 link, 5 bar [modem2]), bit 28 hold; or blazer_modem=N, blazer_modem_hold=1, blazer_modem_force=1. Off by default
+TAGS: `blazer-modem:` (read:, pad, ctrl:, phy:, rc:, cp:, link:, id:, survey:, bar:, tidy:, verdict: rung N, verdict:, stopped:); planned `cell:`, `blazer-gnss:`/`gnss:`; `HKL CommCenter[` (net.log), `HKL locationd[` (location.log)
 SIG: `blazer-modem: verdict: STOP stage N, at X: <reason>` → the named rung failed; everything driven was tidied (tidy: errors 0x0)
+SIG: `blazer-modem: verdict: rung N (name) STOP: <reason>` (modem2) → that rung; later rungs print SKIP. Rungs 1..4 PASS PHYSICAL in a7-sweep1 (2026-11-04)
+SIG: panic right after `bar: command … Next: read 16 words of BAR0` → BAR0 read not decoded, DWC SError (modem2 rung 5)
 SIG: `read: CP as found: NOT off` → stage 4 refuses to power the CP (`CP not off as found`); rerun stage 1 and compare pad TX values
 SIG: `link: attempt 4 failed … LTSSM 0x…` with `cp: powered` → CP ROM did not train: check CP2AP pads after power, PHY table, phy_fw clock
 TOOLS: `hk logs --grep blazer-modem`; `python3 -I tools/probe_eval.py --row Cellular <attempt>`; `hk find --feature modem`
-DOCS: research/ios26-modem-r1/MODEM.md (S5400 map, CommCenter/ARI gap, rungs 5..11 and GNSS G1..G2), PHONE-TEST.md, docs/CONNECTIVITY.md
+DOCS: research/ios26-modem-r1/MODEM.md (S5400 map, CommCenter/ARI gap, rungs 5..11 and GNSS G1..G2), PHONE-TEST.md, modem2/MODEM2.md (sweep1 decode, rung 5), COMMCENTER.md (why CommCenter is absent: `_LimitLoadToDeviceTree baseband`), docs/CONNECTIVITY.md
 OPEN: no physical run yet (rung 0 659b370 and stages 1..4 never booted). CP firmware (rung 6+) needs an owner decision; CommCenter on iPhone12,3 speaks ARI, the S5400 SIPC
 
 ## audio

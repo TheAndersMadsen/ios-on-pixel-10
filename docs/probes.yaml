@@ -585,10 +585,11 @@ probes:
   - id: cellular
     phone_only: true
     row: Cellular
-    # S5400 modem on PCIe0. Rungs and lines: research/ios26-modem-r1/MODEM.md (hk-modem1 kernel, hk_dbg bits 24..27 = stage).
+    # S5400 modem on PCIe0. Rungs and lines: research/ios26-modem-r1/MODEM.md, modem2/MODEM2.md (hk-modem1/hk-modem2, hk_dbg bits 24..27 = stage).
+    # Rungs 1..4 PASS PHYSICAL in a7-sweep1 (2026-11-04); the ROM's class code read 0x000000 there (Android prints 0x028000).
     needs:
       markers: ['blazer-modem: |cell: ']
-      image: 'hk-modem1 kernel (research/ios26-modem-r1/PHONE-TEST.md): hk_dbg | 0x04000000 for stage 4'
+      image: 'hk-modem2 kernel (research/ios26-modem-r1/modem2/MODEM2.md): a7-ios-system-modem2, hk_dbg 0x51e1e1f = stage 5'
     works:
       all:
         - {re: 'cell: the data session is up', label: 'planned (rung 10): packet service'}
@@ -601,13 +602,14 @@ probes:
       note: 'S5400 firmware booted under iOS ({attempt})'
     built:
       all:
-        - {re: 'blazer-modem: rom: boot_stage 0x(?P<boot_stage>[0-9a-f]+)', label: 'planned (rung 5): CP ROM boot handshake'}
+        - {re: 'blazer-modem: rom: boot_stage 0x(?P<boot_stage>[0-9a-f]+)', label: 'planned (rung 5b): CP ROM boot handshake (bus master, MSI)'}
       note: 'CP ROM handshake, boot_stage 0x{boot_stage} ({attempt})'
     active:
       all:
-        - {re: 'blazer-modem: verdict: PASS stage 4, at id: PCIe0 link gen (?P<gen>\d) x(?P<width>\d+), endpoint 144d:(?P<dev>[0-9a-f]{4})', label: 'S5400 boot ROM linked on PCIe0, config ID read'}
+        - {re: 'blazer-modem: verdict: PASS stage [45], at (?:id|bar): PCIe0 link gen (?P<gen>\d) x(?P<width>\d+), endpoint 144d:(?P<dev>[0-9a-f]{4})', label: 'S5400 boot ROM linked on PCIe0, config ID read (stage 5: BAR0 too)'}
       any:
-        - {re: 'blazer-modem: id: 144d:a5a5 class 0x028000', label: 'the ID Android reads (144d:a5a5)'}
+        - {re: 'blazer-modem: id: 144d:a5a5 class', label: 'the ID Android reads (144d:a5a5)'}
+        - {re: 'blazer-modem: verdict: rung 5 \(bar\) PASS', label: 'rung 5: BAR0 decoded, bus master off'}
         - {re: 'blazer-modem: link: UP, attempt \d+'}
       note: 'S5400 boot ROM on PCIe0 under iOS: gen {gen} x{width}, 144d:{dev}, no firmware ({attempt})'
     fails:
@@ -615,8 +617,9 @@ probes:
       - {re: 'blazer-modem: read: CP as found: NOT off', label: CP not off as found (stage 4 refuses)}
       - {re: 'blazer-modem: link: attempt 4 failed', label: CP ROM never trained}
       - {re: 'blazer-modem: tidy: .*errors 0x[1-9a-f]', label: tidy could not restore a pad}
+      - {re: 'blazer-modem: verdict: rung (?P<rung>\d) \((?P<name>\w+)\) STOP: (?P<why>[^,]+)', label: modem2 rung stopped}
     owner: 'Does the status bar show a carrier?'
-    next: {kind: unattended, minutes: 15, test: 'research/ios26-modem-r1/PHONE-TEST.md: the int3/obs image on hk-modem1 with hk_dbg | 0x04000000 (stage 4); verdict line + return check'}
+    next: {kind: unattended, minutes: 15, test: 'research/ios26-modem-r1/modem2/MODEM2.md section 4: a7-ios-system-modem2 (int4 + hk-modem2, stage 5); five rung verdicts + summary + return check'}
 
   - id: sim
     phone_only: true
