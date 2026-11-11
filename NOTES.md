@@ -1,6 +1,6 @@
 # Current project notes
 
-Updated 2026-11-04 (Phase C live-debug run, m1box). This is the **only default project-state document**. Keep it
+Updated 2026-11-11 (UniXNU-alignment run, m1box). This is the **only default project-state document**. Keep it
 short and current; do not append a session journal here. The previous full journal
 is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only.
 
@@ -74,12 +74,19 @@ recoverable. QEMU and host tools support development; they are not phone results
   Host only, not booted: volume-key poll (5bd6899) and `chooser-v1-r12` = r11 + `--keys --keys-poll`
   (bccd5cf0…4870; steps `research/ios26-dualboot-r8/keys/BOOT-r12.md`); the iOS branch, one image with the XNU
   payload and stock Android (291251d; `research/ios26-dualboot-r8/chooser-ios/DESIGN.md`, boots P0, C1-C4).
-- **Apps (QEMU, 2026-11-03):** H3 rejected as stated. Booting the root as a normal boot (`rd=ufsroot0`; `rd=md0`
-  is launchd's restore-like "ramdisk" mode) runs the stock creator `usermanagerd --init` and removes the type-6 persona
-  errors, but the user still has no personas and lsd aborts (`INVALID_PERSONA` -> `Could not get user container URL!`).
-  Removing the seeded persona.kb changed nothing (r15b). Lane stopped (two hypotheses); next blocker by static
-  inference: per-user personas wait on `MKBUserSessionLoadKeybagForUser` (AKS user-session keybag), which is
-  SEP-adjacent and needs an owner decision. `research/ios26-apps-r1/receipts/h3-static-r12/VERDICT.md`.
+- **Apps (QEMU, 2026-11-11):** personas were blocked by varfs refusing `renamex_np(RENAME_SWAP)` (errno 45), not by the
+  AKS user-session keybag; no SEP decision is needed for this step. With the varfs fix (cc42295 = `ed186e2`, already in the
+  int5 line) and `rd=ufsroot0`: INVALID_PERSONA 42 -> 0, lsd aborts 21 -> 0, Calculator/MobileTimer/MobileNotes register
+  (`registration_verified:true`) and launch. Not physical. `/data/work/hk-apps-swap/RESULT.md` (m1box).
+- **Next kernel `kernel.ios26-knext` (2026-11-11, HOST+QEMU, not booted on the phone):** int5-r3 base (48b121e) + backlight
+  calibration v2 (4-byte 16.16 data keys), pmap 64-bit PA, ISB after `AT S1E1W`, `blazer_idle_latency_us` (off by default),
+  GPT usable-range check for ios_data. sha256 ff1b4266…5dde, linked on the Mac, all changes verified in the linked binary;
+  QEMU apps run PASS, app windows draw content. Owner boot commands: `/data/work/hk-knext/BUILD-RESULT.md` section 6.
+  Skeleton overlay (14 missing `/private/var` dirs) and gated `/chosen/osenvironment=main`: `/data/work/hk-skel/RESULT.md`.
+- **iOS-configured kernel (2026-11-11, QEMU):** the same source built as iPhoneOS (`CONFIG_JETSAM`, `XNU_TARGET_OS_IOS`)
+  links and reaches Home in QEMU with 0 panics after three fixes (export lists, earlier MAC policy registration, `exec`
+  console line). Built with upstream clang on m1box (Linux toolchain, 5 min/build); needs a Mac rebuild and a phone A/B
+  before adoption. `/data/work/hk-iosconf/RESULT.md`. UniXNU comparison reports: `/data/work/unixnu-align-r1/`.
 - **Compositor (2026-11-03):** the physical backboardd NSURL-nil abort is BaseBoard's
   `BSSystemSharedDirectoryForIdentifier` getting NULL from `container_system_path_for_identifier` (containermanagerd).
   QEMU never reproduces it (0 respawns in 15 min; the container path resolves), so it is a phone-side timing/

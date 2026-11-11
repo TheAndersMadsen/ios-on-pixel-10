@@ -5,6 +5,12 @@ it is not a second project journal.
 
 ## Next actions
 
+0. **2026-11-11, attended, owner present:** boot `a7-ios-system-knext-r1` (int5-r3 recipe, only the kernel swapped to
+   `kernel.ios26-knext` ff1b4266…; `rd=ufsroot0`). Commands and accept rows: `/data/work/hk-knext/BUILD-RESULT.md`
+   section 6 (m1box). Then A/B: skeleton overlay `int5-r3-skel-r1.ovl` (`hk_overlay=0xA1080081`), then the iOS-configured
+   kernel after a Mac rebuild (`/data/work/hk-iosconf/RESULT.md`). Item 6 below (apps behind the keybag) is superseded:
+   the blocker was varfs RENAME_SWAP. Items 1-5 date from 2026-11-04 and need re-confirmation by the owner.
+
 1. **Owner decision 2026-11-04 ~09:40: Bluetooth transmit APPROVED.** Gate levels 2-3 allowed
    (`blazer_bt_tx=2|3`: classic inquiry, active LE scan, then pairing in Settings). The BT lane
    builds bt5-r3 on this; bt5-r2 (receive-only, BlueTool boot-script fix, Mac-only image) remains
