@@ -9,6 +9,24 @@ is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only
 Goal: native iOS 26 on a self-contained Pixel 10 Pro, with Android preserved and
 recoverable. QEMU and host tools support development; they are not phone results.
 
+### Done-list status (2026-11-12, owner goal; receipts = /data/work/hk-fleet/results/<req>/REPORT.md on m1box)
+
+| # | Item | Status | Physical receipt |
+|---|---|---|---|
+| 1 | Daily image: Home <90 s, Wi-Fi joined, brightness slider, 15+ apps incl. Photos+Maps, touch, charging | **MET** | `integ-5` (a7-ios-system-integ-r5, hk-base-3, r6 root): 18 apps drew incl. Photos + Maps, walk 83/83; Home 77-83 s after `fastboot boot`; Settings>Wi-Fi joined; 99 % charging; `integ-6` (hk-base-4): panel DBV writes follow each slider drag (`tensor-dpu: bright transport sent_dbv 2684 … 1791`, rc 0) |
+| 2 | Bluetooth: attached, HCI both ways, no respawn | open | `bt-2`..`bt-7`: attach PASS, 199 commands all complete; still restarts — `bt-7` stops at LE Set Scan Enable 0x200c answered 0x12 |
+| 3 | Sensors: CoreMotion accel/gyro + UI rotates | half | `sensors-3`: `HKMOTION … accel 280 gyro 280 mag 92→184` (CoreMotion on the phone); rotation needs the owner to turn the phone (`sensors-4`, held) |
+| 4 | GPU compute writes memory + Metal plugin answers QuartzCore without crashing backboardd | **MET** | `gpu-5`: `R12 readback: MATCH (0x5ab1c0de)`; `gpu-7`/`gpu-9`: compute + transfer through HMGU SUBMIT/WAIT MATCH; `metal-5`: backboardd ran QuartzCore on HMNativeMetalDevice 120 s, 12162 calls, no crash (screen black: nothing drawn yet) |
+| 5 | Audio: AoC running, service census | open | `audio-1`..`audio-5`: phone's own aoc.bin 16495511 loads + authenticates (rungs 1-3 PASS); AoC never writes its IPC block (rung 4); amb_smmu programming made no difference |
+| 6 | Modem: ROM handshake rung, no RF | **MET** | `modem-4`: `rom: the boot ROM waits for the doorbell (boot_stage 0xff) … verdict: PASS stage 8`; no doorbell, no firmware, no RF |
+| 7 | devices/blazer passes hk_device check + UniXNU checker, status line per driver | **MET** | `tools/hk_device.py check`: 27 drivers, 27 status lines (21 physical); UniXNU checker `blazer: 23 structured areas checked` |
+| 8 | NOTES summary + phone back in Android, return check PASS | in progress | this table |
+
+Other physical results 2026-11-11/12: root **r6 flashed to ios_system** (sha e798123a, GPT byte-identical; `/data/work/hk-storage/flash-r6-run/`);
+Linux-built kernels boot the phone (`farm-1`); common bases hk-base-2/-3/-4 reach Home; HakiOS-method ladder: `port-1`
+(6 drivers built in) draws Home at 64 fps; modem rungs 5-8; NFC discovery + clock output; camera PMIC id.
+Fleet coordination, method and per-lane state: `/data/work/hk-fleet/{BRIEF,FACTS}.md`, `/data/work/hk-<lane>/STATUS.md`.
+
 - **Best physical iOS result:** XNU 12377 and the real iOS userland reached
   human-confirmed Home and Settings in p32. Five A725 cores, 12.92 GiB RAM,
   display/touch, UFS reads, RTC publication and native battery samples have
