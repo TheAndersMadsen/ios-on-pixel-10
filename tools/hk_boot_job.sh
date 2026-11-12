@@ -34,7 +34,8 @@ bash tools/live_boot.sh "$IMG" "$NAME" --mach "$MACH" --wait "$WAIT" --sync-tool
   < <(sleep 7200) > "$HOME/hk-logs/$NAME.live.log" 2>&1 &
 LB=$!
 D=''
-for i in $(seq 1 60); do D=$(ls -dt research/laguna-usb-fix/attempts/live-*-"$NAME" 2>/dev/null | head -1); [ -n "$D" ] && break; sleep 2; done
+STARTMARK=$(mktemp); touch -d "-5 seconds" "$STARTMARK"   # only accept a run dir made by THIS job (an aborted earlier run can share the name)
+for i in $(seq 1 60); do D=$(find research/laguna-usb-fix/attempts -maxdepth 1 -type d -name "live-*-$NAME" -newer "$STARTMARK" 2>/dev/null | sort | tail -1); [ -n "$D" ] && break; sleep 2; done; rm -f "$STARTMARK"
 log "run dir: $D"
 # probes: once Home is up, then every 5 min while the boot lives
 shot=0; t0=$(date +%s); home=''
