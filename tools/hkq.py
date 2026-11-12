@@ -20,6 +20,8 @@ console file X.log. It runs where the reader runs (the Mac), from the same tools
     tools/hkq.py -s ... -c ... ports SpringBoard [THREADS]       (or a pid)
     tools/hkq.py -s ... -c ... sysctl kern.osversion
     tools/hkq.py -s ... -c ... kthreads [WINDOW_MS]              (kernel with hk-loop-1; name the output with tools/hkq_sym.py)
+    tools/hkq.py -s ... -c ... backlight | wifi-ios | bthci | sensors | gpu | accel | nfc | torch | modem | cpu | gov | temps | chg | ...
+                                                                  (one kernel status: the `drivers` reply filtered to that name)
     tools/hkq.py -s ... status
     tools/hkq.py -s ... -c ... batch 'drivers; procs; ioreg AppleBCM4390 4; log 200; sysctl kern.osversion'
 HKQ_SOCKET and HKQ_CONSOLE stand in for -s and -c. batch runs the queries in order (the kernel admits one per second) and
@@ -61,6 +63,16 @@ QUERIES = {
     'sysctl': (7, True, None, 0),
     'kthreads': (8, False, 'window_ms', 2000),      # XNU hk-loop-1+: kernel_task threads' CPU time over a window (default 500 ms)
 }
+# Kernel status names: not query ids of their own. The kernel prints every one in the `drivers` reply as "name: text"
+# (continuations "name+ text"): built-ins (hk_query.c hkq_builtin[]) and the lanes' hkq_register_status() hooks
+# (2026-11-11/12: hk-base-5 backlight; wifi-ios, bthci, sensors, gpu, accel, nfc, torch, cpu/gov/temps/chg, ...).
+# `hkq backlight` runs `drivers` and keeps only that name's lines; a name the running kernel lacks says so.
+STATUS_NAMES = ('wifi', 'bt', 'usb', 'modem', 'battery', 'thermal', 'ufs', 'audio', 'sensors',
+                'accel', 'backlight', 'bthci', 'chg', 'cpu', 'display', 'gov', 'gpu', 'modem-trace', 'nfc', 'temps',
+                'torch', 'ufsq', 'wifi-ios')
+for _n in STATUS_NAMES:
+    assert _n not in QUERIES
+    QUERIES[_n] = (QUERIES['drivers'][0], False, None, 0)
 SYSCTL_TOPS = ('kern.', 'hw.', 'vm.', 'net.', 'debug.', 'machdep.')
 VENDOR_COMMAND = 'vendor'
 NO_VENDOR = ('the running reader has no vendor op for this request: it was started from older tools than this hkq '
@@ -257,7 +269,29 @@ def run_query(client, console, name, arg, param, timeout, out, raw=False, sleep=
     w = client.run(query, param)
     if needs_arg and w['arg'] != arg:
         raise Refused(f'argument changed under the RUN: {w["arg"]!r}')
-    return wait_dump(tail, w['id'], timeout, out, raw, sleep, clock, client)
+    if name not in STATUS_NAMES:
+        return wait_dump(tail, w['id'], timeout, out, raw, sleep, clock, client)
+    keep = StatusFilter(out, name)
+    end, n = wait_dump(tail, w['id'], timeout, keep, raw, sleep, clock, client)
+    if not end.get('timeout') and not keep.hit:
+        out.write(f'{name}: (no such status in this kernel: not registered, or a kernel without that lane)\n')
+    return end, n
+
+
+class StatusFilter:
+    """A writer that passes on only one status name's lines of a `drivers` reply."""
+    def __init__(self, out, name):
+        self.out, self.hit = out, False
+        self.rx = re.compile(r'^(?:HKQ \d+ )?' + re.escape(name) + r'[:+](?: |$)')
+
+    def write(self, text):
+        for line in text.splitlines(keepends=True):
+            if self.rx.match(line):
+                self.hit = True
+                self.out.write(line)
+
+    def flush(self):
+        self.out.flush()
 
 
 def parse_spec(words):

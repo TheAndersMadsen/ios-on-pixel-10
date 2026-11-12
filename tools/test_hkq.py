@@ -233,6 +233,30 @@ class TestPure(unittest.TestCase):
 
 
 class TestFlow(Base):
+    def test_status_names_run_drivers_and_keep_their_lines(self):
+        """backlight & co. are kernel status hooks printed by `drivers` (query 3), not query ids of their own."""
+        for n in ('backlight', 'wifi-ios', 'bthci', 'bt', 'sensors', 'gpu', 'accel', 'nfc', 'torch', 'modem', 'cpu', 'gov',
+                  'temps', 'chg', 'display'):
+            self.assertEqual(hkq.parse_batch(n), [(n, None, 0)], n)
+            self.assertEqual(hkq.QUERIES[n][0], hkq.QUERIES['drivers'][0], n)
+        self.assertEqual(hkq.parse_batch('backlight; kthreads 500; wifi-ios'),
+                         [('backlight', None, 0), ('kthreads', None, 500), ('wifi-ios', None, 0)])
+        for bad in ('backlight 3', 'backlight x', 'backlite'):
+            with self.assertRaises(ValueError, msg=bad):
+                hkq.parse_batch(bad)
+        reply = ['wifi: up rssi=-51', 'wifi-ios: joined ch=36', 'backlight: level=812 max=4095 req=14 last=+3s',
+                 'backlight+ rate-limited 2', 'bthci: open h4 ok', 'unwired: touch aoc haptics (registered 9)']
+        k = FakeKernel(self.console, lines=reply)
+        end, n, out = self.query(k, 'backlight')
+        self.assertEqual(end['rc'], 0)
+        self.assertEqual(out.splitlines(), ['backlight: level=812 max=4095 req=14 last=+3s', 'backlight+ rate-limited 2'])
+        self.assertEqual(k.log[-1][0], hkq.REQ_RUN)
+        self.assertEqual(k.query, hkq.QUERIES['drivers'][0])           # the wire carries the drivers query id
+        _, _, out = self.query(FakeKernel(self.console, lines=reply), 'wifi')
+        self.assertEqual(out.splitlines(), ['wifi: up rssi=-51'])         # `wifi` does not take `wifi-ios`
+        _, _, out = self.query(FakeKernel(self.console, lines=reply), 'torch')
+        self.assertIn('torch: (no such status in this kernel', out)
+
     def test_procs(self):
         k = FakeKernel(self.console)
         end, n, out = self.query(k, 'procs')
