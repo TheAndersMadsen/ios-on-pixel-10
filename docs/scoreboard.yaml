@@ -532,8 +532,14 @@ subsystems:
       - id: tdm-write
         label: the transfer engine (TDM) writes memory, CPU readback matches (rung 13t, stock fill replayed)
         any: [{re: 'HK GPUTA: R13t PASS'}, {re: 'HK GPUTA: SERVE selftest R13t: .* readback MATCH'}]
-        unverified: XNU hk-gpu-11 b0ace52 (kernel.gpu12), image a7-ios-system-gpu-r13t, queued as gpu-8 (backend path gpu-9)
-        next: 'Kick TDM + TDM finished + 1024/1024 words 0xf111f111'
+        sample: 20261112-051626-a7-gpu8-rung13t
+        next: 'Rung 13t PASS (stock fill on the TDM, 1024/1024 words); backend path gpu-9 PASS. Next: render (rung 14a context, 14b/c TA+3D)'
+        src: /data/work/hk-gpu/STATUS.md
+      - id: render-ctx
+        label: render context (TA dm 2 + 3D dm 3, stock static data) scheduled by the firmware (rung 14a)
+        any: [{re: 'HK GPUTA: R14a PASS'}]
+        sample: live-20261112-071124-a7-gpu10-rung14a
+        next: 'Rung 14a PASS. Next: 14b free lists + HWRT dataset + TA kick (W3 capture), then 14c 3D kick + readback'
         src: /data/work/hk-gpu/STATUS.md
       - id: serve-job
         label: GPU serve mode runs a job through the HMGU backend path (bgs_*), firmware stays up
@@ -719,15 +725,24 @@ subsystems:
           - {re: 'blazer-bt-bridge: from bluetoothd (?P<pk>\d+) packets', group: pk, ge: 1}
           - {re: 'HKBT pkt tx #\d+ s\d+ [SLH] len \d+:'}
           - {re: 'bridge [^|]*\| from bluetoothd (?P<pk>\d+) pkts', group: pk, ge: 1}
-        unverified: 'int5: "from bluetoothd 0 pkts": bluetoothd never opens the bridge (BlueTool boot script times out first)'
-        next: 'Boot a7-ios-system-bt6-r1 (hkbluetool answers the BlueTool boot script; bridge takes IOAOSSKYSETCHANNELSPEC; HKBT pkt trace)'
+        sample: 20261112-070411-a7-bt11-tx2
+        next: 'Boot a kernel with hk-bt-11 (bridge, gate, vendor reply shapes) + nub transport-encoding 1 + hkbluetool overlay'
         src: /data/work/hk-bt/STATUS.md; research/ios26-connectivity-r1/bluetooth/b5/B5.md
+        action: bt-attach
+      - id: le-scan
+        label: bluetoothd stays up and LE scans (advertising reports from the chip)
+        all:
+          - {re: 'HKBT le-scan-enable PASS: 0x200c status 0x00'}
+          - {re: 'HKBT le-scan PASS: (?P<n>\d+) LE advertising report events', group: n, ge: 1}
+        sample: 20261112-070411-a7-bt11-tx2
+        next: 'Needs gate level 2 (blazer_bt_tx=2), hk-bt-11 (0x204a legacy mode, 0xfd3a -> LE Set Random Address)'
+        src: /data/work/hk-bt/STATUS.md
         action: bt-attach
       - id: powered
         label: controller powered on in bluetoothd
         all: [{re: 'HKL bluetoothd\[\d+\] .*Power state changed\. PowerState:1'}]
-        unverified: bluetoothd reports PowerState:2 only
-        next: 'Needs chip attachment first'
+        unverified: bluetoothd reports PowerState:2 only (bt-8 scans for TCC with the user power still off)
+        next: 'Settings > Bluetooth power-on walk on a hk-bt-11 + blazer_bt_tx=2 image'
         src: docs/CONNECTIVITY.md
         action: bt-attach
       - id: scan
@@ -752,6 +767,11 @@ subsystems:
       - {re: 'HKBT hci-open FAIL: (?P<why>.*)', label: bluetoothd connect refused by the bridge}
       - {re: 'HKBT respawn-stop: (?P<why>.*)', label: 'bluetoothd restarts stopped by the kernel (exec refused, launchd parks the job)'}
       - {re: 'FATAL ERROR - HCI Transport', label: bluetoothd could not match its HCI transport name}
+      - {re: 'PCIe failed to register event listener', label: 'nub transport-encoding 7 (PCIe) sends bluetoothd down the PCIe path: publish 1 (H4)'}
+      - {re: 'blazer-bt-bridge: held 0x(?P<op>[0-9a-f]{4}) \(unsupported, never\)', label: 'gate answered Unknown for a standard command bluetoothd needs'}
+      - {re: 'timedout waiting for controller', label: 'bluetoothd VSC stall (a vendor reply shape is wrong: ByteStream parsers need >= 1 byte)'}
+      - {re: 'usercrash: bluetoothd\[\d+\] (?P<why>.*)', label: bluetoothd aborted}
+      - {re: 'HKBT le-scan-enable FAIL: 0x(?P<op>[0-9a-f]{4}) status 0x(?P<st>[0-9a-f]{2})', label: 'LE scan enable refused by the chip (0x0c legacy/extended mix, 0x12 no random address)'}
 
   # ------------------------------------------------------------------ cellular
   - id: cellular
