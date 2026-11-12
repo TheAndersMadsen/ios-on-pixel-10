@@ -1,0 +1,128 @@
+# Physical boot receipt: a7-integ-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 23:12:19 +0100
+image:     research/images/a7-ios-system-integ-r1/boot.img sha256 67c6c2e753c27df294e988861031e7ccefe2d9a153094f1d977ed8cdd9ea8ade
+kernel:    research/ios26-integ-r1/build/kernel.integ1.unstripped (unstripped) sha256 7c553b06fc57379abeb4cf0038aa9b6e018bc6a03e7e001629d7271ffdc64de3
+revision:  22e4e7db52f56d94fbd391dfb1d0163b2a8b3888 (XNU hk-integ-1; kernel.integ1.buildinfo on the Mac)
+command:   bash tools/hk_boot_job.sh a7-ios-system-integ-r1 a7-integ-r1 research/ios26-integ-r1/build/kernel.integ1.unstripped 420 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-231212-a7-integ-r1/console.txt, research/laguna-usb-fix/attempts/20261111-231219-a7-integ-r1/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-231219-a7-integ-r1  [console+msgbuf+live+reader]  up 276 s, panics 0, crashes 1, usertraps 1, codesign 0, max execs 4
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         8/8  settings               (complete)           complete
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        5/8  haptic                 keys-hw              Attended: press Vol Up/Down during a live boot
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  hkq-power              full-run             Boot ended early: see stability ladder
+battery      4/5  ui                     charging             Boot with a lower state of charge to see chg=cc
+gpu         0/13  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi       14/14  settings-wifi          (complete)           complete
+bluetooth    5/8  attached               powered?             Needs chip attachment first
+cellular    3/11  id                     survey?              Boot a7-ios-system-modem3-q5 (or q6/q7, which print rung 5 too)
+sensors     4/14  compass                hid-published?       Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc          5/6  discover               tag?                 Attended: a7-ios-system-nfccam2-c (nfccam-3): hold a tag on the upper back from the TAG WI
+cameras      3/5  cam-pmic               cam-sensor?          Sensor power/reset sequence (front sensor, FDT module_power_seq@4): first rail = PP3200_CA
+apps         4/8  settings-responsive    registered?          Boot kernel.ios26-knext (varfs RENAME_SWAP + rd=ufsroot0) with tools/ios_app_register; che
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  respawns: bluetoothd 4
+  crashes: Photos 1
+  usertraps: Photos 1
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## firmware: grep -E 'shim: TSHIMST2 .*handoff=yes|^VERDICT' reader.txt (first 2)
+VERDICT: PANICKED | stage=none | XNU entered=yes | probe ran=no | root mounted=yes | launchd exec'd=yes | exec committed=yes | userland exec'd=yes | launchd main=yes | dyld=shared-region | panicked=yes ("blazer-usbcon: the host asked to end
+  shim: TSHIMST2 nonce=0x267f957d7d39f998 reason=5 handoff=yes cntfrq=38400000 t0=5925428219 tlast=6899571106
+
+## firmware: grep -E 'TEGU-XNU EARLY [12]:|hk-boot-args: command line' console.txt (first 3)
+23:13:01.272 [    0.05] TEGU-XNU EARLY 1: arm_init entered (MMU on)
+23:13:01.272 [    0.05] TEGU-XNU EARLY 2: PE_init_platform done
+23:13:01.325 [    0.10] hk-boot-args: command line 768 bytes, extra 148 bytes (/chosen/hk-boot-args-extra), builtin 0 bytes; the first source that has a name wins, in that order
+
+## cpu: grep -E 'SWEET CPU: 5/5|blazer-gov: write domain|HKQ 1 cpu:' console.txt (first 3)
+23:13:01.351 [    0.13] SWEET CPU: 5/5 CPUs initialized, SGI1 verified
+23:13:01.644 [    0.42] blazer-gov: write domain 1 level 18, 729 MHz
+23:13:01.648 [    0.42] blazer-gov: write domain 1 level 16, 1075 MHz
+
+## memory: grep -E 'blazer-mem: vm max_mem' console.txt (first 1)
+23:13:01.283 [    0.06] blazer-mem: vm max_mem 0x35ef80000, hw.memsize 0x400000000
+
+## storage: grep -E 'blazer-ufs: "ios_system"|hfs: mounted|blazer-root: watch' console.txt (first 3)
+23:13:01.435 [    0.21] blazer-ufs: "ios_system" on LUN 0: first block 15b4000, 24576 MiB, read only, DMA at 88a424000
+23:13:01.438 [    0.21] hfs: mounted iOSRoot on device b(1, 0)
+23:13:09.392 [    8.17] blazer-root: watch t 10001 ms stage pid1_exec reads 30581 blocks 186428 busy 5297 ms max 11092 us last lba 23407732
+
+## display: grep -E 'tensor-dpu: (attached|scale attached|frames kicks)|SWEET BL: calibration|tensor-dpu: bright transport sent_dbv' console.txt (first 6)
+23:13:01.351 [    0.13] tensor-dpu: attached: layer 0 at 0xf0000000 1280x2856 stride 5120 qos 0
+23:13:01.351 [    0.13] tensor-dpu: scale attached: source 1125x2511 to 0,0 1280x2856 factor 0xe0f9 0xe110 sram 0 on filter 0
+23:13:01.369 [    0.13] SWEET BL: calibration 7 table entries, mid 3276800/65536 nits, 4 fixed keys
+23:13:06.736 [    5.51] tensor-dpu: frames kicks 1 dones 1 underrun first 0 later 0 nofetch 0 frame_us last 11122 max 11122 status 0x2000003 fe 0x40 refusal 0
+23:13:42.882 [   41.66] tensor-dpu: bright transport sent_dbv 4621 (~139.0 nits) cap 140 acl_off 0 rc 0 n 1 (no panel readback)
+23:13:42.889 [   41.66] tensor-dpu: bright transport sent_dbv 4619 (~138.9 nits) cap 140 acl_off 0 rc 0 n 2 (no panel readback)
+
+## input: grep -E 'blazer-touch: tcm: finger|SWEET HID: touch [0-9]|blazer-haptic: tap [0-9]|SWEET PHYSICAL: epoch' console.txt (first 6)
+23:14:56.766 [  115.54] blazer-touch: tcm: finger 0 down at 15842, 64750
+23:14:56.766 [  115.54] blazer-haptic: SWEET HID: touch 0 down at 309,2820 edge (1 clients)
+23:14:56.909 [  115.68] blazer-haptic: tap 1 rc 0 (skipped 0)
+23:14:56.981 [  115.73] HKL Preferences[192] [general] Stopping hotspot browsing (isBrowsing 1 removeCacSWEET HID: touch 0 up at 520,2055 edge (1 clients)
+23:14:58.178 [  116.95] blazer-touch: tcm: finger 0 down at 24388, 60686
+23:14:58.178 [  116.95] blazer-haptic: SWEET HID: touch 0 down at 475,2643 (1 clients)
+
+## network: grep -E 'blazer-wifi: (fw: boot|join: joined|net: frames)|blazer-apple80211: scan list ended|HKWIFI: W2 PASS|exec wifid$|exec MobileSafari|check_text Wi-Fi PASS' console.txt (first 9)
+23:13:03.249 [    2.02] exec wifid
+23:13:34.673 [   33.42] blazer-wifi: fw: boot doorbell, mailbox 0x1, 911 ms after release. Android: 912 ms
+23:13:42.808 [   41.58] blazer-wifi: join: joined in 312 ms
+23:13:42.811 [   41.59] blazer-wifi: net: frames can pass
+23:13:50.519 [   49.29] blazer-apple80211: scan list ended: 23 networks served
+23:13:50.720 [   49.50] HKWIFI: W2 PASS round 1: en0 192.168.x.x gw 192.168.x.x, primary en0 (IPMonitor), gateway ICMP, DNS direct + getaddrinfo, HTTP 200 via en0, nw_path satisfied on en0, nw_connection 200
+23:14:44.201 [  102.98] blazer-apple80211: scan list ended: 23 networks served
+23:14:46.322 [  105.10] blazer-apple80211: scan list ended: 23 networks served
+23:14:58.323 [  117.10] exec MobileSafari
+
+## bluetooth: grep -E 'blazer-bt: HCI UP|HKBT (hci-open|channel-spec|hci-reset) PASS|HKBT respawn-stop' console.txt (first 5)
+23:15:05.931 [  124.70] blazer-bt: HCI UP: HCI version 14 (6.0) revision 0x01da, LMP 14 (6.0) subversion 0x4208, manufacturer 15 (Broadcom), BD_ADDR 43:90:b1:xx:xx:xx (set)
+23:15:06.462 [  125.24] HKBT hci-open PASS: bluetoothd opened com.apple.uart.sk.bluetooth (session 1, gate level 0), chip serving
+23:15:06.465 [  125.24] HKBT channel-spec PASS: bluetoothd asks for slots of 1024 bytes, rings of 63 and 63 slots (session 1): taken, the nexus keeps its own
+23:15:06.918 [  125.69] HKBT hci-reset PASS: bluetoothd's HCI Reset answered status 0x00 (session 1)
+23:15:07.185 [  125.96] HKBT hci-open PASS: bluetoothd opened com.apple.uart.sk.bluetooth (session 2, gate level 0), chip serving
+
+## radios: grep -E 'blazer-nfc: (nci init ok|rsp RF_DISCOVER|ends)' console.txt (first 3)
+23:13:59.772 [   58.55] blazer-nfc: nci init ok: nci 0x20, fw 0x02102850, init rsp 29 bytes
+23:13:59.877 [   58.65] blazer-nfc: rsp RF_DISCOVER status 0x0
+23:14:34.826 [   93.60] blazer-nfc: ends: ok, stage 4, chip answered, fw 0x02102850, ntfs 90, tags 0, detail 0x0, hw 0x06, reset ntfs 3 (trigger 0xa0), pulse 1, i2c reads 97 acked 96 nak 1, clk 0, err ntfs 0
+
+## camera: grep -E 'blazer-cam: pmic|blazer-torch: led1 off' console.txt (first 2)
+23:13:44.820 [   43.60] blazer-cam: pmic-en high
+23:13:44.820 [   43.60] blazer-cam: pmic slg51002 id 0x0331b1 (pattern bytes 03 31 b1) status 0x0 gpio-status 0x0 at 0x75
+
+## power: grep -E 'blazer-battery: (sample 1 |charger 1 )|HKBATT: event=(powerd_percent_post|battery_view_set)|HKQ 1 (thermal|temps)' console.txt (first 6)
+23:13:04.425 [    3.20] blazer-battery: sample 1 SOC(91), VCELL(4351), INOW(-3), IAVG(-13), TEMP(3496), raw soc 5b5b vcell d994 i fffc iavg ffef t 22f8 fstat 0408 dev 5100
+23:13:04.428 [    3.20] blazer-battery: charger 1 in=usb chg=done mode=5 cp=0 wdt=0 cc=1933 mA cv=4350 mV icl=1500 mA wicl=500 mA ichgin=386 mA iwcin=0 mA vwcin=5995 mV vchgin_raw=202b ok=cc dtls=e0b46432 bat=3
+23:13:04.903 [    3.68] HKBATT: event=powerd_percent_post pid=33 rc=0
+23:13:41.682 [   40.46] HKBATT: event=battery_view_set pid=28 role=2 now_ns=222476850364 view=0x14d59aa80 ui_scope=unproved value=0.91000000000000003 notify_rc=0 state=0x9005b percent=91
+23:13:50.842 [   49.62] HKBATT: event=battery_view_set pid=28 role=2 now_ns=231681088515 view=0x14e196800 ui_scope=unproved value=0.91000000000000003 notify_rc=0 state=0x9005b percent=91
+23:14:57.106 [  115.88] HKBATT: event=battery_view_set pid=28 role=2 now_ns=297918496171 view=0x145de5900 ui_scope=unproved value=0.91000000000000003 notify_rc=0 state=0x9005b percent=91
+
+## userland: grep -E 'exec (SpringBoard|backboardd|Preferences)$|LIVEBOOT .*(SPRINGBOARD|UI_READY)|CRASH ' console.txt (first 6)
+23:13:03.194 [    1.97] exec SpringBoard
+23:13:03.249 [    2.02] exec backboardd
+23:13:50.779 [   49.55] exec Preferences
+23:16:22.410 [  201.18] CRASH Photos reason ns 2 code 0x5: (none)
+
+## userland: grep -E 'LIVEBOOT .*(SPRINGBOARD|TOUCH_CLIENT|UI_READY)' markers.txt (first 3)
+LIVEBOOT 23:13:03.194 +50.4 SPRINGBOARD SpringBoard
+LIVEBOOT 23:13:05.843 +53.1 TOUCH_CLIENT
+LIVEBOOT 23:13:29.397 +76.6 UI_READY
+
+## usb: grep -E 'usbcon: connected|blazer-usbcon: mode' console.txt (first 2)
+23:13:01.249 usbcon: connected: nonce 0x267f957d7d39f998, entry 0x19b406b1d, stream 35549 bytes, ring 1048576
+23:13:01.327 [    0.10] blazer-usbcon: mode 2, arena 0xbe917000, first DWC3 read next
+
+## diagnostics: grep -E 'HKQ: on|HK PW: hk_pw|usbcon: reset accepted' console.txt (first 3)
+23:13:01.321 [    0.09] HKQ: on (usbcon 0x71 arg, 0x72 run, 0x73 status), one query per 1000 ms, 49152 bytes each
+23:13:01.391 [    0.16] HK PW: hk_pw=0x442846fe: thermal=2 thermal_fast=1 gov=1 gov_stages=15 thermal_panic_c=70 gov_b=40 gov_cap=16 idle_stats=1
+23:17:35.839 usbcon: reset accepted at t=274.6s (reset op); the phone panics, resets, and parks

@@ -1,0 +1,30 @@
+# blazer (Pixel 10 Pro, Tensor G5): every driver built in. The same kernel as hk-base-2 a159511 (proved by symbols:
+# /data/work/hk-port-build/STATUS.md); each driver still does nothing until its boot-argument (device.conf `gate`) is given.
+# Drivers and what they mean: XNU tree config/hakios/*.drivers; tools/hk_port_config.py show|apply|check.
+CONFIG_HAKIOS_USBCON=y
+CONFIG_HAKIOS_UFS=y
+CONFIG_HAKIOS_DISPLAY=y
+CONFIG_HAKIOS_USBNET=y
+CONFIG_HAKIOS_SOCINFO=y
+CONFIG_HAKIOS_THERMAL=y
+CONFIG_HAKIOS_CPUFREQ=y
+CONFIG_HAKIOS_CLKMON=y
+CONFIG_HAKIOS_RTC=y
+CONFIG_HAKIOS_WDT=y
+CONFIG_HAKIOS_HALT=y
+CONFIG_HAKIOS_BUTTONS=y
+CONFIG_HAKIOS_TOUCH=y
+CONFIG_HAKIOS_SLEEP=y
+CONFIG_HAKIOS_GPU=y
+CONFIG_HAKIOS_AUDIO=y
+CONFIG_HAKIOS_AOC=y
+CONFIG_HAKIOS_BATTERY=y
+CONFIG_HAKIOS_POWERMON=y
+CONFIG_HAKIOS_SENSORS=y
+CONFIG_HAKIOS_WIFI=y
+CONFIG_HAKIOS_HAPTIC=y
+CONFIG_HAKIOS_TORCH=y
+CONFIG_HAKIOS_NFC=y
+CONFIG_HAKIOS_MODEM=y
+CONFIG_HAKIOS_BT=y
+CONFIG_HAKIOS_SWEET_LEGACY=y

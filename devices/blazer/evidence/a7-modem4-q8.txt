@@ -1,0 +1,33 @@
+# Physical boot receipt: a7-modem4-q8 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 03:41:17 +0100
+image:     research/images/a7-ios-system-modem4-q8/boot.img sha256 7a7a1244779bde70126d759c3346ba199151080c0c8f101ad8ee2af6318124ad
+kernel:    research/ios26-modem4-r1/build/kernel.modem4.unstripped (unstripped) sha256 a1e7d06c7f34a120af3de83749639e9b8c751c21b32e63da49be09580507a2cb
+revision:  2d6cc7e1b03446ba18c570926da96677dbdb944f (XNU hk-modem-4; /data/work/hk-modem/STATUS.md)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/modem-4.req (END_ON blazer-modem verdict; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-034110-a7-modem4-q8/console.txt, research/laguna-usb-fix/attempts/20261112-034117-a7-modem4-q8/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console of this boot); the final panic is the host reset op that parks the phone, not a fault.
+           No doorbell, no firmware image, no RF: rung 8 stops with the boot ROM waiting for the doorbell.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261112-034117-a7-modem4-q8  [console+msgbuf+live+reader]  up 71 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+cellular    7/11  rom-boot               online?              CP firmware boot
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+
+## cellular: grep -E 'blazer-modem: (path: amb_smmu|bar: (BAR0 mask|\+0x00)|rom: |verdict: (rung [5-8]|PASS)|tidy)' console.txt
+03:42:26.751 [   28.26] blazer-modem: verdict: rung 5 (survey) PASS, at survey
+03:42:26.758 [   28.26] blazer-modem: path: amb_smmu IDR0 0x080f361f IDR1 0x0e739d20 CR0 0x0 CR0ACK 0x0 GBPA 0x00000000 STRTAB_BASE_CFG 0x0
+03:42:26.758 [   28.27] blazer-modem: path: CP DMA (SID 0x8000) would be: bypass: physical addresses, as UFS and Wi-Fi run under inf_smmu
+03:42:26.758 [   28.27] blazer-modem: verdict: rung 6 (path) PASS, at path
+03:42:26.762 [   28.27] blazer-modem: bar: +0x00: 00000000 ffffffff 00000000 00000000
+03:42:26.764 [   28.27] blazer-modem: verdict: rung 7 (bar) PASS, at bar
+03:42:26.764 [   28.27] blazer-modem: rom: msi_reg as found: boot_stage 0x0 sub 0x0 otp 0x0 cafe 0x0 msi_data 0x0 check 0x0 err 0x0 img 0x000000000+0x0
+03:42:26.767 [   28.27] blazer-modem: rom: MSI root port + endpoint -> 0xf6200000 (ctl 0x0181, 1 vector, root enable/mask as found: no interrupt). Next: bus master on; no doorbell, no image
+03:42:26.767 [   28.28] blazer-modem: rom: +0 ms boot_stage 0xff
+03:42:26.915 [   28.43] blazer-modem: rom: after 100 ms: boot_stage 0xff sub_boot_stage 0x0 otp_version 0x0 flag_cafe 0x0 err_report 0x0 msi_check 0x854c msi_data 0x0 db_loop 0 db_received 0 boot_size 0x0; root MSI status 0x0
+03:42:26.919 [   28.43] blazer-modem: rom: the boot ROM waits for the doorbell (boot_stage 0xff): ladder top without firmware. No doorbell sent
+03:42:26.919 [   28.43] blazer-modem: verdict: rung 8 (rom) PASS, at rom
+03:42:26.947 [   28.46] blazer-modem: tidy: bus master off, MSI (endpoint + root port) as found, COMMAND, BAR0, ATU region 1, root window as found; PERST low, LTSSM off, CP off (CP_WRST, NRESET, CP_PWR 30 ms, PM_WRST 50 ms), pads as found, 
+03:42:26.949 [   28.46] blazer-modem: verdict: PASS stage 8, at rom: endpoint 144d:a5a5, BAR0 0x40200000, boot_stage 0xff sub_boot_stage 0x0 otp_version 0x0 after 100 ms, root MSI status 0x0, DMA path bypass, no doorbell, no image, bus mast

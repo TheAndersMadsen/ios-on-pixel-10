@@ -1,0 +1,60 @@
+# Physical boot receipt: a7-knext-r1c (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 21:11:05 +0100
+image:     research/images/a7-ios-system-knext-r1c/boot.img sha256 d86a25790de8ae66166b8302a73f95c51c78491f3902f605c7b0fd5dc7b8faa8
+kernel:    research/ios26-phaseb-r1/knext/build/kernel.knext.unstripped (unstripped) sha256 51ce6597e5fa3cacd53b5dc5a7456003a10d4f4b7ff29aff4d060bf864b656fb
+revision:  bc7b2dc1b7953cdef6a65a354bda62962555161a (XNU hk-knext; /data/work/hk-knext/BUILD-RESULT.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-knext-r1c a7-knext-r1c research/ios26-phaseb-r1/knext/build/kernel.knext.unstripped 900 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-211056-a7-knext-r1c/console.txt, research/laguna-usb-fix/attempts/20261111-211105-a7-knext-r1c/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-211105-a7-knext-r1c  [console+msgbuf+live+reader]  up 909 s, panics 0, crashes 12, usertraps 3, codesign 0, max execs 26
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         8/8  settings               (complete)           complete
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        5/8  haptic                 keys-hw              Attended: press Vol Up/Down during a live boot
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         6/14  full-run               common-health        Health gates off or refused: blazer-gov "off:" line (hk_pw bits 27..29 + required 0x106)
+battery      5/5  charging               (complete)           complete
+gpu           --  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi        2/14  firmware               scan                 Scan: blazer-wifi scan lines
+bluetooth    4/8  bluetoothd             attached?            Boot a7-ios-system-bt6-r1 (hkbluetool answers the BlueTool boot script; bridge takes IOAOS
+cellular    3/11  id                     survey?              Boot a7-ios-system-modem3-q5 (or q6/q7, which print rung 5 too)
+sensors     4/14  compass                hid-published?       Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc          4/6  nci                    discover             Reached (hk-nfccam-1: CORE_INIT re-sent after the mode-on reset): RF_DISCOVER status 0, 30
+cameras      2/5  torch-lit              cam-pmic             Reached: SLG51002 pattern id 03 31 b1 at 0x75 with chip select only; RT6160 id needs the B
+apps         4/8  app-walk               registered?          Boot kernel.ios26-knext (varfs RENAME_SWAP + rd=ufsroot0) with tools/ios_app_register; che
+stability    4/7  ran-900                no-respawn-loop      Respawn loop: hk_env-inject the looping daemon; crashdoc its CRASH lines
+  respawns: bluetoothd 26
+  crashes: translationd 6, Photos 3, Health 2, Maps 1
+  usertraps: Health 2, Maps 1
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## power: grep -E 'blazer-battery: charger [0-9]+ in=usb chg=cc' console.txt (first 1)
+21:11:41.906 [    3.18] blazer-battery: charger 1 in=usb chg=cc mode=5 cp=0 wdt=0 cc=1933 mA cv=4350 mV icl=1500 mA wicl=500 mA ichgin=1472 mA iwcin=0 mA vwcin=5995 mV vchgin_raw=1ddf ok=d8 dtls=e0b16432 bat=3
+
+## display: grep -E 'SWEET BL: calibration' console.txt (first 1)
+21:11:38.845 [    0.13] SWEET BL: calibration 7 table entries, mid 3276800/65536 nits, 4 fixed keys
+
+## radios: grep -E 'blazer-nfc: (address 0x08 acked|nci init ok)' console.txt (first 2)
+21:12:36.895 [   58.17] blazer-nfc: address 0x08 acked, power-up reset ntf received
+21:12:36.972 [   58.25] blazer-nfc: nci init ok: nci 0x20, fw 0x02102850, init rsp 29 bytes
+
+## userland: grep -E 'exec (SpringBoard|MobileNotes|MobileTimer|MobileCal|Preferences|MobileSafari|Reminders|MobileSMS|Music)$' console.txt (first 9)
+21:11:40.697 [    1.98] exec SpringBoard
+21:12:20.294 [   41.57] exec MobileCal
+21:13:39.881 [  121.16] exec MobileNotes
+21:14:07.565 [  148.85] exec MobileTimer
+21:15:43.565 [  244.84] exec Preferences
+21:18:19.361 [  400.64] exec MobileSafari
+21:18:47.389 [  428.67] exec Reminders
+21:20:31.186 [  532.46] exec MobileSMS
+21:21:00.617 [  561.89] exec Music
+
+## userland: grep -E 'LIVEBOOT .*(SPRINGBOARD|UI_READY)' markers.txt (first 2)
+LIVEBOOT 21:11:40.697 +44.3 SPRINGBOARD SpringBoard
+LIVEBOOT 21:12:06.944 +70.6 UI_READY

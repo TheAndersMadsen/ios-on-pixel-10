@@ -4,7 +4,7 @@
 Every subcommand prints concise text, or one JSON document with --json (stable schemas: `hk schema`, and
 research/ios26-phaseb-r1/hub/HUB.md). Progress of long steps goes to stderr; stdout carries only the result.
 
-  phone + lease  hk state | hk lock status|acquire NAME|check|renew|release NAME|break
+  phone + lease  hk state | hk to-fastboot | hk lock status|acquire NAME|check|renew|release NAME|break
   boot           hk boot IMAGE (= hk live, tools/live_boot.sh) | hk cycle IMAGE (tools/hk_cycle.py) | hk back
   while booted   hk ui SCRIPT | hk shot | hk shell CMD | hk push LOCAL REMOTE | hk restart DAEMON
   analysis       hk status | hk logs [PROC] | hk stacks PROC | hk crash | hk probe [ROW…] | hk report ATTEMPT | hk note ATTEMPT TEXT
@@ -35,6 +35,7 @@ import contextlib
 import datetime as dt
 import fcntl
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -187,7 +188,7 @@ def tool_argv(key, **subst):
     return out
 
 
-def run(cmd, timeout=None, env=None, log=None, echo=False, input_bytes=None):
+def run(cmd, timeout=None, env=None, log=None, echo=False, input_bytes=None, cwd=None):
     """Run cmd in its own process group with stdin from /dev/null (never inherit stdin: ssh/mac children eat it).
     On timeout or Ctrl-C only that group is killed (never pkill: a pattern can match your own shell).
     Returns (rc, stdout text)."""
@@ -196,7 +197,7 @@ def run(cmd, timeout=None, env=None, log=None, echo=False, input_bytes=None):
         full_env.update(env)
     stdin = subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL
     p = subprocess.Popen(cmd, stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=full_env,
-                         start_new_session=True)
+                         start_new_session=True, cwd=cwd)
     chunks = []
     fh = open(log, 'ab') if log else None
 
@@ -823,7 +824,9 @@ def dump_end(klog):
         return None
     if m.group(2):
         return dict(kind='deadline', seconds=int(m.group(2)), line=m.group(1).decode(errors='replace')[:200])
-    return dict(kind='panic', line=m.group(1).decode(errors='replace')[:200])
+    line = m.group(1).decode(errors='replace')[:200]
+    # usbcon reset op (hk to-fastboot, hk_cycle --end-*): the host ended this boot on purpose, not a crash
+    return dict(kind='host-end' if 'the host asked to end this boot' in line else 'panic', line=line)
 
 
 def finalize_from_paths(m):
@@ -936,6 +939,34 @@ def phone_probe(timeout=25):
         return 'unknown', detail
 
 
+# hk state's one-word answer, from phone_probe's finer one, with how it knows.
+STATES = ('android', 'fastboot', 'ios-live', 'shim', 'recovery', 'absent')
+
+
+def phone_class(phone, detail):
+    """(state, how): one of STATES (or unknown / skipped when the bridge could not be asked) and the evidence."""
+    usb = detail.get('usb') or ''
+    if phone == 'fastboot':
+        return 'fastboot', '`fastboot devices` lists it'
+    if phone == 'android':
+        return 'android', '`adb devices` lists it as device'
+    if phone.startswith('android-'):
+        return 'android', f"`adb devices` lists it as {phone.split('-', 1)[1]} (accept the USB-debugging prompt on the phone)"
+    if phone == 'usb-google':
+        return 'android', f'no adb or fastboot answer, but a Google USB id on the Mac ({usb}): Android or the bootloader is starting'
+    if phone == 'recovery':
+        return 'recovery', '`adb devices` lists it in recovery/sideload/rescue'
+    if phone == 'ios':
+        return 'ios-live', f'the usbcon gadget is on the Mac\'s USB ({usb}): an iOS kernel is running'
+    if phone == 'shim':
+        return 'shim', f"the shim's own gadget 1209:0001 is on the Mac's USB ({usb})"
+    if phone == 'off-or-unknown':
+        return 'absent', 'no adb, no fastboot and no 1209:/18d1: id on the Mac\'s USB: off, hung without USB, or the cable'
+    if phone == 'skipped':
+        return 'skipped', '--no-phone'
+    return 'unknown', detail.get('error') or 'the phone bridge could not be asked'
+
+
 LIVE_STALE_S = float(os.environ.get('HK_LIVE_STALE_S', 180))
 
 
@@ -972,14 +1003,15 @@ def cmd_state(args):
         lease = lease_read(path)
     live, kv = active_live_run()
     recent = index_load()[-args.last:]
-    data = dict(phone=phone, phone_detail=detail, ios_shell=shell, lease=dict(state=lease_state(lease),
+    state, how = phone_class(phone, detail)
+    data = dict(state=state, how=how, phone=phone, phone_detail=detail, ios_shell=shell, lease=dict(state=lease_state(lease),
                 lease=public_lease(lease) if lease_state(lease) == 'held' else None),
                 installed_boot_b=installed_record(), live_run=str(live) if live else None,
                 live_sock=kv.get('LIVE_SOCK'), recent=[dict(id=r['id'], verdict=r.get('verdict'), end=r.get('end'),
                                                              features=r.get('features')) for r in recent],
                 queue=queue_counts())
     ib = installed_record() or {}
-    txt = [f'phone: {phone}' + (f" (ios shell {'up' if shell else 'down'})" if shell is not None else ''),
+    txt = [f'{state}  ({how})', f'phone: {phone}' + (f" (ios shell {'up' if shell else 'down'})" if shell is not None else ''),
            f"lease: {data['lease']['state']}" + (f" by {lease['holder']} ({lease.get('purpose')})" if data['lease']['lease'] else ''),
            f"boot_b (recorded, not read from the phone): {ib.get('image', '?')} readback {ib.get('readback', '?')} ({ib.get('when', '?')})",
            f'live run: {live or "none"}', f"queue: {data['queue']}"]
@@ -992,6 +1024,130 @@ def cmd_installed(args):
     ensure_store()
     (store_dir() / 'installed.json').write_text(json.dumps(rec, indent=1) + '\n')
     return emit(args, 'installed', rec, f"recorded boot_b = {args.image} ({args.readback})")
+
+
+# ------------------------------------------------------------------------------------------------------------- to-fastboot
+# Owner rule: end a boot the moment its evidence is in and boot the next image, from any phone state. docs/DEBUG-LOOP.md.
+
+TO_FB_POLL_S = float(os.environ.get('HK_TO_FB_POLL_S', 3.0))
+COLD_RESET = ('Owner: hold power + volume-down until the bootloader (fastboot) screen shows (about 10-20 s). WARNING: that is a '
+              'COLD reset: RAM is wiped, so the ramdump of whatever was running is lost. Use it only when nothing answers.')
+
+
+def wait_state(want, bound, steps):
+    """Poll until phone_class is in want; returns the last state."""
+    end = time.monotonic() + bound
+    while True:
+        phone, detail = phone_probe()
+        state, how = phone_class(phone, detail)
+        if state in want or time.monotonic() >= end:
+            steps.append(dict(step='wait', want=sorted(want), state=state, how=how))
+            return state
+        time.sleep(TO_FB_POLL_S)
+
+
+def usbcon_reply(out):
+    with contextlib.suppress(ValueError):
+        if '{' in out:
+            return json.loads(out[out.find('{'):out.rfind('}') + 1])
+    return {}
+
+
+def mac_usbcon(kv=None, steps=None):
+    """The usbcon.py to run on the Mac: the live run's own (LIVE_TOOLS in live.env), else m1box's current tools placed by
+    tools/mactools.py (hash-verified, outside the Mac checkout). Only if that cannot be done, the Mac checkout's
+    tools/usbcon.py, which `mac repo` refuses to run when it differs from m1box's."""
+    tools = (kv or {}).get('LIVE_TOOLS')
+    if not tools:
+        try:
+            spec = importlib.util.spec_from_file_location('mactools', Path(__file__).resolve().parent / 'mactools.py')
+            mt = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mt)
+            tools = mt.ensure(pb('mac'))['dir']
+        except Exception as e:      # MacToolsError, a missing file: say so and use the checkout's copy
+            if steps is not None:
+                steps.append(dict(step='mactools', error=str(e)[:300], fallback='tools/usbcon.py of the Mac checkout'))
+    return f'{tools}/tools/usbcon.py' if tools else 'tools/usbcon.py'
+
+
+def reset_ios(steps):
+    """End the running iOS boot by the usbcon reset op: through the running reader's socket, else a short-lived reader.
+    Returns how (socket|reader). Raises HkError when the kernel refuses (blazer_usbcon=1) or the answer is unclear."""
+    live, kv = active_live_run()
+    sock = kv.get('LIVE_SOCK')
+    if sock:
+        rc, out = run([pb('mac'), 'repo', '--force', '--', 'python3', '-I', mac_usbcon(kv, steps), '--control-socket', sock,
+                       '--reset-now'], timeout=90, cwd=str(REPO))
+        r = usbcon_reply(out)
+        steps.append(dict(step='reset op', via=sock, live_run=str(live), rc=rc, reply=r or out.strip()[-300:]))
+        if r.get('state') == 'reset':
+            return 'socket'
+        if r.get('state') == 'refused':
+            raise HkError(6, 'reset_not_armed', f"the reader refused the reset: {r.get('error')}. This boot ends at its deadline; "
+                          'or, losing its ramdump: ' + COLD_RESET, steps=steps)
+        gone = re.search(r'Errno (2|61|111)\b|No such file|Connection refused', str(r.get('error', '')) + out)
+        if not gone:
+            raise HkError(6, 'reset_unknown', f"reset op answer unclear (rc {rc}): {r.get('error') or out.strip()[-200:]}; "
+                          'not repeated: run hk state in a minute', steps=steps)
+        progress(f'the reader of {live} is gone ({sock}); starting a short-lived one')
+    py = os.environ.get('USBCON_PY', '/tmp/tegu-venv/bin/python')
+    rc, out = run([pb('mac'), 'repo', '--force', '--', py, '-u', mac_usbcon(None, steps), '--quiet', '--timeout', '45',
+                   '--gone-exit', '5', '--stats', '3600', '--reset-after', '0'], timeout=120, cwd=str(REPO))
+    steps.append(dict(step='short-lived reader --reset-after 0', rc=rc, out=out.strip()[-400:]))
+    if 'reset accepted' in out:
+        return 'reader'
+    if 'another usbcon reader owns USB' in out:
+        raise HkError(4, 'reader_busy', 'another usbcon reader owns the phone\'s USB but no live run names its socket; '
+                      'find its live.env (LIVE_SOCK) and run tools/usbcon.py --control-socket SOCK --reset-now', steps=steps)
+    if re.search(r'reset failed .*(Errno 32|[Pp]ipe)', out):
+        raise HkError(6, 'reset_not_armed', 'the kernel stalled the reset request: this boot runs blazer_usbcon=1. It ends at '
+                      'its deadline; or, losing its ramdump: ' + COLD_RESET, steps=steps)
+    raise HkError(6, 'reset_unknown', f'the short-lived reader did not report an accepted reset (rc {rc}): '
+                  f"{(out.strip().splitlines() or ['no output'])[-1][:200]}; not repeated", steps=steps)
+
+
+def cmd_to_fastboot(args):
+    """Bring the phone to fastboot from whatever it is doing, the fast way that keeps RAM where there is one."""
+    phone, detail = phone_probe()
+    start, how = phone_class(phone, detail)
+    steps = [dict(step='state', state=start, how=how)]
+    data = dict(start=start, how=how, steps=steps, ramdump_kept=None)
+    if start == 'fastboot':
+        return emit(args, 'to-fastboot', dict(data, state='fastboot', action='none'), f'fastboot already ({how})')
+    if start == 'unknown':
+        raise HkError(3, 'bridge_down', f'cannot tell the phone state: {how}', **data)
+    if start == 'absent':
+        raise HkError(6, 'owner_action', f'the phone is absent ({how}). {COLD_RESET}', **data)
+    if start == 'recovery':
+        raise HkError(6, 'owner_action', 'the phone is in recovery: the owner picks "Reboot to bootloader" on it (never factory '
+                      'reset)', **data)
+    if start == 'shim':
+        raise HkError(6, 'transient', "the shim's gadget is up: within seconds it hands to XNU (ios-live) or chain-loads "
+                      'Android; run hk to-fastboot again in 10-30 s', **data)
+    with phone_lease(args, 'to-fastboot', ttl=int(args.wait) + 300):
+        action = []
+        state = start
+        if state == 'ios-live':
+            via = reset_ios(steps)
+            action.append(f'usbcon reset op ({via})')
+            data['ramdump_kept'] = True
+            state = wait_state({'fastboot', 'android'}, args.wait, steps)
+            if state == 'android':
+                data['ramdump_kept'] = False
+                progress('the boot ended but came back in Android: force-fastboot was off, so no park and no ramdump; '
+                         'going on to fastboot')
+        if state == 'android':
+            rc, out = run([pb('adb'), 'reboot', 'bootloader'], timeout=60)
+            steps.append(dict(step='adb reboot bootloader', rc=rc, out=out.strip()[-200:]))
+            action.append('adb reboot bootloader')
+            state = wait_state({'fastboot'}, args.wait, steps)
+    data.update(state=state, action=' then '.join(action))
+    if state != 'fastboot':
+        raise HkError(6, 'not_fastboot', f"after {data['action']} the phone is {state}, not fastboot", **data)
+    txt = [f"{start} -> fastboot by {data['action']}"]
+    if data['ramdump_kept']:
+        txt.append('the boot parked with RAM intact: pull the ramdump (capture-fastboot) before booting the next image')
+    return emit(args, 'to-fastboot', data, txt)
 
 
 # ------------------------------------------------------------------------------------------------------------- boot / cycle / back
@@ -1270,6 +1426,9 @@ def cmd_cycle(args):
                 argv += ['--' + opt, getattr(args, opt)]
         if args.deadline_wait:
             argv += ['--deadline-wait', str(args.deadline_wait)]
+        for opt in ('end_on', 'end_grace', 'end_after', 'end_on_idle'):
+            if getattr(args, opt, None) is not None:
+                argv += ['--' + opt.replace('_', '-'), str(getattr(args, opt))]
         argv += list(args.extra or [])
         m['command'] = argv
         m['paths']['cycle'] = str(out_dir)
@@ -3221,7 +3380,8 @@ def triage_attempt(aid, prev=None, fresh=False, no_backlog=False):
 SCHEMAS = {
     'error': 'ok=false, error ("tool not present" (reason tool_missing)|phone_busy|lock_required|not_holder|no_attempt|no_image|no_log|no_live_run|shell_down|'
              'unsupported|wrong_state|fastboot_failed|usage|...), message, code (exit status), plus context (tool, path, owner, lease)',
-    'state': 'phone (android|recovery|android-unauthorized|android-offline|fastboot|ios|shim|usb-google|off-or-unknown|unknown|skipped), '
+    'state': 'state (android|fastboot|ios-live|shim|recovery|absent, or unknown|skipped), how (the evidence), '
+             'phone (android|recovery|android-unauthorized|android-offline|fastboot|ios|shim|usb-google|off-or-unknown|unknown|skipped), '
              'phone_detail, ios_shell (bool|null), lease {state, lease}, installed_boot_b (recorded), live_run, live_sock, recent[], queue{}',
     'lock': 'state (free|held|expired|stale), lease {holder, purpose, host, pid, pid_bound, acquired, expires, remaining_s, attempt, '
             'reclaimed_from}, token + inherited + reclaimed_from (acquire), holds + by (token|name) (check)',
@@ -3229,6 +3389,9 @@ SCHEMAS = {
               'verdict}}, probes {id: verdict}, probe_counts{}, crashes[], crashes_json, paths, errors[]',
     'boot': 'attempt, dir, rc, result, paths', 'cycle': 'attempt, dir, rc, result, paths',
     'back': 'attempt, verdict (return-check verdict), steps[], dir',
+    'to-fastboot': 'start (as hk.state state), how, state (final), action (none|usbcon reset op (socket|reader)|adb reboot '
+                   'bootloader, joined by then), ramdump_kept (bool|null), steps[]; errors owner_action|transient|reset_not_armed|'
+                   'reset_unknown|reader_busy|not_fastboot|bridge_down',
     'ui': 'attempt, live_run, rc, verdict, report (the UI runner JSON)', 'shot': 'attempt, mode (live|dump), png, rc, out',
     'logs': 'attempt, source, split, file, total, lines[]', 'stacks': 'mode (dump|live), attempt, proc, rc, lines[] | stdout, exit',
     'crash': 'attempt, inputs[], rc, out, signatures[{proc, kind, loc, count, status, hint}], crashes_json, crashes_md',
@@ -3294,6 +3457,9 @@ def parser():
     q = add('state', cmd_state, 'phone state, lease, installed boot_b, live run, recent attempts')
     q.add_argument('--no-phone', action='store_true', help='do not ask the bridge (records only)')
     q.add_argument('--last', type=int, default=5)
+    q = add('to-fastboot', cmd_to_fastboot, 'bring the phone to fastboot from any state (android: adb; ios-live: usbcon reset '
+            'op, RAM kept; absent: what the owner does)')
+    q.add_argument('--wait', type=float, default=150, help='seconds to wait for fastboot after each action (default 150)')
     q = add('lock', cmd_lock, 'the phone lease (one owner of the device and usbcon)')
     q.add_argument('lock_cmd', choices=['status', 'acquire', 'check', 'renew', 'release', 'break'])
     q.add_argument('name', nargs='?', help='holder name (acquire/check/renew/release); default --lock, HK_LOCK, HK_HOLDER')
@@ -3320,6 +3486,10 @@ def parser():
     q.add_argument('--ui')
     q.add_argument('--expect')
     q.add_argument('--deadline-wait', type=int)
+    q.add_argument('--end-on', metavar='REGEX', help='hk_cycle --end-on: end the boot at the first matching console line')
+    q.add_argument('--end-grace', type=float, metavar='S')
+    q.add_argument('--end-after', type=float, metavar='S', help='hk_cycle --end-after: end S seconds after Home')
+    q.add_argument('--end-on-idle', type=float, metavar='S', help='hk_cycle --end-on-idle')
     add_auto_args(q, 0)
     q.epilog = ('arguments after -- go to hk_cycle.py unchanged. hk takes the UI_READY picture and triages; '
                 'the periodic pictures are hk_cycle\'s own (-- --shot-every S / --no-shots)')

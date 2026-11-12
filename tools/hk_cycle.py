@@ -3,7 +3,10 @@
 
   tools/hk_cycle.py --image research/images/X[/boot.img] --mach K.unstripped [--ui SCRIPT.ui|settings]
                     [--expect EXPECT.yaml] [--deadline-wait S] [--out DIR] [--name NAME]
+                    [--end-on REGEX [--end-grace S]] [--end-after S] [--end-on-idle S]
+                    [--queries 'drivers; procs; ioreg X'] [--no-end-shot] [--stay-fastboot] [--return-via chooser|stock]
   tools/hk_cycle.py --report-only CYCLE_DIR [--expect EXPECT.yaml]      # re-run the analysis and the report; no device
+  tools/hk_cycle.py --return-only [--return-via chooser|stock] [--out DIR]   # only step 4: the phone back to Android
 
 Steps (each bounded, each recorded in cycle.log and report.json):
   1. preflight   arguments, image check (image_tool / chooser_ios_image), kernel UUID in the image, the Mac reachable,
@@ -13,25 +16,48 @@ Steps (each bounded, each recorded in cycle.log and report.json):
                  live console, park, ramdump). plain mode (chooser images, which fail the AVB gate): force-fastboot on,
                  the usbcon reader, bare `fastboot boot`, own park watch and tools/capture-fastboot.py on the Mac.
                  With --ui, the UI runner drives the live boot; live screenshots every --shot-every s (blazer_usbcon_snap=1).
-  3. park        wait for the deadline or panic reset to fastboot, pull the ramdump, decode the hk_screen PNG.
-  4. return      force-fastboot off, fastboot reboot, wait for boot_completed, research/ios26-dualboot-r8/return-check.sh.
+  3. park        wait for the park in fastboot, pull the ramdump, decode the hk_screen PNG. With an --end-* condition the
+                 cycle ends the boot itself the moment the evidence is in (below); otherwise, and as the fallback, the
+                 kernel deadline (blazer_deadline) or a panic ends it.
+  4. return      force-fastboot off (read back; no reboot while it still reads on: that reboot would only park again),
+                 then --return-via chooser: `fastboot reboot` into the installed boot_b (the chooser's menu, Android by
+                 timeout), or --return-via stock: `fastboot boot` of the stock boot image (--stock-boot, sha256 checked),
+                 which passes the installed chooser by; wait for boot_completed (through an iOS session the chooser may
+                 have started, to its deadline), research/ios26-dualboot-r8/return-check.sh.
+                 --stay-fastboot replaces the whole step: the phone is left parked in fastboot (force-fastboot still
+                 armed) for the next image, and the report says so. tools/hk_session.py runs a queue that way.
   5. analysis    expectations (pass/fail per feature), usertraps/userabort/HKMAIN stalls symbolicated against the dyld
                  cache (dsc_sym.py), hk_ustack summary (ustack_sym.py), respawns, crashes, panics.
   6. report      DIR/report.md (screenshots inline) and DIR/report.json.
 
 Ctrl-C (or SIGTERM/SIGHUP): 1st stops the UI and screenshots, the boot still runs to its park and its ramdump is pulled;
 2nd abandons the boot (no ramdump); the return to Android always runs; 3rd abandons the return (the phone is left as is).
-Never cold-resets the phone (a power+volume-down reset wipes RAM): an iOS boot is always left to end at its kernel deadline.
+Never cold-resets the phone (a power+volume-down reset wipes RAM). An iOS boot ends at its kernel deadline, or earlier when
+an --end-* condition fires: --end-on REGEX (the first console line that matches, then --end-grace S, default 5),
+--end-after S (S seconds after Home: UI_READY, or exec SpringBoard + touch + buttons + frames), --end-on-idle S (no kernel
+console line for S seconds), --abort-on REGEX (a stop condition: at once, without grace, queries or screenshot). The first to fire sends the usbcon `reset` op (tools/usbcon.py --reset-now: REQ_RESET 0x5c,
+panic "the host asked to end this boot", warm reset, park with RAM intact), once; then the normal park, ramdump and analysis.
+They need an image with blazer_usbcon=2 (preflight refuses mode 1: its kernel stalls 0x5c). A refused or failed reset is
+an error in the report and the deadline still ends the boot. When the condition fires and before the reset: --queries
+runs tools/hkq.py batch through the reader (needs hk_query=1 or hk_dbg bit 27 in the image; output queries.txt), and one
+live screenshot `end` is taken (blazer_usbcon_snap; --no-end-shot skips it).
+The Mac-side tools (usbcon.py, bootios, hkq.py, capture-fastboot.py) are m1box's, placed by tools/mactools.py as a
+hash-verified copy outside the Mac checkout; the Mac checkout's own tools/ are never run or overwritten. report.json/summary.json `end` names what ended it:
+end-on / end-after / end-on-idle (with the line or the time), or deadline / panic / host-end / unknown from the console.
 
 Exit: 0 all required expectations PASS and the return check PASS; 1 an expectation or the return check failed;
 2 usage; 3 preflight refused (phone untouched or back in Android); 4 boot/park/capture error; 5 the phone is NOT back
-in Android (needs the owner); 130 interrupted (after the return).
+in Android (needs the owner), or with --stay-fastboot NOT parked in fastboot; 130 interrupted (after the return).
+The last line printed is always "hk_cycle: phone: STATE (how it is known)".
 
 Test doubles (tools/test_hk_cycle.py): HK_CYCLE_PB (directory with adb/fastboot/mac), HK_CYCLE_LIVE_BOOT,
-HK_CYCLE_SCREENSHOT, HK_CYCLE_RETURN_CHECK, HK_CYCLE_CAPTURE_PY, HK_CYCLE_MAC_DIR, HK_CYCLE_USBCON_CMD.
+HK_CYCLE_SCREENSHOT, HK_CYCLE_RETURN_CHECK, HK_CYCLE_CAPTURE_PY, HK_CYCLE_MAC_DIR, HK_CYCLE_USBCON_CMD. The reset op goes
+through the same `mac repo` double as every other Mac command.
 """
 import argparse
+import contextlib
 import datetime
+import fcntl
 import hashlib
 import importlib.util
 import json
@@ -54,6 +80,13 @@ USTACK_SYM = ROOT / 'research/ios26-phaseb-r1/live/ustack/tools/ustack_sym.py'
 LIVE_PROFILE = ROOT / 'tools/live_profile.py'
 CRASHDOC = ROOT / 'tools/crashdoc.py'          # CRASHDOC: boot segmentation, symbolication, crashes.json
 PROBE_EVAL = ROOT / 'tools/probe_eval.py'      # VERIFY: the one row-verdict evaluator (docs/probes.yaml)
+MACTOOLS = ROOT / 'tools/mactools.py'          # the Mac-side tools as a hash-verified copy outside the Mac checkout
+HKQ = ROOT / 'tools/hkq.py'
+# The stock boot_b image (dumped 2026-11-02): `fastboot boot` of it is a temporary boot of stock Android that passes the
+# installed chooser by. research/ios26-dualboot-r8/truth/SHA256SUMS.
+STOCK_BOOT = 'research/ios26-dualboot-r8/truth/boot_b.img'
+STOCK_BOOT_SHA256 = '3635317e93f67de2e6e75e38f892fe8604008bccd9717a369a590b7a35ce20f5'
+HKQ_GATE_BIT = 0x08000000                      # hk_dbg bit 27 = hk_query (XNU hk-hkq osfmk/kern/hk_dbg.h)
 
 # Every bound, in seconds. --timeouts k=v,k=v overrides (the host tests shrink them).
 TIMEOUTS = dict(
@@ -78,6 +111,14 @@ TIMEOUTS = dict(
     return_check=900,
     analysis=600,        # ustack_sym.py
     unknown_wait=90,     # preflight: phone state unknown, wait this long for it to show up
+    reset=60,            # --end-*: the usbcon reset op through the Mac (one local socket request)
+    mac_tools=180,       # tools/mactools.py ensure: per call to the Mac
+    query=25,            # --queries: one hkq query's END line
+    queries=300,         # --queries: the whole batch
+    repark=45,           # return: still (or again) in fastboot this long after leaving it = parked again
+    stay_park=120,       # --stay-fastboot: after the boot step, the park must show within this
+    return_ios=1500,     # return: an iOS session the installed chooser started, to its deadline park or reset
+    return_absent=1200,  # return: no USB at all after the reboot (the cold-safe chooser and its iOS show none): keep waiting
 )
 EXIT_OK, EXIT_FAIL, EXIT_USAGE, EXIT_PREFLIGHT, EXIT_BOOT, EXIT_NOT_ANDROID, EXIT_INTERRUPTED = 0, 1, 2, 3, 4, 5, 130
 
@@ -292,6 +333,11 @@ HKSTALL = re.compile(r'^HKMAIN: stall (?P<ms>\d+) ms pc (?P<pc>0x[0-9a-f]+) lr (
 LIVE_STAMP = re.compile(r'^\d\d:\d\d:\d\d\.\d{3} ')
 USBCON_STAMP = re.compile(r'^\[\s*\d+\.\d+\] ')
 MARKER = re.compile(r'^LIVEBOOT (?P<wall>\S+) \+(?P<s>[\d.]+) (?P<name>[A-Z_]+)(?: (?P<detail>.*))?$')
+HOST_END = 'blazer-usbcon: the host asked to end this boot'     # osfmk/arm64/blazer_usbcon.c uc_host_reset()
+HOST_NOTE = re.compile(r'^(?:usbcon|live_boot|hk_cycle): ')         # the reader's and the wrappers' own lines, not the kernel's
+HOME_PARTS = dict(springboard=re.compile(r'Successfully spawned SpringBoard\[|(?:^|\s)exec SpringBoard$'),
+                  touch=re.compile(r'SWEET HID: SweetHIDTouch open by'), buttons=re.compile(r'SWEET HID: SweetHIDButtons open by'),
+                  frames=re.compile(r'HK TOP: t=\d+ frames\+[1-9]|SWEET FB: rate swaps (?:[1-9][\d.]*|0\.[1-9])/s'))
 
 
 class Symbolizer:
@@ -422,7 +468,8 @@ def analyse_console(text, sym):
     panics = []
     for m in PANIC.finditer(text):
         body = m['body']
-        panics.append(dict(kind='deadline' if 'blazer-root: deadline' in body else 'panic', line=body[:240]))
+        kind = ('deadline' if 'blazer-root: deadline' in body else 'host-end' if HOST_END in body else 'panic')
+        panics.append(dict(kind=kind, line=body[:240]))
     hkmain = {}
     for m in HKMAIN.finditer(text):
         hkmain[f"{m['name']}[{m['pid']}]"] = {k: m[k] for k in ('t', 'pings', 'wait', 'state', 'touch', 'press', 'other', 'stalls')}
@@ -490,6 +537,7 @@ class Cycle:
         self.lock = threading.RLock()
         self.children = set()
         self.boot_done = threading.Event()
+        self.boot_sent = threading.Event()   # the phone was told to boot (bootios: live_boot boots it; plain: fastboot boot OK)
         self.touched = False          # the phone's state was changed by this cycle
         self.ff_armed = False         # force-fastboot was (or may have been) armed by this cycle
         self.report = dict(schema=1, tool='tools/hk_cycle.py', tool_sha256=sha256(__file__), started=now_iso(),
@@ -509,6 +557,72 @@ class Cycle:
 
     def since(self):
         return round(time.monotonic() - self.t0, 1)
+
+    def ensure_mac_tools(self):
+        """m1box's Mac-side tools on the Mac, hash-verified, outside its checkout (tools/mactools.py). Raises Refused."""
+        if getattr(self, 'mac_tools', None):
+            return self.mac_tools
+        try:
+            mt = load_module('mactools', MACTOOLS)
+            r = mt.ensure(self.mac, timeout=self.t['mac_tools'], env=self.env)
+        except Exception as e:      # MacToolsError, a missing bundle file, an unreadable reply
+            raise Refused('MAC_TOOLS_FAILED', f'could not place and verify the tools on the Mac: {e}')
+        if not str(r.get('dir', '')).startswith('/'):
+            raise Refused('MAC_TOOLS_FAILED', f"mactools gave no absolute Mac directory: {r.get('dir')!r}")
+        self.mac_tools = r
+        self.report['mac_tools'] = dict(dir=r['dir'], id=r['id'], installed=r['installed'], files=r['files'])
+        self.step('mac-tools', id=r['id'], dir=r['dir'], installed=','.join(r['installed']) or 'none (verified)')
+        return r
+
+    def mac_tool(self, name):
+        """A bundled tool's path on the Mac: the live run's own version (LIVE_TOOLS in live.env) when it names one."""
+        tools = self.read_env(self.live_run / 'live.env').get('LIVE_TOOLS') if getattr(self, 'live_run', None) else None
+        if not tools and getattr(self, 'mac_tools', None):
+            tools = self.mac_tools['dir']
+        return f'{tools}/tools/{name}' if tools else f'tools/{name}'
+
+    @contextlib.contextmanager
+    def reader_lock(self, wait=90):
+        """One client at a time on the reader's socket: <live run>/.reader.lock, shared with tools/screenshot.sh and the UI
+        runner (tools/ui_run.py). After `wait` seconds the caller goes ahead without it (an end must never hang on a lock)."""
+        f = None
+        try:
+            f = open(self.live_run / '.reader.lock', 'a')
+            end = time.monotonic() + wait
+            while True:
+                try:
+                    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if time.monotonic() > end:
+                        self.log(f'reader lock still held after {wait}s; going ahead without it')
+                        break
+                    time.sleep(0.2)
+        except OSError:
+            pass
+        try:
+            yield
+        finally:
+            if f:
+                f.close()
+
+    def state_line(self):
+        """The last line of every run: where the phone is and how that is known."""
+        ret = self.report.get('return') or {}
+        st = ret.get('state') or 'unknown'
+        if ret.get('untouched'):
+            how = 'not changed by this run'
+        elif ret.get('stayed'):
+            how = ('parked, left there on purpose (--stay-fastboot); force-fastboot is armed' if st == 'fastboot'
+                   else 'NOT parked in fastboot as --stay-fastboot wants')
+        elif ret.get('android'):
+            how = f"boot completed; return check {self.report.get('return_check_verdict', 'NOT RUN')}"
+        elif ret.get('abandoned'):
+            how = 'the return was abandoned by an interrupt; state not confirmed'
+        else:
+            why = [e['detail'][:160] for e in self.report['errors'] if e['state'].startswith(('RETURN', 'PHONE', 'FORCE'))][-2:]
+            how = 'NOT back in Android' + (': ' + '; '.join(why) if why else '')
+        return f'hk_cycle: phone: {st} ({how})'
 
     def log(self, msg, quiet=False):
         line = f'{datetime.datetime.now().strftime("%H:%M:%S")} +{self.since():7.1f} {msg}'
@@ -583,8 +697,9 @@ class Cycle:
             except OSError:
                 pass
 
-    def run(self, cmd, timeout, label, kill_at=3, env=None, cwd=None, check_text=None):
-        """Bounded child. Returns (rc or None on timeout, output text). Ctrl-C at level >= kill_at kills it and raises."""
+    def run(self, cmd, timeout, label, kill_at=3, env=None, cwd=None, check_text=None, raw=False):
+        """Bounded child. Returns (rc or None on timeout, output text). Ctrl-C at level >= kill_at kills it and raises.
+        What reaches a file is always redacted; the returned text is too, unless raw=True (only for reading a serial)."""
         self.seq += 1
         out_path = self.tmp / f'{self.seq:03d}-{label}.out'
         self.log(f'$ {" ".join(shlex.quote(str(c)) for c in cmd)}  (bound {timeout:.0f}s)', quiet=True)
@@ -612,8 +727,8 @@ class Cycle:
         red = redact(text)
         if red != text:
             out_path.write_text(red)
-        text = red
-        self.log(f'  -> rc={rc} {text.strip().splitlines()[-1][:160] if text.strip() else ""}', quiet=True)
+        text, red = (text if raw else red), red
+        self.log(f'  -> rc={rc} {red.strip().splitlines()[-1][:160] if red.strip() else ""}', quiet=True)
         return rc, text
 
     def sleep(self, seconds, kill_at=3):
@@ -628,10 +743,10 @@ class Cycle:
         return not s or line.split()[0] == s
 
     def phone_state(self, kill_at=3):
-        rc, out = self.run([self.fastboot, 'devices'], self.t['probe'], 'fastboot-devices', kill_at=kill_at)
+        rc, out = self.run([self.fastboot, 'devices'], self.t['probe'], 'fastboot-devices', kill_at=kill_at, raw=True)   # serial_ok needs the real serial
         if rc == 0 and any(re.search(r'\sfastboot\s*$', l) and self.serial_ok(l) for l in out.splitlines() if l.strip()):
             return 'fastboot'
-        rc, out = self.run([self.adb, 'devices'], self.t['probe'], 'adb-devices', kill_at=kill_at)
+        rc, out = self.run([self.adb, 'devices'], self.t['probe'], 'adb-devices', kill_at=kill_at, raw=True)
         for l in out.splitlines():
             parts = l.split()
             if len(parts) >= 2 and parts[0] != 'List' and self.serial_ok(l):
@@ -704,7 +819,7 @@ class Cycle:
         cargs = cmdline_args(cmdline)
         mode = a.mode if a.mode != 'auto' else ('plain' if chooser else 'bootios')
         cold_safe = 'TGL_USB_DISABLE=1' in json.dumps(manifest.get('cflags', ''))
-        console = cargs.get('blazer_usbcon') == '1' and not cold_safe and not a.no_console
+        console = cargs.get('blazer_usbcon') in ('1', '2') and not cold_safe and not a.no_console
         # int4/int5 carry these as hk_dbg bits, not as the separate tokens (1023-byte boot-arg budget)
         snap = console and (cargs.get('blazer_usbcon_snap') == '1' or bool(hk_dbg_bits(cargs) & 0x02))
         deadline = int(cargs['blazer_deadline']) if cargs.get('blazer_deadline', '').isdigit() else None
@@ -715,14 +830,28 @@ class Cycle:
                     deadline_s=deadline, wait_s=wait, console=console, live_snapshots=snap,
                     live_input=cargs.get('blazer_usbcon_input') == '1' or bool(hk_dbg_bits(cargs) & 0x01),
                     hk_screen=cargs.get('hk_screen') or (str(hk_dbg_bits(cargs) >> 8 & 0xff) if hk_dbg_bits(cargs) >> 8 & 0xff else None),
-                    hk_ustack=cargs.get('hk_ustack'), cold_safe=cold_safe, cmdline_bytes=len(cmdline))
+                    hk_ustack=cargs.get('hk_ustack'), cold_safe=cold_safe, cmdline_bytes=len(cmdline),
+                    usbcon_mode=cargs.get('blazer_usbcon'), end_conditions=self.end_conditions())
         self.report['image'] = info
         self.image, self.idir, self.mach = image, idir, mach
         self.step('args', **{k: info[k] for k in ('image', 'mode', 'deadline_s', 'wait_s', 'console', 'live_snapshots')})
 
+        if info['end_conditions']:
+            if not console:
+                raise Refused('END_WITHOUT_CONSOLE', '--end-* needs the live usbcon console (blazer_usbcon=2, not cold-safe, '
+                              'no --no-console): the end is read from it and sent through it')
+            if cargs.get('blazer_usbcon') != '2':
+                raise Refused('END_NEEDS_USBCON2', f"--end-* needs blazer_usbcon=2; this image has blazer_usbcon={cargs.get('blazer_usbcon')}, "
+                              'whose kernel stalls the reset request. Rebuild with the one token changed (docs/DEBUG-LOOP.md), '
+                              'or drop --end-* and let the deadline end the boot')
+        if a.queries:
+            if not (cargs.get('hk_query') == '1' or (hk_dbg_bits(cargs) & HKQ_GATE_BIT and 'hk_query' not in cargs)):
+                raise Refused('QUERIES_NEED_HKQ', '--queries needs the query gate in the image: hk_query=1 or hk_dbg bit 27 '
+                              '(0x08000000), and a kernel with hk-hkq. Without it the kernel stalls 0x71..0x73')
+            info['queries'] = a.queries
         if a.ui:
             if not console:
-                raise Refused('UI_WITHOUT_CONSOLE', 'the UI runner needs the live usbcon console (blazer_usbcon=1, not cold-safe)')
+                raise Refused('UI_WITHOUT_CONSOLE', 'the UI runner needs the live usbcon console (blazer_usbcon=1 or 2, not cold-safe)')
             if not info['live_input'] and not a.force_ui:
                 raise Refused('UI_WITHOUT_INPUT', 'the image has no blazer_usbcon_input=1, so live input is refused by the '
                               'kernel; drop --ui or pass --force-ui (snapshots only)')
@@ -762,6 +891,7 @@ class Cycle:
         info['m1box_head'], info['mac_head'] = here, mac_head
         if here and mac_head and here != mac_head:
             self.log(f'note: the Mac checkout is at {mac_head[:10]}, m1box at {here[:10]}; every mac repo call uses --force')
+        self.ensure_mac_tools()
         if mode == 'bootios':     # plain mode: the fastboot wrapper stages the image itself
             for p in [image] + ([mach] if mach else []):
                 self.ensure_on_mac(p)
@@ -798,11 +928,14 @@ class Cycle:
 
     def pick_serial(self, tool):
         cmd = [self.adb, 'devices'] if tool == 'adb' else [self.fastboot, 'devices']
-        rc, out = self.run(cmd, self.t['probe'], f'{tool}-serial', kill_at=1)
+        # raw: the redacted text names every device "SERIAL" (2026-11-11: ANDROID_SERIAL=SERIAL, fastboot waited forever)
+        rc, out = self.run(cmd, self.t['probe'], f'{tool}-serial', kill_at=1, raw=True)
         want = 'device' if tool == 'adb' else 'fastboot'
         serials = [l.split()[0] for l in out.splitlines() if len(l.split()) >= 2 and l.split()[1] == want and l.split()[0] != 'List']
         if len(serials) != 1:
             raise Refused('SERIAL_AMBIGUOUS', f'{len(serials)} {tool} devices; set ANDROID_SERIAL')
+        if serials[0] == 'SERIAL':
+            raise Refused('SERIAL_AMBIGUOUS', 'the device list came back redacted; set ANDROID_SERIAL')
         os.environ['ANDROID_SERIAL'] = self.env['ANDROID_SERIAL'] = serials[0]
         self.report['image']['serial_hash'] = hashlib.sha256(serials[0].encode()).hexdigest()[:12]
 
@@ -868,6 +1001,160 @@ class Cycle:
             self.log('no live screenshots: the image has no blazer_usbcon_snap=1')
         if self.args.ui:
             threading.Thread(target=self.ui_worker, name='ui', daemon=True).start()
+        if info.get('end_conditions'):
+            threading.Thread(target=self.end_worker, name='end', daemon=True).start()
+
+    # ------------------------------------------------------------------ ending a boot early
+    def end_conditions(self):
+        a = self.args
+        out = {}
+        if a.end_on:
+            out['end-on'] = dict(re=a.end_on, grace_s=a.end_grace)
+        if a.end_after is not None:
+            out['end-after'] = dict(after_home_s=a.end_after)
+        if a.end_on_idle is not None:
+            out['end-on-idle'] = dict(idle_s=a.end_on_idle)
+        if a.abort_on:
+            out['abort-on'] = dict(re=a.abort_on)
+        return out
+
+    def end_worker(self):
+        """Watch the live console; the first --end-* condition to fire sends the reset op, once. Never repeats a reset."""
+        a = self.args
+        try:
+            rx = re.compile(a.end_on) if a.end_on else None
+            abort_rx, abort_line = (re.compile(a.abort_on) if a.abort_on else None), None
+            console = self.live_run / 'console.txt'
+            pos, partial = 0, b''
+            have = {k: False for k in HOME_PARTS}
+            hit_at = hit_line = home_at = last_line_at = None
+            while not self.boot_done.is_set() and self.interrupts < 2:
+                now = time.monotonic()
+                try:
+                    with open(console, 'rb') as f:
+                        f.seek(pos)
+                        data = f.read(1 << 20)
+                except OSError:
+                    data = b''
+                pos += len(data)
+                data, partial = (partial + data).rsplit(b'\n', 1) if b'\n' in partial + data else (b'', partial + data)
+                for raw in data.split(b'\n') if data else []:
+                    line = strip_live(raw.decode('utf-8', 'replace'))
+                    if not line.strip() or HOST_NOTE.match(line):
+                        continue
+                    last_line_at = now
+                    if abort_rx and abort_line is None and abort_rx.search(line):
+                        abort_line = line.strip()[:200]
+                        self.log(f'abort-on: matched at +{self.since()} s: {abort_line}; ending now')
+                    if rx and hit_at is None and rx.search(line):
+                        hit_at, hit_line = now, line.strip()[:200]
+                        self.log(f'end-on: matched at +{self.since()} s: {hit_line}; ending in {a.end_grace:g} s')
+                    for k, r in HOME_PARTS.items():
+                        have[k] = have[k] or bool(r.search(line))
+                if home_at is None and (all(have.values()) or 'UI_READY' in self.markers_seen or self.markers_from_file('UI_READY')):
+                    home_at = now
+                    self.report['timings']['home'] = self.since()
+                    if a.end_after is not None:
+                        self.log(f'end-after: Home at +{self.since()} s; ending in {a.end_after:g} s')
+                if self.markers_from_file('PARKED', 'PANIC', 'DEADLINE', 'CONSOLE_END'):
+                    return                      # it ended without us (CONSOLE_GONE can be a gadget restart)
+                why = None
+                if abort_line is not None:        # a stop condition (e.g. thermal): at once, no grace, no queries, no screenshot
+                    why = ('abort-on', f'matched {a.abort_on!r}: {abort_line}')
+                elif rx and hit_at is not None and now >= hit_at + a.end_grace:
+                    why = ('end-on', f'matched {a.end_on!r}: {hit_line}')
+                elif a.end_after is not None and home_at is not None and now >= home_at + a.end_after:
+                    why = ('end-after', f'{a.end_after:g} s after Home')
+                elif a.end_on_idle is not None and last_line_at is not None and now - last_line_at >= a.end_on_idle:
+                    why = ('end-on-idle', f'no kernel console line for {a.end_on_idle:g} s')
+                if why and self.boot_sent.is_set():     # plain mode: the reader starts before the boot command
+                    self.end_boot(*why)
+                    return
+                time.sleep(0.5)
+        except Interrupted:
+            pass
+        except Exception as e:     # never let the ender take the cycle down: the deadline still ends the boot
+            self.error('END_WORKER', f'{type(e).__name__}: {e}; the deadline ends this boot')
+
+    def end_boot(self, condition, detail):
+        end = self.report['end'] = dict(condition=condition, detail=detail[:240], t=self.since(), how='usbcon reset op')
+        sock = self.read_env(self.live_run / 'live.env').get('LIVE_SOCK')
+        if not sock:
+            end['reset'] = 'not sent'
+            self.error('END_RESET_FAILED', f'{condition}: no LIVE_SOCK in {self.live_run}/live.env; the deadline ends this boot')
+            return
+        if condition != 'abort-on':
+            self.end_evidence(sock)
+        end['reset_t'] = self.since()
+        with self.reader_lock(30):
+            rc, out = self.run([self.mac, 'repo', '--force', '--', 'python3', '-I', self.mac_tool('usbcon.py'), '--control-socket', sock,
+                                '--reset-now'], self.t['reset'], 'end-reset', kill_at=2)
+        reply = {}
+        if '{' in out:
+            try:
+                reply = json.loads(out[out.find('{'):out.rfind('}') + 1])
+            except ValueError:
+                reply = {}
+        state = reply.get('state') or ('refused' if rc == 2 else 'unknown')
+        end['reset'] = state
+        if state == 'reset':
+            self.step('end', condition=condition, reset='accepted', detail=detail[:120])
+            return
+        detail = reply.get('error') or ("the Mac's tools/usbcon.py has no --reset-now (sync tools)" if rc == 2 else
+                                        (out.strip().splitlines() or ['no output'])[-1][:200])
+        end['error'] = detail
+        self.error('END_RESET_REFUSED' if state == 'refused' else 'END_RESET_UNKNOWN',
+                   f'{condition}: reset {state}: {detail}. Not repeated; the deadline ends this boot')
+
+    def end_evidence(self, sock):
+        """The evidence only a live kernel gives, taken when an --end-* condition fired and before the reset: the hkq
+        queries, then one screenshot. Bounded; a failure is recorded and never stops the reset."""
+        a = self.args
+        if a.queries:
+            q = self.report['queries'] = dict(spec=a.queries, t=self.since(), results=[])
+            try:
+                console = f'{self.live_run.relative_to(ROOT)}/usbcon/usbcon.log'
+            except ValueError:
+                console = f'{self.live_run}/usbcon/usbcon.log'
+            with self.reader_lock():
+                rc, out = self.run([self.mac, 'repo', '--force', '--', 'python3', '-I', self.mac_tool('hkq.py'), '-s', sock, '-c', console,
+                                    '--timeout', f"{self.t['query']:g}", 'batch', a.queries], self.t['queries'], 'hkq', kill_at=2)
+            (self.out / 'queries.txt').write_text(out)
+            for m in re.finditer(r'^### (?:end (?P<q>.+?) rc=(?P<rc>-?\d+) lines=(?P<lines>\d+) bytes=(?P<bytes>\d+) dropped=(?P<dropped>\d+) '
+                                 r'ms=(?P<ms>\d+)|error (?P<eq>.+?): (?P<err>.*))$', out, re.M):
+                q['results'].append(dict(query=m['q'], rc=int(m['rc']), lines=int(m['lines']), bytes=int(m['bytes']),
+                                         dropped=int(m['dropped']), ms=int(m['ms'])) if m['q'] else dict(query=m['eq'], error=m['err'][:240]))
+            asked = len([x for x in a.queries.replace('\n', ';').split(';') if x.strip()])
+            q.update(rc=rc, asked=asked, ok=sum(1 for r in q['results'] if r.get('rc') == 0), path='queries.txt', took_s=round(self.since() - q['t'], 1))
+            self.step('queries', rc=rc, asked=asked, ok=q['ok'])
+            if rc != 0 or q['ok'] != asked:
+                bad = next((r for r in q['results'] if r.get('rc') != 0), None)
+                self.error('QUERIES_INCOMPLETE', f"hkq batch rc {rc}: {q['ok']} of {asked} queries ended rc 0"
+                           + (f"; first: {bad['query']}: {bad.get('error') or 'rc ' + str(bad.get('rc'))}" if bad else
+                              f"; {(out.strip().splitlines() or ['no output'])[-1][:200]}"))
+        if self.report['image'].get('live_snapshots') and not a.no_end_shot:
+            t = self.since()
+            path = self.out / 'screens' / f'end-{int(t):05d}s.png'
+            path.parent.mkdir(exist_ok=True)
+            rc, out = self.run([self.screenshot, str(self.live_run), '--name', 'end', '--step', str(a.shot_step), '-o', str(path)],
+                               self.t['shot'], 'shot-end', kill_at=2)
+            ok = rc == 0 and path.is_file()
+            self.report['screenshots'].append(dict(t=t, kind='end', path=str(path.relative_to(self.out)) if ok else None, ok=ok,
+                                                   detail=(out.strip().splitlines() or [''])[-1][:160]))
+
+    def end_summary(self, an):
+        """What ended the boot: the --end-* condition that fired (and its reset), else what the console shows."""
+        end = self.report.get('end')
+        if end and end.get('how') == 'console':        # --report-only of a finished cycle: re-derive
+            end = end.get('attempted')
+        if end and end.get('reset') == 'reset':
+            return end
+        kinds = [p['kind'] for p in an.get('panics') or []]
+        seen = 'host-end' if 'host-end' in kinds else 'deadline' if 'deadline' in kinds else 'panic' if kinds else 'unknown'
+        out = dict(condition=seen, detail=next((p['line'] for p in an.get('panics') or []), ''), how='console')
+        if end:
+            out['attempted'] = end           # an --end-* fired but its reset did not take: the fallback ended it
+        return out
 
     def follow_markers(self, line):
         m = MARKER.match(line.strip())
@@ -882,8 +1169,6 @@ class Cycle:
         info, a = self.report['image'], self.args
         name = self.name
         cmd = [self.live_boot, str(self.image), name, '--mach', str(self.mach), '--wait', str(info['wait_s'])]
-        if not a.no_sync_tools:
-            cmd.append('--sync-tools')
         if not info['console']:
             cmd.append('--no-console')
         bound = info['wait_s'] + max(self.t['boot_watch'], info['wait_s']) + self.t['boot_extra']
@@ -891,6 +1176,7 @@ class Cycle:
         out_path = self.out / 'live_boot.out'
         p = self.spawn(cmd, out_path, pipe_stdout=True)
         self.boot_proc = p
+        self.boot_sent.set()
         lines = []
 
         def reader():
@@ -1001,12 +1287,11 @@ class Cycle:
         if info['console']:
             py = os.environ.get('USBCON_PY', '/tmp/tegu-venv/bin/python')
             ctimeout = int(info['wait_s'] + 600)
+            with open(run / 'live.env', 'a') as f:
+                f.write(f"LIVE_TOOLS={self.mac_tools['dir']}\n")
             cmd = (shlex.split(os.environ['HK_CYCLE_USBCON_CMD']) if os.environ.get('HK_CYCLE_USBCON_CMD') else
-                   [self.mac, 'repo', '--force', '--', py, '-u', 'tools/usbcon.py', '--output', f'{rel}/usbcon/usbcon.log',
+                   [self.mac, 'repo', '--force', '--', py, '-u', self.mac_tool('usbcon.py'), '--output', f'{rel}/usbcon/usbcon.log',
                     '--control-socket', sock, '--timeout', str(ctimeout), '--gone-exit', '45', '--stats', '30'])
-            if not a.no_sync_tools:
-                self.run([self.mac, 'repo', '--force', '--sync', 'tools/usbcon.py', '--overwrite', '--', 'true'], self.t['sync'],
-                         'sync-usbcon', kill_at=2)
             filt = self.stamp_filter()
             p = self.spawn(cmd, run / 'usbcon.out', pipe_stdout=True)
             if filt:
@@ -1029,6 +1314,7 @@ class Cycle:
             self.step('fastboot-boot', rc=rc, line=(out.strip().splitlines() or [''])[-1][:200])
             if rc != 0:
                 raise Refused('BOOT_FAILED', f'fastboot boot rc {rc}', EXIT_BOOT)
+            self.boot_sent.set()
             self.sleep(self.t['settle'], kill_at=2)
             left, outcome = False, None
             end = boot_t + info['wait_s'] + self.t['settle']
@@ -1075,7 +1361,7 @@ class Cycle:
         att.mkdir(parents=True, exist_ok=True)
         rel = att.relative_to(ROOT)
         cap = os.environ.get('HK_CYCLE_CAPTURE_PY', 'python3')
-        rc, out = self.run([self.mac, 'repo', '--force', '--back', str(rel), '--', cap, 'tools/capture-fastboot.py', f'{rel}/ramdump',
+        rc, out = self.run([self.mac, 'repo', '--force', '--back', str(rel), '--', cap, self.mac_tool('capture-fastboot.py'), f'{rel}/ramdump',
                             '--diagnostics'], self.t['capture'], 'capture', kill_at=2)
         (att / 'capture.log').write_text(out)
         self.attempt = att
@@ -1169,9 +1455,33 @@ class Cycle:
                                                        else (out.strip().splitlines() or [''])[-1][:160]),
                                                record=meta))
 
-    # ------------------------------------------------------------------ 4. return to Android
+    # ------------------------------------------------------------------ 4. return to Android (or stay parked)
+    def stay_in_fastboot(self):
+        """--stay-fastboot: no return. The phone must end parked in fastboot, force-fastboot still armed, for the next image."""
+        ret = self.report['return'] = dict(start=self.since(), stayed=True, android=False)
+        if not self.touched:
+            st = self.note_state(self.phone_state(kill_at=3), 'stay (phone untouched by this cycle)')
+            ret.update(state=st, untouched=True, fastboot=st == 'fastboot', action='none: the cycle never changed the phone')
+            return
+        st = self.note_state(self.phone_state(kill_at=3), 'stay')
+        if st != 'fastboot':
+            bound = self.t['park_wait'] if st == 'ios' else self.t['stay_park']
+            self.log(f'not parked yet ({st}); waiting up to {bound:.0f}s for the park (no cold reset: it wipes RAM)')
+            st = self.note_state(self.wait_for({'fastboot', 'android', 'recovery'}, bound, 3, 'stay-park'), 'stay, after waiting')
+        if st == 'android':
+            # the boot ended without a park (force-fastboot off, or the image went on to Android): fastboot is one command away
+            rc, _ = self.run([self.adb, 'reboot', 'bootloader'], self.t['probe'], 'adb-reboot-bootloader', kill_at=3)
+            self.step('to-fastboot', rc=rc, why='stay: the boot ended in Android, not in a park')
+            ret['no_park'] = True
+            st = self.note_state(self.wait_for({'fastboot'}, self.t['to_fastboot'], 3, 'to-fastboot'), 'stay, after adb reboot bootloader')
+        ret.update(state=st, fastboot=st == 'fastboot', end=self.since())
+        if st == 'recovery':
+            self.error('PHONE_IN_RECOVERY', 'the phone is in recovery: the owner chooses "Reboot to bootloader" or "Try again" (never factory reset)')
+        elif st != 'fastboot':
+            self.error('STAY_NOT_FASTBOOT', f'the phone is {st}, not parked in fastboot; nothing more was sent to it')
+
     def return_to_android(self):
-        ret = self.report['return'] = dict(start=self.since())
+        ret = self.report['return'] = dict(start=self.since(), via=self.args.return_via)
         if not self.touched:
             st = self.note_state(self.phone_state(kill_at=3), 'return (phone untouched by this cycle)')
             ret.update(state=st, action='none: the cycle never changed the phone, no boot, no return check', untouched=True,
@@ -1187,14 +1497,7 @@ class Cycle:
                 self.run([self.adb, 'reboot', 'bootloader'], self.t['probe'], 'adb-reboot-bootloader', kill_at=3)
                 st = self.note_state(self.wait_for({'fastboot'}, self.t['to_fastboot'], 3, 'to-fastboot'), 'to disarm force-fastboot')
         if st == 'fastboot':
-            ok = self.force_fastboot(False, kill_at=3)
-            ret['force_fastboot_off'] = ok
-            if not ok:
-                self.error('FORCE_FASTBOOT_ON', 'force-fastboot could not be turned off; rebooting anyway (a later reboot will park)')
-            rc, _ = self.run([self.fastboot, 'reboot'], self.t['ff'], 'fastboot-reboot', kill_at=3)
-            self.step('fastboot-reboot', rc=rc)
-            self.sleep(min(10, self.poll * 2), kill_at=3)
-            st = self.wait_for({'android', 'recovery'}, self.t['android_boot'], 3, 'android-boot', also=())
+            st = self.leave_fastboot(ret)
         if st == 'android':
             end = time.monotonic() + self.t['android_boot']
             while not self.boot_completed(kill_at=3):
@@ -1206,10 +1509,119 @@ class Cycle:
         ret.update(state=st, android=st == 'android', end=self.since())
         if st == 'recovery':
             self.error('PHONE_IN_RECOVERY', 'Android came up in recovery: the owner chooses "Try again" (never factory reset)')
+        elif st == 'fastboot':
+            if not any(e['state'] in ('FORCE_FASTBOOT_ON', 'RETURN_PARKED_AGAIN') for e in self.report['errors']):
+                self.error('RETURN_FAILED', 'the phone is still in fastboot, not Android')
         elif st != 'android':
-            self.error('RETURN_FAILED', f'the phone is {st}, not Android')
+            seen = ' -> '.join(f"{x['state']}@{x['t']:.0f}s" for x in (ret.get('wait') or {}).get('seen', []))
+            self.error('RETURN_FAILED', f'the phone is {st}, not Android, {(ret.get("wait") or {}).get("s", 0):.0f} s after leaving fastboot'
+                       + (f' (states seen: {seen})' if seen else '') + '. Nothing more was sent. If no USB id shows: the installed '
+                       'chooser (no USB by design) may be in its menu, or have started the installed iOS, which ends at its own deadline')
         if st == 'android' and not self.args.no_return_check:
             self.run_return_check(ret)
+
+    def stock_boot_image(self, ret):
+        """The stock boot image for --return-via stock, only if it is the bytes it should be. None (and why) otherwise."""
+        a = self.args
+        p = Path(a.stock_boot)
+        p = p if p.is_absolute() else ROOT / p
+        if not p.is_file():
+            ret['stock'] = f'missing: {p}'
+            return None
+        got = sha256(p)
+        if got != a.stock_boot_sha256:
+            ret['stock'] = f'{p} is {got[:16]}…, not the stock image {a.stock_boot_sha256[:16]}…'
+            return None
+        ret['stock'] = f'{a.stock_boot} sha256 {got[:16]}…'
+        return p
+
+    def leave_fastboot(self, ret, again=False):
+        """Fastboot -> Android. force-fastboot is turned off and READ BACK first: with it on, `fastboot reboot` only parks
+        again (the phone then never shows up as adb). Then the chosen route, then a wait that names what it sees."""
+        ok = self.force_fastboot(False, kill_at=3)
+        if not ok:
+            self.sleep(min(3, self.poll), kill_at=3)
+            ok = self.force_fastboot(False, kill_at=3)       # once more: the write is idempotent
+        ret['force_fastboot_off'] = ok
+        via = self.args.return_via
+        stock = self.stock_boot_image(ret) if via == 'stock' else None
+        if via == 'stock' and stock is None:
+            self.log(f"--return-via stock: {ret['stock']}; using the installed boot_b (fastboot reboot) instead")
+            via = 'chooser'
+        ret['via_used'] = via
+        if not ok and via == 'chooser':
+            self.error('FORCE_FASTBOOT_ON', 'force-fastboot still reads on after two tries; `fastboot reboot` would only park in '
+                       'fastboot again, so it was NOT sent. The phone stays in fastboot. Owner: `fastboot oem force-fastboot off`, '
+                       'check `fastboot oem force-fastboot`, then `fastboot reboot`')
+            return 'fastboot'
+        if not ok:
+            self.error('FORCE_FASTBOOT_ON', 'force-fastboot could not be turned off; booting stock Android all the same (its next '
+                       'reset will park in fastboot: turn it off there)')
+        if via == 'stock':
+            rc, out = self.run([self.fastboot, 'boot', str(stock)], self.t['fb_boot'], 'fastboot-boot-stock', kill_at=3)
+            self.step('fastboot-boot-stock', rc=rc, line=(out.strip().splitlines() or [''])[-1][:200])
+            if rc != 0:
+                st = self.phone_state(kill_at=3)
+                if st != 'fastboot' or not ok:
+                    self.error('RETURN_STOCK_BOOT_FAILED', f'fastboot boot of the stock image rc {rc}; the phone is {st}')
+                    return self.wait_android(ret, via, again) if st != 'fastboot' else st
+                self.log(f'fastboot boot of the stock image failed (rc {rc}) and the phone is still in fastboot: fastboot reboot instead')
+                ret['via_used'] = via = 'chooser'
+        if via == 'chooser':
+            rc, _ = self.run([self.fastboot, 'reboot'], self.t['ff'], 'fastboot-reboot', kill_at=3)
+            self.step('fastboot-reboot', rc=rc)
+        self.sleep(min(10, self.poll * 2), kill_at=3)
+        return self.wait_android(ret, via, again)
+
+    def wait_android(self, ret, via, again=False):
+        """After leaving fastboot: poll until Android or recovery. What shows up instead is named, recorded and waited out
+        within its own bound: a second park (once: force-fastboot off and the route again), an iOS session the installed
+        chooser started (to its deadline), or no USB at all (the cold-safe chooser shows none)."""
+        t0 = time.monotonic()
+        deadline = t0 + self.t['android_boot']
+        w = ret.setdefault('wait', dict(seen=[]))
+        last, left, st = None, False, None
+        while True:
+            st = self.phone_state(kill_at=3)
+            el = time.monotonic() - t0
+            if st != last:
+                self.note_state(st, f'return, {el:.0f} s after leaving fastboot')
+                w['seen'].append(dict(t=round(el, 1), state=st))
+                last = st
+            if st in ('android', 'recovery'):
+                break
+            if st != 'fastboot':
+                left = True
+            if st == 'fastboot' and (left or el > self.t['repark']):
+                # parked again: force-fastboot was (re)armed, or what booted reset early
+                rc, out = self.run([self.fastboot, 'oem', 'force-fastboot'], self.t['ff'], 'ff-read', kill_at=3)
+                ff = re.search(r'force-fastboot (on|off)', out)
+                w['parked_again'] = dict(t=round(el, 1), force_fastboot=ff.group(1) if ff else 'unknown')
+                if again:
+                    self.error('RETURN_PARKED_AGAIN', f"the phone parked in fastboot a second time after the return ({via}); force-fastboot "
+                               f"reads {w['parked_again']['force_fastboot']}. It stays in fastboot; nothing more was sent")
+                    break
+                self.log(f"the phone is back in fastboot {el:.0f} s after the return ({via}); force-fastboot reads "
+                         f"{w['parked_again']['force_fastboot']}. One more try")
+                w['s'] = round(el, 1)
+                return self.leave_fastboot(ret, again=True)
+            if st == 'ios' and not w.get('ios'):
+                w['ios'] = round(el, 1)
+                deadline = max(deadline, t0 + self.t['return_ios'])
+                self.log(f'an iOS/shim USB gadget is up {el:.0f} s after the return: the installed chooser started iOS. Waiting up to '
+                         f"{self.t['return_ios']:.0f}s for its own deadline (no cold reset)")
+            if time.monotonic() > deadline:
+                if st in ('unknown', 'usb-google') and not w.get('absent_extended') and self.t['return_absent'] > self.t['android_boot']:
+                    w['absent_extended'] = round(el, 1)
+                    deadline = t0 + self.t['return_absent']
+                    self.log(f"no adb after {el:.0f} s and the phone shows {'no USB id at all' if st == 'unknown' else 'only a Google USB id'}: "
+                             f"the installed chooser has no USB, and an iOS it starts runs to its 900 s deadline. Waiting on, up to "
+                             f"{self.t['return_absent']:.0f}s in all; nothing is sent meanwhile")
+                    continue
+                break
+            self.sleep(self.poll, kill_at=3)
+        w['s'] = round(time.monotonic() - t0, 1)
+        return st
 
     def run_return_check(self, ret):
         d = self.out / 'return-check'
@@ -1221,7 +1633,13 @@ class Cycle:
             r = {}
         ret['check'] = dict(rc=rc, verdict=r.get('verdict', 'NO RESULT'), kernel_code_base=r.get('kernel_code_base'),
                             failed=[k for k, v in r.items() if v is False])
-        self.step('return-check', verdict=ret['check']['verdict'])
+        try:        # what reset preceded this Android boot: "reboot" after a clean return, "kernel_panic" after an iOS/Linux panic
+            m = re.search(r'androidboot\.bootreason\s*=\s*(.+)', (d / 'bootconfig.txt').read_text(errors='replace'))
+            ret['check']['bootreason'] = m.group(1).replace('"', '').strip()[:80] if m else None
+        except OSError:
+            ret['check']['bootreason'] = None
+        self.step('return-check', verdict=ret['check']['verdict'], bootreason=ret['check']['bootreason'],
+                  kernel_code_base=ret['check']['kernel_code_base'])
 
     # ------------------------------------------------------------------ 5./6. analysis and report
     def analyse(self):
@@ -1273,6 +1691,7 @@ class Cycle:
         for m in markers:
             an['markers'].setdefault(m['name'], dict(s=m['s'], wall=m['wall'], detail=m['detail'][:160], count=0))['count'] += 1
         an['home'] = home_rule(an['markers'], sources)
+        self.report['end'] = self.end_summary(an)
         if an['home']['home']:
             an['markers'].setdefault('HOME', dict(s=None, wall=None, detail=an['home']['rule'], count=1))
         ui = self.report.get('ui', dict(ran=False))
@@ -1382,9 +1801,12 @@ class Cycle:
         ret = r.get('return', {})
         check = (ret.get('check') or {}).get('verdict', 'NOT RUN')
         errors = [e for e in r['errors'] if e['state'] != 'INTERRUPTED']
+        stayed = bool(ret.get('stayed'))           # --stay-fastboot: parked is the wanted end, there is no return check
         if ret.get('untouched') and r['errors']:
             v = 'REFUSED'                     # preflight said no before the phone was changed
-        elif not ret.get('android'):
+        elif stayed and not ret.get('fastboot'):
+            v = 'PHONE_NOT_IN_FASTBOOT'
+        elif not stayed and not ret.get('android'):
             v = 'PHONE_NOT_IN_ANDROID'
         elif any(e['verdict'] == 'FAIL' for e in req) or check not in ('PASS', 'NOT RUN'):
             v = 'FAIL'
@@ -1393,8 +1815,8 @@ class Cycle:
         elif r['errors']:
             v = 'INTERRUPTED'
         elif not exp:
-            v = 'COMPLETE' if check == 'PASS' else 'INCOMPLETE'
-        elif all(e['verdict'] == 'PASS' for e in req) and check == 'PASS':
+            v = 'COMPLETE' if check == 'PASS' or stayed else 'INCOMPLETE'
+        elif all(e['verdict'] == 'PASS' for e in req) and (check == 'PASS' or stayed):
             v = 'PASS'
         else:
             v = 'INCOMPLETE'
@@ -1427,10 +1849,14 @@ class Cycle:
                  image=(r.get('image') or {}).get('image'), image_sha256=(r.get('image') or {}).get('image_sha256'),
                  mode=(r.get('image') or {}).get('mode'), errors=[e['state'] for e in r.get('errors', [])],
                  android=bool((r.get('return') or {}).get('android')), return_check=r.get('return_check_verdict'),
+                 phone=(r.get('return') or {}).get('state'), stayed=bool((r.get('return') or {}).get('stayed')),
+                 live_run=str(self.live_run) if getattr(self, 'live_run', None) else None,
+                 attempt=str(self.attempt) if getattr(self, 'attempt', None) else None,
+                 queries={k: (r.get('queries') or {}).get(k) for k in ('asked', 'ok', 'rc', 'path')} if r.get('queries') else None,
                  home=(an.get('home') or {}).get('home'), evaluator=an.get('evaluator'),
                  rows={e['id']: e['verdict'] for e in rows}, row_counts=counts,
                  crash_signatures=[g['sig'] for g in cd.get('signatures', []) if g.get('crash')],
-                 panics=[p['kind'] for p in an.get('panics', [])],
+                 panics=[p['kind'] for p in an.get('panics', [])], end=r.get('end'),
                  report_md='report.md', report_json='report.json',
                  screenshots=[s['path'] for s in r.get('screenshots', []) if s.get('ok')])
         (self.out / 'summary.json').write_text(json.dumps(s, indent=1, default=str) + '\n')
@@ -1478,7 +1904,7 @@ class Cycle:
                 self.boot_done.set()
             if self.interrupts < 3:
                 try:
-                    self.return_to_android()
+                    self.stay_in_fastboot() if a.stay_fastboot else self.return_to_android()
                 except Interrupted:
                     self.error('INTERRUPTED', 'the return to Android was abandoned (third interrupt)')
                     self.report.setdefault('return', {}).update(android=False, abandoned=True)
@@ -1486,7 +1912,7 @@ class Cycle:
                     self.error('INTERNAL', f'return: {type(e).__name__}: {e}')
                     self.report.setdefault('return', {}).update(android=False)
             else:
-                self.report['return'] = dict(android=False, abandoned=True)
+                self.report['return'] = dict(android=False, abandoned=True, stayed=bool(a.stay_fastboot))
             with self.lock:
                 left = list(self.children)
             for p in left:
@@ -1498,9 +1924,10 @@ class Cycle:
         finally:
             v = self.verdict()
             self.write_report()
+        ret = self.report.get('return', {})
         if v == 'REFUSED':
             pass                                  # the refusal's own code; the phone was not changed
-        elif not self.report.get('return', {}).get('android'):
+        elif not (ret.get('fastboot') if ret.get('stayed') else ret.get('android')):
             code = EXIT_NOT_ANDROID
         elif self.interrupts:
             code = EXIT_INTERRUPTED
@@ -1508,6 +1935,53 @@ class Cycle:
             code = EXIT_FAIL if v in ('FAIL', 'INCOMPLETE') else EXIT_BOOT
         self.write_summary(code)
         print(f'hk_cycle: verdict {v}; return check {self.report["return_check_verdict"]}; report {self.out / "report.md"}')
+        print(self.state_line(), flush=True)
+        return code
+
+    def return_only(self):
+        """Only step 4: bring the phone back to Android from wherever it is, with the return check. No image, no boot."""
+        a = self.args
+        self.name = a.name or 'return'
+        ts = time.strftime('%Y%m%d-%H%M%S')
+        self.out = Path(a.out).resolve() if a.out else ROOT / 'research/hk-cycles' / f'{ts}-{self.name}'
+        self.out.mkdir(parents=True, exist_ok=True)
+        self.tmp = self.out / 'cmd'
+        self.tmp.mkdir(exist_ok=True)
+        self.log_f = open(self.out / 'cycle.log', 'a')
+        self.report.update(name=self.name, out=str(self.out), argv=sys.argv[1:], expect=None, timeouts=self.t, mode='return-only')
+        self.expect_doc = self.live_run = self.attempt = None
+        for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+            signal.signal(sig, self.on_signal)
+        self.interrupts = 2            # an interrupt now abandons the return itself (level 3)
+        self.log(f'return-only {self.out}')
+        first = self.phone_state(kill_at=3)
+        self.touched = True
+        # In Android the flag cannot be read; a reboot through fastboot only to read it is not worth a boot cycle.
+        self.ff_armed = first != 'android'
+        try:
+            self.return_to_android()
+            if first == 'android':
+                self.report['return']['note'] = 'already in Android: force-fastboot was not read (fastboot only) and not changed'
+        except Interrupted:
+            self.error('INTERRUPTED', 'the return to Android was abandoned by an interrupt')
+            self.report.setdefault('return', {}).update(android=False, abandoned=True)
+        except Exception as e:
+            self.error('INTERNAL', f'return: {type(e).__name__}: {e}')
+            self.report.setdefault('return', {}).update(android=False)
+        finally:
+            self.boot_done.set()
+        ret = self.report.get('return', {})
+        check = (ret.get('check') or {}).get('verdict', 'NOT RUN')
+        self.report['return_check_verdict'] = check
+        v = self.report['verdict'] = ('PHONE_NOT_IN_ANDROID' if not ret.get('android') else
+                                      'RETURNED' if check in ('PASS', 'NOT RUN') else 'RETURN_CHECK_FAILED')
+        self.report['ended'], self.report['duration_s'] = now_iso(), self.since()
+        (self.out / 'report.json').write_text(json.dumps(self.report, indent=1, default=str) + '\n')
+        (self.out / 'report.md').write_text(render_md(self.report))
+        code = EXIT_OK if v == 'RETURNED' else EXIT_NOT_ANDROID if v == 'PHONE_NOT_IN_ANDROID' else EXIT_FAIL
+        self.write_summary(code)
+        print(f'hk_cycle: verdict {v}; return check {check}; report {self.out / "report.md"}')
+        print(self.state_line(), flush=True)
         return code
 
     def report_only(self):
@@ -1560,9 +2034,32 @@ def render_md(r):
     L.append(f"- Deadline {img.get('deadline_s')} s, wait {img.get('wait_s')} s, console {img.get('console')}, live snapshots "
              f"{img.get('live_snapshots')}, live input {img.get('live_input')}")
     L.append(f"- Started {r.get('started')}, ended {r.get('ended')}, {r.get('duration_s')} s; expectations `{r.get('expect')}`")
-    L.append(f"- Return to Android: **{'yes' if ret.get('android') else 'NO'}**, return check **{r.get('return_check_verdict')}**"
-             + (f" (failed: {', '.join((ret.get('check') or {}).get('failed', []))})" if (ret.get('check') or {}).get('failed') else ''))
-    L.append('- Evidence class: PHYSICAL (this phone boot); analysis is of its console and ramdump.')
+    if ret.get('stayed'):
+        L.append(f"- Phone left in fastboot on purpose (--stay-fastboot): **{'parked' if ret.get('fastboot') else 'NO: ' + str(ret.get('state'))}**"
+                 + ('; the boot ended in Android (no park, so no ramdump), sent back to fastboot' if ret.get('no_park') else '')
+                 + '. No return to Android, no return check in this cycle.')
+    else:
+        chk = ret.get('check') or {}
+        L.append(f"- Return to Android: **{'yes' if ret.get('android') else 'NO'}**, return check **{r.get('return_check_verdict')}**"
+                 + (f" (failed: {', '.join(chk.get('failed', []))})" if chk.get('failed') else '')
+                 + (f"; route {ret.get('via_used')}" if ret.get('via_used') else '')
+                 + (f", {ret['wait'].get('s')} s from leaving fastboot" if (ret.get('wait') or {}).get('s') is not None else '')
+                 + (f", bootreason `{chk.get('bootreason')}`, kernel {chk.get('kernel_code_base')}" if chk.get('bootreason') or chk.get('kernel_code_base') else ''))
+    q = r.get('queries')
+    if q:
+        L.append(f"- Queries before the end: **{q.get('ok')} of {q.get('asked')}** ended rc 0 (hkq batch rc {q.get('rc')}, {q.get('took_s')} s): "
+                 f"`{q.get('path')}`")
+    end = r.get('end') or {}
+    if end:
+        L.append(f"- Ended by: **{end.get('condition')}** ({md_cell(end.get('detail', ''))[:160]})"
+                 + (f" at +{end['t']} s, reset {end.get('reset')}" if end.get('t') is not None else '')
+                 + (f"; an early end was tried ({end['attempted'].get('condition')}, reset {end['attempted'].get('reset')})"
+                    if end.get('attempted') else ''))
+    if img:
+        L.append('- Evidence class: PHYSICAL (this phone boot); analysis is of its console and ramdump.')
+    mt = r.get('mac_tools')
+    if mt:
+        L.append(f"- Mac-side tools: m1box's, bundle `{mt.get('id')}` in `{mt.get('dir')}` (hash-verified; the Mac checkout's tools/ not used)")
     if r.get('errors'):
         L += ['', '## Errors', '']
         L += [f"- `{e['state']}` at +{e['t']} s: {e['detail']}" for e in r['errors']]
@@ -1581,7 +2078,8 @@ def render_md(r):
     if r.get('screenshots'):
         L += ['', '## Screens', '']
         for s in r['screenshots']:
-            label = 'hk_screen (post-mortem, last capture)' if s['kind'] == 'hk_screen' else f"live +{s['t']:.0f} s"
+            label = ('hk_screen (post-mortem, last capture)' if s['kind'] == 'hk_screen' else
+                     f"at the end condition, before the reset, +{s['t']:.0f} s" if s['kind'] == 'end' else f"live +{s['t']:.0f} s")
             if s.get('ok'):
                 rec = s.get('record') or {}
                 extra = f" (reason {rec.get('reason_name', rec.get('reason'))}, seq {rec.get('seq')}, {rec.get('identity', '')})" if rec.get('reason') else ''
@@ -1672,13 +2170,21 @@ def parse_args(argv):
     p.add_argument('--expect', help='expectations (YAML or JSON), e.g. research/ios26-phaseb-r1/live/expect/int1.yaml')
     p.add_argument('--deadline-wait', type=int, help='seconds to wait for the park after the console appears (default: the '
                    "image's blazer_deadline + 180, else 1200)")
+    p.add_argument('--end-on', metavar='REGEX', help='end the boot at the first live console line matching REGEX (+ --end-grace); '
+                   'needs blazer_usbcon=2')
+    p.add_argument('--end-grace', type=float, default=5.0, metavar='S', help='seconds between the --end-on match and the reset (default 5)')
+    p.add_argument('--end-after', type=float, metavar='S', help='end the boot S seconds after Home (UI_READY); needs blazer_usbcon=2')
+    p.add_argument('--end-on-idle', type=float, metavar='S', help='end the boot after S seconds without a kernel console line; '
+                   'needs blazer_usbcon=2')
+    p.add_argument('--abort-on', metavar='REGEX', help='end the boot AT ONCE at the first live console line matching REGEX (a stop '
+                   'condition such as a thermal limit): no grace, no queries, no screenshot; needs blazer_usbcon=2')
     p.add_argument('--name', help='attempt name (default: the image directory name)')
     p.add_argument('--out', help='cycle directory (default research/hk-cycles/<ts>-<name>)')
     p.add_argument('--mode', choices=('auto', 'bootios', 'plain'), default='auto',
                    help='bootios: live_boot.sh/run-attempt (A7 images); plain: bare fastboot boot (chooser images); auto by manifest')
     p.add_argument('--busy-wait', type=int, default=0, help='if an iOS boot is running at the start, wait this long for its park')
     p.add_argument('--overwrite-mac', action='store_true', help='replace a different Mac copy of the image/kernel')
-    p.add_argument('--no-sync-tools', action='store_true', help="run the Mac's own tools/usbcon.py")
+    p.add_argument('--no-sync-tools', action='store_true', help='ignored: the Mac-side tools are always m1box\'s, placed by tools/mactools.py')
     p.add_argument('--no-console', action='store_true')
     p.add_argument('--no-shots', action='store_true', help='no periodic live screenshots')
     p.add_argument('--shot-every', type=float, default=60)
@@ -1690,9 +2196,39 @@ def parse_args(argv):
     p.add_argument('--poll', type=float, default=10, help='phone state poll interval, seconds')
     p.add_argument('--timeouts', help='override bounds, k=v,...: ' + ','.join(f'{k}={v}' for k, v in TIMEOUTS.items()))
     p.add_argument('--report-only', metavar='CYCLE_DIR', help='redo analysis and report of a finished cycle; no device')
+    p.add_argument('--queries', metavar='SPEC', help="hkq queries to run when an --end-* condition fires, before the reset: "
+                   "'drivers; procs; ioreg CLASS 4; log 200; mem; ports PROC; sysctl NAME' (tools/hkq.py batch); needs the query gate")
+    p.add_argument('--no-end-shot', action='store_true', help='no live screenshot at the end condition')
+    p.add_argument('--stay-fastboot', action='store_true', help='no return to Android: leave the phone parked in fastboot for the '
+                   'next image (tools/hk_session.py)')
+    p.add_argument('--return-via', choices=('chooser', 'stock'), default='chooser', help='the way back to Android: chooser = '
+                   '`fastboot reboot` into the installed boot_b; stock = `fastboot boot` of the stock boot image (temporary, passes '
+                   'the installed chooser by)')
+    p.add_argument('--stock-boot', default=STOCK_BOOT, help='the stock boot image for --return-via stock')
+    p.add_argument('--stock-boot-sha256', default=STOCK_BOOT_SHA256, help=argparse.SUPPRESS)
+    p.add_argument('--return-only', action='store_true', help='only bring the phone back to Android (and run the return check)')
     a = p.parse_args(argv)
-    if not a.report_only and not a.image:
-        p.error('--image is required (or --report-only DIR)')
+    if not a.report_only and not a.return_only and not a.image:
+        p.error('--image is required (or --report-only DIR, or --return-only)')
+    if a.queries:
+        try:
+            load_module('hkq', HKQ).parse_batch(a.queries)
+        except ValueError as e:
+            p.error(f'--queries: {e}')
+        if not (a.end_on or a.end_after is not None or a.end_on_idle is not None):
+            p.error('--queries run when an --end-* condition fires: give --end-on, --end-after or --end-on-idle')
+    if a.stay_fastboot and a.return_only:
+        p.error('--stay-fastboot and --return-only contradict each other')
+    for opt in ('end_on', 'abort_on'):
+        if getattr(a, opt):
+            try:
+                re.compile(getattr(a, opt))
+            except re.error as e:
+                p.error(f"--{opt.replace('_', '-')}: bad regex: {e}")
+    for k in ('end_grace', 'end_after', 'end_on_idle'):
+        v = getattr(a, k)
+        if v is not None and not 0 <= v <= 7200:
+            p.error(f"--{k.replace('_', '-')}: 0..7200 seconds")
     return a
 
 
@@ -1700,7 +2236,7 @@ def main(argv=None):
     a = parse_args(sys.argv[1:] if argv is None else argv)
     c = Cycle(a)
     try:
-        return c.report_only() if a.report_only else c.main()
+        return c.report_only() if a.report_only else c.return_only() if a.return_only else c.main()
     except Refused as e:
         print(f'hk_cycle: {e.state}: {e.detail}', file=sys.stderr)
         return e.code

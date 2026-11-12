@@ -1,0 +1,36 @@
+# Physical boot receipt: a7-bt6-r2 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 22:42:14 +0100
+image:     research/images/a7-ios-system-bt6-r2/boot.img sha256 32325ebadc06057acc737e00dcd8d48337a3af68ee4a405a221d1238f4a572ec
+kernel:    research/ios26-bt6-r1/build/kernel.bt6b.unstripped (unstripped) sha256 3f5d45123129af67d71434c23df553d026942613e6ad92de73c0693d0ad54e33
+revision:  8ef2452c75c00b760571b272576663d682fb39a3 (XNU hk-bt-6; /data/work/hk-bt/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-bt6-r2 a7-bt6-r2 research/ios26-bt6-r1/build/kernel.bt6b.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-224207-a7-bt6-r2/console.txt, research/laguna-usb-fix/attempts/20261111-224214-a7-bt6-r2/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-224214-a7-bt6-r2  [console+msgbuf+live+reader]  up 137 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 3
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         8/8  settings               (complete)           complete
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        5/8  haptic                 keys-hw              Attended: press Vol Up/Down during a live boot
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      5/5  charging               (complete)           complete
+gpu           --  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi        2/14  firmware               scan                 Scan: blazer-wifi scan lines
+bluetooth    5/8  attached               powered?             Needs chip attachment first
+cellular    3/11  id                     survey?              Boot a7-ios-system-modem3-q5 (or q6/q7, which print rung 5 too)
+sensors     4/14  compass                hid-published?       Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc          4/6  nci                    discover             Reached (hk-nfccam-1: CORE_INIT re-sent after the mode-on reset): RF_DISCOVER status 0, 30
+cameras      2/5  torch-lit              cam-pmic             Reached: SLG51002 pattern id 03 31 b1 at 0x75 with chip select only; RT6160 id needs the B
+apps         3/8  settings               settings-responsive  Preferences stalls: HKMAIN lines
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## bluetooth: grep -E 'blazer-bt-bridge: from bluetoothd|HKBT hci-open PASS' console.txt (first 2)
+22:44:51.235 [  115.54] HKBT hci-open PASS: bluetoothd opened com.apple.uart.sk.bluetooth (session 1, gate level 0), chip serving
+22:44:51.830 [  116.14] blazer-bt-bridge: from bluetoothd 13 packets (12 commands to the chip), from the chip 12 (12 complete, 0 status); held: vendor 0, vendor parameters 0, unsupported 1, above level 0, data 0, malformed 0; lost up 0, dow

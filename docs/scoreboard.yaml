@@ -1,0 +1,1234 @@
+# Hardware scoreboard ladders, read by tools/hk_score.py.
+#
+# One ladder per subsystem, rungs ordered from hardware to user-visible. A rung is REACHED in a boot when
+# its checks pass (same check syntax as docs/probes.yaml: re, min, max, src, group + ge/le, seq; plus
+# {metric: NAME, le|ge: N} for computed stability metrics). Spec keys per rung:
+#   all: [checks]        every check must pass
+#   any: [checks]        at least one must pass; an item may itself be {all: [checks], label: ...}
+#   independent: true    reaching this rung does NOT imply the rungs below it (a daemon that runs whatever the
+#                        hardware does, a key that needs a human). Default: a reached rung implies every lower
+#                        rung (the ramdump keeps only the ring tail, so early lines are often gone).
+#   gated: true          only counts when the rung below is reached or implied (negative checks such as
+#                        "no unplanned panic" would otherwise pass on an empty log)
+#   sample: <boot>       a real physical boot where this rung matches (tools/test_hk_score.py checks it)
+#   unverified: <why>    no physical boot prints this yet (planned line or never reached): UNVERIFIED-NO-SAMPLE
+# Subsystem always: true = core platform, exercised by every boot (a dead boot regresses it; --diff verdict 'lost'
+#   otherwise means the feature printed nothing - gate off - and only fails --baseline with --strict).
+#   next: text shown when this is the first missing rung; src: where that hint comes from; action: shared
+#         id so one fix that unblocks rungs in several subsystems ranks once (BASELINE top actions).
+# Subsystem fails: [checks with label/next]: named blockers, printed when they match (never change rungs).
+# Sources: msgbuf (ramdump XNU mirror), console (live console.txt + markers.txt), live (shim live.log),
+# reader (reader.txt / stamps-decode.txt), fastboot (boot.log). Default: msgbuf, live, console, fastboot.
+# Regexes were derived from research/laguna-usb-fix/attempts/2026110[34]-* (physical boots). Add rungs freely;
+# run `python3 -I tools/hk_score.py --validate` to see where each rung matches.
+
+version: 1
+
+subsystems:
+  # ------------------------------------------------------------------ boot
+  - id: boot
+    always: true
+    title: Boot chain
+    rungs:
+      - id: shim
+        label: shim handed off to XNU
+        any:
+          - {re: 'reason=handed-off-to-xnu', src: [reader]}
+          - {re: 'shim: TSHIMST\d nonce=\S+ .*handoff=yes', src: [reader]}
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Shim never handed off: decode stamps-decode.txt (tools/decode-shim-stamps.py); check the boot image/AVB'
+        src: tools/decode-shim-stamps.py
+      - id: xnu
+        label: XNU entered
+        any:
+          - {re: 'Darwin Kernel Version|TEGU-XNU EARLY \d+'}
+          - {re: 'XNUENT1: .*entry-valid=yes', src: [reader]}
+          - {re: 'usbcon: connected: nonce', src: [console]}
+        sample: 20261104-095002-a7-int5-r3
+        next: 'XNU not entered after handoff: read reader.txt MILESTONES / TEGU-XNU EARLY stamps'
+        src: tools/read-ramdump.py
+      - id: root
+        label: root mounted (ufsroot0)
+        any:
+          - {re: 'hfs: mounted iOSRoot on device'}
+          - {re: 'blazer-root: stage t \d+ ms stage mounted'}
+          - {re: 'LIVEBOOT \S+ \S+ ROOT blazer-root', src: [console]}
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Root not mounted: check blazer-ufs lines (ios_system LUN) and rd=ufsroot0 in boot-args'
+        src: NOTES.md (Storage)
+      - id: launchd
+        label: launchd exec'd
+        any:
+          - {re: 'exec launchd|load_init_program: attempting to load'}
+          - {re: 'LIVEBOOT \S+ \S+ LAUNCHD$', src: [console]}
+          - {re: 'com\.apple\.xpc\.launchd\|'}
+        sample: live-20261104-014956-a7-sweep1
+        next: 'launchd not started: varfs/overlay or dyld shared cache; see reader.txt evidence line'
+        src: tools/read-ramdump.py
+      - id: backboardd
+        label: backboardd running
+        any:
+          - {re: 'exec backboardd|HKL backboardd\[|IOK backboardd:'}
+        sample: live-20261104-014956-a7-sweep1
+        next: 'backboardd missing: tools/crashdoc.py on the console; hk_env inject into backboardd (DEBUG-TOOLS.md)'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md
+      - id: springboard
+        label: SpringBoard running
+        any:
+          - {re: 'exec SpringBoard|HKL SpringBoard\['}
+          - {re: 'LIVEBOOT \S+ \S+ SPRINGBOARD', src: [console]}
+        sample: 20261104-095002-a7-int5-r3
+        next: 'SpringBoard not running: crashdoc the backboardd/SpringBoard CRASH lines'
+        src: tools/crashdoc.py
+      - id: home
+        label: Home (touch+buttons+SpringBoard+frames)
+        any:
+          - {re: 'UIRUN \S+ \S+ HOME console conditions met', src: [console]}
+          - {re: 'LIVEBOOT \S+ \S+ UI_READY', src: [console]}
+          - all:
+              - {re: 'HKL SpringBoard\['}
+              - {re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 1}
+            label: ramdump proxy - SpringBoard alive and swaps >= 1/s
+        sample: live-20261104-014956-a7-sweep1
+        next: 'No Home: check frames (display ladder) and SweetHIDTouch/Buttons clients; screenshot the boot'
+        src: tools/live_boot.sh markers
+      - id: settings
+        label: Settings (Preferences) launched
+        any:
+          - {re: 'exec Preferences|HKL Preferences\[|HKMAIN: Preferences\['}
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Drive Settings with a .ui script (tools/ui_run.py) so Preferences launches'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md
+    fails:
+      - {re: 'VERDICT: (NOTHING|SILENT)', src: [reader], label: 'reader verdict: nothing captured for this boot'}
+
+  # ------------------------------------------------------------------ display
+  - id: display
+    always: true
+    title: Display
+    rungs:
+      - id: panel
+        label: DPU attached to the panel layer
+        any: [{re: 'tensor-dpu: attached: layer \d+'}, {re: 'LIVEBOOT \S+ \S+ DISPLAY layer', src: [console]}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'DPU never attached: shim DHO/FBPA in live.log; tensor-dpu probe lines'
+        src: research/ios26-dualboot-r8/display-handback/
+      - id: fullres
+        label: scaled to full 1280x2856
+        all: [{re: 'tensor-dpu: scale attached: source \d+x\d+ to \d+,\d+ 1280x2856'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Scaler not attached: tensor-dpu scale path'
+        src: docs/probes.yaml (picture)
+      - id: frames
+        label: frames completing (DPU dones > 0)
+        all: [{re: 'tensor-dpu: frames kicks \d+ dones [1-9]\d*'}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'No completed frames: tensor-dpu underrun lines; HK PRESENT counters'
+        src: docs/probes.yaml (picture)
+      - id: swaps
+        label: compositor swaps >= 1/s
+        all: [{re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 1}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Frames do not reach SWEET FB: backboardd/CA not presenting; HGLTRACK + HK PRESENT'
+        src: NOTES.md (Compositor)
+      - id: fps30
+        label: swaps >= 30/s (3 windows in a row)
+        all: [{re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 30, sustain: 3}]
+        sample: 20261104-001328-a7-int3-gpuprobe
+        next: 'Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or the governor frames stage (int4-perf-r1)'
+        src: NOTES.md; docs/CPU.md
+        action: gpu-composite
+      - id: fps55
+        label: swaps >= 55/s (5 windows in a row; damage size not checked)
+        all: [{re: 'SWEET FB: rate swaps (?P<swaps>[\d.]+)/s', group: swaps, ge: 55, sustain: 5}]
+        sample: 20261104-001328-a7-int3-gpuprobe
+        next: 'Sustained 60/s only seen on small damage rects (int3-gpuprobe); full-screen needs GPU composition'
+        src: docs/NATIVE-METAL.md
+        action: gpu-composite
+      - id: fps20-full
+        label: whole-canvas motion >= 20 frames/s to the panel (3 windows; scroll under ui/ script load)
+        independent: true
+        all: [{re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s max_gap_us \d+ changed 0,0 (?:1125x2511|960x2142|750x1674)', group: kicks, ge: 20, sustain: 3}]
+        sample: live-20261103-234014-a7-fb120
+        next: 'Run a scroll script (/data/work/hk-display/ui/disp_fps_bright.ui): idle Home only shows the Clock icon at 10/s'
+        src: /data/work/hk-display/STATUS.md (ranking); research/ios26-phaseb-r1/display/fps1/FPS1.md
+      - id: fps30-full
+        label: whole-canvas motion >= 30 frames/s to the panel (3 windows; scroll under ui/ script load)
+        independent: true
+        all: [{re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s max_gap_us \d+ changed 0,0 (?:1125x2511|960x2142|750x1674)', group: kicks, ge: 30, sustain: 3}]
+        sample: 20261103-165027-a7-ios-system-r5-dsp
+        next: 'Governor frames stage (blazer_gov_stages=47), then a smaller canvas (960x2142, 750x1674@2x): display-3/-4 boots'
+        src: /data/work/hk-display/STATUS.md (ranking); research/ios26-phaseb-r1/display/fps1/FPS1.md
+      - id: fps45-full
+        label: whole-canvas motion >= 45 frames/s to the panel (3 windows; scroll under ui/ script load)
+        independent: true
+        all: [{re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s max_gap_us \d+ changed 0,0 (?:1125x2511|960x2142|750x1674)', group: kicks, ge: 45, sustain: 3}]
+        unverified: no physical boot with this yet (display lane requests display-2..5)
+        next: 'Render scale @2x (canvas 750x1674 + /chosen display-scale 2) or a higher CPU cap (power lane)'
+        src: /data/work/hk-display/STATUS.md (ranking); research/ios26-phaseb-r1/display/fps1/FPS1.md
+      - id: fps60-full
+        label: whole-canvas motion >= 60 frames/s to the panel (5 windows; scroll under ui/ script load)
+        independent: true
+        all: [{re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s max_gap_us \d+ changed 0,0 (?:1125x2511|960x2142|750x1674)', group: kicks, ge: 60, sustain: 5}]
+        unverified: no physical boot with this yet (display lane requests display-2..5)
+        next: 'Needs GPU composition (gpu ladder) or @2x plus a higher clock'
+        src: /data/work/hk-display/STATUS.md (ranking); research/ios26-phaseb-r1/display/fps1/FPS1.md
+      - id: bl-calibrated
+        label: backlight calibration published (4 fixed 16.16 keys) and backboardd survives it
+        independent: true
+        all: [{re: 'SWEET BL: calibration \d+ table entries, mid \d+/65536 nits, 4 fixed keys'}, {re: 'SWEET BL: request backboardd route (brightness-nits|IOMFBBrightnessLevel) raw \d+ rc 0\b'}]
+        sample: live-20261111-211056-a7-knext-r1c
+        next: 'Boot kernel.ios26-knext or later with hk_bright=140'
+        src: /data/work/unixnu-align-r1/display-gpu/REPORT.md section 1
+      - id: bl-unknown-ok
+        label: unknown-only brightness requests answered success (hk_dsp bit 1)
+        independent: true
+        all: [{re: 'SWEET BL: request backboardd route unknown-ok raw 0 rc 0\b'}]
+        unverified: no physical boot with this yet (display lane requests display-2..5)
+        next: 'Boot a7-ios-system-disp1-gov-bl-r1 (display-5)'
+        src: /data/work/hk-display/STATUS.md
+      - id: display-status
+        label: hkq drivers reports the display counters
+        independent: true
+        all: [{re: 'HKQ \d+ display\+?: .*(canvas \d+x\d+|last1s swaps)'}]
+        unverified: no physical boot with this yet (display lane requests display-2..5)
+        next: 'Boot kernel.disp1 with hk_dbg bit 27 and run hkq drivers (display-2)'
+        src: /data/work/hk-display/STATUS.md
+      - id: brightness-svc
+        label: brightness requests from backboardd accepted
+        independent: true
+        all: [{re: 'SWEET BL: request backboardd route \S+ raw \d+ rc 0\b'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Backlight calibration v2 is in kernel.ios26-knext (not booted): boot it and check SWEET BL rc 0'
+        src: NOTES.md (Next kernel)
+        action: boot-knext
+      - id: brightness-panel
+        label: brightness reaches the panel (DBV sent)
+        independent: true
+        all: [{re: 'tensor-dpu: bright transport sent_dbv \d+ .*rc 0'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'DCS brightness transport: tensor-dpu bright lines'
+        src: docs/probes.yaml (brightness)
+    fails:
+      - {re: 'tensor-dpu: underrun in frame \d+', min: 10, label: 'DPU underruns (>= 10)'}
+      - {re: 'SWEET BL: request backboardd route \S+ raw \d+ rc 0x[0-9a-f]+ \(refused\)', label: brightness requests refused}
+
+  # ------------------------------------------------------------------ input
+  - id: input
+    title: Touch, keys, haptics
+    rungs:
+      - id: touch-hw
+        label: touch controller reports fingers
+        all: [{re: 'blazer-touch: tcm: finger \d+ down'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Touch controller silent: blazer-touch ssi/aoc lines (AoC touch path)'
+        src: docs/probes.yaml (touch)
+      - id: touch-hid
+        label: SweetHIDTouch registered
+        any: [{re: 'SWEET HID: touch registered'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'HID service not registered: SWEET HID nub'
+        src: docs/probes.yaml (touch)
+      - id: touch-client
+        label: touch client opened (backboardd)
+        any: [{re: 'SWEET HID: SweetHIDTouch open by'}, {re: 'LIVEBOOT \S+ \S+ TOUCH_CLIENT', src: [console]}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'No HID client: backboardd not matching SweetHIDTouch'
+        src: docs/probes.yaml (home)
+      - id: touch-delivered
+        label: touches delivered to an iOS client
+        all: [{re: 'SWEET HID: touch \d+ down at \d+,\d+.*\([1-9]\d* clients\)'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Touch never reaches a client: check client count in SWEET HID lines'
+        src: docs/probes.yaml (touch)
+      - id: buttons-client
+        label: button client opened
+        independent: true
+        any: [{re: 'SWEET HID: SweetHIDButtons open by'}, {re: 'LIVEBOOT \S+ \S+ BUTTON_CLIENT', src: [console]}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'No button client: backboardd not matching SweetHIDButtons'
+        src: docs/probes.yaml (home)
+      - id: keys-hw
+        label: volume key press seen by the kernel
+        independent: true
+        all: [{re: 'blazer-keys: volume (?:up|down) pressed'}]
+        sample: 20261104-033824-a7-int4-confirm
+        next: 'Attended: press Vol Up/Down during a live boot'
+        src: docs/probes.yaml (volume-keys)
+        action: attended-input
+      - id: keys-ios
+        label: key delivered to an iOS client
+        independent: true
+        any: [{re: 'SWEET PHYSICAL: .*usage=0x(?:e9|ea|30) down clients=[1-9]'}]
+        sample: 20261104-033824-a7-int4-confirm
+        next: 'Attended: press a key, check SWEET PHYSICAL clients>0'
+        src: docs/probes.yaml (volume-keys, power-key)
+        action: attended-input
+      - id: haptic
+        label: haptic effect on touch
+        independent: true
+        all: [{re: 'blazer-haptic: tap \d+ rc 0'}]
+        sample: live-20261104-012420-a7-int4c
+        next: 'Haptics: blazer-haptic trigger/dsp lines'
+        src: docs/probes.yaml (haptics)
+
+  # ------------------------------------------------------------------ storage
+  - id: storage
+    always: true
+    title: Storage (UFS, ios_data)
+    rungs:
+      - id: ufs
+        label: UFS up, ios_system LUN found
+        any: [{re: 'blazer-ufs: "ios_system" on LUN \d+'}, {re: 'blazer-ufs: (?:CAP|list)'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'UFS not up: blazer-ufs SMMU/CAP lines'
+        src: docs/DUALBOOT.md
+      - id: root-mounted
+        label: ios_system mounted as root
+        any: [{re: 'hfs: mounted iOSRoot on device'}, {re: 'blazer-root: stage t \d+ ms stage mounted'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Mount failed: blazer-root stage lines'
+        src: docs/DUALBOOT.md
+      - id: sustained-reads
+        label: sustained reads (>= 1000) without error
+        all: [{re: 'blazer-root: watch t \d+ ms stage \S+ reads (?P<reads>\d+)', group: reads, ge: 1000}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Read path stalls: blazer-root watch lines'
+        src: docs/probes.yaml (ufs-read)
+      - id: ios-data
+        label: ios_data resolved
+        all: [{re: 'blazer-persist: ios_data at LBA \d+'}]
+        unverified: physical persist plan not run yet (QEMU only)
+        next: 'Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended'
+        src: research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md
+        action: persist-plan
+      - id: ios-data-saved
+        label: ios_data saved (>= 2 saves)
+        all: [{re: 'blazer-persist: ios_data at LBA \d+'}, {re: 'blazer-persist: saved slot \d+', min: 2}]
+        unverified: physical persist plan not run yet
+        next: 'Same persist plan; then reboot to check restore'
+        src: research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md
+        action: persist-plan
+      - id: ios-data-restored
+        label: ios_data restored after reboot
+        all: [{re: 'blazer-persist: ios_data at LBA \d+'}, {re: 'blazer-persist: .*restor'}]
+        unverified: physical persist plan not run yet
+        next: 'Second boot of the persist plan'
+        src: research/ios26-dualboot-r8/ios-data-persist/PHYSICAL-PLAN.md
+        action: persist-plan
+    fails:
+      - {re: 'blazer-ufs: .*(?:error|timeout|fatal)', label: UFS error}
+      - {re: 'blazer-persist: refused', label: persist writer refused}
+
+  # ------------------------------------------------------------------ cpu
+  - id: cpu
+    always: true
+    title: CPU, thermal, governor
+    rungs:
+      - id: smp
+        label: 5 cores up (SMP)
+        all: [{re: 'SWEET CPU: (?P<cpus>\d)/\d CPUs initialized', group: cpus, ge: 5}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Fewer than 5 cores: SWEET CPU NOT alive lines'
+        src: docs/CPU.md
+      - id: clocks
+        label: per-core clock reads
+        all: [{re: 'blazer-clock: cpu \d+ mpidr \S+ level \d+'}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'blazer-clock not reading AMU: blazer_clock gate'
+        src: docs/CPU.md
+      - id: thermal
+        label: thermal sensors polled
+        all: [{re: 'blazer-thermal: poll \d+ max \d+ C', min: 3}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Thermal poll missing: blazer_thermal gate'
+        src: docs/CPU.md
+      - id: governor
+        label: governor writes clock levels
+        all: [{re: 'blazer-gov: write domain \d+ level \d+, \d+ MHz'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Governor not writing: blazer-gov lines'
+        src: docs/CPU.md
+      - id: governor-range
+        label: governor uses >= 3 levels
+        all: [{re: 'blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz', group: mhz, distinct_min: 3}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Governor stuck at one or two levels: res/cap lines'
+        src: docs/CPU.md
+      - id: full-run
+        label: ran to the 900 s deadline
+        any:
+          - {re: 'blazer-root: deadline (?P<deadline>\d+) s, stage', group: deadline, ge: 900}
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Boot ended early: see stability ladder'
+        src: docs/CPU.md
+      - id: common-health
+        label: common health (verified clocks + required thermal zones)
+        all:
+          - {re: 'blazer-gov: thermal owner admitted: required 0x106 advancing poll \d+ guard \d+ C'}
+          - {re: 'blazer-gov: transactional clock verification on'}
+          - {re: 'blazer-clock: cpu \d+ mpidr \S+ level 16 want 1075 cycles \d+ ticks \d+ mhz 10[5-9]\d', min: 5}
+        sample: 20261111-214625-a7-power2-health-r1
+        next: 'Health gates off or refused: blazer-gov "off:" line (hk_pw bits 27..29 + required 0x106)'
+        src: /data/work/hk-power/STATUS.md
+        action: cpu-common-health
+      - id: mid-clock
+        label: '>= 1536 MHz written and measured'
+        all:
+          - {re: 'blazer-gov: write domain \d+ level 13, 1536 MHz'}
+          - {re: 'blazer-clock: cpu \d+ mpidr \S+ level 13 want 1536 cycles \d+ ticks \d+ mhz 15\d\d'}
+        unverified: power-5 (cap 13) built and queued 2026-11-11
+        next: 'Boot power-5 (cap 13, common-health gates, abort at 55 C)'
+        src: /data/work/hk-power/STATUS.md
+        action: cpu-common-health
+      - id: high-clock
+        label: '>= 2500 MHz written'
+        all: [{re: 'blazer-gov: write domain \d+ level \d+, (?P<mhz>\d+) MHz', group: mhz, ge: 2500}]
+        unverified: higher clocks held (docs/CPU.md)
+        next: 'Terminal five-A725 common-health result first, then a reviewed higher-clock run'
+        src: docs/CPU.md (Remaining work 1-2)
+        action: cpu-common-health
+      - id: a520
+        label: 7+ cores (A520s) up
+        all: [{re: 'SWEET CPU: (?P<cpus>[78])/[78] CPUs initialized'}]
+        unverified: A520 bring-up stopped (ACTLR bit 9 clear)
+        next: 'A520: firmware errata policy review; no speculative writes'
+        src: docs/CPU.md (Remaining work 3)
+        action: a520-errata
+      - id: idle-observed
+        label: WFI intervals counted on every core
+        independent: true
+        all: [{re: 'blazer-idle: cpu \d+ completed \d+ window_ticks \d+', min: 5}]
+        sample: 20261111-214301-a7-power1-r1
+        next: 'Idle stats off: blazer_idle_stats (hk_pw bit 30)'
+        src: /data/work/hk-power/STATUS.md
+      - id: idle-latency
+        label: power-gate latency set (short delays spin)
+        independent: true
+        all: [{re: 'SWEET CPU: idle latency \d+ us: delays shorter than that spin'}]
+        sample: 20261111-215037-a7-power3-idle20-r1
+        next: 'No latency line: blazer_idle_latency_us (hk_pw bits 32..39). A/B at 20 us showed no change (power-3)'
+        src: /data/work/hk-power/STATUS.md
+      - id: throttle-armed
+        label: thermal throttle step armed before the panic
+        independent: true
+        all: [{re: 'blazer-thermal: mode 3: governor asked home at \d+ C'}]
+        unverified: power-4 built, held (trip level to be set from power-1 temperatures)
+        next: 'Boot power-4 (blazer_thermal=3)'
+        src: /data/work/hk-power/STATUS.md
+      - id: hkq-power
+        label: hkq drivers answers cpu, gov, temps, chg
+        independent: true
+        all: [{re: 'HKQ \d+ cpu: c0 '}, {re: 'HKQ \d+ gov: '}, {re: 'HKQ \d+ temps: mode \d'}, {re: 'HKQ \d+ chg: '}]
+        unverified: kernel.power1 not booted
+        next: 'Boot power-1 with QUERIES=drivers'
+        src: /data/work/hk-power/STATUS.md
+    fails:
+      - {re: 'SWEET CPU: cpu=\d+ .*NOT alive', label: a core did not start}
+
+  # ------------------------------------------------------------------ battery
+  - id: battery
+    title: Battery and charger
+    rungs:
+      - id: gauge
+        label: fuel gauge samples
+        all: [{re: 'blazer-battery: sample \d+ SOC\(\d+\)'}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Gauge silent: blazer-battery mapping line (SPMI)'
+        src: docs/probes.yaml (battery)
+      - id: charger
+        label: charger state read
+        all: [{re: 'blazer-battery: charger \d+ in=\w+ chg=\S+'}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Charger reads off: blazer_battery charger mode'
+        src: docs/probes.yaml (charging)
+      - id: powerd
+        label: powerd posts the percentage
+        any: [{re: 'HKBATT: event=powerd_percent_post pid=\d+ rc=0'}, {re: 'HKBATT: event=powerd_registry '}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'powerd not posting: HKBATT powerd_receipt_missing'
+        src: docs/probes.yaml (battery)
+      - id: ui
+        label: SpringBoard battery view set
+        any: [{re: 'HKBATT: event=battery_view_set '}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Status-bar battery view not updated: HKBATT battery_view_* lines'
+        src: docs/probes.yaml (battery)
+      - id: charging
+        label: actively charging (cc/cv)
+        independent: true
+        all: [{re: 'blazer-battery: charger \d+ in=(?:usb|both|wireless) chg=(?:cc|cv|topoff)\b'}]
+        sample: 20261111-211105-a7-knext-r1c
+        next: 'Boot with a lower state of charge to see chg=cc'
+        src: docs/probes.yaml (charging)
+    fails:
+      - {re: 'HKBATT: event=powerd_receipt_missing', min: 5, label: powerd receipts missing}
+      - {re: 'blazer-battery: leaving the controller alone', label: SPMI controller given up}
+
+  # ------------------------------------------------------------------ gpu
+  - id: gpu
+    title: GPU / native Metal
+    rungs:
+      - id: power-id
+        label: GPU powered, CORE_ID read
+        any: [{re: 'blazer-gpu: reg CORE_ID'}, {re: 'blazer-gpu: vote \d+ reply'}]
+        sample: 20261104-044534-a7-gpu5
+        next: 'GPU power vote: blazer-gpu vote lines'
+        src: docs/NATIVE-METAL.md
+      - id: trusty
+        label: GPU Trusty TA online
+        any: [{re: 'HK GPUTA: tipc online'}, {re: 'HK GPUTA: rung \d+ (?:PASS|ANSWERED)'}]
+        sample: 20261104-044534-a7-gpu5
+        next: 'Trusty TA not reachable: HK GPUTA tipc lines'
+        src: docs/NATIVE-METAL.md
+      - id: fw-loaded
+        label: firmware image sent (result 0)
+        any: [{re: 'HK GPUTA: SEND_FIRMWARE_IMAGE .* result 0'}, {re: 'HK GPUTA: rung (?:[6-9]|1\d) PASS'}]
+        sample: 20261104-044534-a7-gpu5
+        next: 'Firmware rejected: process_st_info / KM-FW version mismatch fails'
+        src: docs/NATIVE-METAL.md
+      - id: fw-init
+        label: firmware init / health (rung 6-7)
+        any: [{re: 'HK GPUTA: rung (?P<r>\d+) (?:S1 )?PASS', group: r, ge: 6}]
+        sample: 20261104-044534-a7-gpu5
+        next: 'Firmware not healthy: rung 6/7 STOP reason'
+        src: docs/NATIVE-METAL.md
+      - id: kick
+        label: client streams kick + complete (rung 8)
+        any: [{re: 'HK GPUTA: rung (?P<r>\d+) PASS', group: r, ge: 8}]
+        sample: 20261104-044534-a7-gpu5
+        next: 'Kick/fence: rung 8 (gpu5)'
+        src: NOTES.md (Live-debug queue)
+      - id: mmu-fence
+        label: MMU cache + ordered UFO fence (rung 9)
+        any: [{re: 'HK GPUTA: rung (?P<r>\d+) PASS', group: r, ge: 9}]
+        sample: 20261104-044916-a7-gpu6
+        next: 'Rung 9: MMUCACHE + UFO fence'
+        src: NOTES.md (Live-debug queue)
+      - id: rung10
+        label: client page tables + MMUCACHE + DM-context SLC flush (rung 10)
+        any: [{re: 'HK GPUTA: rung (?P<r>\d+) PASS', group: r, ge: 10}, {re: 'HK GPUTA: VERDICT rung (?P<r>\d+) PASS', group: r, ge: 10}]
+        sample: 20261111-212820-a7-gpu1-rung10
+        next: 'Rung 10: R10 core/probe lines'
+        src: /data/work/hk-fleet/results/gpu-1/REPORT.md
+      - id: cdm-context
+        label: compute (CDM) context scheduled by the firmware (rung 11)
+        any: [{re: 'HK GPUTA: rung (?P<r>\d+) PASS', group: r, ge: 11}, {re: 'HK GPUTA: R11 PASS'}]
+        sample: 20261111-221902-a7-gpu2-rung11
+        next: 'Rung 11 PASS: FENCE+NULL+UPDATE on a firmware-scheduled compute (CDM, DM 4) context, 0 faults; firmware did not activate our memctx (bif act 0 = expected for a NULL stream). Next: rung 12a command-body boot.'
+        src: /data/work/hk-fleet/results/gpu-2/REPORT.md
+      - id: cdm-body
+        label: compute command body + register block accepted by the firmware (rung 12a)
+        any: [{re: 'HK GPUTA: R12a PASS'}, {re: 'HK GPUTA: R12b PASS'}]
+        sample: 20261112-011011-a7-gpu5-rung12b
+        next: 'Met by rung 12b (stock body accepted: Kick Compute + Compute finished). Rung 12a itself (our hand-made body) is superseded'
+        src: /data/work/hk-gpu/STATUS.md
+      - id: gpu-write
+        label: a GPU engine job writes memory, CPU readback matches
+        any: [{re: 'HK GPUTA: R12 readback: MATCH'}]
+        sample: 20261112-011011-a7-gpu5-rung12b
+        next: 'Rung 12b PASS (stock W1 job replayed, 0x5ab1c0de written by the GPU). Next: HMGU v1 SUBMIT/WAIT backend on this job path'
+        src: /data/work/hk-fleet/results/gpu-5/REPORT.md
+      - id: tdm-write
+        label: the transfer engine (TDM) writes memory, CPU readback matches (rung 13t, stock fill replayed)
+        any: [{re: 'HK GPUTA: R13t PASS'}, {re: 'HK GPUTA: SERVE selftest R13t: .* readback MATCH'}]
+        unverified: XNU hk-gpu-11 b0ace52 (kernel.gpu12), image a7-ios-system-gpu-r13t, queued as gpu-8 (backend path gpu-9)
+        next: 'Kick TDM + TDM finished + 1024/1024 words 0xf111f111'
+        src: /data/work/hk-gpu/STATUS.md
+      - id: serve-job
+        label: GPU serve mode runs a job through the HMGU backend path (bgs_*), firmware stays up
+        any: [{re: 'HK GPUTA: SERVE selftest: submit 0 seq 1 status 1 .* readback MATCH'}, {re: 'HMGU-PVR: ctx \d+ .* -> seq [1-9]'}]
+        sample: 20261112-034416-a7-gpu7-serve-selftest
+        next: 'Serve + Home (cpus=5) with hk_metal and a userland client that SUBMITs a compute job; then render (TA/3D) jobs'
+        src: /data/work/hk-gpu/STATUS.md
+      - id: agx-published
+        label: AGXAccelerator matched by a client
+        independent: true
+        any: [{re: 'IOK \S+: matching\d <dict ID="0"><key>IOProviderClass</key><string ID="1">AGXAccelerator</string>.* -> (?!none)'}, {re: 'HMNativeMetal: registry check AGXAccelerator -> [1-9]'}, {re: 'HMGU: \S+ open admitted'}]
+        sample: 20261111-230653-metal-probe-r1
+        next: 'Boot with hk_metal=3 (kernel.gpu6+): SweetHMGU publishes AGXAccelerator:IOAcceleratorES with MetalPluginName'
+        src: /data/work/hk-metal/STATUS.md; /data/work/hk-fleet/results/metal-1/REPORT.md
+        action: gpu-composite
+      - id: metal-device
+        label: a client obtains a Metal device
+        independent: true
+        any: [{re: 'MTLCreateSystemDefaultDevice.*(?:ok|0x[1-9a-f])|Metal device (?:obtained|created)'}, {re: 'HKMPLUG: \S+ capture armed: MTLDevice adopted, MTLDeviceSPI adopted'}]
+        sample: 20261112-030051-metal-probe-r3
+        next: 'HMNativeMetal plugin device must adopt MTLDevice + MTLDeviceSPI (MTLAddDevice asserts both): /data/work/hk-metal/STATUS.md'
+        src: /data/work/hk-metal/STATUS.md; /data/work/hk-fleet/results/metal-3/REPORT.md
+        action: gpu-composite
+      - id: metal-ca
+        label: QuartzCore (backboardd) runs on the native Metal device without a crash (done-item 4b)
+        independent: true
+        any: [{re: 'HKMPLUG: backboardd\[\d+\] sel\[(?P<n>\d+)\]', group: n, ge: 10000}]
+        sample: 20261112-044853-metal-probe-r5
+        next: 'QuartzCore answered >= 10000 calls on HMNativeMetal (mock queue/encoders, no GPU work): route its blits/fills through HMGU transfer jobs, then render'
+        src: /data/work/hk-metal/STATUS.md; /data/work/hk-fleet/results/metal-5/REPORT.md
+        action: gpu-composite
+      - id: gpu-composited
+        label: frames composited by the GPU
+        independent: true
+        any: [{re: 'HK GPUTA: command stream \d+ (?:done|complete)'}]
+        unverified: planned line (docs/probes.yaml metal)
+        next: 'Owned compute shader readback, then IOSurface presentation'
+        src: docs/NATIVE-METAL.md (Acceptance)
+        action: gpu-composite
+    fails:
+      - {re: 'HK GPUTA: rung \d+ STOP: (?P<why>.*)', label: GPU rung stopped}
+      - {re: 'Failed to get Metal device', label: 'client found no Metal device'}
+      - {re: 'HK GPUTA: TA\| gpu-secure-trusty: \d+: RGXValidateFWHeaderVersion2: KM and FW version mismatch', label: KM/FW version mismatch}
+
+  # ------------------------------------------------------------------ wifi
+  - id: wifi
+    title: Wi-Fi (BCM4390)
+    rungs:
+      - id: pcie
+        label: PCIe link up
+        any: [{re: 'blazer-wifi: link: UP'}, {re: 'blazer-wifi: ctrl: resets released'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'PCIe link: blazer-wifi link/ctrl lines (REG_ON/PERST)'
+        src: docs/CONNECTIVITY.md
+      - id: firmware
+        label: firmware booted
+        any: [{re: 'blazer-wifi: fw: boot doorbell'}, {re: 'blazer-wifi: ioctl: ver: status 0'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Firmware did not boot: blazer-wifi fw/blob lines'
+        src: docs/CONNECTIVITY.md
+      - id: scan
+        label: scan finds networks
+        all: [{re: 'blazer-wifi: scan: ended, status 0, \d+ ms: \d+ results, (?P<networks>\d+) networks', group: networks, ge: 1}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Scan: blazer-wifi scan lines'
+        src: docs/CONNECTIVITY.md
+      - id: assoc
+        label: associated
+        all: [{re: 'blazer-wifi: join: association: status 0'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Association: blazer-wifi join lines'
+        src: docs/CONNECTIVITY.md
+      - id: fourway
+        label: 4-way handshake keyed
+        any: [{re: 'blazer-wifi: join: joined in \d+ ms'}, {re: 'blazer-wifi: join: M1 received: yes'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: '4-way failed: method/AKM in blazer-wifi join lines'
+        src: docs/CONNECTIVITY.md
+      - id: frames
+        label: data frames pass (flow ring)
+        all: [{re: 'blazer-wifi: net: frames can pass'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Flow ring not created'
+        src: docs/CONNECTIVITY.md
+      - id: dhcp
+        label: DHCP address
+        all: [{re: 'blazer-wifi: net: address \d+\.\d+\.\d+\.\d+'}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'No lease: blazer-wifi net lines'
+        src: docs/CONNECTIVITY.md
+      - id: traffic
+        label: ping answered (HKOBS ping counter)
+        all: [{re: 'HKOBS \d+ \S+ t=\d+ wifi: .*\bping (?P<ping>\d+)', group: ping, ge: 1}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'No traffic: rx/tx counters in HKOBS wifi'
+        src: docs/CONNECTIVITY.md
+      - id: wifid
+        label: wifid running (WiFiManager registered)
+        independent: true
+        any: [{re: 'exec wifid|HKL wifid\['}]
+        unverified: wifid never runs; clients log "bootstrap_look_up of WiFiManager server failed"
+        next: 'wifid: launchd error 138 (no ADT node / IO80211 family) - needs an IO80211Controller nub + wifid un-denied'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md; docs/CONNECTIVITY.md
+        action: wifi-io80211
+      # W5 (2026-11-11, hk-wifi lane): what wifid does with the IO80211 surface, from the kernel's own trace
+      - id: wifid-bind
+        label: wifid bound en0 (IO80211 user client opened, version answered)
+        independent: true
+        all: [{re: 'blazer-wifi: IO80211 UC: wifid opened'}, {re: 'blazer-wifi: IO80211 UC: wifid sel 0 .*-> 0x0, version sent'}]
+        unverified: no boot has had the IO80211 surface on (W4 r1 was built, not booted)
+        next: 'Boot a7-ios-system-wifi-w5-r1: /arm-io/wlan + IO80211Interface + IO80211APIUserClient (hk_dbg bit 31)'
+        src: /data/work/hk-wifi/STATUS.md
+        action: wifi-io80211
+      - id: wifid-ioctl
+        label: wifid's Apple80211 GETs answered (socket ioctl path)
+        independent: true
+        all: [{re: 'blazer-apple80211: wifid GET type 12 len \d+ val -?\d+ -> 0'}]
+        unverified: needs wifid-bind
+        next: 'The blazer-apple80211 trace lists each GET/SET type wifid asks and the first one refused (rc 102)'
+        src: /data/work/hk-wifi/STATUS.md
+        action: wifi-io80211
+      - id: wifid-scan
+        label: wifid listed the scan table (SCAN_REQ + SCAN_RESULT to the end)
+        independent: true
+        all: [{re: 'blazer-apple80211: scan list ended: (?P<nets>\d+) networks served', group: nets, ge: 1}]
+        unverified: needs wifid-bind
+        next: 'wifid never asked for a scan: hkq drivers "wifi-ios" line (scan req / lists / last refused type)'
+        src: /data/work/hk-wifi/STATUS.md
+        action: wifi-io80211
+      - id: wifid-current
+        label: wifid read the joined network (SSID or CURRENT_NETWORK answered)
+        independent: true
+        any: [{re: 'blazer-apple80211: wifid GET type 103 len 2272 val -?\d+ -> 0'}, {re: 'blazer-apple80211: wifid GET type 1 len 32 val -?\d+ -> 0'}]
+        unverified: needs wifid-bind and the native join
+        next: 'Joined but wifid does not ask: the link event (blazer-apple80211: event 4) and what it refused before'
+        src: /data/work/hk-wifi/STATUS.md
+        action: wifi-io80211
+      - id: settings-wifi
+        label: Settings shows/joins a network
+        independent: true
+        any: [{re: 'UIRUN \S+ \S+ STEP \d+ line \d+ check_text Wi-Fi PASS', src: [console]}]
+        unverified: ui_run "check_text Wi-Fi" has only failed (wifi-w2-r1)
+        next: 'After wifid: drive Settings>Wi-Fi with a .ui script'
+        src: docs/CONNECTIVITY.md (Acceptance)
+        action: wifi-io80211
+    fails:
+      - {re: 'bootstrap_look_up of WiFiManager server failed', label: 'WiFiManager (wifid) missing'}
+      - {re: 'blazer-wifi: join: the 4-way handshake failed', label: 4-way handshake failed}
+      - {re: 'blazer-wifi: join: deauth by the network', label: deauthenticated}
+
+  # ------------------------------------------------------------------ bluetooth
+  - id: bluetooth
+    title: Bluetooth
+    rungs:
+      - id: enabled
+        label: BT driver enabled
+        all: [{re: 'HKOBS \d+ \S+ t=\d+ bt: level \d+'}]
+        sample: 20261104-042637-a7-int5
+        next: 'Boot with blazer_bt= (BT off in this image)'
+        src: docs/CONNECTIVITY.md
+      - id: firmware
+        label: firmware loaded
+        all: [{re: 'bt: .*firmware 1 records [1-9]\d*'}]
+        sample: 20261104-042637-a7-int5
+        next: 'Firmware download: blazer-bt lines'
+        src: docs/CONNECTIVITY.md
+      - id: hci
+        label: HCI up (manufacturer read)
+        all: [{re: 'bt: .*hci up mfr \d+'}]
+        sample: 20261104-042637-a7-int5
+        next: 'HCI reset/read version'
+        src: docs/CONNECTIVITY.md
+      - id: bluetoothd
+        label: bluetoothd running
+        independent: true
+        any: [{re: 'exec bluetoothd|HKL bluetoothd\['}, {re: 'HKOBS \d+ \S+ t=\d+ proc: .*\bbluetoothd [1-9]\d*/'}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'bluetoothd not launched'
+        src: docs/CONNECTIVITY.md
+      - id: attached
+        label: bluetoothd talks to the chip (bridge packets)
+        any:
+          - {re: 'blazer-bt-bridge: from bluetoothd (?P<pk>\d+) packets', group: pk, ge: 1}
+          - {re: 'HKBT pkt tx #\d+ s\d+ [SLH] len \d+:'}
+          - {re: 'bridge [^|]*\| from bluetoothd (?P<pk>\d+) pkts', group: pk, ge: 1}
+        unverified: 'int5: "from bluetoothd 0 pkts": bluetoothd never opens the bridge (BlueTool boot script times out first)'
+        next: 'Boot a7-ios-system-bt6-r1 (hkbluetool answers the BlueTool boot script; bridge takes IOAOSSKYSETCHANNELSPEC; HKBT pkt trace)'
+        src: /data/work/hk-bt/STATUS.md; research/ios26-connectivity-r1/bluetooth/b5/B5.md
+        action: bt-attach
+      - id: powered
+        label: controller powered on in bluetoothd
+        all: [{re: 'HKL bluetoothd\[\d+\] .*Power state changed\. PowerState:1'}]
+        unverified: bluetoothd reports PowerState:2 only
+        next: 'Needs chip attachment first'
+        src: docs/CONNECTIVITY.md
+        action: bt-attach
+      - id: scan
+        label: discovery/scan results
+        all: [{re: 'HKL bluetoothd\[\d+\] .*(?:Discovered device|didDiscover)'}]
+        unverified: planned
+        next: 'Needs attachment + power'
+        src: docs/CONNECTIVITY.md
+        action: bt-attach
+      - id: paired
+        label: paired a peripheral
+        all: [{re: 'HKL bluetoothd\[\d+\] .*[Pp]airing (?:complete|succeeded)'}]
+        unverified: planned; pairing needs keychain/AKS wrap
+        next: 'Pairing secrets need the software AKS wrap (do not fake credentials)'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md (Keychain / AKS)
+        action: aks-keychain
+    fails:
+      - {re: 'HKOBS \d+ \S+ t=\d+ bt: off', label: BT disabled in this image}
+      - {re: 'blazer-bt-bridge: stopped; (?P<why>.*)', label: bridge stopped}
+      - {re: 'BlueTool timed out running boot script', label: 'ChipBoot: stock BlueTool never answers the boot script, bluetoothd restarts (fix: hkbluetool, bt6 overlay)'}
+      - {re: 'set IOAOSSKYSETCHANNELSPEC .* failed|HKBT (?:setopt|getopt) UNKNOWN', label: 'bridge refused a socket option of bluetoothd (open path mismatch)'}
+      - {re: 'HKBT hci-open FAIL: (?P<why>.*)', label: bluetoothd connect refused by the bridge}
+      - {re: 'HKBT respawn-stop: (?P<why>.*)', label: 'bluetoothd restarts stopped by the kernel (exec refused, launchd parks the job)'}
+      - {re: 'FATAL ERROR - HCI Transport', label: bluetoothd could not match its HCI transport name}
+
+  # ------------------------------------------------------------------ cellular
+  - id: cellular
+    title: Cellular (S5400)
+    rungs:
+      - id: cp-power
+        label: CP powered
+        all: [{re: 'blazer-modem: cp: powered, \d+ us'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'CP power sequence: blazer-modem cp/ctrl lines (blazer_modem gate)'
+        src: research/ios26-modem-r1/MODEM.md
+        action: modem-rung5
+      - id: link
+        label: PCIe link to the modem
+        all: [{re: 'blazer-modem: link: UP, attempt \d+'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'PCIe0 link training'
+        src: research/ios26-modem-r1/MODEM.md
+        action: modem-rung5
+      - id: id
+        label: modem config ID read (144d:a5a5)
+        all: [{re: 'blazer-modem: id: 144d:a5a5'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Config space read'
+        src: research/ios26-modem-r1/MODEM.md
+        action: modem-rung5
+      - id: survey
+        label: endpoint survey, read only (rung 5)
+        all: [{re: 'blazer-modem: verdict: rung 5 \(survey\) PASS'}]
+        unverified: 'PHYSICAL PASS modem-1/2/3 (2026-11-11/12): COMMAND 0x0106, BAR0 0x4, MSI ctl 0x0180'
+        next: 'done'
+        src: research/ios26-modem-r1/modem3/SEQUENCE.md
+        action: modem-rung5
+      - id: dma-path
+        label: CP DMA path known (rung 6, amb_smmu + memory map)
+        all: [{re: 'blazer-modem: verdict: rung 6 \(path\) PASS'}]
+        unverified: 'PHYSICAL PASS modem-2/3: amb_smmu bypass (CR0ACK 0, GBPA 0); the four CP regions outside the DRAM window, not VM-managed'
+        next: 'done'
+        src: research/ios26-modem-r1/modem3/SEQUENCE.md
+        action: modem-rung5
+      - id: bar
+        label: BAR0 decoded (rung 7; modem2 called it rung 5)
+        all: [{re: 'blazer-modem: verdict: rung \d \(bar\) PASS'}]
+        unverified: 'PHYSICAL PASS modem-3: BAR0 64 KiB 64-bit at 0x40200000, +0x04 reads 0xffffffff, rest 0'
+        next: 'done'
+        src: research/ios26-modem-r1/modem3/SEQUENCE.md
+        action: modem-rung5
+      - id: rom-boot
+        label: CP ROM boot handshake to WAIT_DOORBELL (rung 8; no doorbell, no image, no RF)
+        all: [{re: 'blazer-modem: verdict: rung 8 \(rom\) PASS'}]
+        unverified: 'PHYSICAL PASS a7-modem4-q8 (2026-11-12 03:42): boot_stage 0xff, waits for the doorbell; no doorbell, no image'
+        next: 'done; next rung needs the cbd boot protocol (research/ios26-modem-r1/modem4/NEXT.md)'
+        src: research/ios26-modem-r1/modem4 (SEQUENCE.md rows 1, 7, 10, 11, 13)
+        action: modem-rung5
+      - id: online
+        label: CP firmware online
+        all: [{re: 'blazer-modem: cp: ONLINE'}]
+        unverified: planned
+        next: 'Capture cbd boot exchange passively (modem4/NEXT.md), then BL1 + first doorbell (rung 9)'
+        src: docs/CONNECTIVITY.md
+        action: modem-rung5
+      - id: sim
+        label: SIM status over IPC
+        all: [{re: 'cell: SIM (?:ready|absent|locked|error)'}]
+        unverified: planned
+        next: 'umts_ipc0 / RFS'
+        src: docs/probes.yaml (sim)
+        action: modem-rung5
+      - id: commcenter
+        label: CommCenter running
+        independent: true
+        any: [{re: 'exec CommCenter$|CommCenter\[\d+\]'}]
+        sample: 20261104-014134-a7-wifi-join-r5
+        next: 'CommCenter not launched'
+        src: docs/CONNECTIVITY.md
+      - id: registered
+        label: network registration / data
+        independent: true
+        any: [{re: 'cell: registered \S+|cell: the data session is up'}]
+        unverified: planned
+        next: 'Needs CP online + SIM'
+        src: docs/CONNECTIVITY.md
+        action: modem-rung5
+    fails:
+      - {re: 'blazer-modem: verdict: rung (?P<rung>\d) \((?P<name>\w+)\) STOP: (?P<why>[^,]+)', label: modem rung stopped}
+      - {re: 'CTServerConnection returned error: \(2, 5\)', min: 3, label: 'CoreTelephony: CommCenter server unreachable'}
+
+  # ------------------------------------------------------------------ sensors
+  - id: sensors
+    title: Sensors
+    rungs:
+      - id: bus
+        label: sensor bus / AoC domain on
+        any: [{re: 'blazer-sensors: aoc domain \d+ \(\d+ on\)'}, {re: 'blazer-sensors: (?:on by|mode \d+, starts)'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Sensors gate off: hk_dbg bit 6 / blazer_sensors'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md
+      - id: imu-id
+        label: IMU identified (who am i)
+        all: [{re: 'blazer-sensors: who am i: 0x[0-9a-f]+'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'IMU not answering: i2c pads/rails lines'
+        src: docs/probes.yaml (sensors)
+      - id: imu-stream
+        label: accel+gyro streaming
+        all: [{re: 'blazer-sensors: sample \d+ raw .* mg, gyro .* mdps', min: 3}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'IMU sampling stopped'
+        src: docs/probes.yaml (sensors)
+      - id: compass
+        label: compass streaming
+        all: [{re: 'blazer-sensors: compass \d+: -?\d+ -?\d+ -?\d+ nT', min: 2}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Compass bus (pads 67/68)'
+        src: docs/probes.yaml (sensors)
+      - id: hid-published
+        label: motion HID services published (accel, gyro, orientation under the SPU stand-in)
+        all:
+          - {re: 'SWEET HID: accel registered'}
+          - {re: 'SWEET HID: gyro registered'}
+          - {re: 'SWEET SPU: device registered, plug-in type 7ACF5332 -> AppleSPULib, orientation service attached'}
+        unverified: hk-sensors-1 kernel (a7-ios-system-sensors1-r1) built, not booted; int5 kernels streamed with no service (bit-6 gate)
+        next: 'Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-boot
+      - id: hid-opened
+        label: iOS event system opened the motion services
+        all:
+          - {re: 'SWEET HID: SweetHIDAccel open by IOHIDEventServiceUserClient -> 1'}
+          - {re: 'SWEET HID: SweetHIDGyro open by IOHIDEventServiceUserClient -> 1'}
+          - {re: 'SWEET HID: SweetHIDOrientation open by IOHIDEventServiceUserClient -> 1'}
+        unverified: QEMU only (qs-sensors1-r1); the 2026-11-02 physical open predates the int line
+        next: 'backboardd did not open the motion services: hkq ioreg SweetHIDAccel; SWEET HID open lines'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-boot
+      - id: motion-ready
+        label: every expected stream >= 50 samples with its service open (HKSENS motion ready)
+        all: [{re: 'HKSENS motion ready t=\d+: accel n=\d+ gyro n=\d+ mag n=\d+.* open accel=1 gyro=1 orient=1'}]
+        unverified: needs the hub gate (blazer_thermal=6) on the hk-sensors-1 kernel
+        next: 'HKSENS motion partial: the line names the missing stream or service; hkq drivers -> sensors'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-boot
+      - id: spu-orientation
+        label: CoreMotion asked the SPU stand-in for the device orientation and got one
+        all: [{re: 'SWEET SPU: LastOrientation query \d+ from \S+: orientation [1-6] '}]
+        unverified: static reading of 23G90 CoreMotion + AppleSPULib; QEMU qs-sensors1 runs
+        next: 'No SWEET SPU client: read the SWEET SPU open/selector lines (plug-in load, user client type)'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-boot
+      - id: coremotion
+        label: CoreMotion client gets IMU data (CMMotionManager read-back)
+        independent: true
+        all: [{re: 'HKMOTION \S+\[\d+\] result PASS .*accel=(?P<n>\d+)', group: n, ge: 50}]
+        unverified: QEMU with synthetic samples only (qp-periph1-r1, qs-sensors1); the phone overlay has no hkp probe yet
+        next: 'Phone overlay with hkp.dylib (hk_env is 975/1024 B in int5-r3: one rule must go) then boot'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-overlay
+      - id: rotate
+        label: device orientation follows the phone (owner turns it at HKSENS MARK ROTATE)
+        all:
+          - {re: 'HKSENS rotate seen t=\d+: orientation 0x6[5-9a] -> 0x6[78] '}
+          - {re: 'SWEET SPU: LastOrientation query \d+ from \S+: orientation [34] '}
+        unverified: needs the owner to turn the phone at the console mark
+        next: 'Owner turns the phone to landscape when the console prints HKSENS MARK ROTATE'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-boot
+      - id: heading
+        label: compass heading reaches CoreLocation
+        independent: true
+        all: [{re: 'HKP \S+\[\d+\] heading result PASS'}]
+        unverified: locationd uses the SPU compass {0xff0c,4} on AOP hardware; raw magnetometer stops when locationd runs (QEMU)
+        next: 'Magnetometer A/B blazer_sensors_mag83=0, then a {0xff0c,4} service if locationd insists on the SPU compass'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-spu-fusion
+      - id: hub-bound
+        label: thermalmonitord bound the SweetSensorHub temperature services
+        independent: true
+        any: [{re: 'HKSENS bind: SweetHIDTemp-'}, {re: 'HKSENS t=\d+ .* temp=19/\d+/[1-9]'}]
+        unverified: 'QEMU only (qf-sensorhub1-r1, qs-sensors1-r1); the physical sensorhub1 boot had no live console'
+        next: 'Boot with blazer_thermal=6 and a live console: HKSENS bind lines'
+        src: research/ios26-phaseb-r1/sensorhub/SENSORHUB.md
+        action: sensors-boot
+      - id: other-sensors
+        label: baro / ALS / prox identified on AoC i2c2
+        all: [{re: 'blazer-sensors: census (?:tmd3743|spl07003) at 0x(?:39|77): ack'}]
+        unverified: census code exists (blazer_sensors=5), never run - pad 34 (i2c2 SDA) is gpio-reserved in the FDT, owner decision
+        next: 'Owner decision on pad 34, then the i2c2 census boot (research/ios26-sensors-r1/PLAN.md S3)'
+        src: research/ios26-sensors-r1/PLAN.md
+        action: sensors-census
+      - id: device-motion
+        label: fused device motion ({0xff0c,1} SPU service) reaches CoreMotion
+        independent: true
+        all: [{re: 'HKMOTION \S+\[\d+\] .*devmotion=(?P<n>\d+)', group: n, ge: 10}]
+        unverified: no fused service yet (52-byte type-3 vendor report decoded; fusion needs fixed-point in the kernel)
+        next: 'SweetSPU {0xff0c,1} service emitting the 52-byte device-motion report'
+        src: /data/work/hk-sensors/STATUS.md
+        action: sensors-spu-fusion
+    fails: []
+
+  # ------------------------------------------------------------------ audio
+  - id: audio
+    title: Audio (AoC)
+    rungs:
+      - id: aoc-trusty
+        label: Trusty hwmgr answers for AoC (rung 1)
+        all: [{re: 'HKAOC rung1 PASS hwmgr_state=\d+'}]
+        sample: 20261104-051243-a7-aoc5
+        next: 'Trusty FF-A/TIPC transport: HK AOC STOP line'
+        src: research/ios26-aoc-r1/AOC5.md
+      - id: aoc-carve
+        label: AoC carve mapped Normal memory (aoc6)
+        all: [{re: 'HKAOC carve PASS attr=0x[4-9a-f][0-9a-f]'}]
+        unverified: aoc6 not booted; aoc5 panicked here (DC ZVA on the Device-mapped carve)
+        next: 'aoc6: HKAOC carve FAIL attr= names the MAIR byte the pmap produced'
+        src: /data/work/hk-audio/STATUS.md
+        action: aoc-carve
+      - id: aoc-probe
+        label: AoC probe (rung 2)
+        any: [{re: 'HKAOC rung2 PASS'}, {re: 'HK AOC: rung 2 PROBE PASS'}, {re: 'HK AOC: rung (?P<r>\d) PASS', group: r, ge: 2}]
+        unverified: aoc5 panicked (DC ZVA on device-mapped carve) before any rung 2 line
+        next: 'HKAOC rung2 FAIL why= (LPB/A32/rails/GSA values on the line)'
+        src: research/ios26-aoc-r1/AOC5.md
+        action: aoc-carve
+      - id: aoc-load
+        label: AoC firmware loaded (rung 3)
+        any: [{re: 'HKAOC rung3 PASS'}, {re: 'HK AOC: rung 3 LOAD PASS'}, {re: 'HK AOC: GSA LOAD reply cmd 0x[0-9a-f]+ err 0'}]
+        unverified: not reached on the phone
+        next: 'HKAOC rung3 FAIL: gsa_rsp=<cmd>,<err>,<argc> decides (GSA LOAD)'
+        src: research/ios26-aoc-r1/AOC5.md
+        action: aoc-carve
+      - id: aoc-live
+        label: AoC live (rung 4)
+        any: [{re: 'HKAOC rung4 PASS'}, {re: 'HK AOC: rung 4 LIVE PASS'}]
+        unverified: not reached on the phone
+        next: 'HKAOC rung4 FAIL: ipc= / magic_ms= / reply_ms= decide (START, magic, control doorbell)'
+        src: research/ios26-aoc-r1/AOC5.md
+        action: aoc-carve
+      - id: aoc-services
+        label: AoC services enumerated (rung 5)
+        all: [{re: 'HKAOC rung5 PASS services=\d+ audio=\d+'}]
+        unverified: not reached on the phone
+        next: 'HKAOC rung5 FAIL why=; HKAOC svc lines list the table'
+        src: /data/work/hk-audio/STATUS.md
+        action: aoc-carve
+      - id: aoc-audio-alive
+        label: AoC audio service answers (rung 6)
+        all: [{re: 'HKAOC rung6 PASS dsp_state=\d+'}]
+        unverified: not reached on the phone
+        next: 'HKAOC rung6 FAIL why= (audio_output_control doorbell / reply / err=)'
+        src: /data/work/hk-audio/STATUS.md
+        action: aoc-carve
+      - id: tone
+        label: kernel test tone on the speaker
+        all: [{re: 'HKAUDIO tone PASS'}]
+        unverified: not built (needs the AP SPI amp driver and the AoC playback path)
+        next: 'CS35L43 census over AP SPI, then BIND2/EP_SETUP/SOURCE on audio_output_control'
+        src: /data/work/hk-audio/STATUS.md
+      - id: pcm-open
+        label: audio device opened by iOS
+        independent: true
+        all: [{re: 'blazer-audio: opened by \S+'}]
+        unverified: no physical sample
+        next: 'blazer_audio boot-arg; audiomxd route'
+        src: research/ios26-aoc-r1
+      - id: sound
+        label: non-silent PCM reaches the kernel
+        independent: true
+        all: [{re: 'blazer-audio: first non-silent write'}]
+        unverified: no physical sample
+        next: 'Play a sound from iOS with blazer_audio=1'
+        src: research/ios26-aoc-r1
+    fails:
+      - {re: 'HK AOC: rung \d STOP: (?P<why>.*)', label: AoC rung stopped}
+      - {re: 'HK AOC: refused', label: AoC refused}
+
+  # ------------------------------------------------------------------ nfc
+  - id: nfc
+    title: NFC (ST21NFC)
+    rungs:
+      - id: enabled
+        label: NFC probe enabled
+        any: [{re: 'blazer-nfc: (?:on by|stage \d+, starts)'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Enable blazer-nfc (hk_dbg bit 7)'
+        src: docs/probes.yaml (nfc)
+      - id: enable-pad
+        label: chip enable driven
+        all: [{re: 'blazer-nfc: chip enable driven high'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Pad mux'
+        src: docs/probes.yaml (nfc)
+      - id: answered
+        label: chip answers on I2C (0x08 acked)
+        all: [{re: 'blazer-nfc: address 0x08 acked'}]
+        sample: 20261111-211105-a7-knext-r1c
+        next: 'Reached on the phone (nfc2 code, hk_dbg bit 7): ST21NFC fw 0x02102850 hw 0x06, NCI 2.0'
+        src: '/data/work/hk-nfccam/STATUS.md'
+      - id: nci
+        label: NCI init ok
+        all: [{re: 'blazer-nfc: nci init ok'}]
+        sample: 20261111-211105-a7-knext-r1c
+        next: 'Reached on the phone (nfc2 code, hk_dbg bit 7): ST21NFC fw 0x02102850 hw 0x06, NCI 2.0'
+        src: '/data/work/hk-nfccam/STATUS.md'
+      - id: discover
+        label: RF discovery accepted (RF_DISCOVER status 0)
+        all: [{re: 'blazer-nfc: discovery on \(poll'}]
+        sample: 20261111-215403-a7-nfccam1-a
+        next: 'Reached (hk-nfccam-1: CORE_INIT re-sent after the mode-on reset): RF_DISCOVER status 0, 30 s, 0 error ntfs'
+        src: '/data/work/hk-nfccam/STATUS.md'
+      - id: tag
+        label: tag read by RF discovery
+        all: [{re: 'blazer-nfc: tag: '}]
+        unverified: not reached
+        next: 'Attended: a7-ios-system-nfccam2-c (nfccam-3): hold a tag on the upper back from the TAG WINDOW OPEN line, 60 s (30 s clock output off as found, 30 s on)'
+        src: '/data/work/hk-nfccam/STATUS.md'
+        action: boot-nfccam3
+    fails:
+      - {re: 'blazer-nfc: stop (?P<why>[a-z-]+), detail 0x(?P<detail>[0-9a-f]+)', label: NFC driver stopped}
+      - {re: 'blazer-nfc: ends: [a-z-]+, stage \d+, chip silent', label: chip silent}
+
+  # ------------------------------------------------------------------ cameras
+  - id: cameras
+    title: Cameras and torch
+    rungs:
+      - id: torch-chip
+        label: torch LED driver answers (LM3644)
+        all: [{re: 'blazer-torch: chip answered: id register 0x[0-9a-f]+'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'CLI7 to I2C: blazer_torch stage'
+        src: docs/probes.yaml (cameras)
+      - id: torch-lit
+        label: torch lit, no fault flags
+        all: [{re: 'blazer-torch: led\d off: standby, \d+ ms lit, flags 0x0 0x0'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'LM3644 flags'
+        src: docs/probes.yaml (cameras)
+      - id: cam-pmic
+        label: camera PMIC id read
+        all: [{re: 'blazer-cam: pmic \S+ id 0x[0-9a-f]+'}]
+        sample: 20261111-215403-a7-nfccam1-a
+        next: 'Reached: SLG51002 pattern id 03 31 b1 at 0x75 with chip select only; RT6160 id needs the BB enable (nfccam-2, owner sign-off)'
+        src: '/data/work/hk-nfccam/STATUS.md'
+      - id: cam-sensor
+        label: image sensor chip id read
+        all: [{re: 'blazer-cam: sensor \S+ bus \S+ addr 0x[0-9a-f]+ id 0x[0-9a-f]+'}]
+        unverified: planned (S2)
+        next: 'Sensor power/reset sequence (front sensor, FDT module_power_seq@4): first rail = PP3200_CAM_BB (nfccam-2, owner sign-off)'
+        src: docs/probes.yaml (camera-sensor)
+        action: camera-pmic
+      - id: cam-frames
+        label: frames captured
+        all: [{re: 'blazer-cam: frame \d+'}]
+        unverified: planned; no ISP path
+        next: 'ISP/CSI pipeline - unknown scope'
+        src: unknown
+        action: camera-pmic
+    fails:
+      - {re: 'blazer-torch: stop (?P<why>[a-z0-9-]+), detail 0x(?P<detail>[0-9a-f]+)', label: torch probe stopped}
+
+  # ------------------------------------------------------------------ apps
+  - id: apps
+    title: Apps
+    rungs:
+      - id: lsd
+        label: lsd running
+        any: [{re: 'exec lsd|HKL lsd\['}, {re: 'HKOBS \d+ \S+ t=\d+ proc: .*\blsd [1-9]\d*/'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'lsd not launched'
+        src: docs/IOS-APPS-IDENTITY.md
+      - id: personas
+        label: no persona failures
+        gated: true
+        all: [{re: 'kpersona_find_by_type\(\) failed|INVALID_PERSONA', min: 0, max: 0}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'varfs RENAME_SWAP fix (in the int5 line); rd=ufsroot0'
+        src: NOTES.md (Apps, QEMU)
+      - id: settings
+        label: Settings launched
+        any: [{re: 'exec Preferences|HKL Preferences\['}]
+        sample: live-20261104-030612-a7-wifi-w2-r1
+        next: 'Drive Settings via ui_run'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md
+      - id: settings-responsive
+        label: Settings main thread responsive
+        all: [{re: 'HKMAIN: Preferences\[\d+\] .*stalls=0'}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Preferences stalls: HKMAIN lines'
+        src: docs/probes.yaml (app-settings-about)
+      - id: registered
+        label: stock apps registered with lsd (registration_verified)
+        all: [{re: '"registration_verified": ?(?:true|[1-9])'}]
+        unverified: 'QEMU only (2026-11-11, /data/work/hk-apps-swap/RESULT.md); NOTES: stock-app registration blocked on the phone'
+        next: 'Boot kernel.ios26-knext (varfs RENAME_SWAP + rd=ufsroot0) with tools/ios_app_register; check HKAPPS lines'
+        src: NOTES.md (Apps; Next kernel)
+        action: boot-knext
+      - id: stock-app
+        independent: true
+        label: a stock app (Calculator/Clock/Notes) exec'd
+        any: [{re: 'exec (?:Calculator|MobileCalculator|MobileTimer|MobileNotes)\b'}]
+        sample: live-20261103-234014-a7-fb120
+        next: 'Boot kernel.ios26-knext (varfs RENAME_SWAP + rd=ufsroot0): apps register in QEMU'
+        src: NOTES.md (Apps; Next kernel)
+      - id: app-walk
+        independent: true
+        label: Home walk, 8 or more stock apps exec'd from icon taps
+        all: [{re: 'exec (?:MobileNotes|MobileTimer|MobileCal|Photos|Maps|MobileSafari|Reminders|Health|MobileSMS|Music|MobilePhone|MobileMail|AppStore|Passbook|FaceTime|News|AppleTV|Games)\b', min: 8}]
+        sample: live-20261111-211056-a7-knext-r1c
+        next: 'Run ui/home_walk_knext.ui (or /data/work/hk-apps/ui/apps_r1_models.ui) on a Home boot'
+        src: /data/work/hk-apps/STATUS.md
+      - id: app-models
+        independent: true
+        label: Photos, Maps and Health exec'd with no CoreData-model abort
+        all: [{re: 'exec Photos\b'}, {re: 'exec Maps\b'}, {re: 'exec Health\b'}, {re: 'with a nil model|MapsSyncContainer\.swift:\d+: Fatal error|HealthExperienceStore\.swift:\d+: Fatal error', min: 0, max: 0}]
+        unverified: 'knext-r1c (2026-11-11): Photos, Maps and Health abort at launch; root r5 lacks photos.momd, MapsSync DataModel*.momd and HealthApp.momd contents'
+        next: 'Boot a7-ios-system-apps-r1 (overlay group 24: 4 model covers), or flash ios_system r6 (has the models)'
+        src: /data/work/hk-apps/STATUS.md
+        action: boot-knext
+    fails:
+      - {re: 'Spotlight launch failed', min: 3, label: Spotlight launch failing (hk_deny EBADARCH)}
+      - {re: 'CRASH (?P<proc>\S+) reason', label: userland crash}
+
+  # ------------------------------------------------------------------ stability
+  - id: stability
+    always: true
+    title: Stability
+    rungs:
+      - id: alive
+        label: kernel alive with status ticks
+        any: [{re: 'HKOBS \d+ \S+ t=\d+ |blazer-root: watch t \d+ ms'}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'No status ticks: reader.txt verdict'
+        src: tools/read-ramdump.py
+      - id: no-panic
+        label: no unplanned panic
+        gated: true
+        all: [{metric: unplanned_panics, le: 0}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Symbolize the panic (tools/read-ramdump.py --logs; crashdoc)'
+        src: tools/read-ramdump.py
+      - id: ran-300
+        label: up >= 300 s
+        gated: true
+        all: [{metric: uptime_s, ge: 300}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Short boot: see the panic/park reason'
+        src: tools/read-ramdump.py
+      - id: ran-900
+        label: up >= 890 s (deadline)
+        gated: true
+        all: [{metric: uptime_s, ge: 890}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'Run to the 900 s deadline'
+        src: docs/CPU.md
+      - id: no-respawn-loop
+        label: no daemon respawn loop (execs <= 3)
+        gated: true
+        all: [{metric: respawn_max, le: 3}]
+        sample: live-20261104-014956-a7-sweep1
+        next: 'Respawn loop: hk_env-inject the looping daemon; crashdoc its CRASH lines'
+        src: research/ios26-userland-r1/DEBUG-TOOLS.md
+        action: respawn-loops
+      - id: no-codesign
+        label: no CODE SIGNING kills
+        gated: true
+        all: [{metric: codesign, le: 0}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'CODE SIGNING: W^X request (glass4 backboardd) - see the process named'
+        src: AGENTS.md (every boot is a debug session)
+      - id: no-crash
+        label: no userland crashes or usertraps
+        gated: true
+        all: [{metric: crashes, le: 0}, {metric: usertraps, le: 0}]
+        sample: 20261104-095002-a7-int5-r3
+        next: 'tools/crashdoc.py on the boot'
+        src: tools/crashdoc.py
+        action: crashdoc
+    fails:
+      - {re: '^panic\(cpu \d+ caller 0x[0-9a-f]+\): (?!blazer-root: deadline|blazer-usbcon: the host asked to end this boot|HK GPUTA: rung \d+ PASS)(?P<why>.{0,100})', label: unplanned panic}
+      - {re: 'CODE SIGNING: \d+\[(?P<proc>[^\]]+)\]', label: CODE SIGNING}
+      - {re: 'usertrap: (?P<proc>[^\[\s]+)\[', min: 1, label: usertrap}

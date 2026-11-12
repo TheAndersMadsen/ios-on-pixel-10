@@ -29,7 +29,7 @@ SERIAL = 'FAKESER1AL99'
 
 # ------------------------------------------------------------------------------------------- the fake phone
 PHONE = r'''
-import fcntl, hashlib, json, os, select, sys, time
+import fcntl, hashlib, json, os, select, subprocess, sys, time
 from pathlib import Path
 STATE = os.environ['FAKE_PHONE']
 tool = Path(sys.argv[0]).name
@@ -41,6 +41,8 @@ def advance():
     if st['mode'] == 'ios' and st.get('park_at') and now >= st['park_at']:
         st['mode'] = st.get('ios_ends', 'fastboot'); st['park_at'] = None
         if st['mode'] == 'android': st['boot_completed_at'] = now
+    if st['mode'] == 'dark' and now >= st.get('dark_until', 0):
+        st['mode'] = st.get('dark_to', 'android'); st['boot_completed_at'] = now
 advance()
 try:
     stdin_open = not select.select([0], [], [], 0)[0]       # an open pipe with nothing written is not readable
@@ -59,14 +61,26 @@ if tool == 'fastboot':
     elif a == ['getvar', 'product']:
         err = 'product: laguna\nFinished.\n'
     elif a[:2] == ['oem', 'force-fastboot'] and len(a) == 3:
-        st['ff'] = a[2] == 'on'; err = 'OKAY\n'
+        if a[2] == 'off' and st.get('ff_stuck'):
+            err, rc = 'FAILED (remote: -2)\n', 1
+        else:
+            st['ff'] = a[2] == 'on'; err = 'OKAY\n'
     elif a == ['oem', 'force-fastboot']:
         err = f"(bootloader) force-fastboot {'on' if st['ff'] else 'off'}\nOKAY\n"
+    elif a[:1] == ['boot'] and 'stock' in Path(a[1]).name:          # the stock boot image: Android, past the installed chooser
+        if st.get('stock_boot_rc'):
+            err, rc = 'FAILED (remote: boot failed)\n', st['stock_boot_rc']
+        else:
+            st['mode'] = st.get('stock_to', 'android'); st['boot_completed_at'] = now + 0.5; st['booted'].append(a[1]); err = 'Booting OKAY\n'
     elif a[:1] == ['boot']:
         st['mode'] = 'ios'; st['park_at'] = now + st.get('park_after', 2); st['booted'].append(a[1]); err = 'Booting OKAY\n'
     elif a == ['reboot']:
+        st['reboots'] = st.get('reboots', 0) + 1
         if st['ff']:
-            st['mode'] = 'fastboot'
+            st['mode'] = 'fastboot'             # force-fastboot on: the reboot only parks again
+        elif st.get('reboot_ios_s') and st['reboots'] == 1:
+            # the installed chooser starts the installed iOS: no USB, then its deadline reset, then Android
+            st['mode'] = 'dark'; st['dark_until'] = now + st['reboot_ios_s']; st['dark_to'] = 'android'
         else:
             st['mode'] = st.get('reboot_to', 'android'); st['boot_completed_at'] = now + 0.5
         err = 'Rebooting OKAY\n'
@@ -85,10 +99,18 @@ elif tool == 'adb':
         out = 'device\n'
     else:
         err, rc = f'fake adb: unsupported {args}\n', 1
+elif tool == 'mac' and args[:4] == ['--', 'python3', '-I', '-c']:
+    # tools/mactools.py's installer: run it here, with HOME = the fake Mac home
+    if st.get('mac_tools_fail'):
+        err, rc = 'phone-bridge: tunnel to anders-macbook-pro is down\n', 1
+    else:
+        p = subprocess.run([sys.executable] + args[2:], capture_output=True, text=True, env=dict(os.environ, HOME=st['mac_home']))
+        out, err, rc = p.stdout, p.stderr, p.returncode
 elif tool == 'mac':
     if args[:1] == ['usb']:
         out = ('  1209:0002  hackios XNU console [ios-laguna]  (480 Mb/s)\n' if st['mode'] == 'ios' else
                '  18d1:4ee0  Pixel 10 Pro [Google]  (480 Mb/s)\n' if st['mode'] in ('android', 'fastboot', 'recovery') else '')
+        # mode 'dark': the cold-safe chooser, or the installed iOS it started: no USB id at all
     elif args[:1] == ['--cd'] and args[3:] == ['git', 'rev-parse', 'HEAD']:
         out = st.get('mac_head', 'a' * 40) + '\n'
         if st.get('mac_down'): out, err, rc = '', 'phone-bridge: tunnel to anders-macbook-pro is down\n', 1
@@ -103,7 +125,34 @@ elif tool == 'mac':
                 rel = opts[j + 1]
                 if rel not in st['mac_files'] or '--overwrite' in opts:
                     st['mac_files'][rel] = hashlib.sha256(Path(st['root'], rel).read_bytes()).hexdigest()
-        if cmd and len(cmd) > 1 and cmd[1] == 'tools/capture-fastboot.py':
+        tool_paths = [c for c in cmd if c.endswith(('/tools/usbcon.py', '/tools/hkq.py', '/tools/capture-fastboot.py'))]
+        if any(not c.startswith(st['mac_home'] + '/.cache/hackios-tools/') for c in tool_paths) or 'tools/usbcon.py' in cmd \
+                or '--sync' in opts and any(o.startswith('tools/') for o in opts):
+            # the Mac checkout's own tools must never run or be overwritten: `mac repo` would refuse a differing copy
+            st['checkout_tool_used'] = cmd; err, rc = "phone-bridge: the Mac's tools/usbcon.py differs from m1box's.\n", 1
+        elif any(c.endswith('/tools/hkq.py') for c in cmd):
+            st['hkq'] = cmd[cmd.index('batch') + 1] if 'batch' in cmd else cmd
+            if st['mode'] != 'ios':
+                out, rc = '### error drivers: [Errno 2] No such file or directory\n', 4
+            else:
+                n = 0
+                for q in [x.strip() for x in cmd[cmd.index('batch') + 1].split(';') if x.strip()]:
+                    n += 1
+                    if q in st.get('hkq_fail', []):
+                        out += f'### hkq {q}\n### error {q}: no END line within 25 s (0 lines seen); kernel says: queued id {n} lines 0\n'; rc = 3
+                    else:
+                        out += f'### hkq {q}\nline one of {q}\nline two\n### end {q} rc=0 lines=3 bytes=99 dropped=0 ms=4\n'
+        elif any(c.endswith('/tools/usbcon.py') for c in cmd) and '--reset-now' in cmd:
+            st['resets'] = st.get('resets', 0) + 1
+            sock = cmd[cmd.index('--control-socket') + 1]
+            if st['mode'] != 'ios':
+                out, rc = json.dumps(dict(state='unknown', error='[Errno 2] No such file or directory', ambiguous=True)), 4
+            elif str(st.get('usbcon_mode', '2')) != '2':
+                out, rc = json.dumps(dict(state='refused', error='reset not armed: this boot runs blazer_usbcon=1', ambiguous=False)), 4
+            else:
+                st['park_at'] = now + 0.3; st['reset_sock'] = sock
+                out = json.dumps(dict(state='reset', ui_observed=False, mode=2))
+        elif cmd and len(cmd) > 1 and cmd[1].endswith('/tools/capture-fastboot.py'):
             if st['mode'] != 'fastboot':
                 err, rc = 'not in fastboot\n', 1
             else:
@@ -268,8 +317,10 @@ class Rig:
         self.expect = self.base / 'expect.yaml'
         self.expect.write_text(EXPECT)
         self.state = self.base / 'phone.json'
+        (self.base / 'machome').mkdir()
         st = dict(mode=mode, ff=False, serial=SERIAL, calls=[], booted=[], mac_files={}, root=str(ROOT), park_after=2,
-                  dump=str(self.dump), console=CONSOLE, live_dir=str(self.base.relative_to(ROOT)), mac_dir='Developer/personal/hackios')
+                  dump=str(self.dump), console=CONSOLE, live_dir=str(self.base.relative_to(ROOT)), mac_dir='Developer/personal/hackios',
+                  mac_home=str(self.base / 'machome'))
         st.update(state)
         self.state.write_text(json.dumps(st))
         for name in ('adb', 'fastboot', 'mac'):
@@ -297,7 +348,7 @@ class Rig:
     def argv(self, *extra, expect=True):
         a = [sys.executable, '-I', str(TOOL), '--image', str(self.image.parent), '--mach', str(self.mach), '--out', str(self.out),
              '--skip-image-check', '--poll', '0.2', '--shot-every', '0.5', '--cache', '/nonexistent',
-             '--timeouts', 'settle=0.5,shot_start=0.2,console_start=0.5,park_wait=6,android_boot=6,to_fastboot=5,unknown_wait=1,boot_extra=10']
+             '--timeouts', 'settle=0.5,shot_start=0.2,console_start=0.5,park_wait=6,android_boot=6,to_fastboot=5,unknown_wait=1,boot_extra=10,return_absent=0,return_ios=8,stay_park=5,repark=2']
         if expect:
             a += ['--expect', str(self.expect)]
         return a + list(extra)
@@ -529,6 +580,141 @@ class CycleTests(unittest.TestCase):
         self.assertEqual(r.summary()['verdict'], 'INCOMPLETE')
         self.assertEqual(r.summary()['rows']['K'], 'NOT_EXERCISED')
 
+    def _preflight_serial_check(self, android_serial):
+        """A fastboot phone whose `fastboot devices` prints a realistic serial must classify as fastboot and reach
+        preflight-ok. The 2026-11-11 bug redacted the serial ('SERIAL\\tfastboot') before serial_ok compared it with
+        ANDROID_SERIAL, so env-unset waited for a device named SERIAL and env-set read usb-google/PHONE_UNKNOWN."""
+        r = self.rig(mode='fastboot')
+        env = r.env()
+        if android_serial is None:
+            env.pop('ANDROID_SERIAL', None)
+        else:
+            env['ANDROID_SERIAL'] = android_serial
+        p = subprocess.run(r.argv(), env=env, capture_output=True, text=True, timeout=90, stdin=subprocess.DEVNULL)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        rep = r.report()
+        states = [s['state'] for s in rep['phone_states']]
+        self.assertEqual(states[0], 'fastboot', f'preflight classified the phone {states[0]}, not fastboot: {states}')
+        self.assertNotIn('usb-google', states, f'a fastboot phone was misread as usb-google: {states}')
+        self.assertFalse([e for e in rep.get('errors', []) if e['state'] in ('PHONE_UNKNOWN', 'PHONE_NOT_FASTBOOT', 'SERIAL_AMBIGUOUS')],
+                         rep.get('errors'))
+        self.assertTrue(any(s.get('step') == 'preflight-ok' for s in rep['steps']), rep['steps'])
+        for f in r.out.rglob('*'):       # serials still never reach a file
+            if f.is_file():
+                self.assertNotIn(SERIAL, f.read_text(errors='replace'), f)
+        return rep
+
+    def test_preflight_fastboot_serial_env_unset_picks_the_real_serial(self):
+        rep = self._preflight_serial_check(None)
+        import hashlib        # env unset: pick_serial read the raw list and hashed the real serial, not 'SERIAL'
+        self.assertEqual(rep['image'].get('serial_hash'), hashlib.sha256(SERIAL.encode()).hexdigest()[:12])
+
+    def test_preflight_fastboot_serial_env_set_is_not_usb_google(self):
+        self._preflight_serial_check(SERIAL)
+
+
+class EndEarlyTests(unittest.TestCase):
+    """--end-on / --end-after / --end-on-idle: the reset op through `mac repo`, then the normal park, ramdump, analysis."""
+    CL2 = 'blazer_deadline=4 blazer_usbcon=2 blazer_usbcon_ch9=1 hk_screen=30'
+
+    def setUp(self):
+        self.rigs = []
+
+    def tearDown(self):
+        for r in self.rigs:
+            r.close()
+
+    def rig(self, **kw):
+        kw.setdefault('cmdline', self.CL2)
+        kw.setdefault('park_after', 60)          # the "deadline": far away, so only the reset can end it in time
+        r = Rig(**kw)
+        self.rigs.append(r)
+        return r
+
+    def run_end(self, r, *extra):
+        t = time.monotonic()
+        p = r.run('--no-shots', *extra)
+        return p, time.monotonic() - t
+
+    def resets(self, r):
+        return [c for c in r.phone()['calls'] if c['tool'] == 'mac' and '--reset-now' in c['args']]
+
+    def test_end_on_regex_resets_parks_and_reports(self):
+        r = self.rig()
+        p, took = self.run_end(r, '--end-on', r'exec Preferences$', '--end-grace', '0.2')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertLess(took, 45)
+        rep, summ = r.report(), r.summary()
+        self.assertEqual(summ['end']['condition'], 'end-on')
+        self.assertEqual(summ['end']['reset'], 'reset')
+        self.assertIn('exec Preferences', summ['end']['detail'])
+        self.assertEqual(len(self.resets(r)), 1)
+        self.assertEqual(r.phone()['reset_sock'], '/tmp/fake.sock')
+        self.assertTrue(list(r.base.glob('*/ramdump/kernel.log')) or rep['analysis']['dump'].get('bytes'))
+        self.assertEqual(r.phone()['mode'], 'android')
+        self.assertIn('Ended by: **end-on**', (r.out / 'report.md').read_text())
+        self.assertEqual(rep['image']['end_conditions']['end-on']['grace_s'], 0.2)
+
+    def test_end_after_home(self):
+        r = self.rig()
+        p, _ = self.run_end(r, '--end-after', '0.5')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertEqual(r.summary()['end']['condition'], 'end-after')
+        self.assertIn('home', r.report()['timings'])
+        self.assertEqual(len(self.resets(r)), 1)
+
+    def test_end_on_idle(self):
+        r = self.rig()
+        p, _ = self.run_end(r, '--end-on-idle', '1', '--end-on', 'never matches this')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertEqual(r.summary()['end']['condition'], 'end-on-idle')
+        self.assertEqual(len(self.resets(r)), 1)
+
+    def test_plain_mode_end_on(self):
+        r = self.rig(chooser=True)
+        p, took = self.run_end(r, '--no-sync-tools', '--end-on', 'SweetHIDTouch', '--end-grace', '0')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertLess(took, 45)
+        self.assertEqual(r.summary()['end']['condition'], 'end-on')
+        self.assertTrue(list(r.out.glob('*/ramdump/kernel.log')))
+        self.assertTrue(r.phone()['reset_sock'].startswith('/tmp/hackios-live-'))
+
+    def test_mode1_image_refused_untouched(self):
+        r = self.rig(mode='android', cmdline='blazer_deadline=4 blazer_usbcon=1')
+        p, _ = self.run_end(r, '--end-on', 'x')
+        self.assertEqual(p.returncode, hc.EXIT_PREFLIGHT, p.stdout + p.stderr)
+        self.assertEqual(r.report()['errors'][0]['state'], 'END_NEEDS_USBCON2')
+        self.assertEqual([c for c in r.phone()['calls'] if c['tool'] in ('adb', 'fastboot') and c['args'] != ['devices']], [])
+        r2 = self.rig(cmdline='blazer_deadline=4')
+        p, _ = self.run_end(r2, '--end-after', '1')
+        self.assertEqual(r2.report()['errors'][0]['state'], 'END_WITHOUT_CONSOLE')
+
+    def test_refused_reset_falls_back_to_the_deadline(self):
+        r = self.rig(park_after=3, usbcon_mode=1)
+        p, _ = self.run_end(r, '--end-on', 'exec launchd', '--end-grace', '0')
+        rep = r.report()
+        self.assertIn('END_RESET_REFUSED', [e['state'] for e in rep['errors']], p.stdout)
+        self.assertEqual(len(self.resets(r)), 1)                 # never repeated
+        self.assertEqual(rep['end']['condition'], 'deadline')
+        self.assertEqual(rep['end']['attempted']['reset'], 'refused')
+        self.assertTrue(rep['return']['android'])
+
+    def test_no_end_option_reports_the_deadline(self):
+        r = self.rig(park_after=1)
+        p, _ = self.run_end(r)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertEqual(r.summary()['end']['condition'], 'deadline')
+        self.assertEqual(self.resets(r), [])
+
+    def test_bad_args(self):
+        for extra in (['--end-on', '('], ['--end-after', '-1']):
+            p = subprocess.run([sys.executable, '-I', str(TOOL), '--image', 'x'] + extra, capture_output=True, text=True, timeout=30)
+            self.assertEqual(p.returncode, 2, extra)
+
+    def test_host_end_panic_is_its_own_kind(self):
+        a = hc.analyse_console('panic(cpu 0 caller 0x1): blazer-usbcon: the host asked to end this boot\n', hc.Symbolizer('/nonexistent'))
+        self.assertEqual(a['panics'][0]['kind'], 'host-end')
+
 
 class UnitTests(unittest.TestCase):
     def doc(self, rows):
@@ -609,6 +795,262 @@ class UnitTests(unittest.TestCase):
         for k in ('boot.root', 'boot.home', 'T', 'Bt', 'H', 'Ph', 'ustack', 'end.deadline'):
             self.assertEqual(rows[k], 'PASS', k)
         self.assertEqual(rows['S'], 'FAIL')        # CRASH Preferences in that boot (PHYSICAL 20261103-205514)
+
+
+class LoopTests(unittest.TestCase):
+    """The loop's own pieces: --stay-fastboot, --queries and the end screenshot, the Mac-side tools, and the way back to
+    Android (force-fastboot read back, --return-via stock|chooser, what the wait does with each state it meets)."""
+    CLQ = 'blazer_deadline=4 blazer_usbcon=2 blazer_usbcon_ch9=1 hk_dbg=0x7c1e1eff'       # mode 2 + snap + the query gate (bit 27)
+
+    def setUp(self):
+        self.rigs = []
+
+    def tearDown(self):
+        for r in self.rigs:
+            r.close()
+
+    def rig(self, **kw):
+        kw.setdefault('cmdline', self.CLQ)
+        r = Rig(**kw)
+        self.rigs.append(r)
+        return r
+
+    def seq(self, r):
+        return [(c['tool'], ' '.join(c['args'])) for c in r.phone()['calls'] if c['tool'] in ('fastboot', 'adb')]
+
+    def stock(self, r, body=b'stock boot image'):
+        p = r.base / 'stock_boot_b.img'
+        p.write_bytes(body)
+        import hashlib
+        return ['--return-via', 'stock', '--stock-boot', str(p), '--stock-boot-sha256', hashlib.sha256(b'stock boot image').hexdigest()]
+
+    # ---- staying in fastboot
+    def test_stay_fastboot_parks_and_never_returns(self):
+        r = self.rig(mode='android', boot_completed_at=0, park_after=60)
+        p = r.run('--stay-fastboot', '--end-on', r'exec Preferences$', '--end-grace', '0.1')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        rep, summ = r.report(), r.summary()
+        self.assertEqual(rep['verdict'], 'PASS')
+        self.assertTrue(rep['return']['stayed'] and rep['return']['fastboot'])
+        self.assertEqual((summ['phone'], summ['stayed'], summ['android']), ('fastboot', True, False))
+        ph = r.phone()
+        self.assertEqual(ph['mode'], 'fastboot')
+        self.assertTrue(ph['ff'], 'force-fastboot stays armed for the next image')
+        seq = self.seq(r)
+        self.assertNotIn(('fastboot', 'reboot'), seq)
+        self.assertNotIn(('fastboot', 'oem force-fastboot off'), seq)
+        self.assertEqual(p.stdout.strip().splitlines()[-1][:27], 'hk_cycle: phone: fastboot (')
+        self.assertIn('left in fastboot on purpose', (r.out / 'report.md').read_text())
+        self.assertTrue(summ['live_run'] and summ['attempt'])
+
+    def test_stay_fastboot_reports_a_boot_that_does_not_park(self):
+        r = self.rig(lb_hang=True)
+        argv = r.argv('--stay-fastboot', '--deadline-wait', '1')
+        argv[argv.index('--timeouts') + 1] = argv[argv.index('--timeouts') + 1].replace('boot_extra=10', 'boot_extra=1,boot_watch=1')
+        p = subprocess.run(argv, env=r.env(), capture_output=True, text=True, timeout=90, stdin=subprocess.DEVNULL)
+        self.assertEqual(p.returncode, hc.EXIT_NOT_ANDROID, p.stdout + p.stderr)
+        rep = r.report()
+        self.assertEqual(rep['verdict'], 'PHONE_NOT_IN_FASTBOOT')
+        self.assertIn('STAY_NOT_FASTBOOT', [e['state'] for e in rep['errors']])
+        self.assertIn('hk_cycle: phone: ios (NOT parked', p.stdout.strip().splitlines()[-1])
+        self.assertEqual(r.phone()['mode'], 'ios')       # never a cold reset, never a blind reboot
+
+    def test_stay_fastboot_after_a_boot_that_ended_in_android(self):
+        r = self.rig(chooser=True, ios_ends='android')   # the image went on to Android: no park, no ramdump
+        p = r.run('--stay-fastboot', '--no-shots', expect=False)
+        rep = r.report()
+        self.assertTrue(rep['return']['fastboot'], p.stdout)
+        self.assertTrue(rep['return']['no_park'])
+        self.assertEqual(r.phone()['mode'], 'fastboot')
+        self.assertIn(('adb', 'reboot bootloader'), self.seq(r))
+
+    # ---- queries and the end screenshot
+    def test_queries_and_screenshot_run_before_the_reset(self):
+        r = self.rig(park_after=60)
+        p = r.run('--no-shots', '--stay-fastboot', '--end-on', r'exec Preferences$', '--end-grace', '0.1',
+                  '--queries', 'drivers; procs 50; ioreg IO80211Controller 4')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        rep = r.report()
+        q = rep['queries']
+        self.assertEqual((q['asked'], q['ok'], q['rc']), (3, 3, 0))
+        self.assertEqual([x['query'] for x in q['results']], ['drivers', 'procs 50', 'ioreg IO80211Controller 4'])
+        self.assertIn('line one of procs 50', (r.out / 'queries.txt').read_text())
+        self.assertEqual(r.phone()['hkq'], 'drivers; procs 50; ioreg IO80211Controller 4')
+        calls = [c for c in r.phone()['calls'] if c['tool'] == 'mac' and c['args'][:1] == ['repo']]
+        i_q = next(i for i, c in enumerate(calls) if any(a.endswith('/tools/hkq.py') for a in c['args']))
+        i_r = next(i for i, c in enumerate(calls) if '--reset-now' in c['args'])
+        self.assertLess(i_q, i_r, 'the queries need the live kernel: before the reset')
+        hk = calls[i_q]['args']
+        self.assertEqual(hk[hk.index('-s') + 1], '/tmp/fake.sock')
+        self.assertTrue(hk[hk.index('-c') + 1].endswith('/usbcon/usbcon.log'))
+        self.assertFalse(hk[hk.index('-c') + 1].startswith('/'), 'the console path is relative to the Mac checkout')
+        ends = [s for s in rep['screenshots'] if s['kind'] == 'end']
+        self.assertTrue(ends and ends[0]['ok'], rep['screenshots'])
+        self.assertLessEqual(q['t'], rep['end']['reset_t'])
+        md = (r.out / 'report.md').read_text()
+        self.assertIn('Queries before the end: **3 of 3**', md)
+        self.assertIn('at the end condition, before the reset', md)
+
+    def test_a_failed_query_is_an_error_and_the_boot_still_ends(self):
+        r = self.rig(park_after=60, hkq_fail=['procs'])
+        p = r.run('--no-shots', '--stay-fastboot', '--end-on', r'exec Preferences$', '--end-grace', '0', '--queries', 'drivers; procs; mem',
+                  expect=False)
+        rep = r.report()
+        self.assertIn('QUERIES_INCOMPLETE', [e['state'] for e in rep['errors']], p.stdout)
+        self.assertEqual(rep['queries']['ok'], 2)
+        self.assertEqual(rep['end']['reset'], 'reset')
+        self.assertEqual(r.phone()['mode'], 'fastboot')
+
+    def test_abort_on_ends_at_once_without_queries_or_screenshot(self):
+        r = self.rig(park_after=60)
+        t = time.monotonic()
+        p = r.run('--no-shots', '--stay-fastboot', '--end-on', 'never matches', '--end-grace', '30', '--queries', 'drivers',
+                  '--abort-on', r'exec SpringBoard$', expect=False)
+        rep = r.report()
+        self.assertEqual((rep['end']['condition'], rep['end']['reset']), ('abort-on', 'reset'), p.stdout)
+        self.assertLess(time.monotonic() - t, 40)
+        self.assertNotIn('queries', rep)
+        self.assertNotIn('hkq', r.phone())
+        self.assertFalse([s for s in rep['screenshots'] if s['kind'] == 'end'])
+        self.assertEqual(r.phone()['mode'], 'fastboot')
+
+    def test_queries_need_the_gate_and_an_end_condition(self):
+        r = self.rig(cmdline='blazer_deadline=4 blazer_usbcon=2 hk_dbg=0x741e1eff')        # bit 27 clear
+        p = r.run('--end-on', 'x', '--queries', 'drivers')
+        self.assertEqual(p.returncode, hc.EXIT_PREFLIGHT, p.stdout + p.stderr)
+        self.assertEqual(r.report()['errors'][0]['state'], 'QUERIES_NEED_HKQ')
+        self.assertEqual(r.phone()['booted'], [])
+        r2 = self.rig()
+        for extra in (['--queries', 'drivers'], ['--end-on', 'x', '--queries', 'shell ls'], ['--end-on', 'x', '--queries', 'ioreg']):
+            p = r2.run(*extra)
+            self.assertEqual(p.returncode, 2, extra)
+        self.assertEqual(r2.phone()['calls'], [])
+
+    # ---- the Mac-side tools
+    def test_mac_tools_come_from_the_verified_copy_never_the_mac_checkout(self):
+        r = self.rig(chooser=True, park_after=60)        # plain mode: the cycle itself starts the reader and the capture
+        env = r.env()
+        env.pop('HK_CYCLE_USBCON_CMD')
+        p = subprocess.run(r.argv('--no-shots', '--end-on', 'never', '--deadline-wait', '3', expect=False), env=env, capture_output=True,
+                           text=True, timeout=120, stdin=subprocess.DEVNULL)
+        ph, rep = r.phone(), r.report()
+        self.assertNotIn('checkout_tool_used', ph, p.stdout)
+        home = ph['mac_home'] + '/.cache/hackios-tools/'
+        self.assertTrue(rep['mac_tools']['dir'].startswith(home))
+        self.assertEqual(sorted(rep['mac_tools']['installed']), sorted(rep['mac_tools']['files']))
+        for c in ph['calls']:
+            if c['tool'] == 'mac' and c['args'][:1] == ['repo']:
+                self.assertNotIn('--sync', c['args'][:c['args'].index('--')] if 'tools/usbcon.py' in ' '.join(c['args']) else [], c)
+                self.assertNotIn('--overwrite', c['args'], c)
+                for a in c['args']:
+                    if a.endswith(('usbcon.py', 'capture-fastboot.py', 'hkq.py')):
+                        self.assertTrue(a.startswith(home), a)
+        import hashlib
+        d = Path(rep['mac_tools']['dir'])
+        self.assertEqual(hashlib.sha256((d / 'tools/usbcon.py').read_bytes()).hexdigest(),
+                         hashlib.sha256((ROOT / 'tools/usbcon.py').read_bytes()).hexdigest())
+        self.assertIn(f"LIVE_TOOLS={rep['mac_tools']['dir']}", next(r.out.glob('live-*/live.env')).read_text())
+
+    def test_unverifiable_mac_tools_refuse_before_the_phone_is_touched(self):
+        r = self.rig(mode='android', boot_completed_at=0, mac_tools_fail=True)
+        p = r.run()
+        self.assertEqual(p.returncode, hc.EXIT_PREFLIGHT, p.stdout + p.stderr)
+        self.assertEqual(r.report()['errors'][0]['state'], 'MAC_TOOLS_FAILED')
+        self.assertEqual(self.seq(r), [('fastboot', 'devices'), ('adb', 'devices')] * 1 + [x for x in self.seq(r)[2:] if x[1] == 'devices'])
+        self.assertEqual(r.phone()['mode'], 'android')
+        self.assertIn('hk_cycle: phone: android (not changed by this run)', p.stdout)
+
+    # ---- the way back
+    def test_return_via_stock_boots_the_stock_image_past_the_chooser(self):
+        r = self.rig()
+        p = r.run(*self.stock(r), expect=False)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        seq = self.seq(r)
+        self.assertNotIn(('fastboot', 'reboot'), seq)
+        i_off = seq.index(('fastboot', 'oem force-fastboot off'))
+        i_boot = next(i for i, c in enumerate(seq) if c[1].startswith('boot ') and 'stock_boot_b.img' in c[1])
+        self.assertLess(i_off, i_boot)
+        ret = r.report()['return']
+        self.assertEqual((ret['via_used'], ret['android'], ret['force_fastboot_off']), ('stock', True, True))
+        self.assertEqual(ret['check']['verdict'], 'PASS')
+        self.assertIn('route stock', (r.out / 'report.md').read_text())
+
+    def test_return_via_stock_falls_back_when_the_image_is_not_the_stock_bytes(self):
+        r = self.rig()
+        args = self.stock(r, body=b'something else')
+        p = r.run(*args, expect=False)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        ret = r.report()['return']
+        self.assertEqual(ret['via_used'], 'chooser')
+        self.assertIn('not the stock image', ret['stock'])
+        self.assertIn(('fastboot', 'reboot'), self.seq(r))
+        self.assertFalse(any('stock_boot_b' in c[1] for c in self.seq(r)))
+
+    def test_force_fastboot_that_stays_on_never_gets_a_blind_reboot(self):
+        """2026-11-11: `fastboot reboot` with force-fastboot on parks again and adb never comes. Not sent; the state is said."""
+        r = self.rig(ff_stuck=True)
+        p = r.run(expect=False)
+        self.assertEqual(p.returncode, hc.EXIT_NOT_ANDROID, p.stdout + p.stderr)
+        rep = r.report()
+        self.assertIn('FORCE_FASTBOOT_ON', [e['state'] for e in rep['errors']])
+        self.assertNotIn(('fastboot', 'reboot'), self.seq(r))
+        self.assertEqual(self.seq(r).count(('fastboot', 'oem force-fastboot off')), 2)
+        self.assertEqual(r.phone()['mode'], 'fastboot')
+        self.assertIn('hk_cycle: phone: fastboot (NOT back in Android', p.stdout.strip().splitlines()[-1])
+
+    def test_a_second_park_gets_one_more_try_and_then_stops_in_fastboot(self):
+        r = self.rig(reboot_to='fastboot')               # whatever boots resets straight back into fastboot
+        p = r.run(expect=False)
+        self.assertEqual(p.returncode, hc.EXIT_NOT_ANDROID, p.stdout + p.stderr)
+        rep = r.report()
+        self.assertIn('RETURN_PARKED_AGAIN', [e['state'] for e in rep['errors']])
+        self.assertEqual(self.seq(r).count(('fastboot', 'reboot')), 2)
+        self.assertEqual(rep['return']['wait']['parked_again']['force_fastboot'], 'off')
+        self.assertEqual(r.phone()['mode'], 'fastboot')
+
+    def test_no_usb_after_the_reboot_is_waited_out_and_reported(self):
+        """The installed chooser has no USB; if it starts the installed iOS that runs to its deadline. Wait, send nothing."""
+        r = self.rig(reboot_ios_s=9)                     # dark for 9 s (> android_boot 6), then Android by itself
+        argv = r.argv(expect=False)
+        argv[argv.index('--timeouts') + 1] = argv[argv.index('--timeouts') + 1].replace('return_absent=0', 'return_absent=40')
+        p = subprocess.run(argv, env=r.env(), capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        ret = r.report()['return']
+        self.assertTrue(ret['android'])
+        self.assertIn('absent_extended', ret['wait'])
+        seen = [x['state'] for x in ret['wait']['seen']]
+        self.assertEqual(seen[-1], 'android')
+        self.assertIn('unknown', seen)
+        self.assertEqual(self.seq(r).count(('fastboot', 'reboot')), 1, 'nothing more is sent while it is dark')
+
+    def test_no_usb_past_every_bound_fails_with_the_states_seen(self):
+        r = self.rig(reboot_ios_s=600)
+        p = r.run(expect=False)
+        self.assertEqual(p.returncode, hc.EXIT_NOT_ANDROID, p.stdout + p.stderr)
+        e = next(e for e in r.report()['errors'] if e['state'] == 'RETURN_FAILED')
+        self.assertIn('states seen', e['detail'])
+        self.assertIn('unknown', p.stdout.strip().splitlines()[-1])
+
+    def test_return_only_from_fastboot_and_from_android(self):
+        r = self.rig(ff=True)
+        out = r.base / 'ret'
+        argv = [sys.executable, '-I', str(TOOL), '--return-only', '--out', str(out), '--poll', '0.2',
+                '--timeouts', 'android_boot=6,to_fastboot=5,park_wait=6,return_absent=0']
+        p = subprocess.run(argv, env=r.env(), capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        rep = json.loads((out / 'report.json').read_text())
+        self.assertEqual((rep['verdict'], rep['return']['check']['verdict']), ('RETURNED', 'PASS'))
+        self.assertEqual(r.phone()['mode'], 'android')
+        self.assertFalse(r.phone()['ff'])
+        self.assertEqual(r.phone()['booted'], [])
+        self.assertIn('hk_cycle: phone: android (boot completed; return check PASS)', p.stdout.strip().splitlines()[-1])
+        n = len(r.phone()['calls'])
+        p = subprocess.run(argv[:5] + [str(r.base / 'ret2')] + argv[6:], env=r.env(), capture_output=True, text=True, timeout=60,
+                           stdin=subprocess.DEVNULL)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        later = [(c['tool'], ' '.join(c['args'])) for c in r.phone()['calls'][n:] if c['tool'] in ('fastboot', 'adb')]
+        self.assertNotIn(('adb', 'reboot bootloader'), later, 'already in Android: no boot cycle only to read a flag')
+        self.assertFalse(any(c[1].startswith(('reboot', 'boot', 'oem')) for c in later if c[0] == 'fastboot'))
 
 
 if __name__ == '__main__':

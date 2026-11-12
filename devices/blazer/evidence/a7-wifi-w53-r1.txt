@@ -1,0 +1,38 @@
+# Physical boot receipt: a7-wifi-w53-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 22:21:25 +0100
+image:     research/images/a7-ios-system-wifi-w53-r1/boot.img sha256 dfb1e12cb3398a781165a3d6d31372ae36447ef43846784ada4fbe0b8fbb81c7
+kernel:    research/ios26-connectivity-r1/wifi/w5/build/kernel.wifi53.unstripped (unstripped) sha256 ceb8cffdaf258e92c920683d5c91a122e97c8fe1c11025aecebf4c40cee69966
+revision:  4b9ad20a8542c9179f9105b411096ab91af570cb (XNU hk-wifi-4 (kernel.wifi53); /data/work/hk-integ/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-wifi-w53-r1 a7-wifi-w53-r1 research/ios26-connectivity-r1/wifi/w5/build/kernel.wifi53.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-222118-a7-wifi-w53-r1/console.txt, research/laguna-usb-fix/attempts/20261111-222125-a7-wifi-w53-r1/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-222125-a7-wifi-w53-r1  [console+msgbuf+live+reader]  up 69 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 7
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         8/8  settings               (complete)           complete
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        5/8  haptic                 keys-hw              Attended: press Vol Up/Down during a live boot
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      4/5  ui                     charging             Boot with a lower state of charge to see chg=cc
+gpu         0/13  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi       13/14  wifid-current          settings-wifi?       After wifid: drive Settings>Wi-Fi with a .ui script
+bluetooth    0/8  bluetoothd             enabled              Boot with blazer_bt= (BT off in this image)
+cellular    0/11  -                      cp-power             CP power sequence: blazer-modem cp/ctrl lines (blazer_modem gate)
+sensors       --  -                      bus                  Sensors gate off: hk_dbg bit 6 / blazer_sensors
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc           --  -                      enabled              Enable blazer-nfc (hk_dbg bit 7)
+cameras       --  -                      torch-chip           CLI7 to I2C: blazer_torch stage
+apps         4/8  settings-responsive    registered?          Boot kernel.ios26-knext (varfs RENAME_SWAP + rd=ufsroot0) with tools/ios_app_register; che
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  respawns: bluetoothd 7
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## network: grep -E 'exec wifid$|blazer-apple80211: (wifid GET type 12 |scan list ended)' console.txt (first 3)
+22:22:08.880 [    1.92] exec wifid
+22:22:40.551 [   33.59] blazer-apple80211: wifid GET type 12 len 21 val 0 -> 0 (not joined)
+22:22:53.591 [   46.63] blazer-apple80211: scan list ended: 25 networks served

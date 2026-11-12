@@ -1,0 +1,39 @@
+# Physical boot receipt: a7-nfccam1-a (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 21:54:03 +0100
+image:     research/images/a7-ios-system-nfccam1-a/boot.img sha256 ee04d1b31b82fd5edab0e3d19e0e1b90e1e0c335474b6ef4c88975aeb410b561
+kernel:    research/ios26-nfccam-r1/build/kernel.nfccam1.unstripped (unstripped) sha256 eed56db5b8a31526e4cab58052f0a7a6a98a0aa5fa155e020bac616179e4fb05
+revision:  0c8c9a718d8a341c8ad25509a1912f5294c28db6 (XNU hk-nfccam-1; /data/work/hk-nfccam/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-nfccam1-a a7-nfccam1-a research/ios26-nfccam-r1/build/kernel.nfccam1.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-215356-a7-nfccam1-a/console.txt, research/laguna-usb-fix/attempts/20261111-215403-a7-nfccam1-a/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-215403-a7-nfccam1-a  [console+live]  up 116 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         8/8  settings               (complete)           complete
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        5/8  buttons-client         keys-hw              Attended: press Vol Up/Down during a live boot
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      5/5  charging               (complete)           complete
+gpu           --  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi        2/14  firmware               scan                 Scan: blazer-wifi scan lines
+bluetooth    1/8  bluetoothd             firmware             Firmware download: blazer-bt lines
+cellular    3/11  id                     survey?              Boot a7-ios-system-modem3-q5 (or q6/q7, which print rung 5 too)
+sensors     4/14  compass                hid-published?       Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc          5/6  discover               tag?                 Attended: a7-ios-system-nfccam2-c (nfccam-3): hold a tag on the upper back from the TAG WI
+cameras      3/5  cam-pmic               cam-sensor?          Sensor power/reset sequence (front sensor, FDT module_power_seq@4): first rail = PP3200_CA
+apps         3/8  settings               settings-responsive  Preferences stalls: HKMAIN lines
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## radios: grep -E 'blazer-nfc: (discovery on|rsp RF_DISCOVER)' console.txt (first 2)
+21:55:42.749 [   58.33] blazer-nfc: rsp RF_DISCOVER status 0x0
+21:55:42.749 [   58.33] blazer-nfc: discovery on (poll a/b/f/v), listening 30 s
+
+## camera: grep -E 'blazer-cam: pmic' console.txt (first 1)
+21:55:27.489 [   43.08] blazer-cam: pmic-en high

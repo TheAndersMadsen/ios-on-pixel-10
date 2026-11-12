@@ -1,0 +1,38 @@
+# Physical boot receipt: a7-modem3-q5 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 22:24:14 +0100
+image:     research/images/a7-ios-system-modem3-q5/boot.img sha256 83d873d155d21e96273988b0954fe73938d7fc6afcca30529ff1651607dce605
+kernel:    research/ios26-modem3-r1/build/kernel.modem3.unstripped (unstripped) sha256 d93d82ba7d50a7e57ef83e93e5b7f6f1fded9032208f07b61d9924b2ac367059
+revision:  c120c3fd17887fe002d34bede7b17649e2dc3aaf (XNU hk-modem-3; /data/work/hk-modem/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-modem3-q5 a7-modem3-q5 research/ios26-modem3-r1/build/kernel.modem3.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-222407-a7-modem3-q5/console.txt, research/laguna-usb-fix/attempts/20261111-222414-a7-modem3-q5/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-222414-a7-modem3-q5  [console+msgbuf+live+reader]  up 68 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         7/8  home                   settings             Drive Settings with a .ui script (tools/ui_run.py) so Preferences launches
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        3/8  buttons-client         touch-delivered      Touch never reaches a client: check client count in SWEET HID lines
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      5/5  charging               (complete)           complete
+gpu         0/13  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi        2/14  firmware               scan                 Scan: blazer-wifi scan lines
+bluetooth    1/8  bluetoothd             firmware             Firmware download: blazer-bt lines
+cellular    4/11  survey                 dma-path?            Boot a7-ios-system-modem3-q6: is amb_smmu in bypass, are the CP regions VM-managed
+sensors       --  -                      bus                  Sensors gate off: hk_dbg bit 6 / blazer_sensors
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc           --  -                      enabled              Enable blazer-nfc (hk_dbg bit 7)
+cameras       --  -                      torch-chip           CLI7 to I2C: blazer_torch stage
+apps         2/8  personas               settings             Drive Settings via ui_run
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## cellular: grep -E 'blazer-modem: (cp: powered|link: UP|id: 144d|verdict)' console.txt (first 4)
+22:25:15.540 [   28.18] blazer-modem: verdict: rung 1 (read) PASS, at read
+22:25:15.544 [   28.18] blazer-modem: verdict: rung 2 (ctrl) PASS, at ctrl
+22:25:15.547 [   28.19] blazer-modem: verdict: rung 3 (phy) PASS, at phy
+22:25:15.551 [   28.19] blazer-modem: cp: powered, 35046 us. The CP boot ROM runs; PERST still low

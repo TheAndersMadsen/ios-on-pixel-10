@@ -1,0 +1,38 @@
+# Physical boot receipt: metal-probe-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 23:06:53 +0100
+image:     research/images/a7-ios-system-metal-probe-r1/boot.img sha256 a04d1551f237e7b3b0f697bcce9aa1ef96afdb1f86e74d70188773240b239e09
+kernel:    research/ios26-gpu-r1/gpu6/build/kernel.gpu6.unstripped (unstripped) sha256 524aaa6450552a2cb61cef178c9afda8fe6f13d9e78088a67d6619514ffbbee8
+revision:  e74a5573d50e80425751e5ebe7ee8d15742daa25 (XNU hk-base-2 + SweetHMGU (kernel.gpu6); /data/work/hk-gpu/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-metal-probe-r1 metal-probe-r1 research/ios26-gpu-r1/gpu6/build/kernel.gpu6.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-230646-metal-probe-r1/console.txt, research/laguna-usb-fix/attempts/20261111-230653-metal-probe-r1/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-230653-metal-probe-r1  [console+live]  up 26 s, panics 0, crashes 6, usertraps 1, codesign 0, max execs 2
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         6/8  springboard            home                 No Home: check frames (display ladder) and SweetHIDTouch/Buttons clients; screenshot the b
+display     2/15  fullres                frames               No completed frames: tensor-dpu underrun lines; HK PRESENT counters
+input        3/8  buttons-client         touch-delivered      Touch never reaches a client: check client count in SWEET HID lines
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      3/5  powerd                 ui                   Status-bar battery view not updated: HKBATT battery_view_* lines
+gpu         0/13  agx-published          power-id             GPU power vote: blazer-gpu vote lines
+wifi          --  -                      pcie                 PCIe link: blazer-wifi link/ctrl lines (REG_ON/PERST)
+bluetooth    1/8  bluetoothd             firmware             Firmware download: blazer-bt lines
+cellular      --  -                      cp-power             CP power sequence: blazer-modem cp/ctrl lines (blazer_modem gate)
+sensors     4/14  compass                hid-published?       Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc          1/6  enabled                enable-pad           Pad mux
+cameras       --  -                      torch-chip           CLI7 to I2C: blazer_torch stage
+apps         2/8  personas               settings             Drive Settings via ui_run
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  crashes: backboardd 3, chronod 2, devicerecoveryto 1
+  usertraps: devicerecoveryto 1
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## gpu: grep -E 'HMNativeMetal: (registry check|loaded|init)' console.txt (first 4)
+23:07:35.581 [    1.20] HMNativeMetal: registry check IOAcceleratorES -> 1 found registry=0x100000146 same=1
+23:07:35.581 [    1.20] HMNativeMetal: registry check AGXAccelerator -> 1 found registry=0x100000146 same=1

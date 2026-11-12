@@ -1,0 +1,37 @@
+# Physical boot receipt: a7-gpu2-rung11 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 22:19:02 +0100
+image:     research/images/a7-ios-system-gpu-r11/boot.img sha256 5225fffad42122c47e9f9e3a02b868ec8a517176ea964fef5d6732c6e51189dc
+kernel:    research/ios26-gpu-r1/gpu3/build/kernel.gpu3.unstripped (unstripped) sha256 fd7e1c8bfb81a9fd45fc407267ddd62adbe3b5521104ffa95f33ddbceffa20a1
+revision:  d5f46467c1e17b18f57dcd94927d9144ae51c50b (XNU hk-gpu-2 (linked as kernel.gpu3); /data/work/hk-gpu/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-gpu-r11 a7-gpu2-rung11 research/ios26-gpu-r1/gpu3/build/kernel.gpu3.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-221854-a7-gpu2-rung11/console.txt, research/laguna-usb-fix/attempts/20261111-221902-a7-gpu2-rung11/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-221902-a7-gpu2-rung11  [console+live+reader]  up 45 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+  note: msgbuf: reader: current-fresh=no (stale, ignored)
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         6/8  springboard            home                 No Home: check frames (display ladder) and SweetHIDTouch/Buttons clients; screenshot the b
+display     2/15  fullres                frames               No completed frames: tensor-dpu underrun lines; HK PRESENT counters
+input        3/8  buttons-client         touch-delivered      Touch never reaches a client: check client count in SWEET HID lines
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      3/5  powerd                 ui                   Status-bar battery view not updated: HKBATT battery_view_* lines
+gpu         8/13  cdm-context            cdm-body?            Find what rgxfw_register_clear needs (rgx.fw disassembly / Android firmware trace), then r
+wifi          --  -                      pcie                 PCIe link: blazer-wifi link/ctrl lines (REG_ON/PERST)
+bluetooth    0/8  -                      enabled              Boot with blazer_bt= (BT off in this image)
+cellular    0/11  commcenter             cp-power             CP power sequence: blazer-modem cp/ctrl lines (blazer_modem gate)
+sensors       --  -                      bus                  Sensors gate off: hk_dbg bit 6 / blazer_sensors
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc           --  -                      enabled              Enable blazer-nfc (hk_dbg bit 7)
+cameras       --  -                      torch-chip           CLI7 to I2C: blazer_torch stage
+apps         1/8  lsd                    personas             varfs RENAME_SWAP fix (in the int5 line); rd=ufsroot0
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## gpu: grep -E 'HK GPUTA: rung 11' console.txt (first 3)
+22:19:37.146 [    0.11] HK GPUTA: rung 11 start
+22:19:37.477 [    0.44] HK GPUTA: rung 11 PASS, firmware client streams complete (smcs 489)

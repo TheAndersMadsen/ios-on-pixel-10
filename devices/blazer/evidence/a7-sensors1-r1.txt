@@ -1,0 +1,39 @@
+# Physical boot receipt: a7-sensors1-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 22:51:20 +0100
+image:     research/images/a7-ios-system-sensors1-r1/boot.img sha256 b919d13734796ebb7b312056691b586f04e1fdfb4a12a7b258a01838968bf42f
+kernel:    research/ios26-sensors-r2/build/kernel.sensors1.unstripped (unstripped) sha256 565c38025a5f8ee3ac6c9ba6bb7bcc61e8a34f8c76e25c0b95ee0e62ddb4a6b5
+revision:  199baf6e389c7eaa83235b1a97d6e5400355292e (XNU hk-sensors-1; /data/work/hk-sensors/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-sensors1-r1 a7-sensors1-r1 research/ios26-sensors-r2/build/kernel.sensors1.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-225112-a7-sensors1-r1/console.txt, research/laguna-usb-fix/attempts/20261111-225120-a7-sensors1-r1/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-225120-a7-sensors1-r1  [console+msgbuf+live+reader]  up 110 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         7/8  home                   settings             Drive Settings with a .ui script (tools/ui_run.py) so Preferences launches
+display     4/15  brightness-panel       fps30                Home runs ~10 swaps/s (software compositing, CPU-bound): GPU compositing (gpu ladder) or t
+input        3/8  buttons-client         touch-delivered      Touch never reaches a client: check client count in SWEET HID lines
+storage      3/6  sustained-reads        ios-data?            Run the ios_data persist plan (blazer_persist=1 + tools/persist_check.py), attended
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      4/5  ui                     charging             Boot with a lower state of charge to see chg=cc
+gpu         0/13  -                      power-id             GPU power vote: blazer-gpu vote lines
+wifi        2/14  firmware               scan                 Scan: blazer-wifi scan lines
+bluetooth    1/8  bluetoothd             firmware             Firmware download: blazer-bt lines
+cellular    3/11  id                     survey?              Boot a7-ios-system-modem3-q5 (or q6/q7, which print rung 5 too)
+sensors     8/14  hub-bound              coremotion?          Phone overlay with hkp.dylib (hk_env is 975/1024 B in int5-r3: one rule must go) then boot
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc          4/6  nci                    discover             Reached (hk-nfccam-1: CORE_INIT re-sent after the mode-on reset): RF_DISCOVER status 0, 30
+cameras      2/5  torch-lit              cam-pmic             Reached: SLG51002 pattern id 03 31 b1 at 0x75 with chip select only; RT6160 id needs the B
+apps         2/8  personas               settings             Drive Settings via ui_run
+stability    2/7  no-panic               ran-300              Short boot: see the panic/park reason
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## sensors: grep -E 'SWEET HID: (accel|gyro) registered|SweetHIDAccel open|HKSENS motion ready|SWEET SPU: LastOrientation' console.txt (first 5)
+22:52:01.311 [    0.18] SWEET HID: accel registered
+22:52:01.311 [    0.18] SWEET HID: gyro registered
+22:52:05.841 [    4.71] SWEET HID: SweetHIDAccel open by IOHIDEventServiceUserClient -> 1
+22:52:35.386 [   34.26] SWEET SPU: LastOrientation query 1 from backboardd: orientation 5 (usage 0x69), room 10
+22:52:37.802 [   36.67] SWEET SPU: LastOrientation query 2 from backboardd: orientation 5 (usage 0x69), room 10

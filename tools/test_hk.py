@@ -1077,6 +1077,169 @@ a = sys.argv[1:]; out = pathlib.Path(a[a.index('--out') + 1])
 """
 
 
+class ToFastbootTest(unittest.TestCase):
+    """hk state's classes and hk to-fastboot's every branch, on a fake phone-bridge (adb, fastboot, mac incl. usbcon).
+    HkTest's fixtures, without re-running HkTest's own tests."""
+    tearDown, make_pb, make_image, fake_tool, hk, hkj = (HkTest.tearDown, HkTest.make_pb, HkTest.make_image, HkTest.fake_tool,
+                                                         HkTest.hk, HkTest.hkj)
+
+    def setUp(self):
+        HkTest.setUp(self)
+        self.env.update(HK_TO_FB_POLL_S='0.05', FAKE_RESET='ok', FAKE_READER='ok', FAKE_PARK_TO='fastboot')
+        log = '"$FAKE_LOG"'
+        write(self.pb / 'adb', f"""#!/bin/sh
+echo "adb $*" >> {log}
+echo "List of devices attached"
+st=$(cat "$FAKE_STATE")
+[ "$st" = android ] && printf 'SERIAL\\tdevice\\n'
+[ "$st" = recovery ] && printf 'SERIAL\\trecovery\\n'
+[ "$st" = unauth ] && printf 'SERIAL\\tunauthorized\\n'
+if [ "$1" = reboot ] && [ "$st" = android ]; then echo fastboot > "$FAKE_STATE"; fi
+exit 0
+""", 0o755)
+        write(self.pb / 'mac', f"""#!/bin/sh
+echo "mac $* [cwd $(pwd)]" >> {log}
+st=$(cat "$FAKE_STATE")
+if [ "$1" = usb ]; then
+  [ "$st" = ios ] && echo "  1209:0002  hackios XNU console  (pid.codes)"
+  [ "$st" = shim ] && echo "  1209:0001  hackios shim  (pid.codes)"
+  exit 0
+fi
+case "$*" in
+  *--reset-now*)
+    case "$FAKE_RESET" in
+      ok) echo "$FAKE_PARK_TO" > "$FAKE_STATE"; echo '{{"state": "reset", "mode": 2}}'; exit 0;;
+      refused) echo '{{"state": "refused", "error": "reset not armed: this boot runs blazer_usbcon=1", "ambiguous": false}}'; exit 4;;
+      gone) echo '{{"state": "unknown", "error": "[Errno 2] No such file or directory", "ambiguous": true}}' >&2; exit 4;;
+      odd) echo '{{"state": "unknown", "error": "timed out", "ambiguous": true}}'; exit 4;;
+    esac;;
+  *--reset-after*)
+    case "$FAKE_READER" in
+      ok) echo "$FAKE_PARK_TO" > "$FAKE_STATE"; echo "usbcon: connected: nonce 0x1"; echo "usbcon: reset accepted at t=0.0s (reset-after); the phone panics, resets, and parks"; exit 0;;
+      stall) echo "usbcon: reset failed at t=0.0s (reset-after): [Errno 32] Pipe error. A stall means blazer_usbcon=1"; exit 0;;
+      busy) echo "usbcon.py: error: another usbcon reader owns USB; use its --control-socket"; exit 2;;
+    esac;;
+esac
+exit 1
+""", 0o755)
+
+    def live_run(self):
+        run = self.store / 'x' / 'live-20261111-000000-t'
+        write(run / 'live.env', 'LIVE_RUN=x\nLIVE_SOCK=/tmp/hackios-live-test.sock\n')
+        write(run / 'console.txt', 'boot\n')
+        return run
+
+    def calls(self):
+        p = self.tmp / 'calls.log'
+        return p.read_text() if p.exists() else ''
+
+    def tofb(self, code=0, **env):
+        return self.hkj('to-fastboot', '--wait', '5', code=code, env=env or None)
+
+    def test_state_classes_and_how(self):
+        for st, want in (('fastboot', 'fastboot'), ('android', 'android'), ('unauth', 'android'), ('ios', 'ios-live'),
+                         ('shim', 'shim'), ('recovery', 'recovery'), ('off', 'absent')):
+            self.state.write_text(st)
+            d = self.hkj('state', env=dict(HK_SHELL='tcp:127.0.0.1:1'))
+            self.assertEqual(d['state'], want, st)
+            self.assertTrue(d['how'])
+        self.state.write_text('ios')
+        self.assertIn('1209:0002', self.hkj('state', env=dict(HK_SHELL='tcp:127.0.0.1:1'))['how'])
+        r = self.hk('state', env=dict(HK_SHELL='tcp:127.0.0.1:1'), code=0)
+        self.assertTrue(r.stdout.startswith('ios-live  ('), r.stdout)
+
+    def test_fastboot_does_nothing(self):
+        d = self.tofb()
+        self.assertEqual((d['start'], d['state'], d['action']), ('fastboot', 'fastboot', 'none'))
+        self.assertNotIn('reboot', self.calls())
+
+    def test_android_reboots_to_bootloader(self):
+        self.state.write_text('android')
+        d = self.tofb()
+        self.assertEqual(d['state'], 'fastboot')
+        self.assertEqual(d['action'], 'adb reboot bootloader')
+        self.assertIn('adb reboot bootloader', self.calls())
+        self.assertEqual(self.hkj('lock', 'status')['state'], 'free')
+
+    def test_android_refused_while_someone_holds_the_phone(self):
+        self.state.write_text('android')
+        self.hkj('lock', 'acquire', '--holder', 'owner-attended')
+        self.assertEqual(self.tofb(code=4)['error'], 'phone_busy')
+        self.assertNotIn('adb reboot', self.calls())
+
+    def test_ios_live_with_reader_uses_the_socket(self):
+        self.state.write_text('ios')
+        self.live_run()
+        d = self.tofb()
+        self.assertEqual(d['state'], 'fastboot')
+        self.assertEqual(d['action'], 'usbcon reset op (socket)')
+        self.assertTrue(d['ramdump_kept'])
+        c = self.calls()
+        self.assertIn('--control-socket /tmp/hackios-live-test.sock --reset-now', c)
+        self.assertIn(f'[cwd {self.repo}]', c)
+        self.assertNotIn('--reset-after', c)
+        self.assertNotIn('adb reboot', c)
+
+    def test_ios_live_mode1_is_refused_cleanly(self):
+        self.state.write_text('ios')
+        self.live_run()
+        d = self.tofb(code=6, FAKE_RESET='refused')
+        self.assertEqual(d['error'], 'reset_not_armed')
+        self.assertIn('deadline', d['message'])
+        self.assertIn('COLD', d['message'])
+        self.state.write_text('ios')
+        d = self.tofb(code=6, FAKE_RESET='odd')
+        self.assertEqual(d['error'], 'reset_unknown')
+        self.assertNotIn('--reset-after', self.calls())      # an unclear answer is never followed by a second reset
+
+    def test_ios_live_stale_socket_falls_back_to_a_short_reader(self):
+        self.state.write_text('ios')
+        self.live_run()
+        d = self.tofb(FAKE_RESET='gone')
+        self.assertEqual(d['action'], 'usbcon reset op (reader)')
+        self.assertIn('--reset-after 0', self.calls())
+
+    def test_ios_live_without_reader(self):
+        self.state.write_text('ios')
+        d = self.tofb()
+        self.assertEqual(d['action'], 'usbcon reset op (reader)')
+        self.assertNotIn('--reset-now', self.calls())
+        for reader, code, err in (('stall', 6, 'reset_not_armed'), ('busy', 4, 'reader_busy')):
+            self.state.write_text('ios')
+            self.assertEqual(self.tofb(code=code, FAKE_READER=reader)['error'], err)
+
+    def test_ios_live_that_comes_back_in_android_goes_on_to_fastboot(self):
+        self.state.write_text('ios')
+        d = self.tofb(FAKE_PARK_TO='android')
+        self.assertEqual(d['state'], 'fastboot')
+        self.assertFalse(d['ramdump_kept'])
+        self.assertEqual(d['action'], 'usbcon reset op (reader) then adb reboot bootloader')
+
+    def test_absent_recovery_shim_need_the_owner_or_time(self):
+        for st, err in (('off', 'owner_action'), ('recovery', 'owner_action'), ('shim', 'transient')):
+            self.state.write_text(st)
+            d = self.tofb(code=6)
+            self.assertEqual(d['error'], err, st)
+        self.state.write_text('off')
+        d = self.tofb(code=6)
+        self.assertIn('power + volume-down', d['message'])
+        self.assertIn('ramdump', d['message'])
+        self.assertNotRegex(self.calls(), r'adb reboot|fastboot (reboot|oem)|reset')
+
+    def test_cycle_passes_end_options(self):
+        self.fake_tool('cycle', """import sys, json, pathlib
+a = sys.argv[1:]
+out = pathlib.Path(a[a.index('--out') + 1]); out.mkdir(parents=True)
+(out / 'report.json').write_text(json.dumps(dict(verdict='PASS', return_check_verdict='PASS', argv=a)))
+print('hk_cycle: verdict PASS')
+""")
+        d = self.hkj('cycle', 'a7-ios-system-wifi1', '--end-on', 'wifi: joined', '--end-grace', '3')
+        m = json.loads((self.store / d['attempt'] / 'manifest.json').read_text())
+        cmd = ' '.join(m['command'])
+        self.assertIn('--end-on wifi: joined', cmd)
+        self.assertIn('--end-grace 3.0', cmd)
+
+
 class RealToolsTest(unittest.TestCase):
     """hk over the real probe_eval.py and crashdoc.py of this checkout on a synthetic runner dir; no research/ needed."""
 

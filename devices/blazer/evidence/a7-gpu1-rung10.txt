@@ -1,0 +1,38 @@
+# Physical boot receipt: a7-gpu1-rung10 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-11 21:28:20 +0100
+image:     research/images/a7-ios-system-gpu1/boot.img sha256 c62bab362b6460f53d8b3ad31e6805b592e28a5d051d49ee67b9ca58cdfe98e0
+kernel:    research/ios26-gpu-r1/gpu1/build/kernel.gpu1.unstripped (unstripped) sha256 7b9d7c98cc186fe9878310b17c31b62fa8daf0d3ff2dbf7237d9465441c07775
+revision:  b83bd10b95fcd6a01502844c944a7023c3966b6c (XNU hk-gpu-1; /data/work/hk-gpu/STATUS.md)
+command:   bash tools/hk_boot_job.sh a7-ios-system-gpu1 a7-gpu1-rung10 research/ios26-gpu-r1/gpu1/build/kernel.gpu1.unstripped 600 <EXPECT> <UI>  (coordinator run_req.sh; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261111-212812-a7-gpu1-rung10/console.txt, research/laguna-usb-fix/attempts/20261111-212820-a7-gpu1-rung10/ (ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot)
+hk_score 20261111-212820-a7-gpu1-rung10  [console+msgbuf+live+reader]  up 5 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 0
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING        NEXT
+boot         6/8  springboard            home                 No Home: check frames (display ladder) and SweetHIDTouch/Buttons clients; screenshot the b
+display     2/15  fullres                frames               No completed frames: tensor-dpu underrun lines; HK PRESENT counters
+input        2/8  touch-hid              touch-client         No HID client: backboardd not matching SweetHIDTouch
+storage      2/6  root-mounted           sustained-reads      Read path stalls: blazer-root watch lines
+cpu         5/14  governor-range         full-run             Boot ended early: see stability ladder
+battery      1/5  gauge                  charger              Charger reads off: blazer_battery charger mode
+gpu         7/13  rung10                 cdm-context          Rung 11 PASS: FENCE+NULL+UPDATE on a firmware-scheduled compute (CDM, DM 4) context, 0 fau
+wifi          --  -                      pcie                 PCIe link: blazer-wifi link/ctrl lines (REG_ON/PERST)
+bluetooth     --  -                      enabled              Boot with blazer_bt= (BT off in this image)
+cellular      --  -                      cp-power             CP power sequence: blazer-modem cp/ctrl lines (blazer_modem gate)
+sensors       --  -                      bus                  Sensors gate off: hk_dbg bit 6 / blazer_sensors
+audio         --  -                      aoc-trusty           Trusty FF-A/TIPC transport: HK AOC STOP line
+nfc           --  -                      enabled              Enable blazer-nfc (hk_dbg bit 7)
+cameras       --  -                      torch-chip           CLI7 to I2C: blazer_torch stage
+apps          --  -                      lsd                  lsd not launched
+stability    0/7  -                      alive                No status ticks: reader.txt verdict
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## gpu: grep -E 'HK GPUTA: rung 10 (start|PASS)|HK GPUTA: .*SLC' ramdump/kernel.log (first 4)
+HK GPUTA: rung 10 start
+HK GPUTA: R10: rung 10: R8 fixture + PC/PD/PT for va 0xb800000000, MMUCACHE 0x807, 2 fenced streams, then DM-context SLC flush probe; trace ts 0x2d755
+HK GPUTA: R10 PASS: PC/PD/PT for va 0xb800000000 published, MMUCACHE 0x807 sync 0 -> 1, streams fenced on it and on the UFO executed (0xdead0000 -> 0xc0de0001 -> 0xc0de0002), DM-context SLC flush executed, no MMU fault, buffer untouched; fi
+HK GPUTA: rung 10 PASS, firmware client streams complete (smcs 491)
