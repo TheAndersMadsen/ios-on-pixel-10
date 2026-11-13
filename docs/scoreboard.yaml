@@ -1040,9 +1040,9 @@ subsystems:
       - id: aoc-live
         label: AoC live (rung 4)
         any: [{re: 'HKAOC rung4 PASS'}, {re: 'HK AOC: rung 4 LIVE PASS'}]
-        unverified: 'rung4 FAIL on every phone boot audio-1..8 (state 2 without IPC magic); Trusty log: sswrp_cpu/rfw not enabled by socversion, ac_dt_socversion 0x0 (/data/work/hk-fleet/results/audio-8/REPORT.md:13,25,37)'
-        next: 'Write ac_dt socversion 0x2 / cdtproduct 0x10 before START (aoc14), then re-read HKAOC rung4 (/data/work/hk-audio/FINDING-socversion-20261113.md)'
-        src: /data/work/hk-audio/FINDING-socversion-20261113.md
+        unverified: 'rung4 FAIL on every phone boot audio-1..8 (state 2 without IPC magic); hwmgr START takes 3008 ms = 6 x 501 with 8 uirq_ack_handled failed (/data/work/hk-fleet/results/audio-8/REPORT.md:13,25,37); the socversion Trusty lines are also on stock, not a cause'
+        next: 'Boot audio-9 (aoc14 read-only Trusty interrupt diagnostic) and read HKAOC tirq; then audio-10 forward+pump if an interrupt is listed (/data/work/hk-audio/STATUS.md)'
+        src: /data/work/hk-audio/FINDING-socversion-REFUTED-20261114.md
         action: aoc-carve
       - id: aoc-services
         label: AoC services enumerated (rung 5)
