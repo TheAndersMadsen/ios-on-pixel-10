@@ -29,6 +29,10 @@ Built, not booted (2026-11-14, host/QEMU only; queue `/data/work/hk-fleet/queue/
 (hk-modem-5 8548f72; BL1 is read at boot from the phone's own modem_b, a raw TOC image; no firmware in any image or repo; first AP
 access to cp_rmem); `audio-9` (item 5); `apps-4` (overlay: Spotlight deny off, fairplayd disabled, translationd config cover).
 Modem rung 11 (main image = radio stack runs) is NOT built and needs the owner's decision.
+`metal-9` queued: CPU-composited frame, not GPU (plugin gate mode 4: real texture memory, CoreAnimation draws run by a CPU executor;
+HOST 59/0 + 19/0, QEMU reaches the Apple logo only). metal-8 issued no GPU job (`opens 0 submits 0`); the black screen was the plugin's
+memory-less stand-in for the display IOSurface, the present path itself works. A GPU-composited frame needs a render job + shader path.
+**m1box thermal shutdowns 2026-11-14 00:34/00:42/00:51** (`SMC Thermal pressure initiated Sleep`, fans at max): no QEMU/builds there until checked.
 Fleet coordination, method and per-lane state: `/data/work/hk-fleet/{BRIEF,FACTS}.md`, `/data/work/hk-<lane>/STATUS.md`.
 
 - **Best physical iOS result:** XNU 12377 and the real iOS userland reached
