@@ -32,6 +32,9 @@ Modem rung 11 (main image = radio stack runs) is NOT built and needs the owner's
 `metal-9` queued: CPU-composited frame, not GPU (plugin gate mode 4: real texture memory, CoreAnimation draws run by a CPU executor;
 HOST 59/0 + 19/0, QEMU reaches the Apple logo only). metal-8 issued no GPU job (`opens 0 submits 0`); the black screen was the plugin's
 memory-less stand-in for the display IOSurface, the present path itself works. A GPU-composited frame needs a render job + shader path.
+`wifi-3` queued: kernel hk-wifi-7 4268a84 (hk-base-5 + W5.4 + W7 = per-process Apple80211/IO80211 selector census, `blazer-wifi-census:` at 40/150 s;
+HOST 625+343 checks; QEMU 840 s 0 panics but Home NOT drawn in QEMU, comparison runs cut by the m1box shutdowns). The W4 `wlan` entry + wifid start
+was already physical in integ-7, so nothing was added for it. Transmits as integ-7.
 **m1box thermal shutdowns 2026-11-14 00:34/00:42/00:51** (`SMC Thermal pressure initiated Sleep`, fans at max): no QEMU/builds there until checked.
 Fleet coordination, method and per-lane state: `/data/work/hk-fleet/{BRIEF,FACTS}.md`, `/data/work/hk-<lane>/STATUS.md`.
 
