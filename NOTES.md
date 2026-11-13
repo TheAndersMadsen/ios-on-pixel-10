@@ -41,8 +41,9 @@ Fleet coordination, method and per-lane state: `/data/work/hk-fleet/{BRIEF,FACTS
   green - softblur-free Home 70 s→1080 s deadline, epoch= honored as the RTC floor
   (`source rtc … (floor image-epoch …)`, publish ok), settings-r1 disabled.plist 7397 B +
   22 applied + MobileSMS/SocialLayer prefs seeded, 0 backboardd/LIBMALLOC/MobileSMS/
-  FaceTime/Preferences crashes, Spotlight denied (68). Misses: A4 medialibraryd still never
-  execs (launchd did not act on the applied plist; on-demand or needs a UI walk) and the
+  FaceTime/Preferences crashes, Spotlight denied (68). Misses: A4 medialibraryd did not exec
+  (resolved 2026-11-14, not a fault: the job is on-demand only and execs within 0.5 s of its
+  first client on 8 later boots, e.g. Music in integ-7; int5-r3 had no media client) and the
   R3 recipe's UI walk (Settings/Spotlight shots) was not in the queue argv - both open.
   Receipts: `research/ios26-phaseb-r1/goal-pool/receipts/queue-20261104.md`,
   `gpu5-20261104.md` (rungs 8-9), `int5-20261104.md` (regression),
