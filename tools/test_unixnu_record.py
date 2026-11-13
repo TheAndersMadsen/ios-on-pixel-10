@@ -106,6 +106,24 @@ class Record(unittest.TestCase):
         with self.assertRaises(SystemExit):
             U.build(STATUS, {}, {'teleport': {'area': 'teleport', 'status': 'planned'}})
 
+    def test_claim_replaces_static_area_text(self):
+        claims = {'cellular': {'area': 'cellular', 'status': 'planned', 'inputs': ['i'], 'configuration': ['c'],
+                               'procedure': ['p']}}
+        rec = areas(U.build(STATUS, {}, claims))
+        self.assertEqual((rec['cellular']['inputs'], rec['cellular']['configuration'], rec['cellular']['procedure']),
+                         (['i'], ['c'], ['p']))
+        self.assertNotEqual(areas(U.build(STATUS, {}))['cellular']['procedure'], ['p'])
+        with tempfile.TemporaryDirectory() as tmp:
+            ev = pathlib.Path(tmp) / 'ev.toml'
+            ev.write_text('[[claim]]\narea = "cellular"\nstatus = "planned"\nprocedure = "not a list"\n')
+            with self.assertRaises(SystemExit):
+                U.load_evidence(ev)
+
+    def test_record_has_a_generated_head_comment(self):
+        text = U.dump(U.build(STATUS, {}))
+        self.assertTrue(text.startswith('# hackios porting record'))
+        self.assertEqual(tomllib.loads(text)['schema_version'], 1)
+
     def test_evidence_resolves_in_outdir(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = pathlib.Path(tmp)
