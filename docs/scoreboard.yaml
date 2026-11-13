@@ -843,11 +843,18 @@ subsystems:
         next: 'done; next rung needs the cbd boot protocol (research/ios26-modem-r1/modem4/NEXT.md)'
         src: research/ios26-modem-r1/modem4 (SEQUENCE.md rows 1, 7, 10, 11, 13)
         action: modem-rung5
+      - id: bl1
+        label: BL1 handed to the boot ROM (rung 9; one doorbell, no bootloader/main image, no RF)
+        all: [{re: 'blazer-modem: verdict: rung 9 \(bl1\) PASS'}]
+        unverified: 'built, not booted: hk-modem-5 8548f72, kernel.modem5 d1042e40, HOST 387+144 checks, QEMU inert'
+        next: 'Boot modem-5 (a7-ios-system-modem5-q9); want boot_stage 0x1fff then 0x3fff'
+        src: research/ios26-modem-r1/modem5/DESIGN.md
+        action: modem-5
       - id: online
         label: CP firmware online
         all: [{re: 'blazer-modem: cp: ONLINE'}]
         unverified: planned
-        next: 'Capture cbd boot exchange passively (modem4/NEXT.md), then BL1 + first doorbell (rung 9)'
+        next: 'After bl1 (rung 9): bootloader (rung 10, no RF); main image (rung 11) starts the radio stack and needs the owner decision first'
         src: docs/CONNECTIVITY.md
         action: modem-rung5
       - id: sim

@@ -25,6 +25,10 @@ recoverable. QEMU and host tools support development; they are not phone results
 Other physical results 2026-11-11/12: root **r6 flashed to ios_system** (sha e798123a, GPT byte-identical; `/data/work/hk-storage/flash-r6-run/`);
 Linux-built kernels boot the phone (`farm-1`); common bases hk-base-2/-3/-4 reach Home; HakiOS-method ladder: `port-1`
 (6 drivers built in) draws Home at 64 fps; modem rungs 5-8; NFC discovery + clock output; camera PMIC id.
+Built, not booted (2026-11-14, host/QEMU only; queue `/data/work/hk-fleet/queue/`): `modem-5` = rung 9, BL1 handoff, one doorbell, no RF
+(hk-modem-5 8548f72; BL1 is read at boot from the phone's own modem_b, a raw TOC image; no firmware in any image or repo; first AP
+access to cp_rmem); `audio-9` (item 5); `apps-4` (overlay: Spotlight deny off, fairplayd disabled, translationd config cover).
+Modem rung 11 (main image = radio stack runs) is NOT built and needs the owner's decision.
 Fleet coordination, method and per-lane state: `/data/work/hk-fleet/{BRIEF,FACTS}.md`, `/data/work/hk-<lane>/STATUS.md`.
 
 - **Best physical iOS result:** XNU 12377 and the real iOS userland reached
