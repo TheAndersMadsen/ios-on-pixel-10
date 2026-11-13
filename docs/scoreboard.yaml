@@ -2,7 +2,8 @@
 #
 # One ladder per subsystem, rungs ordered from hardware to user-visible. A rung is REACHED in a boot when
 # its checks pass (same check syntax as docs/probes.yaml: re, min, max, src, group + ge/le, seq; plus
-# {metric: NAME, le|ge: N} for computed stability metrics). Spec keys per rung:
+# {metric: NAME, le|ge: N} for computed stability metrics; group + distinct_min on a non-numeric group counts
+# different strings, e.g. app names). Spec keys per rung:
 #   all: [checks]        every check must pass
 #   any: [checks]        at least one must pass; an item may itself be {all: [checks], label: ...}
 #   independent: true    reaching this rung does NOT imply the rungs below it (a daemon that runs whatever the
@@ -11,6 +12,8 @@
 #   gated: true          only counts when the rung below is reached or implied (negative checks such as
 #                        "no unplanned panic" would otherwise pass on an empty log)
 #   sample: <boot>       a real physical boot where this rung matches (tools/test_hk_score.py checks it)
+#   receipt: <file:line> the fleet report line that shows it (results/<req>/REPORT.md), or where the proof is when the
+#                        report does not carry the line (run console, screenshot). Informational; hk_score ignores it.
 #   unverified: <why>    no physical boot prints this yet (planned line or never reached): UNVERIFIED-NO-SAMPLE
 # Subsystem always: true = core platform, exercised by every boot (a dead boot regresses it; --diff verdict 'lost'
 #   otherwise means the feature printed nothing - gate off - and only fails --baseline with --strict).
@@ -163,14 +166,14 @@ subsystems:
         label: whole-canvas motion >= 45 frames/s to the panel (3 windows; scroll under ui/ script load)
         independent: true
         all: [{re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s max_gap_us \d+ changed 0,0 (?:1125x2511|960x2142|750x1674)', group: kicks, ge: 45, sustain: 3}]
-        unverified: no physical boot with this yet (display lane requests display-2..5)
+        unverified: 'no physical boot reaches this; display-2..13 ran and the daily image stays near 10 swaps/s (/data/work/hk-fleet/results/display-13/REPORT.md:240)'
         next: 'Render scale @2x (canvas 750x1674 + /chosen display-scale 2) or a higher CPU cap (power lane)'
         src: /data/work/hk-display/STATUS.md (ranking); research/ios26-phaseb-r1/display/fps1/FPS1.md
       - id: fps60-full
         label: whole-canvas motion >= 60 frames/s to the panel (5 windows; scroll under ui/ script load)
         independent: true
         all: [{re: 'SWEET FB: rate swaps [\d.]+/s kicks (?P<kicks>[\d.]+)/s max_gap_us \d+ changed 0,0 (?:1125x2511|960x2142|750x1674)', group: kicks, ge: 60, sustain: 5}]
-        unverified: no physical boot with this yet (display lane requests display-2..5)
+        unverified: 'no physical boot reaches this; display-2..13 ran and the daily image stays near 10 swaps/s (/data/work/hk-fleet/results/display-13/REPORT.md:240)'
         next: 'Needs GPU composition (gpu ladder) or @2x plus a higher clock'
         src: /data/work/hk-display/STATUS.md (ranking); research/ios26-phaseb-r1/display/fps1/FPS1.md
       - id: bl-calibrated
@@ -184,14 +187,16 @@ subsystems:
         label: unknown-only brightness requests answered success (hk_dsp bit 1)
         independent: true
         all: [{re: 'SWEET BL: request backboardd route unknown-ok raw 0 rc 0\b'}]
-        unverified: no physical boot with this yet (display lane requests display-2..5)
+        sample: 20261112-022919-a7-disp1-gov-bl-r1
+        receipt: '/data/work/hk-fleet/results/display-5/REPORT.md:1 names the run; the matching line is only in the attempt kernel log (not in the report)'
         next: 'Boot a7-ios-system-disp1-gov-bl-r1 (display-5)'
         src: /data/work/hk-display/STATUS.md
       - id: display-status
         label: hkq drivers reports the display counters
         independent: true
         all: [{re: 'HKQ \d+ display\+?: .*(canvas \d+x\d+|last1s swaps)'}]
-        unverified: no physical boot with this yet (display lane requests display-2..5)
+        sample: 20261112-014718-a7-disp2-gov-r1
+        receipt: '/data/work/hk-fleet/results/display-2/REPORT.md:59'
         next: 'Boot kernel.disp1 with hk_dbg bit 27 and run hkq drivers (display-2)'
         src: /data/work/hk-display/STATUS.md
       - id: brightness-svc
@@ -377,7 +382,8 @@ subsystems:
         all:
           - {re: 'blazer-gov: write domain \d+ level 13, 1536 MHz'}
           - {re: 'blazer-clock: cpu \d+ mpidr \S+ level 13 want 1536 cycles \d+ ticks \d+ mhz 15\d\d'}
-        unverified: power-5 (cap 13) built and queued 2026-11-11
+        sample: 20261112-013512-a7-power5-cap13-r1
+        receipt: '/data/work/hk-fleet/results/power-5/REPORT.md:8'
         next: 'Boot power-5 (cap 13, common-health gates, abort at 55 C)'
         src: /data/work/hk-power/STATUS.md
         action: cpu-common-health
@@ -420,7 +426,8 @@ subsystems:
         label: hkq drivers answers cpu, gov, temps, chg
         independent: true
         all: [{re: 'HKQ \d+ cpu: c0 '}, {re: 'HKQ \d+ gov: '}, {re: 'HKQ \d+ temps: mode \d'}, {re: 'HKQ \d+ chg: '}]
-        unverified: kernel.power1 not booted
+        sample: 20261111-231219-a7-integ-r1
+        receipt: '/data/work/hk-fleet/results/integ-1/REPORT.md:266'
         next: 'Boot power-1 with QUERIES=drivers'
         src: /data/work/hk-power/STATUS.md
     fails:
@@ -575,7 +582,7 @@ subsystems:
         label: frames composited by the GPU
         independent: true
         any: [{re: 'HK GPUTA: command stream \d+ (?:done|complete)'}]
-        unverified: planned line (docs/probes.yaml metal)
+        unverified: 'no GPU job from backboardd yet: metal-8 armed HK_XFER but no hmgu xfer line printed and SERVE tick 2 shows jobs 0 (/data/work/hk-fleet/results/metal-8/REPORT.md:131,136); QuartzCore ran on stand-ins, screen black'
         next: 'Owned compute shader readback, then IOSurface presentation'
         src: docs/NATIVE-METAL.md (Acceptance)
         action: gpu-composite
@@ -640,7 +647,8 @@ subsystems:
         label: wifid running (WiFiManager registered)
         independent: true
         any: [{re: 'exec wifid|HKL wifid\['}]
-        unverified: wifid never runs; clients log "bootstrap_look_up of WiFiManager server failed"
+        sample: 20261111-222125-a7-wifi-w53-r1
+        receipt: '/data/work/hk-fleet/results/wifi-2/REPORT.md:8 (later boot, same image); wifi-1/REPORT.md:220 scoreboard row'
         next: 'wifid: launchd error 138 (no ADT node / IO80211 family) - needs an IO80211Controller nub + wifid un-denied'
         src: research/ios26-userland-r1/DEBUG-TOOLS.md; docs/CONNECTIVITY.md
         action: wifi-io80211
@@ -649,7 +657,8 @@ subsystems:
         label: wifid bound en0 (IO80211 user client opened, version answered)
         independent: true
         all: [{re: 'blazer-wifi: IO80211 UC: wifid opened'}, {re: 'blazer-wifi: IO80211 UC: wifid sel 0 .*-> 0x0, version sent'}]
-        unverified: no boot has had the IO80211 surface on (W4 r1 was built, not booted)
+        sample: 20261111-222125-a7-wifi-w53-r1
+        receipt: '/data/work/hk-fleet/results/wifi-1/REPORT.md:220 (scoreboard row 13/14; the UC lines are in the run console)'
         next: 'Boot a7-ios-system-wifi-w5-r1: /arm-io/wlan + IO80211Interface + IO80211APIUserClient (hk_dbg bit 31)'
         src: /data/work/hk-wifi/STATUS.md
         action: wifi-io80211
@@ -657,7 +666,8 @@ subsystems:
         label: wifid's Apple80211 GETs answered (socket ioctl path)
         independent: true
         all: [{re: 'blazer-apple80211: wifid GET type 12 len \d+ val -?\d+ -> 0'}]
-        unverified: needs wifid-bind
+        sample: 20261111-222125-a7-wifi-w53-r1
+        receipt: '/data/work/hk-fleet/results/wifi-2/REPORT.md:16; wifi-1/REPORT.md:220'
         next: 'The blazer-apple80211 trace lists each GET/SET type wifid asks and the first one refused (rc 102)'
         src: /data/work/hk-wifi/STATUS.md
         action: wifi-io80211
@@ -665,7 +675,8 @@ subsystems:
         label: wifid listed the scan table (SCAN_REQ + SCAN_RESULT to the end)
         independent: true
         all: [{re: 'blazer-apple80211: scan list ended: (?P<nets>\d+) networks served', group: nets, ge: 1}]
-        unverified: needs wifid-bind
+        sample: 20261111-222125-a7-wifi-w53-r1
+        receipt: '/data/work/hk-fleet/results/wifi-1/REPORT.md:20'
         next: 'wifid never asked for a scan: hkq drivers "wifi-ios" line (scan req / lists / last refused type)'
         src: /data/work/hk-wifi/STATUS.md
         action: wifi-io80211
@@ -673,15 +684,17 @@ subsystems:
         label: wifid read the joined network (SSID or CURRENT_NETWORK answered)
         independent: true
         any: [{re: 'blazer-apple80211: wifid GET type 103 len 2272 val -?\d+ -> 0'}, {re: 'blazer-apple80211: wifid GET type 1 len 32 val -?\d+ -> 0'}]
-        unverified: needs wifid-bind and the native join
+        sample: 20261111-222125-a7-wifi-w53-r1
+        receipt: '/data/work/hk-fleet/results/wifi-1/REPORT.md:221; integ-7/REPORT.md:238'
         next: 'Joined but wifid does not ask: the link event (blazer-apple80211: event 4) and what it refused before'
         src: /data/work/hk-wifi/STATUS.md
         action: wifi-io80211
       - id: settings-wifi
-        label: Settings shows/joins a network
+        label: 'Settings > Wi-Fi page drawn (OCR finds "Wi-Fi"); the joined row is a screenshot read, the join itself is kernel-side'
         independent: true
         any: [{re: 'UIRUN \S+ \S+ STEP \d+ line \d+ check_text Wi-Fi PASS', src: [console]}]
-        unverified: ui_run "check_text Wi-Fi" has only failed (wifi-w2-r1)
+        sample: 20261111-231219-a7-integ-r1
+        receipt: '/data/work/hk-fleet/results/integ-1/REPORT.md:273 (OCR); joined row: integ-r5 run ui/0016-016-wifi.png (screenshot, human-read)'
         next: 'After wifid: drive Settings>Wi-Fi with a .ui script'
         src: docs/CONNECTIVITY.md (Acceptance)
         action: wifi-io80211
@@ -741,7 +754,7 @@ subsystems:
       - id: powered
         label: controller powered on in bluetoothd
         all: [{re: 'HKL bluetoothd\[\d+\] .*Power state changed\. PowerState:1'}]
-        unverified: bluetoothd reports PowerState:2 only (bt-8 scans for TCC with the user power still off)
+        unverified: 'no PowerState:1 line on the phone; integ-7 opened Settings > Bluetooth (walk step 17-19) and still printed none (/data/work/hk-fleet/results/integ-7/REPORT.md:240)'
         next: 'Settings > Bluetooth power-on walk on a hk-bt-11 + blazer_bt_tx=2 image'
         src: docs/CONNECTIVITY.md
         action: bt-attach
@@ -801,28 +814,32 @@ subsystems:
       - id: survey
         label: endpoint survey, read only (rung 5)
         all: [{re: 'blazer-modem: verdict: rung 5 \(survey\) PASS'}]
-        unverified: 'PHYSICAL PASS modem-1/2/3 (2026-11-11/12): COMMAND 0x0106, BAR0 0x4, MSI ctl 0x0180'
+        sample: 20261111-222414-a7-modem3-q5
+        receipt: '/data/work/hk-fleet/results/modem-1/REPORT.md:15'
         next: 'done'
         src: research/ios26-modem-r1/modem3/SEQUENCE.md
         action: modem-rung5
       - id: dma-path
         label: CP DMA path known (rung 6, amb_smmu + memory map)
         all: [{re: 'blazer-modem: verdict: rung 6 \(path\) PASS'}]
-        unverified: 'PHYSICAL PASS modem-2/3: amb_smmu bypass (CR0ACK 0, GBPA 0); the four CP regions outside the DRAM window, not VM-managed'
+        sample: 20261112-012150-a7-modem3-q6
+        receipt: '/data/work/hk-fleet/results/modem-2/REPORT.md:21'
         next: 'done'
         src: research/ios26-modem-r1/modem3/SEQUENCE.md
         action: modem-rung5
       - id: bar
         label: BAR0 decoded (rung 7; modem2 called it rung 5)
         all: [{re: 'blazer-modem: verdict: rung \d \(bar\) PASS'}]
-        unverified: 'PHYSICAL PASS modem-3: BAR0 64 KiB 64-bit at 0x40200000, +0x04 reads 0xffffffff, rest 0'
+        sample: 20261112-012447-a7-modem3-q7
+        receipt: '/data/work/hk-fleet/results/modem-3/REPORT.md:27'
         next: 'done'
         src: research/ios26-modem-r1/modem3/SEQUENCE.md
         action: modem-rung5
       - id: rom-boot
         label: CP ROM boot handshake to WAIT_DOORBELL (rung 8; no doorbell, no image, no RF)
         all: [{re: 'blazer-modem: verdict: rung 8 \(rom\) PASS'}]
-        unverified: 'PHYSICAL PASS a7-modem4-q8 (2026-11-12 03:42): boot_stage 0xff, waits for the doorbell; no doorbell, no image'
+        sample: 20261112-034117-a7-modem4-q8
+        receipt: '/data/work/hk-fleet/results/modem-4/REPORT.md:18-21 (boot_stage 0xff at +0 ms, msi_check 0x854c after the clear; no doorbell)'
         next: 'done; next rung needs the cbd boot protocol (research/ios26-modem-r1/modem4/NEXT.md)'
         src: research/ios26-modem-r1/modem4 (SEQUENCE.md rows 1, 7, 10, 11, 13)
         action: modem-rung5
@@ -893,7 +910,8 @@ subsystems:
           - {re: 'SWEET HID: accel registered'}
           - {re: 'SWEET HID: gyro registered'}
           - {re: 'SWEET SPU: device registered, plug-in type 7ACF5332 -> AppleSPULib, orientation service attached'}
-        unverified: hk-sensors-1 kernel (a7-ios-system-sensors1-r1) built, not booted; int5 kernels streamed with no service (bit-6 gate)
+        sample: 20261111-225120-a7-sensors1-r1
+        receipt: '/data/work/hk-fleet/results/sensors-1/REPORT.md:7'
         next: 'Boot a7-ios-system-sensors1-r1 (queue sensors-1): SWEET HID/SPU registered lines'
         src: /data/work/hk-sensors/STATUS.md
         action: sensors-boot
@@ -903,21 +921,24 @@ subsystems:
           - {re: 'SWEET HID: SweetHIDAccel open by IOHIDEventServiceUserClient -> 1'}
           - {re: 'SWEET HID: SweetHIDGyro open by IOHIDEventServiceUserClient -> 1'}
           - {re: 'SWEET HID: SweetHIDOrientation open by IOHIDEventServiceUserClient -> 1'}
-        unverified: QEMU only (qs-sensors1-r1); the 2026-11-02 physical open predates the int line
+        sample: 20261111-225120-a7-sensors1-r1
+        receipt: '/data/work/hk-fleet/results/sensors-1/REPORT.md:16'
         next: 'backboardd did not open the motion services: hkq ioreg SweetHIDAccel; SWEET HID open lines'
         src: /data/work/hk-sensors/STATUS.md
         action: sensors-boot
       - id: motion-ready
         label: every expected stream >= 50 samples with its service open (HKSENS motion ready)
         all: [{re: 'HKSENS motion ready t=\d+: accel n=\d+ gyro n=\d+ mag n=\d+.* open accel=1 gyro=1 orient=1'}]
-        unverified: needs the hub gate (blazer_thermal=6) on the hk-sensors-1 kernel
+        sample: 20261111-225120-a7-sensors1-r1
+        receipt: '/data/work/hk-fleet/results/sensors-1/REPORT.md:54'
         next: 'HKSENS motion partial: the line names the missing stream or service; hkq drivers -> sensors'
         src: /data/work/hk-sensors/STATUS.md
         action: sensors-boot
       - id: spu-orientation
         label: CoreMotion asked the SPU stand-in for the device orientation and got one
         all: [{re: 'SWEET SPU: LastOrientation query \d+ from \S+: orientation [1-6] '}]
-        unverified: static reading of 23G90 CoreMotion + AppleSPULib; QEMU qs-sensors1 runs
+        sample: 20261111-225120-a7-sensors1-r1
+        receipt: '/data/work/hk-fleet/results/sensors-1/REPORT.md:46'
         next: 'No SWEET SPU client: read the SWEET SPU open/selector lines (plug-in load, user client type)'
         src: /data/work/hk-sensors/STATUS.md
         action: sensors-boot
@@ -925,17 +946,25 @@ subsystems:
         label: CoreMotion client gets IMU data (CMMotionManager read-back)
         independent: true
         all: [{re: 'HKMOTION \S+\[\d+\] result PASS .*accel=(?P<n>\d+)', group: n, ge: 50}]
-        unverified: QEMU with synthetic samples only (qp-periph1-r1, qs-sensors1); the phone overlay has no hkp probe yet
+        sample: 20261112-011428-a7-sensors3-r1
+        receipt: '/data/work/hk-fleet/results/sensors-3/REPORT.md:53 (phone lay flat: moved=0)'
         next: 'Phone overlay with hkp.dylib (hk_env is 975/1024 B in int5-r3: one rule must go) then boot'
         src: /data/work/hk-sensors/STATUS.md
         action: sensors-overlay
       - id: rotate
-        label: device orientation follows the phone (owner turns it at HKSENS MARK ROTATE)
-        all:
-          - {re: 'HKSENS rotate seen t=\d+: orientation 0x6[5-9a] -> 0x6[78] '}
-          - {re: 'SWEET SPU: LastOrientation query \d+ from \S+: orientation [34] '}
-        unverified: needs the owner to turn the phone at the console mark
-        next: 'Owner turns the phone to landscape when the console prints HKSENS MARK ROTATE'
+        label: 'UI follows the phone to landscape (owner turns it; kernel orientation + landscape screenshot)'
+        any:
+          - all:
+              - {re: 'HKSENS rotate seen t=\d+: orientation 0x6[5-9a] -> 0x6[78] '}
+              - {re: 'SWEET SPU: LastOrientation query \d+ from \S+: orientation [34] '}
+            label: kernel rotate window + CoreMotion query answered landscape
+          - all:
+              - {re: 'blazer-sensors: orientation 0x6[78], filtered '}
+              - {re: 'UIRUN \S+ \S+ STEP \d+ line \d+ shot safari-landscape PASS state=snapshot changed=0\.(?:0[5-9]|[1-9])', src: [console]}
+            label: kernel landscape orientation, then the Safari screenshot changed (read the shot - it must show the landscape layout)
+        sample: live-20261112-073922-a7-sensors4-r1
+        receipt: '/data/work/hk-fleet/results/sensors-4/REPORT.md:122 (orient last=0x68) + run ui/0006-006-safari-landscape.png and /data/work/hk-fleet/results/sensors4-sheet.png (Safari drawn in landscape). One way only: the return to portrait was not seen (walk step 9 FAIL); integ-7 repeat saw no landscape line in its window (walk steps 39/42 FAIL)'
+        next: 'Repeat with the return to portrait: keep the phone upright until OWNER-ROTATE-NOW, hold landscape, then back upright (integ7_walk.ui steps 39-44)'
         src: /data/work/hk-sensors/STATUS.md
         action: sensors-boot
       - id: heading
@@ -950,14 +979,17 @@ subsystems:
         label: thermalmonitord bound the SweetSensorHub temperature services
         independent: true
         any: [{re: 'HKSENS bind: SweetHIDTemp-'}, {re: 'HKSENS t=\d+ .* temp=19/\d+/[1-9]'}]
-        unverified: 'QEMU only (qf-sensorhub1-r1, qs-sensors1-r1); the physical sensorhub1 boot had no live console'
+        sample: 20261104-104304-a7-sensorhub1
+        receipt: '/data/work/hk-fleet/results/sensors-3/REPORT.md:6 (HKSENS bind lines, live console)'
         next: 'Boot with blazer_thermal=6 and a live console: HKSENS bind lines'
         src: research/ios26-phaseb-r1/sensorhub/SENSORHUB.md
         action: sensors-boot
       - id: other-sensors
         label: baro / ALS / prox identified on AoC i2c2
+        independent: true
         all: [{re: 'blazer-sensors: census (?:tmd3743|spl07003) at 0x(?:39|77): ack'}]
-        unverified: census code exists (blazer_sensors=5), never run - pad 34 (i2c2 SDA) is gpio-reserved in the FDT, owner decision
+        sample: 20261112-011428-a7-sensors3-r1
+        receipt: '/data/work/hk-fleet/results/sensors-3/REPORT.md:18'
         next: 'Owner decision on pad 34, then the i2c2 census boot (research/ios26-sensors-r1/PLAN.md S3)'
         src: research/ios26-sensors-r1/PLAN.md
         action: sensors-census
@@ -984,42 +1016,45 @@ subsystems:
       - id: aoc-carve
         label: AoC carve mapped Normal memory (aoc6)
         all: [{re: 'HKAOC carve PASS attr=0x[4-9a-f][0-9a-f]'}]
-        unverified: aoc6 not booted; aoc5 panicked here (DC ZVA on the Device-mapped carve)
+        sample: 20261112-011921-a7-aoc6-r3
+        receipt: '/data/work/hk-fleet/results/audio-1/REPORT.md:13'
         next: 'aoc6: HKAOC carve FAIL attr= names the MAIR byte the pmap produced'
         src: /data/work/hk-audio/STATUS.md
         action: aoc-carve
       - id: aoc-probe
         label: AoC probe (rung 2)
         any: [{re: 'HKAOC rung2 PASS'}, {re: 'HK AOC: rung 2 PROBE PASS'}, {re: 'HK AOC: rung (?P<r>\d) PASS', group: r, ge: 2}]
-        unverified: aoc5 panicked (DC ZVA on device-mapped carve) before any rung 2 line
+        sample: 20261112-011921-a7-aoc6-r3
+        receipt: '/data/work/hk-fleet/results/audio-1/REPORT.md:18'
         next: 'HKAOC rung2 FAIL why= (LPB/A32/rails/GSA values on the line)'
         src: research/ios26-aoc-r1/AOC5.md
         action: aoc-carve
       - id: aoc-load
         label: AoC firmware loaded (rung 3)
         any: [{re: 'HKAOC rung3 PASS'}, {re: 'HK AOC: rung 3 LOAD PASS'}, {re: 'HK AOC: GSA LOAD reply cmd 0x[0-9a-f]+ err 0'}]
-        unverified: not reached on the phone
+        sample: 20261112-011921-a7-aoc6-r3
+        receipt: '/data/work/hk-fleet/results/audio-1/REPORT.md:19; audio-8/REPORT.md:12'
         next: 'HKAOC rung3 FAIL: gsa_rsp=<cmd>,<err>,<argc> decides (GSA LOAD)'
         src: research/ios26-aoc-r1/AOC5.md
         action: aoc-carve
       - id: aoc-live
         label: AoC live (rung 4)
         any: [{re: 'HKAOC rung4 PASS'}, {re: 'HK AOC: rung 4 LIVE PASS'}]
-        unverified: not reached on the phone
-        next: 'HKAOC rung4 FAIL: ipc= / magic_ms= / reply_ms= decide (START, magic, control doorbell)'
-        src: research/ios26-aoc-r1/AOC5.md
+        unverified: 'rung4 FAIL on every phone boot audio-1..8 (state 2 without IPC magic); Trusty log: sswrp_cpu/rfw not enabled by socversion, ac_dt_socversion 0x0 (/data/work/hk-fleet/results/audio-8/REPORT.md:13,25,37)'
+        next: 'Write ac_dt socversion 0x2 / cdtproduct 0x10 before START (aoc14), then re-read HKAOC rung4 (/data/work/hk-audio/FINDING-socversion-20261113.md)'
+        src: /data/work/hk-audio/FINDING-socversion-20261113.md
         action: aoc-carve
       - id: aoc-services
         label: AoC services enumerated (rung 5)
         all: [{re: 'HKAOC rung5 PASS services=\d+ audio=\d+'}]
-        unverified: not reached on the phone
+        unverified: 'SKIP on the phone: rung 4 never passes (/data/work/hk-fleet/results/audio-8/REPORT.md:15-16)'
         next: 'HKAOC rung5 FAIL why=; HKAOC svc lines list the table'
         src: /data/work/hk-audio/STATUS.md
         action: aoc-carve
       - id: aoc-audio-alive
         label: AoC audio service answers (rung 6)
         all: [{re: 'HKAOC rung6 PASS dsp_state=\d+'}]
-        unverified: not reached on the phone
+        unverified: 'SKIP on the phone: rung 4 never passes (/data/work/hk-fleet/results/audio-8/REPORT.md:15-16)'
         next: 'HKAOC rung6 FAIL why= (audio_output_control doorbell / reply / err=)'
         src: /data/work/hk-audio/STATUS.md
         action: aoc-carve
@@ -1084,8 +1119,8 @@ subsystems:
       - id: tag
         label: tag read by RF discovery
         all: [{re: 'blazer-nfc: tag: '}]
-        unverified: not reached
-        next: 'Attended: a7-ios-system-nfccam2-c (nfccam-3): hold a tag on the upper back from the TAG WINDOW OPEN line, 60 s (30 s clock output off as found, 30 s on)'
+        unverified: 'attended window run with the clock on, no tag: 0 rf notifications in 60 s (/data/work/hk-fleet/results/nfccam-4/REPORT.md:17-19)'
+        next: 'nfccam-4 saw 0 RF notifications with a card on the back: check the RF field/antenna path (RF_FIELD_INFO, discovery config) before another attended window'
         src: '/data/work/hk-nfccam/STATUS.md'
         action: boot-nfccam3
     fails:
@@ -1163,8 +1198,8 @@ subsystems:
       - id: registered
         label: stock apps registered with lsd (registration_verified)
         all: [{re: '"registration_verified": ?(?:true|[1-9])'}]
-        unverified: 'QEMU only (2026-11-11, /data/work/hk-apps-swap/RESULT.md); NOTES: stock-app registration blocked on the phone'
-        next: 'Boot kernel.ios26-knext (varfs RENAME_SWAP + rd=ufsroot0) with tools/ios_app_register; check HKAPPS lines'
+        unverified: 'no phone boot prints registration_verified (tools/ios_app_register never ran there); the Home walk still launches 15 stock apps from icons on root r6 (app-walk-15)'
+        next: 'Run tools/ios_app_register on a Home boot and check the HKAPPS registration_verified line (the knext kernel line is already booted)'
         src: NOTES.md (Apps; Next kernel)
         action: boot-knext
       - id: stock-app
@@ -1176,16 +1211,28 @@ subsystems:
         src: NOTES.md (Apps; Next kernel)
       - id: app-walk
         independent: true
-        label: Home walk, 8 or more stock apps exec'd from icon taps
-        all: [{re: 'exec (?:MobileNotes|MobileTimer|MobileCal|Photos|Maps|MobileSafari|Reminders|Health|MobileSMS|Music|MobilePhone|MobileMail|AppStore|Passbook|FaceTime|News|AppleTV|Games)\b', min: 8}]
+        label: 'Home walk, 8 or more different stock apps exec''d from icon taps'
+        all: [{re: 'exec (?P<app>MobileNotes|MobileTimer|MobileCal|Photos|Maps|MobileSafari|Reminders|Health|MobileSMS|Music|MobilePhone|MobileMail|AppStore|Passbook|FaceTime|News|AppleTV|Games|Weather|MobileAddressBook|Files|Books)\b', group: app, distinct_min: 8}]
         sample: live-20261111-211056-a7-knext-r1c
         next: 'Run ui/home_walk_knext.ui (or /data/work/hk-apps/ui/apps_r1_models.ui) on a Home boot'
         src: /data/work/hk-apps/STATUS.md
+      - id: app-walk-15
+        independent: true
+        label: Home walk, 15 or more different stock apps exec'd incl. Photos and Maps (done-item 1)
+        all:
+          - {re: 'exec (?P<app>MobileNotes|MobileTimer|MobileCal|Photos|Maps|MobileSafari|Reminders|Health|MobileSMS|Music|MobilePhone|MobileMail|AppStore|Passbook|FaceTime|News|AppleTV|Games|Weather|MobileAddressBook|Files|Books)\b', group: app, distinct_min: 15}
+          - {re: 'exec Photos\b'}
+          - {re: 'exec Maps\b'}
+        sample: live-20261112-054049-a7-integ-r5
+        receipt: '/data/work/hk-fleet/results/integ-5/REPORT.md:209 (walk END PASS 83/83) and :292 (exec Photos); 15 distinct exec lines in the run console. Exec, not ''drew'': drawing is the walk screenshots'
+        next: 'Run /data/work/hk-integ/ui/integ5_walk.ui (or integ7_walk.ui) on a root r6 Home boot'
+        src: /data/work/hk-integ/STATUS.md
       - id: app-models
         independent: true
         label: Photos, Maps and Health exec'd with no CoreData-model abort
         all: [{re: 'exec Photos\b'}, {re: 'exec Maps\b'}, {re: 'exec Health\b'}, {re: 'with a nil model|MapsSyncContainer\.swift:\d+: Fatal error|HealthExperienceStore\.swift:\d+: Fatal error', min: 0, max: 0}]
-        unverified: 'knext-r1c (2026-11-11): Photos, Maps and Health abort at launch; root r5 lacks photos.momd, MapsSync DataModel*.momd and HealthApp.momd contents'
+        sample: 20261111-222654-a7-apps-r2
+        receipt: '/data/work/hk-fleet/results/apps-2/REPORT.md:15,21,33'
         next: 'Boot a7-ios-system-apps-r1 (overlay group 24: 4 model covers), or flash ios_system r6 (has the models)'
         src: /data/work/hk-apps/STATUS.md
         action: boot-knext

@@ -147,6 +147,13 @@ class SyntheticTests(unittest.TestCase):
         self.assertEqual(b["level"], 0)
         self.assertEqual(b["first_missing"], "enabled")
 
+    def test_app_walk_counts_different_apps(self):
+        respawns = live_dir(self.dir, "live-20261104-040000-a7-r", ["exec Photos"] * 6 + ["exec Maps", "exec Music", "exec MobileCal"])
+        self.assertNotIn("app-walk", [r["id"] for r in sub(self.score(respawns), "apps")["rungs"] if r["state"] == "reached"])
+        names = ["MobileNotes", "MobileTimer", "MobileCal", "Photos", "Maps", "MobileSafari", "Health", "Music"]
+        walk = live_dir(self.dir, "live-20261104-050000-a7-k", [f"exec {n}" for n in names])
+        self.assertIn("app-walk", [r["id"] for r in sub(self.score(walk), "apps")["rungs"] if r["state"] == "reached"])
+
     def test_gated_negative_rungs_need_the_rung_below(self):
         d = live_dir(self.dir, "live-20261104-030612-a7-e", ["nothing to see"])
         st = sub(self.score(d), "stability")
@@ -218,7 +225,8 @@ class SyntheticTests(unittest.TestCase):
                      markers=["UIRUN 03:07:31.508 +78.5 HOME console conditions met (touch, buttons, SpringBoard, frames)"])
         rc, md = run_main([str(d), "--md"])
         self.assertEqual(rc, 0)
-        self.assertIn("| Wi-Fi (BCM4390) | 7/10 |", md)
+        wifi_rungs = len(next(s for s in BOARD["subsystems"] if s["id"] == "wifi")["rungs"])
+        self.assertIn(f"| Wi-Fi (BCM4390) | 7/{wifi_rungs} |", md)
         self.assertIn("## Boot timeline", md)
         rc, js = run_main([str(d), "--json"])
         doc = json.loads(js)

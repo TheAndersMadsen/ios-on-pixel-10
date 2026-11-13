@@ -506,7 +506,7 @@ def run_check(check, attempt, trust=False, max_cites=3):
                         return result
         return result
     rx, group = check["_rx"], check.get("group")
-    values, last, where = [], {}, []
+    values, last, where, texts = [], {}, [], set()
     for si, s in enumerate(sources):
         for n, line in enumerate(s.lines, 1):
             m = rx.search(line)
@@ -515,6 +515,7 @@ def run_check(check, attempt, trust=False, max_cites=3):
             result["count"] += 1
             last = {k: v for k, v in m.groupdict().items() if v is not None}
             if group and m.group(group) is not None:
+                texts.add(m.group(group))
                 v = _num(m.group(group))
                 if v is not None:
                     values.append((v, f"{s.cite}:{n}: {line.strip()[:160]}"))
@@ -559,6 +560,10 @@ def run_check(check, attempt, trust=False, max_cites=3):
                 ctx[group] = _fmt_num(min(best)[0])
                 ctx[f"{group}_windows"] = str(len(best))
                 result["cites"] = [best[0][1], best[-1][1]][:max(1, max_cites)]
+    elif group and texts and "distinct_min" in check and not any(k in check for k in ("ge", "le", "span_min", "sustain")):
+        # a non-numeric group (app names): distinct_min counts different strings, so respawns of one app do not add up
+        ok = ok and len(texts) >= check["distinct_min"]
+        ctx[group] = "/".join(sorted(texts)[:8])
     elif group and any(k in check for k in ("ge", "le", "distinct_min", "span_min", "sustain")):
         ok = False
     result["passed"] = ok
