@@ -1,5 +1,7 @@
-# blazer (Pixel 10 Pro, Tensor G5): every driver built in. The same kernel as hk-base-2 a159511 (proved by symbols:
-# /data/work/hk-port-build/STATUS.md); each driver still does nothing until its boot-argument (device.conf `gate`) is given.
+# blazer (Pixel 10 Pro, Tensor G5): every driver built in except AOC_FW (27 of 28). On hk-port-1 this configuration was
+# proved the same kernel as hk-base-2 a159511 by symbols (/data/work/hk-port-build/STATUS.md); on hk-port-2 the source is
+# hk-base-5 8b99410 + the stubs commit 96db889. Each driver still does nothing until its boot-argument (device.conf `gate`)
+# is given.
 # Drivers and what they mean: XNU tree config/hakios/*.drivers; tools/hk_port_config.py show|apply|check.
 CONFIG_HAKIOS_USBCON=y
 CONFIG_HAKIOS_UFS=y

@@ -1,0 +1,45 @@
+# Physical boot receipt: metal-probe-r5 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 04:48:53 +0100
+image:     research/images/a7-ios-system-metal-probe-r5/boot.img sha256 42e3ae9602809a9b4ff9f1bc63e2eeb445f57c3280fcb31ac2dc01fb48432f56
+kernel:    research/ios26-gpu-r1/gpu6/build/kernel.gpu6.unstripped (unstripped) sha256 524aaa6450552a2cb61cef178c9afda8fe6f13d9e78088a67d6619514ffbbee8
+revision:  e74a5573d50e80425751e5ebe7ee8d15742daa25 (XNU hk-gpu-6 (kernel.gpu6, the metal-probe-r1 kernel: same unstripped sha256 524aaa64 as /data/work/hk-fleet/FACTS.md gpu 23:10 records))
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/metal-5.req (END_ON HKMPLUG: [A-Za-z0-9_.-]+\[[0-9]+\] FATAL signal; END_AFTER 120; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-044846-metal-probe-r5/console.txt, research/laguna-usb-fix/attempts/20261112-044853-metal-probe-r5/ (attempt dir, no ramdump), outside git
+evidence:  PHYSICAL (live USB console of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-044853-metal-probe-r5  [console+live]  up 146 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  governor-range         full-run
+battery      4/5  ui                     charging
+gpu         0/17  metal-ca               power-id
+wifi        2/14  firmware               scan
+bluetooth    4/9  bluetoothd             attached
+cellular    3/11  id                     survey
+sensors     4/14  compass                hid-published
+audio         --  -                      aoc-trusty
+nfc          5/6  discover               tag?
+cameras      2/5  torch-lit              cam-pmic
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## gpu: grep -E 'HMNativeMetal: publish' console.txt (first 1)
+04:49:34.905 [    0.16] HMNativeMetal: publish class=AGXAccelerator base=IOAcceleratorES metacast=1 registry=0x10000014a provider=SweetPlatformExpert uc=0x484d4755 plugin=../../../private/var/hk/HMNativeMetal class=HMNativeMetalDevice mode=
+
+## gpu: grep -E 'HKMPLUG: backboardd\[\d+\] (plugin-load|capture armed)' console.txt (first 2)
+04:49:39.624 [    4.89] HKMPLUG: backboardd[45] plugin-load #1 mode=3 claim=1 class=HMNativeMetalDevice port=0xb703 registryID=0x10000014a -> capture
+04:49:39.628 [    4.89] HKMPLUG: backboardd[45] capture armed: MTLDevice adopted, MTLDeviceSPI adopted, 657 _MTLDevice methods intercepted, invokeUsingIMP yes
+
+## gpu: grep -E 'HKMPLUG: backboardd\[\d+\] sel\[12162\]' console.txt (first 1)
+04:50:16.614 [   41.88] HKMPLUG: backboardd[45] sel[12162] CommandQueueWithDescriptor#319 -setGPUPriority: -> 0 from QuartzCore+0x283268
+
+## gpu: grep -E 'CRASH backboardd|exec backboardd$' console.txt (first 3)
+04:49:36.743 [    2.01] exec backboardd

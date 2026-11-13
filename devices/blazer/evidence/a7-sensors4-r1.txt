@@ -1,0 +1,48 @@
+# Physical boot receipt: a7-sensors4-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 07:39:30 +0100
+image:     research/images/a7-ios-system-sensors4-r1/boot.img sha256 2b706fb814d6c12f7d73c3ae774631a75aa101a15231e7cbf52cc60988e1fac9
+kernel:    research/ios26-sensors-r2/build/kernel.sensors2.unstripped (unstripped) sha256 192ab90fa7265868917b9ad5d9326077fec5f014900243b7460797d1a70775b7
+revision:  23db54862908b8389d861f420725f04a5491f495 (XNU hk-sensors-2: the same kernel file and unstripped sha256 192ab90f as evidence/a7-sensors3-r1.txt)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/sensors-4.req (END_AFTER 210; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-073922-a7-sensors4-r1/console.txt, research/laguna-usb-fix/attempts/20261112-073930-a7-sensors4-r1/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-073930-a7-sensors4-r1  [console+msgbuf+live+reader]  up 246 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 4
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  hkq-power              full-run
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi        2/14  firmware               scan
+bluetooth    4/9  bluetoothd             attached
+cellular    3/11  id                     survey
+sensors    10/14  other-sensors          heading?
+audio         --  -                      aoc-trusty
+nfc          5/6  discover               tag?
+cameras      2/5  torch-lit              cam-pmic
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  respawns: bluetoothd 4
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## sensors: grep -E 'HKSENS MARK ROTATE' console.txt (first 1)
+07:40:50.708 [   46.16] HKSENS MARK ROTATE t=441: owner turns the phone now (landscape, hold 5 s, then back upright); window 40 s, orientation now 0x69
+
+## sensors: grep -E 'blazer-sensors: orientation 0x6[0-9a-f], filtered' console.txt (first 3)
+07:40:23.876 [   19.33] blazer-sensors: orientation 0x69, filtered -7 8 -996 mg
+07:41:33.069 [   88.52] blazer-sensors: orientation 0x65, filtered -114 -782 -266 mg
+07:41:34.181 [   89.63] blazer-sensors: orientation 0x68, filtered 865 -33 -92 mg
+
+## sensors: grep -E 'HKQ 1 sensors\+' console.txt (first 1)
+07:44:08.335 [  243.78] HKQ 1 sensors+ n=2006 last=145996,-339794,101556 nT 29ms | orient n=42 last=0x68 2511ms | open a=1 g=1 o=1 m=1 | spu opens=3 q=2 ans=5 cfg=3 other=0 | gate done/closed
+
+## sensors: grep -E 'SWEET SPU: LastOrientation' console.txt (first 2)
+07:40:38.661 [   34.11] SWEET SPU: LastOrientation query 1 from backboardd: orientation 5 (usage 0x69), room 10
+07:40:41.043 [   36.50] SWEET SPU: LastOrientation query 2 from backboardd: orientation 5 (usage 0x69), room 10

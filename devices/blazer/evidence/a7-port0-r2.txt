@@ -1,0 +1,52 @@
+# Physical boot receipt: a7-port0-r2 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 03:46:09 +0100
+image:     research/images/a7-ios-system-port0-r1/boot.img sha256 82aa088e25e546212b0e45cde2d65b77f36da78e132255d8d2c48f2fafb855ea
+kernel:    research/ios26-port-r1/build/kernel.port1-min-r1.unstripped (unstripped) sha256 090ffdc0a7ea307c7ab21461eb0771d1c615fa8fa908f40b4b0038ca75b1cf47
+revision:  cd469c153e1a396c70d9c092f8e5999c5c2ccf30 (XNU hk-port-1-min; /data/work/hk-port-build/STATUS.md names kernel.port1-min-r1 unstripped 090ffdc0 = hk-port-1-min cd469c1)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/port-0b.req (END_ON SWEET FB: rate swaps [1-9]; END_AFTER 60; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-034602-a7-port0-r2/console.txt, research/laguna-usb-fix/attempts/20261112-034609-a7-port0-r2/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-034609-a7-port0-r2  [console+msgbuf+live+reader]  up 101 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 10
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         1/14  smp                    clocks
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi        0/14  -                      pcie
+bluetooth    0/9  bluetoothd             enabled
+cellular    0/11  -                      cp-power
+sensors       --  -                      bus
+audio         --  -                      aoc-trusty
+nfc           --  -                      enabled
+cameras       --  -                      torch-chip
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  respawns: bluetoothd 10
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## configuration: grep -E 'hakios-kernel: \d+ drivers built in' console.txt (first 1)
+03:46:49.638 [    0.14] hakios-kernel: 3 drivers built in (DISPLAY UFS USBCON), 24 left out
+
+## configuration: grep -E 'blazer-usbcon: mode|tensor-dpu: attached|blazer-ufs: "ios_system"|hfs: mounted' console.txt (first 4)
+03:46:49.607 [    0.10] blazer-usbcon: mode 2, arena 0xbed5c000, first DWC3 read next
+03:46:49.633 [    0.13] tensor-dpu: attached: layer 0 at 0xf0000000 1280x2856 stride 5120 qos 0
+03:46:49.664 [    0.16] blazer-ufs: "ios_system" on LUN 0: first block 15b4000, 24576 MiB, read only, DMA at 889ec4000
+03:46:49.668 [    0.17] hfs: mounted iOSRoot on device b(1, 0)
+
+## userland: grep -E '\] exec (launchd|SpringBoard|backboardd)$' console.txt (first 3)
+03:46:49.705 [    0.20] exec launchd
+03:46:52.808 [    3.31] exec SpringBoard
+03:46:53.410 [    3.91] exec backboardd
+
+## display: grep -E 'SWEET FB: (display on|rate swaps [1-9])' console.txt (first 3)
+03:47:02.312 [   12.81] SWEET FB: display on
+03:48:09.128 [   79.63] SWEET FB: rate swaps 6.8/s kicks 6.8/s max_gap_us 11415386 changed 0,0 1125x2511 unsaid 90
+03:48:13.361 [   83.86] SWEET FB: rate swaps 22.9/s kicks 21.7/s max_gap_us 399460 changed 0,0 1125x2511 unsaid 34

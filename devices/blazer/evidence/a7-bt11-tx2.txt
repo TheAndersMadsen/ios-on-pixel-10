@@ -1,0 +1,47 @@
+# Physical boot receipt: a7-bt11-tx2 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 07:04:11 +0100
+image:     research/images/a7-ios-system-bt11-tx2/boot.img sha256 b72fdd119cac161906468050037f2aece4ef9802a438ca74856078e2a580bae4
+kernel:    research/ios26-bt11-r1/build/kernel.bt11.unstripped (unstripped) sha256 3e6e3598f91e24484e6e8f6136fbce943e880ff9196a537ac3d5e18a69e5c6ef
+revision:  84b1973143b91721ad79187908b6d65fc00a7f4f (XNU hk-bt-11; /data/work/hk-bt/build-linux/kernel.bt11.buildinfo names this commit and this unstripped sha256)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/bt-8.req (END_ON HKBT respawn; END_AFTER 180; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-070404-a7-bt11-tx2/console.txt, research/laguna-usb-fix/attempts/20261112-070411-a7-bt11-tx2/ (attempt dir, no ramdump), outside git
+evidence:  PHYSICAL (live USB console of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-070411-a7-bt11-tx2  [console+live]  up 302 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  governor-range         full-run
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi        2/14  firmware               scan
+bluetooth    6/9  le-scan                powered?
+cellular    3/11  id                     survey
+sensors     4/14  compass                hid-published
+audio         --  -                      aoc-trusty
+nfc          4/6  nci                    discover
+cameras      2/5  torch-lit              cam-pmic
+apps         2/9  personas               settings
+stability    3/7  ran-300                ran-900
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## bluetooth: grep -E '\] exec bluetoothd$' console.txt (first 3)
+07:04:53.891 [    1.97] exec bluetoothd
+
+## bluetooth: grep -E 'HKBT (hci-open|hci-reset|random-address) PASS' console.txt (first 3)
+07:06:47.482 [  115.56] HKBT hci-open PASS: bluetoothd opened com.apple.uart.sk.bluetooth (session 1, gate level 2), chip serving
+07:06:47.894 [  115.97] HKBT hci-reset PASS: bluetoothd's HCI Reset answered status 0x00 (session 1)
+07:06:48.086 [  116.16] HKBT random-address PASS: 0xfd3a's address given to the chip as LE Set Random Address, status 0x00 (session 1)
+
+## bluetooth: grep -E '\] HKBT le-scan-enable PASS' console.txt (first 1)
+07:06:48.223 [  116.30] HKBT le-scan-enable PASS: 0x200c status 0x00
+
+## bluetooth: grep -E '\] HKBT le-scan PASS: 1000? LE advertising report events' console.txt (first 2)
+07:06:54.992 [  123.07] HKBT le-scan PASS: 100 LE advertising report events from the chip (subevent 0x02)
+07:09:17.442 [  265.52] HKBT le-scan PASS: 1000 LE advertising report events from the chip (subevent 0x02)

@@ -1,0 +1,39 @@
+# Physical boot receipt: a7-gpu10-rung14a (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 07:11:31 +0100
+image:     research/images/a7-ios-system-gpu-r14a/boot.img sha256 d6e879eadc9645eefb32018fa5bf2aa8ce657cf815ca74f83fc67c8dc7014e6c
+kernel:    research/ios26-gpu-r1/gpu13/build/kernel.gpu13.unstripped (unstripped) sha256 837983f413848e896afd98adf6809c7b7ae033b177b60a477e6ce49097299603
+revision:  ec508e3d820ee3be8bb331e6138938b9845f49d5 (XNU hk-gpu-12; /data/work/hk-fleet/FACTS.md (gpu plan) names kernel.gpu13 = hk-gpu-12 ec508e3 by file name (the unstripped sha256 is not in the lane notes))
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/gpu-10.req (END_ON HK GPUTA: VERDICT rung 18 (PASS|ANSWERED|STOP); phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-071124-a7-gpu10-rung14a/console.txt, research/laguna-usb-fix/attempts/20261112-071131-a7-gpu10-rung14a/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-071131-a7-gpu10-rung14a  [console+msgbuf+live+reader]  up 6 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 0
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         6/8  springboard            home
+display     2/15  fullres                frames
+input        2/8  touch-hid              touch-client
+storage      2/6  root-mounted           sustained-reads
+cpu         5/14  hkq-power              full-run
+battery      1/5  gauge                  charger
+gpu        12/17  render-ctx             serve-job
+wifi          --  -                      pcie
+bluetooth     --  -                      enabled
+cellular      --  -                      cp-power
+sensors       --  -                      bus
+audio         --  -                      aoc-trusty
+nfc           --  -                      enabled
+cameras       --  -                      torch-chip
+apps          --  -                      lsd
+stability    0/7  -                      alive
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## gpu: grep -E 'HK GPUTA: R14a (PASS|FAIL)' console.txt (first 1)
+07:12:13.124 [    0.41] HK GPUTA: R14a PASS: render context (TA dm 2 + 3D dm 3, stock static data) scheduled by the firmware: FENCE + NULL + UPDATE on each executed (0xc0de0002 -> 3 -> 4), no fault; firmware NULL lines ta 1 3d 1
+
+## gpu: grep -E 'HK GPUTA: M[23] .*boot: .*fw_faults' console.txt (first 2)
+07:12:12.909 [    0.19] HK GPUTA: M2 boot: sys fw_faults 0; cr poll addr 0x0 mask 0x0 count 0; hwr 0x1; sysflags 0x0; ts0 0
+07:12:12.917 [    0.20] HK GPUTA: M3 S1 boot: mmu_fault 0 lockup 0 failed_hw_poll 0 hwr_reset 0 debug_dump 0 fw_faults 0 assert_empty 1; trace_valid 1 words 133 entries 25 other 25; hwr 0x1 ok; fwccb w 0 r 0 pending 0 fault_cmds 0

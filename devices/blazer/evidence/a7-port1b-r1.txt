@@ -1,0 +1,49 @@
+# Physical boot receipt: a7-port1b-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 04:04:06 +0100
+image:     research/images/a7-ios-system-port1b-r1/boot.img sha256 f282554d6a39464dec3c11655d8628d94c75f11ee72063ff1975b800c36d989a
+kernel:    research/ios26-port-r1/build/kernel.port1-s1b-linux-r1.unstripped (unstripped) sha256 e362b51011c6ae34fb5714f6e7a53f04218adf9b1eb935ed1194f2620e2b43f2
+revision:  dc9e73e46c81962cd215019b76c6599c1ea4752c (XNU hk-port-1-s1b; /data/work/hk-port-build/STATUS.md names kernel.port1-s1b-linux-r1 unstripped e362b510 = hk-port-1-s1b dc9e73e)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/port-2.req (END_ON HK CLK: t=[0-9]+ gmc=; END_AFTER 60; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-040359-a7-port1b-r1/console.txt, research/laguna-usb-fix/attempts/20261112-040406-a7-port1b-r1/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-040406-a7-port1b-r1  [console+msgbuf+live+reader]  up 73 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 7
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  governor-range         full-run
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi        0/14  -                      pcie
+bluetooth    0/9  bluetoothd             enabled
+cellular    0/11  -                      cp-power
+sensors       --  -                      bus
+audio         --  -                      aoc-trusty
+nfc           --  -                      enabled
+cameras       --  -                      torch-chip
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  respawns: bluetoothd 7
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## configuration: grep -E 'hakios-kernel: \d+ drivers built in' console.txt (first 1)
+04:04:46.169 [    0.18] hakios-kernel: 10 drivers built in (DISPLAY UFS USBCON CLKMON CPUFREQ HALT RTC SOCINFO THERMAL WDT), 17 left out
+
+## configuration: grep -E 'blazer-rtc: (GET_RTC_TIME|source)|HK CLK: (every|t=)' console.txt (first 4)
+04:04:46.169 [    0.18] blazer-rtc: GET_RTC_TIME rc 0 (ok), reply 40010a00 0 ce94bc9 0, waited 1 ms
+04:04:46.173 [    0.19] blazer-rtc: source rtc, unix 1794452681, 2026-11-12 03:04:41 UTC (floor kernel-build 1794401205)
+04:04:46.181 [    0.19] HK CLK: every 30 s
+04:05:14.852 [   28.86] HK CLK: t=138 gmc=8/8/8 memss=4/4/4 reads=6 waits=12 strays=0
+
+## configuration: grep -E 'blazer-(wdt|halt): ' console.txt (first 2)
+(no match)
+
+## display: grep -E 'SWEET FB: rate swaps [1-9]' console.txt (first 2)
+04:05:26.568 [   40.58] SWEET FB: rate swaps 14.0/s kicks 14.0/s max_gap_us 4687396 changed 0,0 1125x2511 unsaid 90
+04:05:31.547 [   45.56] SWEET FB: rate swaps 69.5/s kicks 57.3/s max_gap_us 194311 changed 0,0 1125x2511 unsaid 16

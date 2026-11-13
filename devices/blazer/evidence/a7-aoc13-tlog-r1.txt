@@ -1,0 +1,39 @@
+# Physical boot receipt: a7-aoc13-tlog-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 07:50:27 +0100
+image:     research/images/a7-ios-system-aoc13-tlog-r1/boot.img sha256 2e296c5d98b3680dd8ca8924297d973c16773aaaf9a114baff7946c4404cf59f
+kernel:    research/ios26-aoc-r1/build/aoc13/kernel.aoc13.unstripped (unstripped) sha256 3d366dbe4939c4cdddc9332887c41c8fda2a1de5e2cd10167f2e23259aa4cc70
+revision:  6f3fba7efaaa63fb518a152edb8a02544013fc47 (XNU hk-audio-13; /data/work/hk-audio/STATUS.md names kernel.aoc13 unstripped 3d366dbe = hk-audio-13 6f3fba7)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/audio-8.req (END_ON HKAOC verdict (PASS|FAIL); phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-075020-a7-aoc13-tlog-r1/console.txt, research/laguna-usb-fix/attempts/20261112-075027-a7-aoc13-tlog-r1/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-075027-a7-aoc13-tlog-r1  [console+msgbuf+live+reader]  up 20 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         6/8  springboard            home
+display     3/15  frames                 swaps
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         4/14  governor               governor-range
+battery      3/5  powerd                 ui
+gpu           --  -                      power-id
+wifi          --  -                      pcie
+bluetooth    0/9  bluetoothd             enabled
+cellular      --  -                      cp-power
+sensors       --  -                      bus
+audio       4/10  aoc-load               aoc-live?
+nfc           --  -                      enabled
+cameras       --  -                      torch-chip
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## audio: grep -E 'HKAOC (rung[1-4]|verdict) ' console.txt (first 5)
+07:51:13.080 [    0.14] HKAOC rung1 PASS hwmgr_state=0 smcs=93 nops=7
+07:51:31.549 [   18.61] HKAOC rung2 PASS fw=16495511-polygon fw_ok=1 lpb=2 a32=0x10 fabstby=0x15 ipc0=0x0 ldo18=0x0 ldo33=0x0 sel18=0x3c sel33=0xd2 gsa_ipver=0x1000000 gsa_words=16 gsa_ctl=0x10000 gsa_st=0x0
+07:51:31.549 [   18.61] HKAOC rung3 PASS gsa_rsp=0x8000005a,0,0 gsa_st=0x1 load_ms=50 hw_state=2 params=28
+07:51:31.549 [   18.61] HKAOC rung4 FAIL hw_state=2 ipc=0xa0cda7a magic_ms=12059 services=0 ctrl=0 irq=0 doorbell=0x0 reply_ms=0 version='' why="state 2 without IPC magic"
+07:51:31.553 [   18.61] HKAOC verdict FAIL passed=3 cap=6 first_fail=4 why="state 2 without IPC magic"

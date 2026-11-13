@@ -1,0 +1,49 @@
+# Physical boot receipt: a7-power5-cap13-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 01:35:12 +0100
+image:     research/images/a7-ios-system-power5-cap13-r1/boot.img sha256 2e1a176b872d2be2ce22cdf944e15ec3d13cb6feaf7b12a67456e2f1ed4da4ba
+kernel:    research/ios26-power-fleet-r1/build/kernel.power1.unstripped (unstripped) sha256 db139beff1b01057e51155c87e4f35e17ec08093b3700e58ab08dd7b49001209
+revision:  f358be316c61c5c0582db5c2428bfd2e44301b37 (XNU hk-power-1 at the kernel.power1 build: the same kernel file and unstripped sha256 db139bef as evidence/a7-power2-health-r1.txt)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/power-5.req (END_ON blazer-gov: thermal health poll (7[5-9]|[89][0-9]|[1-9][0-9][0-9]) req; END_AFTER 120; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-013505-a7-power5-cap13-r1/console.txt, research/laguna-usb-fix/attempts/20261112-013512-a7-power5-cap13-r1/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-013512-a7-power5-cap13-r1  [console+msgbuf+live+reader]  up 51 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 1
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         8/14  idle-observed          high-clock?
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi        2/14  firmware               scan
+bluetooth    1/9  bluetoothd             firmware
+cellular    0/11  -                      cp-power
+sensors     4/14  compass                hid-published
+audio         --  -                      aoc-trusty
+nfc          1/6  enabled                enable-pad
+cameras      2/5  torch-lit              cam-pmic
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## cpu: grep -E 'blazer-gov: write domain [12] level 13, 1536 MHz' console.txt (first 2)
+01:35:55.405 [    2.11] blazer-gov: write domain 1 level 13, 1536 MHz
+01:35:55.407 [    2.11] blazer-gov: write domain 2 level 13, 1536 MHz
+
+## cpu: grep -E 'blazer-clock: cpu \d+ .*level 13 want 1536 .*mhz' console.txt (first 5)
+01:35:55.407 [    2.11] blazer-clock: cpu 3 mpidr 0x81000500 level 13 want 1536 cycles 7680054 ticks 192004 mhz 1535
+01:35:55.407 [    2.11] blazer-clock: cpu 4 mpidr 0x81000600 level 13 want 1536 cycles 7680109 ticks 192004 mhz 1535
+01:35:55.501 [    2.21] blazer-clock: cpu 0 mpidr 0x81000200 level 13 want 1536 cycles 7680150 ticks 192005 mhz 1535
+01:35:55.507 [    2.21] blazer-clock: cpu 1 mpidr 0x81000300 level 13 want 1536 cycles 7680143 ticks 192005 mhz 1535
+01:35:55.507 [    2.21] blazer-clock: cpu 2 mpidr 0x81000400 level 13 want 1536 cycles 7680133 ticks 192005 mhz 1535
+
+## cpu: grep -E 'blazer-gov: thermal owner admitted' console.txt (first 1)
+01:35:55.404 [    2.11] blazer-gov: thermal owner admitted: required 0x106 advancing poll 2 guard 70 C
+
+## power: grep -E 'blazer-thermal: poll 1 ' console.txt (first 1)
+01:35:53.483 [    0.19] blazer-thermal: poll 1 max 36 C BIG; 36 35 35 35 0 0 0 0 35 35; strays 0

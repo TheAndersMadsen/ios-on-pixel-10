@@ -1,0 +1,57 @@
+# Physical boot receipt: a7-integ-r6 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 06:06:12 +0100
+image:     research/images/a7-ios-system-integ-r6/boot.img sha256 bc38ae42a133a5ac974b56d1fb1c16e92e77183a5ecc9ff4fe7c1a9cd1552480
+kernel:    research/ios26-farm-r1/build/kernel.base4-linux-r1.unstripped (unstripped) sha256 67915b8ef24b350951f9758c2a95f0ef99c14287a0c446bbb7caa8cf693e33ee
+revision:  ed065b4cf046b536d9c631606a70d86b8e91d008 (XNU hk-base-4; /data/work/hk-farm/out/kernel.base4-linux-r1.buildinfo names this commit and this unstripped sha256)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/integ-6.req (END_ON HK LIVE tap gen=[0-9]+ hold=333 ms; END_AFTER 840; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-060604-a7-integ-r6/console.txt, research/laguna-usb-fix/attempts/20261112-060612-a7-integ-r6/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-060612-a7-integ-r6  [console+msgbuf+live+reader]  up 872 s, panics 0, crashes 5, usertraps 0, codesign 0, max execs 4
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         8/8  settings               (complete)
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  hkq-power              full-run
+battery      4/5  ui                     charging
+gpu           --  -                      power-id
+wifi       13/14  wifid-current          settings-wifi
+bluetooth    5/9  attached               le-scan
+cellular    3/11  id                     survey
+sensors     8/14  spu-orientation        coremotion
+audio         --  -                      aoc-trusty
+nfc          5/6  discover               tag?
+cameras      3/5  cam-pmic               cam-sensor?
+apps         4/9  app-models             registered?
+stability    3/7  ran-300                ran-900
+  respawns: bluetoothd 4
+  crashes: translationd 5
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## display: grep -E 'tensor-dpu: bright transport sent_dbv (2684|1791) ' console.txt (first 2)
+06:10:40.029 [  227.34] tensor-dpu: bright transport sent_dbv 2684 (~42.4 nits) cap 140 acl_off 1 rc 0 n 91 (no panel readback)
+06:10:40.661 [  227.97] tensor-dpu: bright transport sent_dbv 1791 (~17.6 nits) cap 140 acl_off 1 rc 0 n 96 (no panel readback)
+
+## display: grep -E 'SWEET BL: request backboardd route brightness-nits raw \d+ rc 0' console.txt (first 3)
+06:07:34.295 [   41.61] SWEET BL: request backboardd route brightness-nits raw 9174137 rc 0 (queued for DCS)0
+06:07:34.349 [   41.66] SWEET BL: request backboardd route brightness-nits raw 9141253 rc 0 (queued for DCS)0
+06:07:34.375 [   41.69] SWEET BL: request backboardd route brightness-nits raw 9110287 rc 0 (queued for DCS)0
+
+## display: grep -E 'HKQ 1 backlight' console.txt (first 2)
+06:21:22.683 [  869.99] HKQ 1 backlight: req total 1710 ok 956 refused 754 | nits 474 level 482 unknown 754 unknown-ok 0 other 0 | last unknown by backboardd raw 0 (~0.00 nits) rc 0xe00002c7 age_ms 255691 | log lines 124
+06:21:22.686 [  869.99] HKQ 1 backlight+ unlogged 5 | panel cap 140 target_dbv 3061 sent_dbv 3061 (~56.6 nits) sends 350 send_age_ms 255691 dead 0
+
+## display: grep -E 'SWEET BL: calibration' console.txt (first 1)
+06:06:52.810 [    0.12] SWEET BL: calibration 7 table entries, mid 3276800/65536 nits, 4 fixed keys
+
+## userland: grep -E 'LIVEBOOT .*(SPRINGBOARD|UI_READY)' markers.txt (first 2)
+LIVEBOOT 06:06:54.719 +50.0 SPRINGBOARD SpringBoard
+LIVEBOOT 06:07:20.894 +76.1 UI_READY
+
+## userland: grep -E 'UIRUN .* END ' ui_run.log (first 1)
+UIRUN 06:20:20.202 +855.4 END FAIL rc=1 steps=89 pass=87 report research/laguna-usb-fix/attempts/live-20261112-060604-a7-integ-r6/ui_run.json

@@ -1,0 +1,48 @@
+# Physical boot receipt: a7-port2-r1 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 07:45:10 +0100 (live stamp)
+image:     research/images/a7-ios-system-port2-r1/boot.img sha256 0550c67a32384fa4e88e4bb48d74971a3531f81a255564f4a256daccb31c3a86
+kernel:    research/ios26-port-r1/build/kernel.port1-s2-linux-r1.unstripped (unstripped) sha256 1c0d1b06ca8ca96686ccdc9e8407741883dbdaf99d7007a9fc33ce2dcdef8de2
+revision:  ff3039a634476de785240f7feb1d18c496425444 (XNU hk-port-1-s2; /data/work/hk-port-build/STATUS.md names kernel.port1-s2-linux-r1 unstripped 1c0d1b06 = hk-port-1-s2 ff3039a)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/port-3.req (END_ON blazer-touch: tcm: finger [0-9]+ down; END_AFTER 90; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-074510-a7-port2-r1/console.txt (live dir only: no separate attempt dir was kept for this boot), outside git
+evidence:  PHYSICAL (live USB console of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score live-20261112-074510-a7-port2-r1  [console]  up 99 s, panics 0, crashes 0, usertraps 0, codesign 0, max execs 9
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         7/8  home                   settings
+display     4/15  brightness-panel       fps30
+input        3/8  keys-ios               touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  governor-range         full-run
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi        0/14  -                      pcie
+bluetooth    0/9  bluetoothd             enabled
+cellular    0/11  -                      cp-power
+sensors       --  -                      bus
+audio         --  -                      aoc-trusty
+nfc           --  -                      enabled
+cameras       --  -                      torch-chip
+apps         2/9  personas               settings
+stability    2/7  no-panic               ran-300
+  respawns: bluetoothd 9
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## configuration: grep -E 'hakios-kernel: \d+ drivers built in' console.txt (first 1)
+07:45:49.820 [    0.19] hakios-kernel: 8 drivers built in (DISPLAY UFS USBCON CPUFREQ SOCINFO THERMAL BUTTONS TOUCH), 19 left out
+
+## input: grep -E 'blazer-touch: tcm: finger 0 down|SWEET HID: SweetHIDTouch open' console.txt (first 2)
+07:45:54.778 [    5.15] SWEET HID: SweetHIDTouch open by IOHIDEventServiceUserClient -> 1
+07:46:44.128 [   54.49] blazer-touch: tcm: finger 0 down at 57987, 47124
+
+## input: grep -E 'blazer-keys: volume down pressed|SWEET PHYSICAL: epoch=\d+ key=2 .* down' console.txt (first 2)
+07:46:42.510 [   52.88] blazer-keys: volume down pressed
+07:46:42.510 [   52.88] SWEET PHYSICAL: epoch=3 key=2 usage=0xea down clients=1 callback
+
+## display: grep -E 'SWEET FB: rate swaps [1-9]' console.txt (first 2)
+07:46:30.257 [   40.62] SWEET FB: rate swaps 14.0/s kicks 14.0/s max_gap_us 4729135 changed 0,0 1125x2511 unsaid 91
+07:46:35.262 [   45.63] SWEET FB: rate swaps 70.0/s kicks 61.4/s max_gap_us 191744 changed 0,0 1125x2511 unsaid 16

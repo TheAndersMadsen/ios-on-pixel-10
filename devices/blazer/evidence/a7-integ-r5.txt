@@ -1,0 +1,86 @@
+# Physical boot receipt: a7-integ-r5 (bounded excerpt; full logs stay outside git)
+device:    Google Pixel 10 Pro, product blazer (Tensor G5 laguna); fastboot product: blazer
+firmware:  ABL deepspace-17.4-16424240 (fastboot getvar version-bootloader, 2026-11-04 receipts)
+started:   2026-11-12 05:40:56 +0100
+image:     research/images/a7-ios-system-integ-r5/boot.img sha256 2dd0e53108c350bdca7ff4a1974e10dcee2ec50285f3c9d91d9281f98e7d7e75
+kernel:    research/ios26-farm-r1/build/kernel.base3-linux-r2.unstripped (unstripped) sha256 682e0dc6c8828213380e335d260abcbd839ad68bbaabe0e4fbfeac8e326f02c7
+revision:  8a8f5f736eb0cddc30e84008494ce61e82ef9191 (XNU hk-base-3; /data/work/hk-farm/out/kernel.base3-linux-r2.buildinfo names this commit and this unstripped sha256)
+command:   coordinator run_req.sh /data/work/hk-fleet/queue/integ-5.req (END_ON HK LIVE tap gen=[0-9]+ hold=333 ms; END_AFTER 840; phone parked in fastboot)
+logs:      research/laguna-usb-fix/attempts/live-20261112-054049-a7-integ-r5/console.txt, research/laguna-usb-fix/attempts/20261112-054056-a7-integ-r5/ (attempt dir, ramdump), outside git
+evidence:  PHYSICAL (live USB console and RAM dump of this boot); a final PANICKED verdict after the
+           decisive lines is the host reset op that parks the phone, not a fault.
+
+## hk_score --brief (physical scoreboard of this boot; the NEXT advice column is left out)
+hk_score 20261112-054056-a7-integ-r5  [console+msgbuf+live+reader]  up 879 s, panics 0, crashes 9, usertraps 0, codesign 0, max execs 4
+SUBSYSTEM    LVL  BEST RUNG              FIRST MISSING
+boot         8/8  settings               (complete)
+display     4/15  brightness-panel       fps30
+input        3/8  buttons-client         touch-delivered
+storage      3/6  sustained-reads        ios-data?
+cpu         5/14  hkq-power              full-run
+battery      4/5  ui                     charging
+gpu         0/17  -                      power-id
+wifi       13/14  wifid-current          settings-wifi
+bluetooth    5/9  attached               le-scan
+cellular    3/11  id                     survey
+sensors     8/14  spu-orientation        coremotion
+audio         --  -                      aoc-trusty
+nfc          5/6  discover               tag?
+cameras      3/5  cam-pmic               cam-sensor?
+apps         4/9  app-models             registered?
+stability    3/7  ran-300                ran-900
+  respawns: bluetoothd 4
+  crashes: translationd 5, bluetoothd 4
+  ? = first missing rung has no physical sample yet (UNVERIFIED-NO-SAMPLE)
+
+## configuration: grep -E 'hakios-kernel: \d+ drivers built in' console.txt (first 1)
+05:41:41.892 [    0.18] hakios-kernel: 27 drivers built in (DISPLAY UFS USBCON CLKMON CPUFREQ HALT RTC SOCINFO THERMAL WDT BUTTONS SLEEP TOUCH GPU AOC AUDIO BATTERY POWERMON SENSORS USBNET WIFI BT HAPTIC MODEM NFC TORCH SWEET_LEGACY), 0 lef
+
+## userland: grep -E 'LIVEBOOT .*(SPRINGBOARD|TOUCH_CLIENT|UI_READY)' markers.txt (first 3)
+LIVEBOOT 05:41:43.614 +54.5 SPRINGBOARD SpringBoard
+LIVEBOOT 05:41:46.216 +57.1 TOUCH_CLIENT
+LIVEBOOT 05:42:09.707 +80.6 UI_READY
+
+## userland: grep -E '\] exec (SpringBoard|backboardd|Photos|Maps|MobileNotes|MobileTimer|MobileSafari|MobileSMS|Music|MobilePhone|MobileMail|Health|Passbook|FaceTime|Files|Books|Preferences|MobileCal|Reminders|News|AppStore|TV)$' console.txt (first 24)
+05:41:43.614 [    1.90] exec SpringBoard
+05:41:43.623 [    1.91] exec backboardd
+05:42:22.431 [   40.72] exec MobileCal
+05:42:36.913 [   55.20] exec Photos
+05:43:13.317 [   91.61] exec Maps
+05:43:40.538 [  118.83] exec Preferences
+05:46:00.905 [  259.19] exec MobileNotes
+05:46:27.808 [  286.09] exec MobileTimer
+05:47:52.529 [  370.82] exec MobileSafari
+05:48:46.040 [  424.33] exec MobileSMS
+05:49:12.500 [  450.79] exec Music
+05:49:39.305 [  477.59] exec MobilePhone
+05:50:05.804 [  504.09] exec MobileMail
+05:50:32.559 [  530.85] exec Health
+05:50:59.019 [  557.31] exec Passbook
+05:51:25.358 [  583.65] exec FaceTime
+05:53:12.442 [  690.73] exec Files
+05:53:53.254 [  731.54] exec Books
+
+## userland: grep -E 'UIRUN .* END ' ui_run.log (first 1)
+UIRUN 05:54:55.525 +846.4 END PASS rc=0 steps=83 pass=83 report research/laguna-usb-fix/attempts/live-20261112-054049-a7-integ-r5/ui_run.json
+
+## userland: grep -E 'CRASH ' console.txt (first 4)
+05:43:48.015 [  126.30] CRASH bluetoothd reason ns 2 code 0x6: (none)
+05:43:48.738 [  127.02] CRASH bluetoothd reason ns 2 code 0x6: (none)
+05:43:59.652 [  137.94] CRASH bluetoothd reason ns 2 code 0x6: (none)
+05:44:10.573 [  148.86] CRASH bluetoothd reason ns 2 code 0x6: (none)
+
+## network: grep -E 'blazer-wifi: join: joined in|HKWIFI: W2 PASS|check_text Wi-Fi PASS' console.txt (first 3)
+05:42:23.128 [   41.39] blazer-wifi: join: joined in 274 ms
+05:42:30.187 [   48.48] HKWIFI: W2 PASS round 1: en0 192.168.x.x gw 192.168.x.x, primary en0 (IPMonitor), gateway ICMP, DNS direct + getaddrinfo, HTTP 200 via en0, nw_path satisfied on en0, nw_connection 200
+05:47:30.727 [  349.01] HKWIFI: W2 PASS round 2: en0 192.168.x.x gw 192.168.x.x, primary en0 (IPMonitor), gateway ICMP, DNS direct + getaddrinfo, HTTP 200 via en0, nw_path satisfied on en0, nw_connection 200
+
+## power: grep -E 'blazer-battery: (sample 1 |charger 1 )|HKBATT: event=battery_view_set' console.txt (first 3)
+05:41:44.720 [    3.01] blazer-battery: sample 1 SOC(91), VCELL(4348), INOW(-17), IAVG(-3), TEMP(2859), raw soc 5b45 vcell d972 i ffea iavg fffc t 1c99 fstat 0408 dev 5100
+05:41:44.721 [    3.01] blazer-battery: charger 1 in=usb chg=done mode=5 cp=0 wdt=0 cc=1933 mA cv=4350 mV icl=1500 mA wicl=500 mA ichgin=408 mA iwcin=0 mA vwcin=5995 mV vchgin_raw=202a ok=cc dtls=e0b46432 bat=3
+05:42:21.752 [   40.04] HKBATT: event=battery_view_set pid=28 role=2 now_ns=137293397083 view=0x14cdb2f80 ui_scope=unproved value=0.91000000000000003 notify_rc=0 state=0x9005b percent=91
+
+## display: grep -E 'tensor-dpu: bright transport sent_dbv' console.txt (first 3)
+05:42:23.262 [   41.55] tensor-dpu: bright transport sent_dbv 4635 (~139.9 nits) cap 140 acl_off 0 rc 0 n 1 (no panel readback)
+05:42:23.317 [   41.58] tensor-dpu: bright transport sent_dbv 4627 (~139.4 nits) cap 140 acl_off 0 rc 0 n 2 (no panel readback)
+05:42:23.346 [   41.63] tensor-dpu: bright transport sent_dbv 4618 (~138.9 nits) cap 140 acl_off 0 rc 0 n 3 (no panel readback)
