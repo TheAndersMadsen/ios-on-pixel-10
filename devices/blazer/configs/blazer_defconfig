@@ -18,6 +18,8 @@ CONFIG_HAKIOS_SLEEP=y
 CONFIG_HAKIOS_GPU=y
 CONFIG_HAKIOS_AUDIO=y
 CONFIG_HAKIOS_AOC=y
+# AOC_FW (default n since hk-base-4 ed065b4) is the 24.8 MB embedded aoc.bin; the audio lane turns it on.
+# CONFIG_HAKIOS_AOC_FW is not set
 CONFIG_HAKIOS_BATTERY=y
 CONFIG_HAKIOS_POWERMON=y
 CONFIG_HAKIOS_SENSORS=y

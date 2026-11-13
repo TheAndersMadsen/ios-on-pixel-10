@@ -11,7 +11,7 @@ check   devices/blazer holds together:
             is really in that attempt's console.txt / boot.log / ramdump (skip with --no-evidence);
           - `qemu` names an existing path, `compiled` needs no proof.
 ladder  the drivers by ladder step with their state (what to turn on next).
-XNU DIR as hk_port_config.py (--xnu, $HK_PORT_XNU, /data/work/hk-port-build/xnu)."""
+XNU DIR as hk_port_config.py (--xnu, $HK_PORT_XNU, /data/work/hk-port-build/xnu5)."""
 import argparse
 import glob
 import os

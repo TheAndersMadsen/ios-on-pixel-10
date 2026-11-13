@@ -19,7 +19,7 @@ usage:
 
 CONFIG is a file of `CONFIG_HAKIOS_<NAME>=y`, `# CONFIG_HAKIOS_<NAME> is not set` and `#include <file>` lines
 (devices/blazer/configs/). A driver CONFIG does not name gets its `default` (y unless said).
-XNU DIR: --xnu, else $HK_PORT_XNU, else /data/work/hk-port-build/xnu.
+XNU DIR: --xnu, else $HK_PORT_XNU, else /data/work/hk-port-build/xnu5 (hk-port-2 on hk-base-5).
 """
 import argparse
 import importlib.util
@@ -54,7 +54,7 @@ class Driver:
 
 
 def xnu_dir(arg):
-    return arg or os.environ.get('HK_PORT_XNU') or '/data/work/hk-port-build/xnu'
+    return arg or os.environ.get('HK_PORT_XNU') or '/data/work/hk-port-build/xnu5'
 
 
 def parse(xnu):
