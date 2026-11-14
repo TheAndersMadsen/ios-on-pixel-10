@@ -1,6 +1,6 @@
 # Current project notes
 
-Updated 2026-11-11 (UniXNU-alignment run, m1box). This is the **only default project-state document**. Keep it
+Updated 2026-11-14. This is the **only default project-state document**. Keep it
 short and current; do not append a session journal here. The previous full journal
 is `research/journal/NOTES-full-20261102.md` for explicit historical lookup only.
 
@@ -132,7 +132,7 @@ Fleet coordination, method and per-lane state: `/data/work/hk-fleet/{BRIEF,FACTS
 - **Not complete:** native Metal, stable compositing, strict GPT, chooser volume keys and the iOS entry, a
   visible iOS boot from ios_system (compositor), higher-clock/A520 acceptance, stock-app registration and foreground launches, native Wi-Fi/
   Bluetooth/cellular service, audio, cameras, SEP/Apple identity and dual boot.
-- The README's 48% is a weighted planning checklist, not release readiness.
+- The README's 59% of 50 reachable features is a weighted planning checklist, not release readiness; it reflects the November 11–12 receipts, with host/QEMU-only candidates kept separate.
 
 ## Read only what the task needs
 

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-04",
+  "updated": "2026-11-14",
   "scores": {
     "works": 100,
     "partial": 60,
@@ -11,80 +11,83 @@
   "stats": [
     {
       "value": "5/5",
-      "label": "fast cores up under iOS",
-      "note": "A725s, 15 min runs, governor 533–1075 MHz"
+      "label": "fast cores under iOS",
+      "note": "A725 cores; A520 and X4 remain excluded"
     },
     {
-      "value": "3052",
-      "unit": "MHz",
-      "label": "CPU clock held",
-      "note": "one core, under 1 s, not under iOS"
+      "value": "12.92",
+      "unit": "GiB",
+      "label": "RAM under iOS",
+      "note": "Memory test passed; remaining RAM unqualified"
     },
     {
-      "value": "2.85",
-      "unit": "x",
-      "label": "faster memory access",
-      "note": "seconds-long test, not under iOS"
-    },
-    {
-      "value": "0",
-      "unit": "errors",
-      "label": "sampler pixel comparisons",
-      "note": "598.9M pixels; phone speed unmeasured"
-    },
-    {
-      "value": "68",
+      "value": "80.6",
       "unit": "s",
-      "label": "to first iOS frames",
-      "note": "30 s GPU wait removed; was 136 s"
+      "label": "to Home",
+      "note": "integ-5; other boots have different limits"
     },
     {
-      "value": "41",
-      "unit": "°C",
-      "label": "p32 end temperature",
-      "note": "Five A725s; guarded 300-second capture"
+      "value": "15",
+      "label": "stock apps launched",
+      "note": "Plus Settings; Photos and Maps in integ-5"
     },
     {
-      "value": "98",
-      "unit": "%",
-      "label": "busy window at 1075 MHz",
-      "note": "governor frames stage, sustained UI load (perf1)"
+      "value": "83/83",
+      "label": "scripted UI steps passed",
+      "note": "integ-5; later combined run was 78/93"
     },
     {
-      "value": "19/19",
-      "unit": "",
-      "label": "thermal services bound",
-      "note": "thermalmonitord polls incl. battery TG0B (sensorhub1)"
+      "value": "1535",
+      "unit": "MHz",
+      "label": "measured CPU clock",
+      "note": "1536 MHz target (power-5); higher unproved"
+    },
+    {
+      "value": "1000",
+      "label": "LE advertising events",
+      "note": "bt-8; Settings discovery/pairing unproved"
+    },
+    {
+      "value": "120",
+      "unit": "s",
+      "label": "Metal plugin without crash",
+      "note": "backboardd; black screen (metal-5)"
+    },
+    {
+      "value": "833",
+      "label": "CoreMotion accel samples",
+      "note": "833 gyro too; phone flat (sensors-3)"
     }
   ],
   "roadmap": [
     {
       "stage": "Now",
       "items": [
-        "Backboardd crash loop fixed live (softblur material removed, int5-r2); the Spotlight spin is root-caused (aks_get_device_state poll) - ship its fix and measure frame completion",
-        "GPU command stream: rungs 8-9 executed on the phone; land rung 10 (page tables + first memory-writing job), then publish the AGXAccelerator for Metal",
-        "Qualify interactive scripted TAP/HOME behavior; screenshots already run unattended",
-        "Get the Wi-Fi WPA2 handshake through (RX-starvation fix built, boot pending) and pair Bluetooth in Settings (transmit owner-approved, image pending)",
-        "Make the Phone app (now opens, partly) and Settings > About fully usable, then more stock-app launches"
+        "Repeat the daily-image UI walk without translationd crashes or input interference; integ-5 passed 83/83 steps, integ-7 passed 78/93",
+        "Test the built metal-9 CPU compositor on the phone; GPU compositing still needs a render job and a shader path",
+        "Read the audio-9 Trusty interrupt diagnostic; AoC authentication passes, but no IPC or service census has appeared",
+        "Take Bluetooth from chip-level LE scan reports to controller power-on, a Settings device list and pairing",
+        "Verify a Wi-Fi join initiated from Settings; kernel-initiated WPA2 join, DNS and HTTP already pass",
+        "Finish the attended landscape-to-portrait rotation check and return-to-Android check"
       ]
     },
     {
       "stage": "Next",
       "items": [
-        "Verify persistent real settings on ios_data across reboots",
-        "Validate display sleep and wake",
-        "Repair and physically qualify USB ECM networking, then native mux pairing",
-        "Complete CPU health and thermal step-down before higher clocks or A520 admission"
+        "Test the built modem-5 BL1 handoff; the proven ROM handshake has loaded no modem firmware and emitted no RF",
+        "Verify persistent real settings on ios_data across reboots; the GPT-bounded writer has host/QEMU evidence only",
+        "Validate display sleep and wake, completed-frame timing, and USB ECM networking",
+        "Qualify sustained higher CPU clocks; 1536 MHz was written and measured, higher sustained clocks under iOS remain unqualified"
       ]
     },
     {
       "stage": "Later",
       "items": [
-        "Complete GPU command execution, shader compilation and Metal rendering",
-        "Integrate audio (speakers, microphones) with actual transport and physical acceptance",
-        "Establish ownership of RAM beyond the working 12.92 GiB",
-        "Complete Wi-Fi association, Bluetooth, cellular and GPS",
-        "Validate sleep, standby and remaining peripherals"
+        "Complete GPU rendering, shader compilation and CoreAnimation compositing on the GPU",
+        "Bring up speaker and microphone transport after AoC IPC and service discovery work",
+        "Qualify A520 cores and RAM beyond the working 12.92 GiB",
+        "Bring up cellular service, SIM/eSIM and GPS; loading the main modem image needs a separate owner decision",
+        "Read an NFC tag, capture a camera frame, and qualify the remaining sensors and standby behavior"
       ]
     }
   ],
@@ -100,12 +103,12 @@
         [
           "CPU clock control",
           "works",
-          "Governor ran 15 min under iOS: 533–1075 MHz on demand, 125 clock reads within 2%, 33–35 °C"
+          "Governor clocks change under iOS; power-5 wrote 1536 MHz on both A725 domains and measured about 1535 MHz on all five cores"
         ],
         [
           "Higher clocks, up to the 3052 MHz top",
           "partial",
-          "Governor frames stage proven under UI load: 98% of a busy window at the proven 1075 MHz cap (perf1). Above-1075 acceptance and A520 admission still pending"
+          "1536 MHz written and measured under iOS (power-5); higher sustained clocks remain unqualified. The old 3052 MHz probe was under one second, outside iOS"
         ],
         [
           "2 A520 cores",
@@ -120,7 +123,7 @@
         [
           "Idle sleep",
           "works",
-          "By code reading: cores already idle in WFI"
+          "WFI idling observed in power-5; full system suspend remains unproved"
         ]
       ]
     },
@@ -140,7 +143,7 @@
         [
           "The rest of the 16 GiB",
           "open",
-          "Not assigned"
+          "Remaining RAM has not been qualified"
         ]
       ]
     },
@@ -170,7 +173,7 @@
         [
           "Brightness",
           "works",
-          "Owner: the Settings slider visibly changes the panel brightness (pwr1)"
+          "Owner saw the slider change brightness; integ-6 links three drags to successful DBV writes, without panel readback"
         ],
         [
           "HDR, peak brightness, colour calibration",
@@ -195,12 +198,12 @@
         [
           "GPU firmware through Trusty",
           "works",
-          "Health PASS (gpu2); rungs 8-9 executed on the phone: MMUCACHE 0x807 ran in firmware, UFO fence in order, 0 faults (gpu5/gpu6). Rung 10 built and queued"
+          "Firmware health, memory-writing compute and transfer jobs passed on the phone; rung 14a scheduled a render context with no faults (gpu-10), without rendering geometry"
         ],
         [
           "Metal drawing",
           "active",
-          "CA diagnostic: no AGXAccelerator exists in the IORegistry, so CoreAnimation selects the software context. Native path mapped; coremem S1 and rung 10 (page tables, MMUCACHE, first memory-writing job) built, booting"
+          "QuartzCore uses HMNativeMetalDevice without crashing backboardd for 120 s (metal-5), but the screen stays black. No GPU-composited frame; metal-9 is a built CPU compositor, not yet phone-tested"
         ],
         [
           "Video encode and decode",
@@ -220,7 +223,7 @@
         [
           "Writing (persistent /var)",
           "partial",
-          "Saves and restore across reset verified on the old root; writer now bound to the GPT-resolved ios_data (host-tested), not yet run there"
+          "Old-root save/restore was physical; the GPT-resolved ios_data writer has host/QEMU bounds checks only, with no persistence boot on that partition"
         ],
         [
           "Maximum speed",
@@ -230,12 +233,12 @@
         [
           "Android/iOS boot chooser",
           "works",
-          "Installed on boot_b (int1, readback verified): Android by timeout PASS; owner booted iOS from a real power-on through the installed menu (r3)"
+          "Historical phone tests booted Android and iOS from the installed menu (r3); a current deployment requires fresh review under docs/COORDINATION.md"
         ],
         [
           "Isolated iOS partitions",
           "works",
-          "ios_system 24 GiB and ios_data 8 GiB on the phone; ios_system flashed, read back on the phone (hash match) and booted to Home (r3)"
+          "Historical phone tests used 24 GiB ios_system and 8 GiB ios_data; the r6 root was flashed, hash-verified and booted. No current deployment is authorized by those receipts"
         ]
       ]
     },
@@ -249,8 +252,8 @@
         ],
         [
           "Scripted taps and keys",
-          "partial",
-          "Remote HOME visibly worked; TAP dispatched but required manual app recovery. No automatic retry or clean TAP acceptance"
+          "works",
+          "integ-5 passed 83/83 UI-walk steps across 15 stock apps plus Settings; integ-7 passed 78/93, with physical input interference and other misses"
         ],
         [
           "Volume keys",
@@ -275,17 +278,17 @@
         [
           "Wi-Fi",
           "partial",
-          "BCM4390 under iOS: scan found 26 networks, authentication and association OK; the WPA2 4-way handshake fails. No packet traffic yet"
+          "Kernel-initiated WPA2 join, gateway ICMP, DNS and HTTP passed; Settings shows the joined row (integ-5). Choosing and joining a network from Settings is unproved"
         ],
         [
           "Bluetooth",
           "partial",
-          "Native HCI attached on the phone (HCI 6.0 Broadcom, 4 Mbaud RTS/CTS, Read Local Version status 0); keychain wrap/unwrap PASS (B1). Settings pairing needs radio transmit: owner-approved, pairing image pending"
+          "bluetoothd exchanged HCI commands and received 1000 LE advertising events with no respawn in bt-8; controller power-on, device discovery in Settings and pairing remain unproved"
         ],
         [
           "Cellular",
           "active",
-          "S5400 identified; pad probe only. PCIe0, modem boot and native CommCenter service remain unfinished"
+          "S5400 PCIe link and ROM handshake passed through rung 8, with no firmware loaded or RF. BL1 handoff (modem-5) is built, not phone-tested; no cellular service"
         ],
         [
           "SIM, eSIM",
@@ -299,8 +302,8 @@
         ],
         [
           "NFC",
-          "open",
-          "Reading tags possible at most; Apple Pay is out of reach"
+          "partial",
+          "Controller discovery runs and the 19.2 MHz clock output was tested; no tag was read, including the attended test. Apple Pay remains out of reach"
         ],
         [
           "UWB",
@@ -330,7 +333,7 @@
         [
           "Network over USB",
           "active",
-          "ECM source integrated and host-tested; review and physical binding/traffic gates remain open"
+          "The IONetworkStack stand-in ran on the phone; the ECM interface has no physical RX/TX evidence. Host-interactive USB-net and KDP are parked"
         ],
         [
           "USB host, video out",
@@ -345,7 +348,7 @@
         [
           "Speakers, microphones",
           "active",
-          "QEMU test queued; depends on always-on chip"
+          "No physical audio output or capture. The QEMU device has no sink; phone audio depends on AoC IPC and service discovery"
         ],
         [
           "Haptics",
@@ -359,13 +362,13 @@
       "features": [
         [
           "Accelerometer, gyro, proximity, light, barometer",
-          "active",
-          "Physical: accel and gyro samples through 2400, changing orientation; proximity/light/barometer and app integration unproved. SweetSensorHub publishes 19 temperature services, all bound by thermalmonitord"
+          "partial",
+          "CoreMotion read 833 accel and 833 gyro samples (sensors-3). Safari drew in landscape once; the return to portrait is unproved. Proximity/light/barometer only acknowledged on I2C"
         ],
         [
           "Always-on chip",
           "active",
-          "First phone run panicked in the carve zeroing (DC-ZVA alignment fault on the device-class map); root-caused, the aoc6 fix is next"
+          "Firmware authenticates through rung 3, but rung 4 has no IPC response or service census. Cause unknown; the socversion theory was refuted. audio-9 is a built interrupt diagnostic, not phone-tested"
         ]
       ]
     },
@@ -385,7 +388,7 @@
         [
           "Charging control",
           "open",
-          "Left at the bootloader's settings"
+          "Read-only reporting saw USB cc and done states on the phone; changing charge limits remains unimplemented"
         ],
         [
           "Wireless charging",
@@ -404,8 +407,8 @@
       "features": [
         [
           "Cameras, flash",
-          "out",
-          "Likely months: sensor details aren't public"
+          "partial",
+          "Flash torch lit for 2000 ms on the phone; camera PMIC ID read. No image sensor ID or camera frame"
         ]
       ]
     },
@@ -447,9 +450,9 @@
       "label": "RAM under iOS"
     },
     {
-      "value": "42",
+      "value": "80.6",
       "unit": "s",
-      "label": "to Android via chooser"
+      "label": "to Home (integ-5)"
     }
   ]
 }
